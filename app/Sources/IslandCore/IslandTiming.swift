@@ -11,12 +11,11 @@ public enum IslandTiming {
     /// Схлопывание раскрытого острова
     public static let collapse: Duration = .milliseconds(400)
 
-    /// Вход и выход бокового контента: проявление из размытия со сжатием по X
+    /// Вход и выход контента: проявление из размытия и угасание, без сжатия по X
     public static let slotIn: Double = 0.3
     public static let slotOut: Double = 0.25
     public static let slotInBlur: CGFloat = 10
     public static let slotOutBlur: CGFloat = 4
-    public static let slotOutScaleX: CGFloat = 0.25
 
     /// Скорость бегущей строки в peek, pt/с
     public static let marqueeSpeed: CGFloat = 30
