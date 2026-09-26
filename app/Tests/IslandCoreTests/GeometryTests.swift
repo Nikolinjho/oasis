@@ -130,60 +130,61 @@ struct GeometryTests {
         }
     }
 
-    @Test("Зона hover в покое: вырез ±30 pt по бокам и 6 pt вниз")
-    func hoverZone() {
-        #expect(IslandGeometry.hoverZone(for: Self.mbp16) == CGRect(x: 741, y: 1079, width: 246, height: 38))
+    static func rects(_ surface: Surface, media: Bool = true) -> (body: CGRect, island: CGRect) {
+        let window = IslandGeometry.windowFrame(for: mbp16)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: media, notch: mbp16.notchSize)
+        return (IslandGeometry.bodyScreenRect(spec, windowFrame: window), IslandGeometry.islandScreenRect(spec, windowFrame: window))
+    }
+
+    @Test("Тело острова в покое — ровно вырез, без ушек")
+    func idleBodyIsNotch() {
+        #expect(Self.rects(.idle, media: false).body == Self.mbp16.notchRect)
     }
 
     @Test("Hover держится над формой, из которой открылся: у края компакта нет мигания")
     func hoverHysteresis() {
-        let window = IslandGeometry.windowFrame(for: Self.mbp16)
-        let notch = CGSize(width: 186, height: 32)
-        let compact = IslandGeometry.islandScreenRect(
-            IslandGeometry.spec(for: .compact, hasMedia: true, notch: notch), windowFrame: window)
-        let hover = IslandGeometry.islandScreenRect(
-            IslandGeometry.spec(for: .hover, hasMedia: true, notch: notch), windowFrame: window)
-        // край компакта: внутри компакта, но левее узкой hover-формы
-        let edge = CGPoint(x: compact.minX + 3, y: window.maxY - 10)
-        #expect(!hover.contains(edge))
+        let compact = Self.rects(.compact)
+        let hover = Self.rects(.hover)
+        // край компакта: внутри тела компакта, но левее узкой hover-формы
+        let edge = CGPoint(x: compact.body.minX + 3, y: 1107)
+        #expect(!hover.island.contains(edge))
 
-        // вход: курсор над компактом
-        #expect(IslandGeometry.pointerInside(edge, island: compact, hoverZone: nil, openedFrom: nil))
+        // вход: курсор над телом компакта
+        #expect(IslandGeometry.pointerInside(edge, body: compact.body, island: compact.island, openedFrom: nil))
         // hover открыт: форма сузилась, но курсор над компактом, из которого hover открылся
-        #expect(IslandGeometry.pointerInside(edge, island: hover, hoverZone: nil, openedFrom: compact))
+        #expect(IslandGeometry.pointerInside(edge, body: hover.body, island: hover.island, openedFrom: compact.body))
         // без запомненной формы курсор оказался бы снаружи и hover бы закрылся
-        #expect(!IslandGeometry.pointerInside(edge, island: hover, hoverZone: nil, openedFrom: nil))
+        #expect(!IslandGeometry.pointerInside(edge, body: hover.body, island: hover.island, openedFrom: nil))
         // уход за пределы обеих форм закрывает hover
-        let away = CGPoint(x: compact.minX - 5, y: window.maxY - 10)
-        #expect(!IslandGeometry.pointerInside(away, island: hover, hoverZone: nil, openedFrom: compact))
+        let away = CGPoint(x: compact.island.minX - 5, y: 1107)
+        #expect(!IslandGeometry.pointerInside(away, body: hover.body, island: hover.island, openedFrom: compact.body))
     }
 
-    @Test("В покое вход в hover засчитывается по зоне вокруг выреза")
-    func hoverZoneEntry() {
-        let window = IslandGeometry.windowFrame(for: Self.mbp16)
-        let idle = IslandGeometry.islandScreenRect(
-            IslandGeometry.spec(for: .idle, hasMedia: false, notch: CGSize(width: 186, height: 32)), windowFrame: window)
-        let zone = IslandGeometry.hoverZone(for: Self.mbp16)
-        let beside = CGPoint(x: Self.mbp16.notchRect.minX - 20, y: window.maxY - 10)
-        #expect(!idle.contains(beside))
-        #expect(IslandGeometry.pointerInside(beside, island: idle, hoverZone: zone, openedFrom: nil))
+    @Test("Вход в hover только над телом: рядом с вырезом и над ушком не срабатывает")
+    func entryOnlyOverBody() {
+        let idle = Self.rects(.idle, media: false)
+        let beside = CGPoint(x: Self.mbp16.notchRect.minX - 20, y: 1107)
+        #expect(!IslandGeometry.pointerInside(beside, body: idle.body, island: idle.island, openedFrom: nil))
+        let onEar = CGPoint(x: idle.body.minX - 1, y: 1116.5)
+        #expect(idle.island.contains(onEar))
+        #expect(!IslandGeometry.pointerInside(onEar, body: idle.body, island: idle.island, openedFrom: nil))
+        let below = CGPoint(x: Self.mbp16.notchRect.midX, y: Self.mbp16.notchRect.minY - 2)
+        #expect(!IslandGeometry.pointerInside(below, body: idle.body, island: idle.island, openedFrom: nil))
+        let over = CGPoint(x: Self.mbp16.notchRect.midX, y: 1100)
+        #expect(IslandGeometry.pointerInside(over, body: idle.body, island: idle.island, openedFrom: nil))
     }
 
     @Test("Курсор, упёртый в верх экрана над вырезом, считается внутри")
     func pointerAtTopEdge() {
-        let window = IslandGeometry.windowFrame(for: Self.mbp16)
-        let notch = CGSize(width: 186, height: 32)
         let top = CGPoint(x: Self.mbp16.notchRect.midX, y: Self.mbp16.screenFrame.maxY)
-        let idle = IslandGeometry.islandScreenRect(
-            IslandGeometry.spec(for: .idle, hasMedia: false, notch: notch), windowFrame: window)
-        let expanded = IslandGeometry.islandScreenRect(
-            IslandGeometry.spec(for: .expanded, hasMedia: true, notch: notch), windowFrame: window)
+        let idle = Self.rects(.idle, media: false)
+        let expanded = Self.rects(.expanded)
         // NSRect.contains не включает maxY: без поправки курсор у края экрана был бы снаружи
-        #expect(!idle.contains(top))
-        #expect(IslandGeometry.pointerInside(top, island: idle, hoverZone: nil, openedFrom: nil))
-        #expect(IslandGeometry.pointerInside(top, island: idle, hoverZone: IslandGeometry.hoverZone(for: Self.mbp16), openedFrom: nil))
-        #expect(IslandGeometry.pointerInside(top, island: expanded, hoverZone: nil, openedFrom: idle))
+        #expect(!idle.body.contains(top))
+        #expect(IslandGeometry.pointerInside(top, body: idle.body, island: idle.island, openedFrom: nil))
+        #expect(IslandGeometry.pointerInside(top, body: expanded.body, island: expanded.island, openedFrom: idle.body))
         // выше края экрана курсор не бывает, но и там остров не растягивается дальше 1 pt
-        #expect(!IslandGeometry.pointerInside(CGPoint(x: top.x, y: top.y + 2), island: idle, hoverZone: nil, openedFrom: nil))
+        let above = CGPoint(x: top.x, y: top.y + 2)
+        #expect(!IslandGeometry.pointerInside(above, body: idle.body, island: idle.island, openedFrom: nil))
     }
 }

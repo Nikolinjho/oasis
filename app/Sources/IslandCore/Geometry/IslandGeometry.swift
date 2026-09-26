@@ -117,18 +117,21 @@ public enum IslandGeometry {
             height: spec.size.height)
     }
 
-    /// Зона hover в покое: вырез ±30 pt по бокам и 6 pt вниз
-    /// Замера нет, оценка на глаз, уточняется при сверке в задаче 16
-    public static func hoverZone(for metrics: NotchMetrics) -> CGRect {
-        let notch = metrics.notchRect
-        return CGRect(x: notch.minX - 30, y: notch.minY - 6, width: notch.width + 60, height: notch.height + 6)
+    /// Тело острова без ушек в координатах экрана: в покое это ровно вырез
+    public static func bodyScreenRect(_ spec: IslandShapeSpec, windowFrame: CGRect) -> CGRect {
+        CGRect(
+            x: windowFrame.midX - spec.size.width / 2,
+            y: windowFrame.maxY - spec.size.height,
+            width: spec.size.width,
+            height: spec.size.height)
     }
 
-    /// Курсор над островом с гистерезисом. Пока hover открыт (openedFrom не nil), он держится над
-    /// объединением текущей формы и формы, из которой открылся: hover уже компакта, и без этого
-    /// у краёв компакта hover открывался и закрывался на каждом движении мыши
-    public static func pointerInside(_ point: CGPoint, island: CGRect, hoverZone: CGRect?, openedFrom: CGRect?) -> Bool {
-        let area = openedFrom.map(island.union) ?? hoverZone.map(island.union) ?? island
+    /// Курсор над островом с гистерезисом. Вход только над видимым телом (без ушек и зон вокруг):
+    /// по живой проверке запас вокруг выреза открывал hover, не доходя до острова.
+    /// Пока hover открыт (openedFrom не nil), он держится над объединением текущей формы с ушками и тела,
+    /// из которого открылся: hover уже компакта, и без этого у краёв компакта hover мигал бы
+    public static func pointerInside(_ point: CGPoint, body: CGRect, island: CGRect, openedFrom: CGRect?) -> Bool {
+        let area = openedFrom.map(island.union) ?? body
         return reachingScreenTop(area).contains(point)
     }
 

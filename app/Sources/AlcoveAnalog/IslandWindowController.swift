@@ -12,7 +12,7 @@ final class IslandWindowController {
     private var metrics: NotchMetrics?
     private var monitors: [Any] = []
     private var pointerInside = false
-    /// Форма (с зоной hover в покое), над которой курсор вошёл: держит hover, пока курсор над ней
+    /// Тело острова, над которым курсор вошёл: держит hover, пока курсор над ним
     private var hoverOpenedFrom: CGRect?
 
     init(store: IslandStore, menu: NSMenu) {
@@ -92,17 +92,17 @@ final class IslandWindowController {
     }
 
     private func pointerMoved() {
-        guard let panel, let metrics else { return }
+        guard let panel, metrics != nil else { return }
         let point = NSEvent.mouseLocation
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
         // вне формы клики уходят в menu bar и окна под островом
         panel.ignoresMouseEvents = !IslandGeometry.reachingScreenTop(island).contains(point)
 
-        let zone = store.model.surface == .idle ? IslandGeometry.hoverZone(for: metrics) : nil
-        let inside = IslandGeometry.pointerInside(point, island: island, hoverZone: zone, openedFrom: hoverOpenedFrom)
+        let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
+        let inside = IslandGeometry.pointerInside(point, body: body, island: island, openedFrom: hoverOpenedFrom)
         guard inside != pointerInside else { return }
         pointerInside = inside
-        hoverOpenedFrom = inside ? zone.map(island.union) ?? island : nil
+        hoverOpenedFrom = inside ? body : nil
         store.send(inside ? .hoverEntered : .hoverExited)
     }
 }
