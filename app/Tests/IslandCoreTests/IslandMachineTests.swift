@@ -250,4 +250,47 @@ struct IslandMachineTests {
         #expect(IslandMachine.reduce(&m, .hoverEntered).isEmpty)
         #expect(m.surface == .idle)
     }
+
+    // MARK: - Покрытие спеки: клик в покое, hover из музыки, потеря музыки
+
+    @Test("Клик в покое без музыки раскрывает пустой плеер")
+    func clickFromIdle() {
+        var m = IslandModel()
+        #expect(IslandMachine.reduce(&m, .clicked) == [.cancel(.peekEnd), .animate(.expand)])
+        #expect(m.surface == .expanded)
+        #expect(!m.hasMedia)
+    }
+
+    @Test("Hover из компакта открывает hover")
+    func hoverFromCompact() {
+        var m = Self.model(.compact, media: true)
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverOpen)])
+        #expect(m.surface == .hover)
+    }
+
+    @Test("Hover из peek отменяет таймер peek и открывает hover")
+    func hoverFromPeek() {
+        var m = Self.model(.peek, media: true)
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverOpen)])
+        #expect(m.surface == .hover)
+    }
+
+    @Test("Музыка пропала во время peek: уходим в покой, таймер peek отменён")
+    func mediaClearedDuringPeek() {
+        var m = Self.model(.peek, media: true)
+        #expect(IslandMachine.reduce(&m, .mediaCleared) == [.cancel(.peekEnd), .animate(.compactOut)])
+        #expect(m.surface == .idle)
+        #expect(!m.hasMedia)
+    }
+
+    @Test("Музыка пропала во время HUD: после HUD остров уходит в покой без сжатия")
+    func mediaClearedDuringHUD() {
+        var m = Self.model(.hud(.volume, level: 0.5), media: true)
+        #expect(IslandMachine.reduce(&m, .mediaCleared).isEmpty)
+        #expect(m.surface == .hud(.volume, level: 0.5))
+        #expect(!m.hasMedia)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == [.animate(.hudOut)])
+        #expect(m.surface == .idle)
+        #expect(m.pending == nil)
+    }
 }
