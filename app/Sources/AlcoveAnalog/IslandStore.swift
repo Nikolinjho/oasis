@@ -1,3 +1,4 @@
+import AppKit
 import IslandCore
 import IslandSources
 import IslandUI
@@ -42,6 +43,12 @@ final class IslandStore {
             withAnimation(spring.animation) { model = next }
         } else {
             model = next
+        }
+        if transition?.opensByHover == true {
+            // .generic, а не .levelChange: levelChange — щелчок шага значения (слайдер, громкость),
+            // а раскрытие острова — обычное подтверждение действия. Трекпад отдаёт отклик,
+            // только если на нём лежит палец, от мыши его нет
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
         }
 
         for effect in effects {
