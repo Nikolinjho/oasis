@@ -26,11 +26,15 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         var backoff = Backoff()
         var accents: [String: RGB] = [:]
         var stopped = false
+        /// Номер запуска: колбэки старого процесса сверяют его и не трогают новый
+        var generation = 0
+        /// Первая строка нового процесса ещё не пришла
+        var awaitingFirstLine = true
     }
 
     public init(paths: AdapterPaths) {
         self.paths = paths
-        (changes, continuation) = AsyncStream.makeStream()
+        (changes, continuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingNewest(8))
     }
 
     public func start() {
@@ -57,8 +61,19 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         }
     }
 
-    private func launch() {
+    /// afterGeneration: перезапуск по backoff. Если за время ожидания был stop() или новый start(), не запускаемся
+    private func launch(afterGeneration expected: Int? = nil) {
         let process = Process()
+        let generation: Int? = state.withLockUnchecked { s in
+            guard !s.stopped, expected == nil || s.generation == expected else { return nil }
+            s.generation += 1
+            s.process = process
+            // хвост недописанной строки от умершего процесса не должен приклеиться к первой строке нового
+            s.buffer = LineBuffer()
+            s.awaitingFirstLine = true
+            return s.generation
+        }
+        guard let generation else { return }
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
         // у stream нет --now: elapsed парсер отсчитывает от timestampEpochMicros
         process.arguments = [paths.script.path, paths.framework.path, "stream", "--no-diff", "--micros", "--debounce=50"]
@@ -71,30 +86,28 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
                 handle.readabilityHandler = nil
                 return
             }
-            self.receive(chunk)
+            self.receive(chunk, generation: generation)
         }
         process.terminationHandler = { [weak self] finished in
-            self?.log.error("adapter exited with status \(finished.terminationStatus)")
-            self?.scheduleRestart()
-        }
-        state.withLockUnchecked { s in
-            s.process = process
-            // хвост недописанной строки от умершего процесса не должен приклеиться к первой строке нового
-            s.buffer = LineBuffer()
+            self?.processEnded(generation: generation, status: finished.terminationStatus)
         }
         do {
             try process.run()
             log.info("adapter started")
         } catch {
             log.error("adapter launch failed: \(error.localizedDescription)")
-            scheduleRestart()
+            processEnded(generation: generation, status: nil)
         }
     }
 
-    private func receive(_ chunk: Data) {
+    private func receive(_ chunk: Data, generation: Int) {
         let changes = state.withLockUnchecked { s -> [NowPlayingChange] in
-            s.buffer.append(chunk).compactMap { line in
-                guard let change = s.parser.consume(line) else { return nil }
+            // вывод старого процесса после перезапуска не нужен
+            guard s.generation == generation else { return [] }
+            return s.buffer.append(chunk).compactMap { line in
+                let isFirstLine = s.awaitingFirstLine
+                s.awaitingFirstLine = false
+                guard let change = s.parser.consume(line, ignoringClear: isFirstLine) else { return nil }
                 s.backoff.reset()
                 return change
             }
@@ -125,15 +138,18 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         return info
     }
 
-    private func scheduleRestart() {
+    /// Процесс адаптера завершился. Перезапуск — только если это текущий процесс и stop() не звали
+    private func processEnded(generation: Int, status: Int32?) {
         let delay: Duration? = state.withLockUnchecked { s in
+            guard s.generation == generation else { return nil }
             s.process = nil
             return s.stopped ? nil : s.backoff.next()
         }
         guard let delay else { return }
+        if let status { log.error("adapter exited with status \(status)") }
         Task { [weak self] in
             try? await Task.sleep(for: delay)
-            self?.launch()
+            self?.launch(afterGeneration: generation)
         }
     }
 }

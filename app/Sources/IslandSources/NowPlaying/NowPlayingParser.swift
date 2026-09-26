@@ -34,11 +34,13 @@ public struct NowPlayingParser: Sendable {
         let artworkData: String?
     }
 
-    public mutating func consume(_ line: String, now: Date = Date()) -> NowPlayingChange? {
+    /// ignoringClear: пустой payload не сбрасывает текущий трек. Для первой строки перезапущенного адаптера:
+    /// он всегда начинает с пустого payload, и без этого остров схлопывался бы и снова показывал peek
+    public mutating func consume(_ line: String, now: Date = Date(), ignoringClear: Bool = false) -> NowPlayingChange? {
         guard let decoded = try? JSONDecoder().decode(Line.self, from: Data(line.utf8)),
               decoded.type == "data" else { return nil }
         guard let payload = decoded.payload, let title = payload.title, !title.isEmpty else {
-            guard current != nil else { return nil }
+            guard current != nil, !ignoringClear else { return nil }
             current = nil
             return .cleared
         }

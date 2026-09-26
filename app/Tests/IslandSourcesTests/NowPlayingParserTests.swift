@@ -68,6 +68,15 @@ struct NowPlayingParserTests {
         #expect(parser.consume(Self.lines[3], now: Self.now) == nil)
     }
 
+    @Test("Пустая первая строка перезапущенного адаптера не сбрасывает трек, тот же трек дальше — updated")
+    func relaunchEmptyLineKeepsTrack() {
+        var parser = NowPlayingParser()
+        _ = parser.consume(Self.lines[0], now: Self.now)
+        #expect(parser.consume(Self.lines[3], now: Self.now, ignoringClear: true) == nil)
+        #expect(parser.current?.title == "Fire")
+        guard case .updated? = parser.consume(Self.lines[1], now: Self.now) else { Issue.record("ожидали updated"); return }
+    }
+
     @Test("Мусор и чужие типы строк игнорируются")
     func garbage() {
         var parser = NowPlayingParser()
