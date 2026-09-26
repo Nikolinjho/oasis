@@ -2,14 +2,14 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var statusItem: NSStatusItem?
+    private let store = IslandStore()
+    private var window: IslandWindowController?
+    private var statusItem: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
-        let menu = NSMenu()
-        menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        item.menu = menu
-        statusItem = item
+        window = IslandWindowController(store: store)
+        statusItem = StatusItemController(
+            debugItems: DebugMenu.items(store: store),
+            isTrusted: { Permissions.isAccessibilityTrusted })
     }
 }
