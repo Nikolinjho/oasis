@@ -1,4 +1,4 @@
-{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.google.Chrome","title":"Fire","artist":"Artist A","album":"Album A","playing":true,"duration":240000000,"elapsedTimeNow":60000000,"artworkMimeType":"image/png","artworkData":"iVBORw0KGgo="}}
-{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.google.Chrome","title":"Fire","artist":"Artist A","album":"Album A","playing":false,"duration":240000000,"elapsedTimeNow":61000000,"artworkMimeType":"image/png","artworkData":"iVBORw0KGgo="}}
-{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.apple.Music","title":"Water","artist":"Artist B","playing":true,"duration":180000000,"elapsedTime":0}}
+{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.google.Chrome","title":"Fire","artist":"Artist A","album":"Album A","playing":true,"durationMicros":240000000,"elapsedTimeNowMicros":60000000,"artworkMimeType":"image/png","artworkData":"iVBORw0KGgo="}}
+{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.google.Chrome","title":"Fire","artist":"Artist A","album":"Album A","playing":false,"durationMicros":240000000,"elapsedTimeNowMicros":61000000,"artworkMimeType":"image/png","artworkData":"iVBORw0KGgo="}}
+{"type":"data","diff":false,"payload":{"bundleIdentifier":"com.apple.Music","title":"Water","artist":"Artist B","playing":true,"durationMicros":180000000,"elapsedTimeMicros":0,"timestampEpochMicros":1000500000000}}
 {"type":"data","diff":false,"payload":{}}

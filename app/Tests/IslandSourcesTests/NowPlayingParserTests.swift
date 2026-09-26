@@ -35,7 +35,7 @@ struct NowPlayingParserTests {
         #expect(info.elapsed == 61)
     }
 
-    @Test("Другой трек — newTrack, elapsedTime вместо elapsedTimeNow, без обложки")
+    @Test("Другой трек — newTrack, elapsedTimeMicros вместо elapsedTimeNowMicros, без обложки")
     func anotherTrack() {
         var parser = NowPlayingParser()
         _ = parser.consume(Self.lines[0], now: Self.now)
@@ -43,6 +43,15 @@ struct NowPlayingParserTests {
         #expect(info.title == "Water")
         #expect(info.elapsed == 0)
         #expect(info.artwork == nil)
+    }
+
+    @Test("stream без --now: elapsed отсчитывается от timestampEpochMicros, а не от момента разбора")
+    func elapsedAnchoredToTimestamp() {
+        var parser = NowPlayingParser()
+        guard case let .newTrack(info)? = parser.consume(Self.lines[2], now: Self.now) else { Issue.record("ожидали newTrack"); return }
+        #expect(info.duration == 180)
+        #expect(info.elapsedAt == Date(timeIntervalSince1970: 1_000_500))
+        #expect(info.position(at: Date(timeIntervalSince1970: 1_000_510)) == 10)
     }
 
     @Test("Пустой payload — cleared, текущий трек сбрасывается")
