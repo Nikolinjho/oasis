@@ -34,26 +34,26 @@ public enum IslandGeometry {
     public static let shrinkWidth: CGFloat = 188
 
     /// Ушки (вогнутые плечи) по бокам: форма перетекает в menu bar. Ширина геометрическая,
-    /// от кончика кривой у края экрана до борта острова; видимая ширина у края чуть меньше (≈0.88),
-    /// потому что кончик тоньше пикселя. Форма одна на все состояния (IslandOutline.EarProfile),
-    /// масштабируется шириной. Замеры: кадры Alcove, остров 0, фон по половине яркости, 1 pt = 2 px
+    /// от кончика кривой у края экрана до борта острова; видимая у края меньше (≈0.8), кончик тоньше пикселя.
+    /// Форма одна на все состояния (IslandOutline.EarProfile), масштабируется шириной.
+    /// В анимации ушко идёт той же пружиной, что размер, то есть линейно по высоте, как в видео.
+    /// В видео при раскрытии ушко отстаёт от высоты примерно на 40 мс: пока не повторяем
     public enum Shoulder {
-        /// В покое остров совпадает с вырезом, ушек нет: трекер по строке 1 pt ниже края
-        /// дал ровно 186 = ширина выреза (capture/analysis/track-2026-09-26.json)
-        public static let idle: CGFloat = 0
-        /// rec2/player-sheet.png, 4-й ряд: видимая 6.3 pt, эталонная форма легла с СКО 0.18 px
-        public static let compact: CGFloat = 8
-        /// rec2/player-sheet.png, 5-й ряд: видимая 7.1 pt, СКО 0.15 px
-        public static let peek: CGFloat = 9
-        /// states/t69.4.png (запись №1): видимая 6.3 pt, СКО 0.18 px
-        public static let hud: CGFloat = 8
-        /// Замера нет: как у компакта и HUD той же высоты 32
-        public static let shrink: CGFloat = 8
-        /// Раскрытый плеер по кадру пользователя ref-ears.png (масштаб принят 2x): видимая 25.8 pt.
-        /// Alcove 1.7.7 в записях давал меньше (rec2: 20 pt), берём кадр пользователя
-        public static let expanded: CGFloat = 29.5
+        /// Видео hover-открытия Alcove 2026-09-26, покой (26 кадров): видимая 3.4 pt
+        public static let idle: CGFloat = 5.15
+        /// rec2/player-sheet.png, 4-й ряд: видимая 6.3 pt, форма из видео легла с СКО 0.13 px
+        public static let compact: CGFloat = 8.8
+        /// rec2/player-sheet.png, 5-й ряд: видимая 7.1 pt, СКО 0.21 px
+        public static let peek: CGFloat = 9.8
+        /// states/t69.4.png (запись №1): видимая 6.3 pt, СКО 0.12 px
+        public static let hud: CGFloat = 8.7
+        /// Замера нет: как у компакта той же высоты 32
+        public static let shrink: CGFloat = 8.8
+        /// Видео hover-открытия Alcove 2026-09-26, раскрытый (41 кадр, левое и правое в пределах 0.3 px):
+        /// видимая 14.7 pt. Кадр ref-ears.png (видимая 25.8 pt) — другое состояние или масштаб, не цель
+        public static let expanded: CGFloat = 18.3
 
-        /// Hover не мерили: оценка линейно по высоте между peek (51 → 9) и раскрытым (175 → 29.5)
+        /// Hover не мерили: оценка линейно по высоте между peek (51 → 9.8) и раскрытым (175 → 18.3)
         public static func estimated(forHeight height: CGFloat) -> CGFloat {
             let (h0, s0) = (peekHeight, peek)
             let (h1, s1) = (IslandGeometry.expanded.height, expanded)
@@ -63,9 +63,9 @@ public enum IslandGeometry {
         private static let peekHeight = IslandGeometry.peek.height
     }
 
-    /// Окно под самое большое состояние с перелётом и ушками. Раскрытие из покоя (пружина 175/16,
-    /// перелёт 9.2%): тело 370 → пик 386.9, ушко 29.5 → 32.2, всего 451.3 × 188.1. Запас до 460
-    public static let windowSize = CGSize(width: 460, height: 210)
+    /// Окно под самое большое состояние с перелётом и ушками. Раскрытие кликом из покоя (175/16,
+    /// перелёт 9.2%): тело 345 → пик 359.6, ушко 18.3 → 19.5, всего 398.6 × 188.1
+    public static let windowSize = CGSize(width: 440, height: 210)
 
     public static func spec(for surface: Surface, hasMedia: Bool, notch: CGSize) -> IslandShapeSpec {
         let size: CGSize = switch surface {

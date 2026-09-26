@@ -58,7 +58,7 @@ struct GeometryTests {
 
     @Test("Окно прижато к верху экрана по центру выреза")
     func windowFrame() {
-        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 634, y: 907, width: 460, height: 210))
+        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 644, y: 907, width: 440, height: 210))
     }
 
     @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками")
@@ -68,7 +68,8 @@ struct GeometryTests {
             let overshoot = try #require(IslandMotion.spring(for: transition)).overshoot
             let expanded = IslandGeometry.expanded
             let body = expanded.width + overshoot * (expanded.width - notch.width)
-            let shoulder = IslandGeometry.Shoulder.expanded * (1 + overshoot)
+            let shoulder = IslandGeometry.Shoulder.expanded
+                + overshoot * (IslandGeometry.Shoulder.expanded - IslandGeometry.Shoulder.idle)
             #expect(IslandGeometry.windowSize.width >= body + 2 * shoulder, "\(transition)")
             #expect(IslandGeometry.windowSize.height >= expanded.height + overshoot * (expanded.height - notch.height))
         }
@@ -78,44 +79,54 @@ struct GeometryTests {
     func islandScreenRect() {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
         let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize)
-        #expect(IslandGeometry.islandScreenRect(spec, windowFrame: window) == CGRect(x: 727.5, y: 1085, width: 273, height: 32))
+        let rect = IslandGeometry.islandScreenRect(spec, windowFrame: window)
+        #expect(abs(rect.minX - 726.7) < 1e-9 && abs(rect.width - 274.6) < 1e-9)
+        #expect(rect.maxY == 1117 && rect.height == 32)
         let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
-        #expect(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width == 404)
+        #expect(abs(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width - 381.6) < 1e-9)
     }
 
-    @Test("Ушки по состояниям: в покое нет, в раскрытом по кадру пользователя, hover — оценка")
+    @Test("Ушки по состояниям: покой и раскрытый по видео, компакт, peek и HUD по записям, hover — оценка")
     func shoulders() {
         let notch = Self.mbp16.notchSize
         func shoulder(_ surface: Surface, media: Bool = true) -> CGFloat {
             IslandGeometry.spec(for: surface, hasMedia: media, notch: notch).shoulder
         }
-        #expect(shoulder(.idle) == 0)
-        #expect(shoulder(.compact) == 8)
-        #expect(shoulder(.peek) == 9)
-        #expect(shoulder(.hud(.volume, level: 0.5)) == 8)
-        #expect(shoulder(.shrink) == 8)
-        #expect(shoulder(.expanded) == 29.5)
-        #expect(shoulder(.hover, media: true) == 12.6)
-        #expect(shoulder(.hover, media: false) == 15.4)
+        #expect(shoulder(.idle) == 5.15)
+        #expect(shoulder(.compact) == 8.8)
+        #expect(shoulder(.peek) == 9.8)
+        #expect(shoulder(.hud(.volume, level: 0.5)) == 8.7)
+        #expect(shoulder(.shrink) == 8.8)
+        #expect(shoulder(.expanded) == 18.3)
+        #expect(shoulder(.hover, media: true) == 11.3)
+        #expect(shoulder(.hover, media: false) == 12.5)
     }
 
-    @Test("Профиль ушка раскрытого плеера совпадает с кадром Alcove в пределах 1 pt")
-    func earProfileMatchesReference() {
-        // ref-ears.png, 2x: строгая граница чёрного по строкам, тело острова с x = 421 px
-        let reference: [(y: CGFloat, x: CGFloat)] = [
-            (0, 370), (4, 385), (8, 393), (12, 399), (16, 403), (20, 407), (24, 410), (28, 412),
-            (32, 414), (36, 416), (40, 417), (44, 418), (48, 419), (52, 420), (56, 421), (64, 421), (72, 421),
-        ]
-        let spec = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
+    /// Расстояние от борта до края ушка по строкам пикселей (2x) на центре строки
+    static func earProfile(_ surface: Surface, rows: [CGFloat]) -> [CGFloat] {
+        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: mbp16.notchSize)
         let path = IslandOutline.path(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder)
-        for row in reference {
-            // центр строки пикселей в пунктах
-            let y = (row.y + 0.5) / 2
+        return rows.map { row in
+            let y = (row + 0.5) / 2
             var x: CGFloat = 0
-            while x < spec.shoulder, !path.contains(CGPoint(x: x, y: y)) { x += 0.05 }
-            let measured = spec.shoulder - x
-            let expected = (421 - row.x) / 2
-            #expect(abs(measured - expected) <= 1, "y = \(row.y) px: \(measured) против \(expected)")
+            while x < spec.shoulder, !path.contains(CGPoint(x: x, y: y)) { x += 0.01 }
+            return spec.shoulder - x
+        }
+    }
+
+    @Test("Профиль ушка раскрытого и покоя совпадает с видео Alcove в пределах 0.5 pt")
+    func earProfileMatchesVideo() {
+        // видео hover-открытия 2026-09-26: расстояние от борта, px при 2x, по строкам сверху
+        let open: [(row: CGFloat, px: CGFloat)] = [
+            (0, 29.4), (2, 20.9), (4, 16.8), (6, 13.4), (8, 10.9), (10, 9.0), (12, 7.3), (14, 5.8), (16, 4.6),
+            (18, 3.5), (20, 2.7), (22, 2.0), (24, 1.4), (26, 0.9), (28, 0.7), (30, 0.3), (32, 0), (40, 0),
+        ]
+        let rest: [(row: CGFloat, px: CGFloat)] = [(0, 6.7), (1, 4.4), (2, 3.0), (3, 2.1), (4, 1.0), (6, 0.3), (7, 0), (12, 0)]
+        for (surface, reference) in [(Surface.expanded, open), (.idle, rest)] {
+            let measured = Self.earProfile(surface, rows: reference.map(\.row))
+            for (row, value) in zip(reference, measured) {
+                #expect(abs(value - row.px / 2) <= 0.5, "\(surface) строка \(row.row): \(value) против \(row.px / 2)")
+            }
         }
     }
 
