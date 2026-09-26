@@ -17,8 +17,8 @@ final class NotchPanel: NSPanel {
         acceptsMouseMovedEvents = true
     }
 
-    // кнопки плеера должны нажиматься, но окно не должно становиться главным
-    override var canBecomeKey: Bool { true }
+    // окно не забирает фокус у активного приложения: кнопки в NSHostingView срабатывают и с первого клика
+    override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
 

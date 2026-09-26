@@ -13,6 +13,8 @@ final class IslandStore {
     var notch = CGSize(width: 186, height: 32)
 
     @ObservationIgnored var onCommand: (MediaCommand) -> Void = { _ in }
+    /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
+    @ObservationIgnored var onSurfaceChange: () -> Void = {}
     @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]
 
     var spec: IslandShapeSpec {
@@ -21,6 +23,7 @@ final class IslandStore {
 
     func send(_ event: IslandEvent) {
         var next = model
+        let previous = model.surface
         let effects = IslandMachine.reduce(&next, event)
 
         var transition: IslandTransition?
@@ -48,6 +51,8 @@ final class IslandStore {
                 timers[id] = nil
             }
         }
+        // после эффектов: вложенный send из колбэка не перемешается с таймерами этого события
+        if model.surface != previous { onSurfaceChange() }
     }
 
     func apply(_ change: NowPlayingChange) {

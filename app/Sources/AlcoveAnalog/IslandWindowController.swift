@@ -7,6 +7,7 @@ import SwiftUI
 @MainActor
 final class IslandWindowController {
     private let store: IslandStore
+    private let menu: NSMenu
     private var panel: NotchPanel?
     private var metrics: NotchMetrics?
     private var monitors: [Any] = []
@@ -14,8 +15,9 @@ final class IslandWindowController {
     /// Форма (с зоной hover в покое), над которой курсор вошёл: держит hover, пока курсор над ней
     private var hoverOpenedFrom: CGRect?
 
-    init(store: IslandStore) {
+    init(store: IslandStore, menu: NSMenu) {
         self.store = store
+        self.menu = menu
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -23,6 +25,7 @@ final class IslandWindowController {
         }
         placeOnNotchScreen()
         installMonitors()
+        store.onSurfaceChange = { [weak self] in self?.pointerMoved() }
     }
 
     private func placeOnNotchScreen() {
@@ -36,6 +39,8 @@ final class IslandWindowController {
             // экрана с вырезом нет (крышка закрыта): прячемся до следующей смены экранов
             panel?.orderOut(nil)
             self.metrics = nil
+            pointerInside = false
+            hoverOpenedFrom = nil
             return
         }
         self.metrics = metrics
@@ -70,6 +75,20 @@ final class IslandWindowController {
         if let outside = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown, handler: { [weak self] _ in
             MainActor.assumeIsolated { self?.store.send(.clickedOutside) }
         }) { monitors.append(outside) }
+        // правый клик по острову открывает меню приложения: иконку в menu bar закрывает компакт
+        if let rightClick = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.showMenuIfOnIsland(event) ?? false } ? nil : event
+        }) { monitors.append(rightClick) }
+    }
+
+    /// Показывает меню под островом, если правый клик пришёлся на его форму
+    private func showMenuIfOnIsland(_ event: NSEvent) -> Bool {
+        guard let panel, event.window === panel, let content = panel.contentView else { return false }
+        let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
+        guard island.contains(NSEvent.mouseLocation) else { return false }
+        let bottomCentre = panel.convertPoint(fromScreen: CGPoint(x: island.midX, y: island.minY))
+        menu.popUp(positioning: nil, at: content.convert(bottomCentre, from: nil), in: content)
+        return true
     }
 
     private func pointerMoved() {

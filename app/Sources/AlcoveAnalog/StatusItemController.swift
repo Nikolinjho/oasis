@@ -22,6 +22,8 @@ final class ClosureMenuItem: NSMenuItem {
 @MainActor
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    /// То же меню открывается правым кликом по острову: компакт закрывает иконку в menu bar
+    let menu = NSMenu()
     private let launchAtLogin = ClosureMenuItem("Launch at Login") { LoginItem.toggle() }
     private let grantAccessibility = ClosureMenuItem("Grant Accessibility…") { Permissions.openAccessibilitySettings() }
     private let isTrusted: () -> Bool
@@ -30,8 +32,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.isTrusted = isTrusted
         super.init()
         item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
+        // позиция после перетаскивания с Cmd сохраняется между запусками
+        item.autosaveName = "AlcoveAnalogStatus"
 
-        let menu = NSMenu()
         menu.delegate = self
         menu.addItem(launchAtLogin)
         menu.addItem(grantAccessibility)
