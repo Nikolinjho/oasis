@@ -24,7 +24,13 @@ public struct IslandView: View {
 
     public var body: some View {
         ZStack(alignment: .top) {
-            IslandShape(spec: spec).fill(IslandPalette.background)
+            IslandShape(spec: spec)
+                .fill(IslandPalette.background)
+                // тень только у раскрытого: меняется вместе с моделью внутри withAnimation и растёт той же пружиной
+                .shadow(
+                    color: .black.opacity(model.surface == .expanded ? IslandGeometry.Shadow.opacity : 0),
+                    radius: IslandGeometry.Shadow.radius,
+                    y: IslandGeometry.Shadow.y)
             content
                 .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
                 .clipShape(IslandShape(spec: spec, shoulder: 0))

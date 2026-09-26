@@ -58,10 +58,10 @@ struct GeometryTests {
 
     @Test("Окно прижато к верху экрана по центру выреза")
     func windowFrame() {
-        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 644, y: 907, width: 440, height: 210))
+        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 885, width: 480, height: 232))
     }
 
-    @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками")
+    @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками и тенью")
     func windowFitsOvershoot() throws {
         let notch = Self.mbp16.notchSize
         for transition in [IslandTransition.expand, .hoverExpand] {
@@ -70,8 +70,10 @@ struct GeometryTests {
             let body = expanded.width + overshoot * (expanded.width - notch.width)
             let shoulder = IslandGeometry.Shoulder.expanded
                 + overshoot * (IslandGeometry.Shoulder.expanded - IslandGeometry.Shoulder.idle)
-            #expect(IslandGeometry.windowSize.width >= body + 2 * shoulder, "\(transition)")
-            #expect(IslandGeometry.windowSize.height >= expanded.height + overshoot * (expanded.height - notch.height))
+            let shadow = IslandGeometry.Shadow.self
+            #expect(IslandGeometry.windowSize.width >= body + 2 * shoulder + 2 * shadow.reach, "\(transition)")
+            let height = expanded.height + overshoot * (expanded.height - notch.height)
+            #expect(IslandGeometry.windowSize.height >= height + shadow.y + shadow.reach)
         }
     }
 
