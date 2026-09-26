@@ -79,16 +79,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handleKey(_ press: MediaKeyPress) -> Bool {
         switch press.key {
         case .volumeUp, .volumeDown:
-            if press.isDown { volume?.step(up: press.key == .volumeUp, fine: press.fine) }
+            if press.isDown, let volume {
+                let before = volume.volume
+                volume.step(up: press.key == .volumeUp, fine: press.fine)
+                // на границе (100% и вверх, 0% и вниз) CoreAudio не меняется и слушатель молчит: HUD шлём сами.
+                // step всегда снимает mute, поэтому volume здесь равен уровню, который отдал бы слушатель
+                let after = volume.volume
+                if after == before { store.send(.hudChanged(.volume, level: after ?? 0)) }
+            }
             return true
         case .mute:
             if press.isDown, !press.isRepeat { volume?.toggleMute() }
             return true
         case .brightnessUp, .brightnessDown:
             guard let brightness else { return false }
-            if press.isDown, let level = brightness.step(up: press.key == .brightnessUp, fine: press.fine) {
-                store.send(.hudChanged(.brightness, level: level))
-            }
+            guard press.isDown else { return true }
+            // DisplayServices не смог прочитать или выставить яркость: отдаём клавишу системе
+            guard let level = brightness.step(up: press.key == .brightnessUp, fine: press.fine) else { return false }
+            store.send(.hudChanged(.brightness, level: level))
             return true
         }
     }
