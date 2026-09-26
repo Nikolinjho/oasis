@@ -26,7 +26,7 @@ public struct IslandView: View {
         ZStack(alignment: .top) {
             IslandShape(spec: spec).fill(IslandPalette.background)
             content
-                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
+                .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
                 .clipShape(IslandShape(spec: spec, shoulder: 0))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -44,7 +44,7 @@ public struct IslandView: View {
         case .expanded:
             PlayerView(info: nowPlaying, onCommand: onCommand)
                 .id(ContentID.player)
-                .transition(.slot)
+                .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):
             HUDView(kind: kind, level: level, notchWidth: notchWidth)
                 .id(ContentID.hud(kind))
