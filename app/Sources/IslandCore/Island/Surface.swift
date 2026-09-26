@@ -9,8 +9,11 @@ public enum Surface: Equatable, Sendable {
     case compact
     /// Компакт плюс строка с названием трека
     case peek
-    /// Промежуточное состояние при наведении
+    /// Промежуточное состояние при наведении (режим Alcove): мини-остров 190×73 без контента
     case hover
+    /// Отклик на наведение (режим пользователя): форма from чуть шире, контент тот же,
+    /// по таймеру hoverOpen раскрывается в плеер. from — idle, compact или peek
+    indirect case hoverNudge(from: Surface)
     /// Раскрытый плеер
     case expanded
     /// Сжатие почти до выреза перед сменой активности

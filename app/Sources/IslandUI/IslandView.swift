@@ -60,7 +60,7 @@ public struct IslandView: View {
                 .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.hud(kind))
                 .transition(.slot)
-        case .idle, .hover, .shrink:
+        case .idle, .hover, .shrink, .hoverNudge:
             Color.clear
         }
     }

@@ -159,6 +159,8 @@ public enum IslandMachine {
         case .shrink:
             m.pending = hud
             return []
+        case .hoverNudge:
+            return []
         }
     }
 
