@@ -45,6 +45,9 @@ public struct IslandView: View {
         switch model.surface {
         case .compact, .peek:
             MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: model.surface == .peek)
+                // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
+                // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку
+                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.music)
                 .transition(.slot)
         case .expanded:
@@ -53,6 +56,8 @@ public struct IslandView: View {
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):
             HUDView(kind: kind, level: level, notchWidth: notchWidth)
+                // как у музыки: в узкой рамке растущей формы подпись переносилась на две строки
+                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.hud(kind))
                 .transition(.slot)
         case .idle, .hover, .shrink:
