@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Тёплые чёрный и белый Alcove: stone-950 и orange-25, не чистые #000 и #FFF
+/// Цвета острова. Фон чисто чёрный: пробы нативного Alcove дают #000000 (осмотр 26.09),
+/// тёплый #0C0A09 был из веб-демо. Текст тёплый белый orange-25 из веб-демо, в нативном не проверяли
 public enum IslandPalette {
-    public static let background = Color(red: 12 / 255, green: 10 / 255, blue: 9 / 255)
+    public static let background = Color.black
     public static let foreground = Color(red: 1, green: 250 / 255, blue: 244 / 255)
     public static let secondary = foreground.opacity(0.6)
     /// Квадрат вместо обложки у браузерных источников
