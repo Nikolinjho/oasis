@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var brightness: BrightnessControl?
     private var keyTap: MediaKeyTap?
     private var trustTimer: Timer?
+    private var fullscreen: FullscreenMonitor?
     private var tasks: [Task<Void, Never>] = []
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
 
@@ -23,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isTrusted: { Permissions.isAccessibilityTrusted })
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
+        startFullscreenMonitor()
         startNowPlaying()
         startLevels()
         startKeyTap()
@@ -30,6 +32,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         nowPlaying?.stop()
+    }
+
+    /// Полноэкранное приложение на экране с вырезом прячет компакт музыки
+    private func startFullscreenMonitor() {
+        let monitor = FullscreenMonitor { [store, log] isFullscreen in
+            log.info("fullscreen \(isFullscreen ? "on" : "off")")
+            store.send(.fullscreenChanged(isFullscreen))
+        }
+        monitor.start()
+        fullscreen = monitor
     }
 
     private func startNowPlaying() {

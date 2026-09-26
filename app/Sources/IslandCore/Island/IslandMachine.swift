@@ -9,6 +9,8 @@ public enum IslandEvent: Equatable, Sendable {
     case hudChanged(HUDKind, level: Double)
     case hoverEntered, hoverExited
     case clicked, clickedOutside
+    /// На экране с вырезом открылось или закрылось полноэкранное приложение
+    case fullscreenChanged(Bool)
     case timerFired(TimerID)
 }
 
@@ -24,13 +26,15 @@ public struct IslandModel: Equatable, Sendable {
     public var hasMedia = false
     /// Куда остров раскроется, когда закончится сжатие или схлопывание
     public var pending: Surface?
+    /// На экране с вырезом полноэкранное приложение: музыка в покое не показывается
+    public var isFullscreen = false
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
     }
 
-    /// Состояние покоя: компакт при музыке только в режиме compactAtRest, иначе форма выреза
-    public var base: Surface { hasMedia && config.compactAtRest ? .compact : .idle }
+    /// Состояние покоя: компакт при музыке только в режиме compactAtRest и не в полноэкранном, иначе форма выреза
+    public var base: Surface { hasMedia && config.compactAtRest && !isFullscreen ? .compact : .idle }
 }
 
 /// Чистая машина состояний острова: приоритеты и хореография смены активностей.
@@ -73,6 +77,7 @@ public enum IslandMachine {
                 : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
         case .hoverExited, .clickedOutside: close(&model)
+        case let .fullscreenChanged(on): fullscreenChanged(&model, on)
         case let .timerFired(id): timerFired(&model, id)
         }
     }
@@ -82,6 +87,9 @@ public enum IslandMachine {
         // после сжатия или схлопывания остров вернётся в покой, а покой зависит от музыки
         if m.pending == .idle || m.pending == .compact { m.pending = m.base }
         switch m.surface {
+        case .idle where m.isFullscreen:
+            // в полноэкранном музыка только запоминается: компакт появится после выхода
+            return []
         case .idle where m.pending == nil && m.config.compactAtRest:
             m.surface = .compact
             return [.animate(.compactIn)]
@@ -94,6 +102,24 @@ public enum IslandMachine {
             return [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek)]
         default:
             // peek не перезапускаем, в остальных состояниях меняется только контент
+            return []
+        }
+    }
+
+    /// В полноэкранном компакт и peek музыки прячутся, открытый плеер и HUD не трогаем:
+    /// они закроются в покой, который теперь форма выреза
+    private static func fullscreenChanged(_ m: inout IslandModel, _ on: Bool) -> [IslandEffect] {
+        guard m.isFullscreen != on else { return [] }
+        m.isFullscreen = on
+        if m.pending == .idle || m.pending == .compact { m.pending = m.base }
+        switch m.surface {
+        case .compact where on, .peek where on:
+            m.surface = .idle
+            return [.cancel(.peekEnd), .animate(.compactOut)]
+        case .idle where !on && m.pending == nil && m.base == .compact:
+            m.surface = .compact
+            return [.animate(.compactIn)]
+        default:
             return []
         }
     }
