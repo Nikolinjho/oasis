@@ -63,5 +63,10 @@ struct MusicViewTests {
         #expect(try Snapshot.write(
             island(IslandGeometry.expanded, AnyView(PlayerView(info: Self.info, onAction: { _ in }))),
             size: IslandGeometry.expanded, name: "player") == CGSize(width: 690, height: 350))
+        var paused = Self.info
+        paused.isPlaying = false
+        try Snapshot.write(
+            island(IslandGeometry.expanded, AnyView(PlayerView(info: paused, onAction: { _ in }))),
+            size: IslandGeometry.expanded, name: "player-paused")
     }
 }

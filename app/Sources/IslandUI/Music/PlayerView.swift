@@ -10,6 +10,7 @@ struct PlayerView: View {
         VStack(spacing: 8) {
             HStack(spacing: 12) {
                 ArtworkFlip(info: info, side: 56, radius: 12)
+                    .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(info?.title ?? "Not Playing")
                         .font(.system(size: 14, weight: .semibold))
@@ -34,6 +35,32 @@ struct PlayerView: View {
         .padding(.horizontal, 20)
         .padding(.top, 36)
         .padding(.bottom, 10)
+    }
+}
+
+/// На паузе обложка уменьшается и выцветает, при play возвращается (кадры паузы Alcove)
+struct PausedArtwork: ViewModifier {
+    struct Look: Equatable {
+        let scale: CGFloat
+        let saturation: Double
+        let opacity: Double
+    }
+
+    let isPlaying: Bool
+
+    /// Масштаб 0.9 по кадрам; насыщенность и прозрачность — замера нет, оценка
+    static func look(isPlaying: Bool) -> Look {
+        isPlaying ? Look(scale: 1, saturation: 1, opacity: 1) : Look(scale: 0.9, saturation: 0.2, opacity: 0.6)
+    }
+
+    func body(content: Content) -> some View {
+        let look = Self.look(isPlaying: isPlaying)
+        content
+            .saturation(look.saturation)
+            .opacity(look.opacity)
+            .scaleEffect(look.scale)
+            // замера нет, оценка: в ногу со сменой ⏸/▶
+            .animation(.easeInOut(duration: 0.4), value: isPlaying)
     }
 }
 
