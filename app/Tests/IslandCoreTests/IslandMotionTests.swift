@@ -86,7 +86,7 @@ struct TimeScaleTests {
 
         var open = IslandModel()
         open.surface = .expanded
-        let collapse = IslandMachine.reduce(&open, .hudChanged(.volume, level: 0.5))
-        #expect(collapse == [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse * 1.18)])
+        let morph = IslandMachine.reduce(&open, .hudChanged(.volume, level: 0.5))
+        #expect(morph == [.animate(.hudMorph), .schedule(.hudHide, after: IslandTiming.hudVisible)])
     }
 }

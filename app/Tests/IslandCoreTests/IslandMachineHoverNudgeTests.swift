@@ -1,15 +1,17 @@
 import Testing
 @testable import IslandCore
 
-/// Режим пользователя: hover сначала даёт отклик (форма чуть шире), плеер раскрывается по таймеру.
+/// Ненулевая задержка hover (Hover duration у Alcove): сначала отклик (форма чуть шире), плеер по таймеру.
 /// Уход курсора схлопывает плеер с задержкой, возврат в неё отменяет схлопывание
 struct IslandMachineHoverNudgeTests {
-    static let scale = IslandMachine.Config.user.timeScale
+    static let nudging = IslandMachine.Config(
+        hoverOpensPlayer: true, compactAtRest: true, timeScale: 1.18, hoverDelay: IslandTiming.hoverNudge)
+    static let scale = nudging.timeScale
     static let startOpen = IslandEffect.schedule(.hoverOpen, after: IslandTiming.hoverNudge * scale)
     static let startLeave = IslandEffect.schedule(.hoverLeave, after: IslandTiming.hoverLeave * scale)
     static let nudgeEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.hoverNudge), startOpen]
 
-    static func model(_ surface: Surface, media: Bool = true, config: IslandMachine.Config = .user) -> IslandModel {
+    static func model(_ surface: Surface, media: Bool = true, config: IslandMachine.Config = nudging) -> IslandModel {
         var model = IslandModel(config: config)
         model.surface = surface
         model.hasMedia = media
@@ -45,7 +47,8 @@ struct IslandMachineHoverNudgeTests {
 
     @Test("Тайминги отклика и задержки ухода замедляются timeScale")
     func timingsAreScaled() {
-        var m = IslandModel(config: IslandMachine.Config(hoverOpensPlayer: true, compactAtRest: true, timeScale: 2))
+        var m = IslandModel(config: IslandMachine.Config(
+            hoverOpensPlayer: true, compactAtRest: true, timeScale: 2, hoverDelay: IslandTiming.hoverNudge))
         #expect(IslandMachine.reduce(&m, .hoverEntered).contains(.schedule(.hoverOpen, after: IslandTiming.hoverNudge * 2)))
         _ = IslandMachine.reduce(&m, .timerFired(.hoverOpen))
         #expect(IslandMachine.reduce(&m, .hoverExited) == [.schedule(.hoverLeave, after: IslandTiming.hoverLeave * 2)])
@@ -160,17 +163,22 @@ struct IslandMachineHoverNudgeTests {
         #expect(IslandMachine.reduce(&leaving, .timerFired(.hoverLeave)).isEmpty)
     }
 
-    @Test("HUD во время задержки ухода: таймер отменён, схлопывание перед HUD")
+    @Test("HUD во время задержки ухода: таймер отменён, плеер морфится в HUD")
     func hudDuringDelay() {
         var m = Self.leaving()
         let fx = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4))
-        #expect(fx == [
-            .cancel(.hoverLeave), .animate(.collapse),
-            .schedule(.collapseDone, after: IslandTiming.collapse * Self.scale),
-        ])
-        #expect(m.surface == .compact)
+        #expect(fx == [.cancel(.hoverLeave), .animate(.hudMorph), .schedule(.hudHide, after: IslandTiming.hudVisible)])
+        #expect(m.surface == .hud(.volume, level: 0.4))
         #expect(IslandMachine.reduce(&m, .timerFired(.hoverLeave)).isEmpty)
-        #expect(m.pending == .hud(.volume, level: 0.4))
+        #expect(m.surface == .hud(.volume, level: 0.4))
+    }
+
+    @Test("Режим пользователя по умолчанию без задержки hover, как Alcove с Hover duration 0")
+    func userHasNoHoverDelay() {
+        #expect(IslandMachine.Config.user.hoverDelay == .zero)
+        var m = Self.model(.compact, config: .user)
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverExpand)])
+        #expect(m.surface == .expanded)
     }
 
     // MARK: - Режим Alcove без изменений

@@ -152,47 +152,39 @@ struct IslandMachineTests {
 
     // MARK: - HUD при раскрытом острове
 
-    @Test("HUD при раскрытом плеере: схлопывание, затем HUD как из компакта")
+    @Test("HUD при раскрытом плеере: прямой морф в HUD без сжатия, после него компакт через сжатие")
     func hudOverExpandedWithMedia() {
         var m = Self.model(.expanded, media: true)
-        let collapse = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4))
-        #expect(collapse == [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse)])
-        #expect(m.surface == .compact)
-        #expect(m.pending == .hud(.volume, level: 0.4))
-
-        #expect(IslandMachine.reduce(&m, .timerFired(.collapseDone)) == Self.shrinkEffects)
-        #expect(m.surface == .shrink)
-        #expect(m.pending == .hud(.volume, level: 0.4))
-
-        #expect(IslandMachine.reduce(&m, .timerFired(.grow)) == [.animate(.grow), Self.hideHUD])
+        #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4)) == [.animate(.hudMorph), Self.hideHUD])
         #expect(m.surface == .hud(.volume, level: 0.4))
+        #expect(m.pending == nil)
+        // после HUD плеер не возвращается, даже если курсор над островом
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkEffects)
+        #expect(m.pending == .compact)
     }
 
-    @Test("HUD при раскрытом без музыки: после схлопывания сразу HUD")
+    @Test("HUD при hover-мини (режим Alcove) тоже морфится напрямую")
+    func hudOverHover() {
+        var m = Self.model(.hover, media: true)
+        #expect(IslandMachine.reduce(&m, .hudChanged(.brightness, level: 0.3)) == [.animate(.hudMorph), Self.hideHUD])
+        #expect(m.surface == .hud(.brightness, level: 0.3))
+    }
+
+    @Test("HUD при раскрытом без музыки: морф в HUD, после него покой")
     func hudOverExpandedWithoutMedia() {
         var m = Self.model(.expanded)
-        _ = IslandMachine.reduce(&m, .hudChanged(.brightness, level: 0.7))
-        #expect(m.surface == .idle)
-        #expect(IslandMachine.reduce(&m, .timerFired(.collapseDone)) == [.animate(.hudIn), Self.hideHUD])
+        #expect(IslandMachine.reduce(&m, .hudChanged(.brightness, level: 0.7)) == [.animate(.hudMorph), Self.hideHUD])
         #expect(m.surface == .hud(.brightness, level: 0.7))
-        #expect(m.pending == nil)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == [.animate(.hudOut)])
+        #expect(m.surface == .idle)
     }
 
-    @Test("Уровень, пришедший во время схлопывания, берётся последним")
+    @Test("Новый уровень после морфа меняет только полоску HUD")
     func latestLevelWins() {
         var m = Self.model(.expanded, media: true)
         _ = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4))
-        #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5)).isEmpty)
-        _ = IslandMachine.reduce(&m, .timerFired(.collapseDone))
-        #expect(m.pending == .hud(.volume, level: 0.5))
-    }
-
-    @Test("HUD из hover тоже сначала схлопывает")
-    func hudOverHover() {
-        var m = Self.model(.hover)
-        let fx = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4))
-        #expect(fx == [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse)])
-        #expect(m.surface == .idle)
+        #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5)) == [.animate(.hudUpdate), Self.hideHUD])
+        #expect(m.surface == .hud(.volume, level: 0.5))
     }
 
     // MARK: - Hover и клик

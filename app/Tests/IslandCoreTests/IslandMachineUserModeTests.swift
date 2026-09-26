@@ -10,9 +10,8 @@ struct IslandMachineUserModeTests {
     static let startGrow = IslandEffect.schedule(.grow, after: IslandTiming.shrink)
     static let shrinkEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.shrink), startGrow]
     static let peekEffects: [IslandEffect] = [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek)]
-    static let nudgeEffects: [IslandEffect] = [
-        .cancel(.peekEnd), .animate(.hoverNudge), .schedule(.hoverOpen, after: IslandTiming.hoverNudge),
-    ]
+    /// Hover duration 0, как у нативного Alcove по умолчанию: плеер раскрывается сразу
+    static let hoverEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.hoverExpand)]
 
     static func model(_ surface: Surface, media: Bool = false, pending: Surface? = nil) -> IslandModel {
         var model = IslandModel(config: notchRest)
@@ -50,8 +49,7 @@ struct IslandMachineUserModeTests {
         var m = IslandModel()
         m.surface = .compact
         m.hasMedia = true
-        _ = IslandMachine.reduce(&m, .hoverEntered)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.hoverEffects)
         #expect(m.surface == .expanded)
         #expect(IslandMachine.reduce(&m, .clicked).isEmpty)
         _ = IslandMachine.reduce(&m, .hoverExited)
@@ -62,8 +60,7 @@ struct IslandMachineUserModeTests {
     @Test("Режим пользователя: hover из покоя без музыки раскрывает пустой плеер")
     func userModeHoverFromIdle() {
         var m = IslandModel()
-        _ = IslandMachine.reduce(&m, .hoverEntered)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.hoverEffects)
         #expect(m.surface == .expanded)
         #expect(!m.hasMedia)
     }
@@ -114,19 +111,17 @@ struct IslandMachineUserModeTests {
         #expect(m.hasMedia)
     }
 
-    @Test("Hover из покоя через отклик раскрывает полный плеер")
+    @Test("Hover из покоя сразу раскрывает полный плеер")
     func hoverOpensPlayer() {
         var m = IslandModel(config: Self.notchRest)
-        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.nudgeEffects)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.hoverEffects)
         #expect(m.surface == .expanded)
     }
 
     @Test("Hover из покоя с музыкой открывает плеер с треком")
     func hoverWithMediaOpensPlayer() {
         var m = Self.model(.idle, media: true)
-        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.nudgeEffects)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.hoverEffects)
         #expect(m.surface == .expanded)
         #expect(m.hasMedia)
     }
@@ -139,11 +134,10 @@ struct IslandMachineUserModeTests {
         #expect(m.hasMedia)
     }
 
-    @Test("Hover во время peek отменяет таймер и раскрывает плеер через отклик")
+    @Test("Hover во время peek отменяет таймер и сразу раскрывает плеер")
     func hoverFromPeek() {
         var m = Self.model(.peek, media: true)
-        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.nudgeEffects)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
+        #expect(IslandMachine.reduce(&m, .hoverEntered) == Self.hoverEffects)
         #expect(m.surface == .expanded)
     }
 
@@ -198,13 +192,13 @@ struct IslandMachineUserModeTests {
         #expect(m.surface == .idle)
     }
 
-    @Test("HUD при раскрытом плеере с музыкой: схлопывание в покой, затем HUD без сжатия")
+    @Test("HUD при раскрытом плеере: прямой морф в HUD, после него покой в форме выреза")
     func hudOverExpandedWithMedia() {
         var m = Self.model(.expanded, media: true)
-        let collapse = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4))
-        #expect(collapse == [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse)])
-        #expect(m.surface == .idle)
-        #expect(IslandMachine.reduce(&m, .timerFired(.collapseDone)) == [.animate(.hudIn), Self.hideHUD])
+        #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.4)) == [.animate(.hudMorph), Self.hideHUD])
         #expect(m.surface == .hud(.volume, level: 0.4))
+        #expect(m.pending == nil)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == [.animate(.hudOut)])
+        #expect(m.surface == .idle)
     }
 }

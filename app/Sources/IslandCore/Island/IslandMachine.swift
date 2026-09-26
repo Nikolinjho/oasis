@@ -1,6 +1,6 @@
 /// Таймеры машины. Новый schedule с тем же id отменяет прежний
 public enum TimerID: Hashable, Sendable {
-    case peekEnd, hudHide, grow, collapseDone
+    case peekEnd, hudHide, grow
     /// Отклик на hover раскрывается в плеер
     case hoverOpen
     /// Курсор ушёл из раскрытого: схлопывание с задержкой
@@ -28,7 +28,7 @@ public struct IslandModel: Equatable, Sendable {
     public var config: IslandMachine.Config
     public var surface: Surface = .idle
     public var hasMedia = false
-    /// Куда остров раскроется, когда закончится сжатие или схлопывание
+    /// Куда остров раскроется, когда закончится сжатие
     public var pending: Surface?
     /// На экране с вырезом полноэкранное приложение: музыка в покое не показывается
     public var isFullscreen = false
@@ -55,13 +55,18 @@ public enum IslandMachine {
         public var compactAtRest: Bool
 
         /// Во сколько раз анимации острова медленнее замеров Alcove: пружины (IslandMotion) и таймеры,
-        /// привязанные к их длине (сжатие перед grow, схлопывание перед HUD). Характер пружины (ζ) тот же
+        /// привязанные к их длине (сжатие перед grow). Характер пружины (ζ) тот же
         public var timeScale: Double
+        /// Hover duration Alcove (0…0.6 с): сколько курсор держится над островом до раскрытия.
+        /// Ноль — плеер сразу, без промежуточного отклика: так у нативного Alcove по умолчанию.
+        /// Ненулевая задержка — отклик hoverNudge на это время. Замедляется timeScale
+        public var hoverDelay: Duration
 
-        public init(hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1) {
+        public init(hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero) {
             self.hoverOpensPlayer = hoverOpensPlayer
             self.compactAtRest = compactAtRest
             self.timeScale = timeScale
+            self.hoverDelay = hoverDelay
         }
 
         /// Режим пользователя: hover раскрывает плеер, при музыке в покое компакт, как у Alcove.
@@ -89,7 +94,7 @@ public enum IslandMachine {
 
     private static func trackChanged(_ m: inout IslandModel) -> [IslandEffect] {
         m.hasMedia = true
-        // после сжатия или схлопывания остров вернётся в покой, а покой зависит от музыки
+        // после сжатия остров вернётся в покой, а покой зависит от музыки
         if m.pending == .idle || m.pending == .compact { m.pending = m.base }
         switch m.surface {
         case .idle where m.isFullscreen:
@@ -152,7 +157,7 @@ public enum IslandMachine {
             return [.cancel(.hoverLeave)] + hudChanged(&m, hud)
         }
         if m.pending != nil {
-            // идёт сжатие или схлопывание: HUD покажется, когда оно закончится
+            // идёт сжатие: HUD покажется, когда оно закончится
             m.pending = hud
             return []
         }
@@ -166,10 +171,10 @@ public enum IslandMachine {
         case .compact, .peek:
             return shrink(&m, then: hud)
         case .hover, .expanded:
-            // сначала закрываемся, потом HUD появляется как из закрытого состояния
-            m.surface = m.base
-            m.pending = hud
-            return [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse * m.config.timeScale)]
+            // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
+            // После HUD плеер не возвращается: hudHide уводит в покой
+            m.surface = hud
+            return [.animate(.hudMorph), .schedule(.hudHide, after: IslandTiming.hudVisible)]
         case .shrink:
             m.pending = hud
             return []
@@ -193,8 +198,8 @@ public enum IslandMachine {
         return [.cancel(.peekEnd), .animate(transition)]
     }
 
-    /// Hover в режиме пользователя: из покоя, компакта и peek сначала отклик, плеер по таймеру hoverOpen.
-    /// Возврат курсора, пока раскрытый ждёт схлопывания, отменяет его
+    /// Hover в режиме пользователя: из покоя, компакта и peek плеер сразу, а при ненулевой hoverDelay —
+    /// сначала отклик и плеер по таймеру hoverOpen. Возврат курсора, пока раскрытый ждёт схлопывания, отменяет его
     private static func nudge(_ m: inout IslandModel) -> [IslandEffect] {
         if m.leaving {
             m.leaving = false
@@ -203,10 +208,14 @@ public enum IslandMachine {
         guard m.pending == nil else { return [] }
         switch m.surface {
         case .idle, .compact, .peek:
+            if m.config.hoverDelay == .zero {
+                m.surface = .expanded
+                return [.cancel(.peekEnd), .animate(.hoverExpand)]
+            }
             m.surface = .hoverNudge(from: m.surface)
             return [
                 .cancel(.peekEnd), .animate(.hoverNudge),
-                .schedule(.hoverOpen, after: IslandTiming.hoverNudge * m.config.timeScale),
+                .schedule(.hoverOpen, after: m.config.hoverDelay * m.config.timeScale),
             ]
         default:
             return []
@@ -279,10 +288,6 @@ public enum IslandMachine {
             // таймер уже сработал: отменять нечего
             m.leaving = false
             return close(&m)
-        case .collapseDone:
-            guard m.surface != .shrink, let target = m.pending else { return [] }
-            m.pending = nil
-            return hudChanged(&m, target)
         }
     }
 

@@ -8,8 +8,6 @@ public enum IslandTiming {
     public static let hudVisible: Duration = .milliseconds(1500)
     /// Сжатие перед сменой активности
     public static let shrink: Duration = .milliseconds(330)
-    /// Схлопывание раскрытого острова
-    public static let collapse: Duration = .milliseconds(400)
     /// Отклик на hover перед раскрытием в плеер. Обзорное видео Alcove, 30 fps: форма подрастает
     /// 4 кадра (≈ 130 мс) после касания курсором, на 5-м начинается раскрытие
     public static let hoverNudge: Duration = .milliseconds(130)

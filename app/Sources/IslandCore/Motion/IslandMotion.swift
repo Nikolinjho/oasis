@@ -7,6 +7,8 @@ public enum IslandTransition: Equatable, Sendable {
     /// Отклик на hover перед раскрытием (режим пользователя) и возврат из него, если курсор ушёл раньше
     case hoverNudge, hoverNudgeBack
     case hudIn, hudOut, hudUpdate
+    /// Раскрытый остров перетекает прямо в HUD
+    case hudMorph
     /// Сжатие почти до выреза перед сменой активности и раскрытие в новую
     case shrink, grow
 
@@ -40,6 +42,9 @@ public enum IslandMotion {
         case .hoverNudge, .hoverNudgeBack: .smooth(duration: 0.13)
         case .hudIn: .smooth(duration: 0.44)
         case .hudOut: .smooth(duration: 0.45)
+        // оценка: пружину не подгоняли. Осмотр 26.09 (случайная запись): 175 → 32 за ~0.35 с,
+        // ширина с перелётом выше конечной. Берём замеренную пружину hover-открытия, у неё тот же перелёт
+        case .hudMorph: SpringSpec(stiffness: 200, damping: 17.5)
         // новый уровень HUD меняет только полоску, размер тот же
         case .hudUpdate: nil
         case .shrink: .smooth(duration: 0.33)
