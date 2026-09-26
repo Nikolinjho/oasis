@@ -1,0 +1,10 @@
+checkSupportedCommandsForBundleIdentifier:reply:
+getNowPlayingBundle:
+getNowPlayingInfo:
+getNowPlayingInfoForBundleIdentifier:reply:
+getNowPlayingSource:
+installUpdateWithZipPath:appBundlePath:reply:
+isNowPlayingObservationEnabled
+MRMediaRemoteCommand
+startNowPlayingObservation
+stopNowPlayingObservation

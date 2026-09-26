@@ -1,0 +1,1571 @@
+{
+  "colors": {
+    "AccentColor": {
+      "light": {
+        "hex": "#2DD4BF",
+        "alpha": 1,
+        "rgba": [
+          0.1765,
+          0.8314,
+          0.749,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#2DD4BF",
+        "alpha": 1,
+        "rgba": [
+          0.1765,
+          0.8314,
+          0.749,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveAmberBrightColor": {
+      "light": {
+        "hex": "#FBC337",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.7647,
+          0.2157,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FBC337",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.7647,
+          0.2157,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveAmberBrighterColor": {
+      "light": {
+        "hex": "#FCD34D",
+        "alpha": 1,
+        "rgba": [
+          0.9882,
+          0.8275,
+          0.302,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FCD34D",
+        "alpha": 1,
+        "rgba": [
+          0.9882,
+          0.8275,
+          0.302,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveAmberColor": {
+      "light": {
+        "hex": "#F59E0B",
+        "alpha": 1,
+        "rgba": [
+          0.9608,
+          0.6196,
+          0.0431,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#F59E0B",
+        "alpha": 1,
+        "rgba": [
+          0.9608,
+          0.6196,
+          0.0431,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveApricotColor": {
+      "light": {
+        "hex": "#E09C6C",
+        "alpha": 1,
+        "rgba": [
+          0.8784,
+          0.6118,
+          0.4235,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#E09C6C",
+        "alpha": 1,
+        "rgba": [
+          0.8784,
+          0.6118,
+          0.4235,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveCoralColor": {
+      "light": {
+        "hex": "#F28C61",
+        "alpha": 1,
+        "rgba": [
+          0.949,
+          0.549,
+          0.3804,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#F28C61",
+        "alpha": 1,
+        "rgba": [
+          0.949,
+          0.549,
+          0.3804,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveEmeraldColor": {
+      "light": {
+        "hex": "#10B981",
+        "alpha": 1,
+        "rgba": [
+          0.0627,
+          0.7255,
+          0.5059,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#10B981",
+        "alpha": 1,
+        "rgba": [
+          0.0627,
+          0.7255,
+          0.5059,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveFuchsiaBrightColor": {
+      "light": {
+        "hex": "#F0ABFC",
+        "alpha": 1,
+        "rgba": [
+          0.9412,
+          0.6706,
+          0.9882,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#F0ABFC",
+        "alpha": 1,
+        "rgba": [
+          0.9412,
+          0.6706,
+          0.9882,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveFuchsiaColor": {
+      "light": {
+        "hex": "#D946EF",
+        "alpha": 1,
+        "rgba": [
+          0.851,
+          0.2745,
+          0.9373,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#D946EF",
+        "alpha": 1,
+        "rgba": [
+          0.851,
+          0.2745,
+          0.9373,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveGreenColor": {
+      "light": {
+        "hex": "#4ADE80",
+        "alpha": 1,
+        "rgba": [
+          0.2902,
+          0.8706,
+          0.502,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#4ADE80",
+        "alpha": 1,
+        "rgba": [
+          0.2902,
+          0.8706,
+          0.502,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveIndigoColor": {
+      "light": {
+        "hex": "#6366F1",
+        "alpha": 1,
+        "rgba": [
+          0.3882,
+          0.4,
+          0.9451,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#6366F1",
+        "alpha": 1,
+        "rgba": [
+          0.3882,
+          0.4,
+          0.9451,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveOrangeBrightColor": {
+      "light": {
+        "hex": "#FFEDD5",
+        "alpha": 1,
+        "rgba": [
+          1,
+          0.9294,
+          0.8353,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FFEDD5",
+        "alpha": 1,
+        "rgba": [
+          1,
+          0.9294,
+          0.8353,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveOrangeBrighterColor": {
+      "light": {
+        "hex": "#FFF7ED",
+        "alpha": 1,
+        "rgba": [
+          1,
+          0.9686,
+          0.9294,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FFF7ED",
+        "alpha": 1,
+        "rgba": [
+          1,
+          0.9686,
+          0.9294,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveOrangeColor": {
+      "light": {
+        "hex": "#FB923C",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.5725,
+          0.2353,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FB923C",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.5725,
+          0.2353,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveOrangeDarkColor": {
+      "light": {
+        "hex": "#431407",
+        "alpha": 1,
+        "rgba": [
+          0.2627,
+          0.0784,
+          0.0275,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#431407",
+        "alpha": 1,
+        "rgba": [
+          0.2627,
+          0.0784,
+          0.0275,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcovePinkColor": {
+      "light": {
+        "hex": "#CB66D9",
+        "alpha": 1,
+        "rgba": [
+          0.7961,
+          0.4,
+          0.851,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#CB66D9",
+        "alpha": 1,
+        "rgba": [
+          0.7961,
+          0.4,
+          0.851,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcovePrimaryColor": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 1,
+        "rgba": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 1,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcovePurpleColor": {
+      "light": {
+        "hex": "#A855F7",
+        "alpha": 1,
+        "rgba": [
+          0.6588,
+          0.3333,
+          0.9686,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#A855F7",
+        "alpha": 1,
+        "rgba": [
+          0.6588,
+          0.3333,
+          0.9686,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveRoseBrightColor": {
+      "light": {
+        "hex": "#FB7185",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.4431,
+          0.5216,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FB7185",
+        "alpha": 1,
+        "rgba": [
+          0.9843,
+          0.4431,
+          0.5216,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveRoseColor": {
+      "light": {
+        "hex": "#F43F5E",
+        "alpha": 1,
+        "rgba": [
+          0.9569,
+          0.2471,
+          0.3686,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#F43F5E",
+        "alpha": 1,
+        "rgba": [
+          0.9569,
+          0.2471,
+          0.3686,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveSkyBrightColor": {
+      "light": {
+        "hex": "#7DD3FC",
+        "alpha": 1,
+        "rgba": [
+          0.4902,
+          0.8275,
+          0.9882,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#7DD3FC",
+        "alpha": 1,
+        "rgba": [
+          0.4902,
+          0.8275,
+          0.9882,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveSkyColor": {
+      "light": {
+        "hex": "#0EA5E9",
+        "alpha": 1,
+        "rgba": [
+          0.0549,
+          0.6471,
+          0.9137,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#0EA5E9",
+        "alpha": 1,
+        "rgba": [
+          0.0549,
+          0.6471,
+          0.9137,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveSkyDarkColor": {
+      "light": {
+        "hex": "#2563EB",
+        "alpha": 1,
+        "rgba": [
+          0.1451,
+          0.3882,
+          0.9216,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#2563EB",
+        "alpha": 1,
+        "rgba": [
+          0.1451,
+          0.3882,
+          0.9216,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveSlateColor": {
+      "light": {
+        "hex": "#7588A3",
+        "alpha": 1,
+        "rgba": [
+          0.4588,
+          0.5333,
+          0.6392,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#7588A3",
+        "alpha": 1,
+        "rgba": [
+          0.4588,
+          0.5333,
+          0.6392,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneBrightColor": {
+      "light": {
+        "hex": "#D6D3D1",
+        "alpha": 1,
+        "rgba": [
+          0.8392,
+          0.8275,
+          0.8196,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#D6D3D1",
+        "alpha": 1,
+        "rgba": [
+          0.8392,
+          0.8275,
+          0.8196,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneBrighterColor": {
+      "light": {
+        "hex": "#F5F5F4",
+        "alpha": 1,
+        "rgba": [
+          0.9608,
+          0.9608,
+          0.9569,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#F5F5F4",
+        "alpha": 1,
+        "rgba": [
+          0.9608,
+          0.9608,
+          0.9569,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneColor": {
+      "light": {
+        "hex": "#78716C",
+        "alpha": 1,
+        "rgba": [
+          0.4706,
+          0.4431,
+          0.4235,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#78716C",
+        "alpha": 1,
+        "rgba": [
+          0.4706,
+          0.4431,
+          0.4235,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneDarkColor": {
+      "light": {
+        "hex": "#44403C",
+        "alpha": 1,
+        "rgba": [
+          0.2667,
+          0.251,
+          0.2353,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#44403C",
+        "alpha": 1,
+        "rgba": [
+          0.2667,
+          0.251,
+          0.2353,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneDarkerColor": {
+      "light": {
+        "hex": "#1C1917",
+        "alpha": 1,
+        "rgba": [
+          0.1098,
+          0.098,
+          0.0902,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#1C1917",
+        "alpha": 1,
+        "rgba": [
+          0.1098,
+          0.098,
+          0.0902,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveStoneWhiteColor": {
+      "light": {
+        "hex": "#FAFAF9",
+        "alpha": 1,
+        "rgba": [
+          0.9804,
+          0.9804,
+          0.9765,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FAFAF9",
+        "alpha": 1,
+        "rgba": [
+          0.9804,
+          0.9804,
+          0.9765,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveTealColor": {
+      "light": {
+        "hex": "#14B8A6",
+        "alpha": 1,
+        "rgba": [
+          0.0784,
+          0.7216,
+          0.651,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#14B8A6",
+        "alpha": 1,
+        "rgba": [
+          0.0784,
+          0.7216,
+          0.651,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AlcoveVioletColor": {
+      "light": {
+        "hex": "#2E1065",
+        "alpha": 1,
+        "rgba": [
+          0.1804,
+          0.0627,
+          0.3961,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#2E1065",
+        "alpha": 1,
+        "rgba": [
+          0.1804,
+          0.0627,
+          0.3961,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "AppIcon_Assets/Color-1": {
+      "light": {
+        "hex": "#FFFFFF",
+        "alpha": 1,
+        "rgba": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "colorspace": "extended gray"
+      }
+    },
+    "AppIcon_Assets/Color-2": {
+      "light": {
+        "hex": "#FFFFFF",
+        "alpha": 1,
+        "rgba": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "colorspace": "gray gamma 22"
+      }
+    },
+    "AppIcon_Assets/Color-3": {
+      "light": {
+        "hex": "#ECECEC",
+        "alpha": 1,
+        "rgba": [
+          0.925,
+          0.925,
+          0.925,
+          1
+        ],
+        "colorspace": "gray gamma 22"
+      }
+    },
+    "AppIcon_Assets/Color-4": {
+      "light": {
+        "hex": "#313131",
+        "alpha": 1,
+        "rgba": [
+          0.192,
+          0.192,
+          0.192,
+          1
+        ],
+        "colorspace": "gray gamma 22"
+      }
+    },
+    "AppIcon_Assets/Color-5": {
+      "light": {
+        "hex": "#141414",
+        "alpha": 1,
+        "rgba": [
+          0.078,
+          0.078,
+          0.078,
+          1
+        ],
+        "colorspace": "gray gamma 22"
+      }
+    },
+    "BorderedButtonBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.04,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.04
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.05,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.05
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "BorderedButtonFocusBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.08,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.08
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.1,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "BorderedButtonInnerBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.08,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.08
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.1,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ButtonBackground": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.75,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.75
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.05,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.05
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ButtonBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.12,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.12
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.08,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.08
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ButtonHighlight": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.5,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.5
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ButtonShadow": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "ChargingColor": {
+      "light": {
+        "hex": "#8DEB92",
+        "alpha": 1,
+        "rgba": [
+          0.5529,
+          0.9216,
+          0.5725,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#8DEB92",
+        "alpha": 1,
+        "rgba": [
+          0.5529,
+          0.9216,
+          0.5725,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ContainerBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.025,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.025
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0.075,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.075
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ContainerInnerBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.08,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.08
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ContainerLightBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.025,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.025
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FFFFFF",
+        "alpha": 0.04,
+        "rgba": [
+          1,
+          1,
+          1,
+          0.04
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ContainerOuterBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.08,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.08
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0.25,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.25
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "LowBatteryColor": {
+      "light": {
+        "hex": "#FA6375",
+        "alpha": 1,
+        "rgba": [
+          0.9804,
+          0.3882,
+          0.4588,
+          1
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FA6375",
+        "alpha": 1,
+        "rgba": [
+          0.9804,
+          0.3882,
+          0.4588,
+          1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "ModalBackground": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.75,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.75
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.15,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.15
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "ModalBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.15,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.15
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0.5,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.5
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "ModalHighlight": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.5,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.5
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.2,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.2
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "ModalShadow": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "NestedButtonBackground": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.75,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.75
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#A5A5A5",
+        "alpha": 0.1,
+        "rgba": [
+          0.6471,
+          0.6471,
+          0.6471,
+          0.1
+        ],
+        "colorspace": "gray gamma 22"
+      }
+    },
+    "NestedButtonBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.12,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.12
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.06,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.06
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "NestedButtonHighlight": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.5,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.5
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "NestedButtonShadow": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "PopoverButtonBackground": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.75,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.75
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#807F7F",
+        "alpha": 0.25,
+        "rgba": [
+          0.502,
+          0.498,
+          0.498,
+          0.25
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "PopoverButtonBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.12,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.12
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.08,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.08
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "PopoverButtonHighlight": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0.5,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.5
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "PopoverButtonShadow": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "colorspace": "p3"
+      }
+    },
+    "SegmentedButtonBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.05,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.05
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.05,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.05
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "SegmentedButtonFocusBackground": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.1,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "SegmentedButtonInnerBorder": {
+      "light": {
+        "hex": "#000000",
+        "alpha": 0.1,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.1
+        ],
+        "colorspace": "p3"
+      },
+      "dark": {
+        "hex": "#FEFFFF",
+        "alpha": 0.1,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0.1
+        ],
+        "colorspace": "srgb"
+      }
+    },
+    "SegmentedButtonOuterBorder": {
+      "light": {
+        "hex": "#FEFFFF",
+        "alpha": 0,
+        "rgba": [
+          0.9961,
+          1,
+          1,
+          0
+        ],
+        "colorspace": "srgb"
+      },
+      "dark": {
+        "hex": "#000000",
+        "alpha": 0.3,
+        "rgba": [
+          0,
+          0,
+          0,
+          0.3
+        ],
+        "colorspace": "p3"
+      }
+    }
+  },
+  "gradients": [
+    {
+      "AssetType": "Named Gradient",
+      "Gradient Colors": [
+        "AppIcon_Assets/Color-4",
+        "AppIcon_Assets/Color-5"
+      ],
+      "Gradient Start/Stop": "0.500,0.000 - 0.500,1.000",
+      "Gradient Stops": [
+        0,
+        1
+      ],
+      "Gradient Type": 1,
+      "Name": "AppIcon_Assets/system-dark",
+      "NameIdentifier": 58630,
+      "Scale": 1,
+      "SHA1Digest": "4C65A248AE5C66DC59F234F458FBD3DD551DFB591DCF98CA773DFD3EB763957A",
+      "SizeOnDisk": 306
+    },
+    {
+      "AssetType": "Named Gradient",
+      "Gradient Colors": [
+        "AppIcon_Assets/Color-2",
+        "AppIcon_Assets/Color-3"
+      ],
+      "Gradient Start/Stop": "0.500,0.000 - 0.500,1.000",
+      "Gradient Stops": [
+        0,
+        1
+      ],
+      "Gradient Type": 1,
+      "Name": "AppIcon_Assets/system-light",
+      "NameIdentifier": 11899,
+      "Scale": 1,
+      "SHA1Digest": "B99827CCED80C82375713B1912724C7A3C3351BFD333843EC48EB905512D11B4",
+      "SizeOnDisk": 306
+    }
+  ]
+}

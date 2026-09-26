@@ -1,0 +1,20 @@
+.DS_Store
+
+# ассеты и сайт Alcove: только для локальной сборки, не публикуем
+assets/
+site/
+
+# записи и кадры
+capture/recordings/
+capture/frames/
+capture/analysis/**/*.png
+
+# спеки и планы живут только на диске
+docs/superpowers/
+
+# сборка
+app/.build/
+app/build/
+app/Vendor/
+.venv/
+__pycache__/
