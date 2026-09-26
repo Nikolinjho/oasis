@@ -44,15 +44,21 @@ public enum IslandMachine {
         /// При музыке остров стоит в компакте. Выключено: компакт только на время peek, в покое форма выреза
         public var compactAtRest: Bool
 
-        public init(hoverOpensPlayer: Bool, compactAtRest: Bool) {
+        /// Во сколько раз анимации острова медленнее замеров Alcove: пружины (IslandMotion) и таймеры,
+        /// привязанные к их длине (сжатие перед grow, схлопывание перед HUD). Характер пружины (ζ) тот же
+        public var timeScale: Double
+
+        public init(hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1) {
             self.hoverOpensPlayer = hoverOpensPlayer
             self.compactAtRest = compactAtRest
+            self.timeScale = timeScale
         }
 
         /// Режим пользователя: hover раскрывает плеер, при музыке в покое компакт, как у Alcove.
-        /// Покой в форме выреза пробовали и отказались: остаётся настройкой compactAtRest = false
-        public static let user = Config(hoverOpensPlayer: true, compactAtRest: true)
-        /// Поведение Alcove, с которым записан эталон: для demo-прогона и сверки
+        /// Покой в форме выреза пробовали и отказались: остаётся настройкой compactAtRest = false.
+        /// Анимации на 18% медленнее Alcove: по живой проверке замеренные казались слишком быстрыми
+        public static let user = Config(hoverOpensPlayer: true, compactAtRest: true, timeScale: 1.18)
+        /// Поведение Alcove, с которым записан эталон: для demo-прогона и сверки, пружины как в замерах
         public static let alcove = Config(hoverOpensPlayer: false, compactAtRest: true)
     }
 
@@ -123,7 +129,7 @@ public enum IslandMachine {
             // сначала закрываемся, потом HUD появляется как из закрытого состояния
             m.surface = m.base
             m.pending = hud
-            return [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse)]
+            return [.animate(.collapse), .schedule(.collapseDone, after: IslandTiming.collapse * m.config.timeScale)]
         case .shrink:
             m.pending = hud
             return []
@@ -180,6 +186,6 @@ public enum IslandMachine {
     private static func shrink(_ m: inout IslandModel, then target: Surface) -> [IslandEffect] {
         m.surface = .shrink
         m.pending = target
-        return [.cancel(.peekEnd), .animate(.shrink), .schedule(.grow, after: IslandTiming.shrink)]
+        return [.cancel(.peekEnd), .animate(.shrink), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
     }
 }

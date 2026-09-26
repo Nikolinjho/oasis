@@ -14,6 +14,11 @@ public enum IslandTransition: Equatable, Sendable {
 
 /// Пружины переходов. Числа — замеры нативного Alcove из capture/analysis/README.md
 public enum IslandMotion {
+    /// Пружина перехода, замедленная в timeScale раз (IslandMachine.Config.timeScale)
+    public static func spring(for transition: IslandTransition, timeScale: Double) -> SpringSpec? {
+        spring(for: transition)?.slowed(by: timeScale)
+    }
+
     public static func spring(for transition: IslandTransition) -> SpringSpec? {
         switch transition {
         case .compactIn: SpringSpec(stiffness: 235, damping: 31)

@@ -23,6 +23,13 @@ public struct SpringSpec: Equatable, Sendable {
         return SpringSpec(stiffness: omega * omega, damping: 2 * (1 - bounce) * omega)
     }
 
+    /// Та же пружина, растянутая во времени в scale раз: k / s², c / s. ζ не меняется,
+    /// время затухания растёт ровно в s раз. Для smooth(d) это smooth(d · s)
+    public func slowed(by scale: Double) -> SpringSpec {
+        guard scale != 1 else { return self }
+        return SpringSpec(stiffness: stiffness / (scale * scale), damping: damping / scale)
+    }
+
     public var dampingRatio: Double { damping / (2 * stiffness.squareRoot()) }
 
     /// Доля пройденного пути в момент t: 0 в начале, 1 у цели

@@ -39,7 +39,7 @@ final class IslandStore {
 
         var transition: IslandTransition?
         for case let .animate(t) in effects { transition = t }
-        if let spring = transition.flatMap(IslandMotion.spring(for:)) {
+        if let spring = transition.flatMap({ IslandMotion.spring(for: $0, timeScale: next.config.timeScale) }) {
             withAnimation(spring.animation) { model = next }
         } else {
             model = next
