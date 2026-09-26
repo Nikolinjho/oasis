@@ -105,4 +105,22 @@ struct GeometryTests {
         #expect(!idle.contains(beside))
         #expect(IslandGeometry.pointerInside(beside, island: idle, hoverZone: zone, openedFrom: nil))
     }
+
+    @Test("Курсор, упёртый в верх экрана над вырезом, считается внутри")
+    func pointerAtTopEdge() {
+        let window = IslandGeometry.windowFrame(for: Self.mbp16)
+        let notch = CGSize(width: 186, height: 32)
+        let top = CGPoint(x: Self.mbp16.notchRect.midX, y: Self.mbp16.screenFrame.maxY)
+        let idle = IslandGeometry.islandScreenRect(
+            IslandGeometry.spec(for: .idle, hasMedia: false, notch: notch), windowFrame: window)
+        let expanded = IslandGeometry.islandScreenRect(
+            IslandGeometry.spec(for: .expanded, hasMedia: true, notch: notch), windowFrame: window)
+        // NSRect.contains не включает maxY: без поправки курсор у края экрана был бы снаружи
+        #expect(!idle.contains(top))
+        #expect(IslandGeometry.pointerInside(top, island: idle, hoverZone: nil, openedFrom: nil))
+        #expect(IslandGeometry.pointerInside(top, island: idle, hoverZone: IslandGeometry.hoverZone(for: Self.mbp16), openedFrom: nil))
+        #expect(IslandGeometry.pointerInside(top, island: expanded, hoverZone: nil, openedFrom: idle))
+        // выше края экрана курсор не бывает, но и там остров не растягивается дальше 1 pt
+        #expect(!IslandGeometry.pointerInside(CGPoint(x: top.x, y: top.y + 2), island: idle, hoverZone: nil, openedFrom: nil))
+    }
 }

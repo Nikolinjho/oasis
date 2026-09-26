@@ -85,7 +85,7 @@ final class IslandWindowController {
     private func showMenuIfOnIsland(_ event: NSEvent) -> Bool {
         guard let panel, event.window === panel, let content = panel.contentView else { return false }
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
-        guard island.contains(NSEvent.mouseLocation) else { return false }
+        guard IslandGeometry.reachingScreenTop(island).contains(NSEvent.mouseLocation) else { return false }
         let bottomCentre = panel.convertPoint(fromScreen: CGPoint(x: island.midX, y: island.minY))
         menu.popUp(positioning: nil, at: content.convert(bottomCentre, from: nil), in: content)
         return true
@@ -96,7 +96,7 @@ final class IslandWindowController {
         let point = NSEvent.mouseLocation
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
         // вне формы клики уходят в menu bar и окна под островом
-        panel.ignoresMouseEvents = !island.contains(point)
+        panel.ignoresMouseEvents = !IslandGeometry.reachingScreenTop(island).contains(point)
 
         let zone = store.model.surface == .idle ? IslandGeometry.hoverZone(for: metrics) : nil
         let inside = IslandGeometry.pointerInside(point, island: island, hoverZone: zone, openedFrom: hoverOpenedFrom)

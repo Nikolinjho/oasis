@@ -80,7 +80,13 @@ public enum IslandGeometry {
     /// объединением текущей формы и формы, из которой открылся: hover уже компакта, и без этого
     /// у краёв компакта hover открывался и закрывался на каждом движении мыши
     public static func pointerInside(_ point: CGPoint, island: CGRect, hoverZone: CGRect?, openedFrom: CGRect?) -> Bool {
-        if let openedFrom { return island.union(openedFrom).contains(point) }
-        return (hoverZone.map(island.union) ?? island).contains(point)
+        let area = openedFrom.map(island.union) ?? hoverZone.map(island.union) ?? island
+        return reachingScreenTop(area).contains(point)
+    }
+
+    /// Прямоугольник, растянутый вверх на 1 pt. NSRect.contains не включает maxY, а курсор,
+    /// упёртый в верх экрана, стоит ровно на maxY экрана: без растяжки он был бы снаружи острова
+    public static func reachingScreenTop(_ rect: CGRect) -> CGRect {
+        CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: rect.height + 1)
     }
 }
