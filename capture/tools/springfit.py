@@ -19,7 +19,7 @@ def fit(ts, ws, x0, x1):
     moved = (ws - x0) * np.sign(x1 - x0) > 1
     if not moved.any():
         return None
-    t0 = ts[np.argmax(moved)] - 1 / 60
+    t0 = ts[np.argmax(moved)] - 1 / 60  # кадр перед движением; частота записи считается 60 fps
     tt = ts - t0
     m = tt >= 0
     best = None

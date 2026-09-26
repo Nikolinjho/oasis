@@ -10,5 +10,9 @@ mkdir -p "$out"
 
 ffprobe -v error -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 "$src" > "$out/pts.txt"
 read -r width height < <(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=' ' "$src")
+if [ -z "${width:-}" ] || [ -z "${height:-}" ]; then
+    echo "ffprobe не смог прочитать width/height из $src" >&2
+    exit 1
+fi
 "$python" "$here/track.py" "$src" "$out/pts.txt" "$out/track.json" 0 "$width" "$height"
 "$python" "$here/compare.py" "$out/track.json" | tee "$out/compare.txt"

@@ -1,4 +1,5 @@
 """Тесты подгонки пружин и сверки с эталоном: python3 -m unittest test_springfit -v (из capture/tools)"""
+import copy
 import json
 import unittest
 from pathlib import Path
@@ -12,25 +13,42 @@ TARGETS = json.loads((Path(__file__).resolve().parent.parent / "targets.json").r
 
 
 def synthetic_track(targets, extra=0.0, fps=60, lead=2.0, override=None):
-    """Трек ширины из самих targets: до сегмента держим его x0, внутри — эталонная пружина.
+    """Трек ширины из самих targets, непрерывный по позиции: следующий сегмент стартует не с
+    номинального x0, а с фактического значения хода в момент своего начала (скорость не
+    сохраняем — только позицию). Так же ведёт себя реальная запись, где границы сегментов
+    не всегда совпадают идеально с моментом разворота.
     override — {"name", "stiffness", "damping"}: подменяет пружину одного сегмента в самом
     треке, чтобы проверить, что сверка ловит расхождение с эталоном"""
     segments = sorted(targets["segments"], key=lambda s: s["start"])
     ts = np.arange(0, segments[-1]["end"] + 1.0 + lead, 1 / fps)
     ws = np.empty_like(ts)
+
+    value = float(segments[0]["x0"])  # текущее фактическое значение хода
+    active = None                     # индекс сегмента, чья пружина сейчас считается
+    start_t = 0.0                     # demo-время фактического старта active
+    start_x0 = value                  # фактическое значение хода в start_t
+
     for i, t in enumerate(ts):
         demo_t = t - lead
-        value = segments[-1]["x1"]
-        for s in segments:
+        idx = None
+        for j, s in enumerate(segments):
+            if s["start"] <= demo_t <= s["end"]:
+                idx = j
+                break
             if demo_t < s["start"]:
-                value = s["x0"]
                 break
-            if demo_t <= s["end"]:
-                k, c = s["stiffness"], s["damping"]
-                if override and s["name"] == override["name"]:
-                    k, c = override["stiffness"], override["damping"]
-                value = spring(demo_t - s["start"], s["x0"], s["x1"], k, c)
-                break
+        if idx is not None and idx != active:
+            active = idx
+            start_t = demo_t
+            start_x0 = value
+        if active is not None and demo_t <= segments[active]["end"]:
+            s = segments[active]
+            k, c = s["stiffness"], s["damping"]
+            if override and s["name"] == override["name"]:
+                k = override.get("stiffness", k)
+                c = override.get("damping", c)
+            value = spring(demo_t - start_t, start_x0, s["x1"], k, c)
+        # иначе (гэп между сегментами) держим value как есть — плато на месте разворота
         ws[i] = value + extra
     return ts, ws
 
@@ -85,6 +103,19 @@ class CompareTests(unittest.TestCase):
         result = evaluate(ts, ws, TARGETS)
         row = next(r for r in result["rows"] if r["name"] == "сжатие после HUD")
         self.assertFalse(row["ok"])
+
+    def test_late_chain_handoff_still_passes(self):
+        """Прототип может закончить «сжатие после HUD» на кадр позже номинального конца
+        сегмента: следующий сегмент цепочки («раскрытие в компакт») должен всё равно
+        сверяться с фактической точки разворота, а не с номинального x0=195"""
+        stretched = copy.deepcopy(TARGETS)
+        for s in stretched["segments"]:
+            if s["name"] == "сжатие после HUD":
+                s["end"] += 1 / 60
+        ts, ws = synthetic_track(stretched)
+        result = evaluate(ts, ws, TARGETS)
+        failed = [r["name"] for r in result["rows"] if not r["ok"]]
+        self.assertEqual(failed, [])
 
 
 if __name__ == "__main__":
