@@ -1,9 +1,13 @@
 import IslandCore
 import SwiftUI
 
-/// Бегущая строка 30 pt/с с гаснущими краями (motion.md, «Бегущая строка в peek»). Короткий текст стоит по центру
+/// Бегущая строка 30 pt/с с гаснущими краями (motion.md, «Бегущая строка в peek»).
+/// Короткий текст стоит на месте: в peek по центру, в плеере у левого края
 struct MarqueeText: View {
     let text: String
+    var shortAlignment: Alignment = .center
+    /// Вынести левое затухание за край вью, чтобы длинный текст начинался вровень с соседними строками
+    var outdentsFade = false
     @State private var textWidth: CGFloat = 0
     @State private var start = Date()
     // замера нет, оценка
@@ -14,6 +18,9 @@ struct MarqueeText: View {
     var body: some View {
         GeometryReader { proxy in
             let overflow = textWidth > proxy.size.width
+            // полоса шире на вынос: левое затухание уходит за край, текст стартует вровень с соседними строками
+            let bleed = overflow && outdentsFade ? proxy.size.width * visibleStart / (1 - visibleStart) : 0
+            let width = proxy.size.width + bleed
             TimelineView(.animation(paused: !overflow)) { context in
                 let cycle = textWidth + gap
                 let travelled = CGFloat(context.date.timeIntervalSince(start)) * IslandTiming.marqueeSpeed
@@ -21,12 +28,14 @@ struct MarqueeText: View {
                     label
                     if overflow { label }
                 }
-                .offset(x: overflow ? proxy.size.width * visibleStart - travelled.truncatingRemainder(dividingBy: cycle) : 0)
-                .frame(width: proxy.size.width, alignment: overflow ? .leading : .center)
+                .offset(x: overflow ? width * visibleStart - travelled.truncatingRemainder(dividingBy: cycle) : 0)
+                .frame(width: width, alignment: overflow ? .leading : shortAlignment)
             }
+            .frame(width: width, height: proxy.size.height)
             .mask(overflow ? AnyView(fadeMask) : AnyView(Color.black))
+            .clipped()
+            .offset(x: -bleed)
         }
-        .clipped()
         // новый текст бежит с начала
         .onChange(of: text) { start = .now }
     }

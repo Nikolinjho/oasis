@@ -68,5 +68,20 @@ struct MusicViewTests {
         try Snapshot.write(
             island(IslandGeometry.expanded, AnyView(PlayerView(info: paused, onAction: { _ in }))),
             size: IslandGeometry.expanded, name: "player-paused")
+        let short = NowPlayingInfo(
+            bundleID: "com.apple.Music", title: "Dai Dai", artist: "Shakira & Burna Boy", isPlaying: true,
+            duration: 223, elapsed: 9, artwork: Self.artwork)
+        try Snapshot.write(
+            island(IslandGeometry.expanded, AnyView(PlayerView(info: short, onAction: { _ in }))),
+            size: IslandGeometry.expanded, name: "player-music")
+        // подложка кнопки под курсором
+        let hovered = Button {} label: {
+            Image(systemName: "pause.fill").font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(IslandPalette.foreground).frame(width: 48, height: 40)
+        }
+        .buttonStyle(HoverBackgroundStyle(isHovered: true))
+        try Snapshot.write(
+            hovered.frame(maxWidth: .infinity, maxHeight: .infinity).background(IslandPalette.background),
+            size: CGSize(width: 80, height: 60), name: "player-button-hover")
     }
 }

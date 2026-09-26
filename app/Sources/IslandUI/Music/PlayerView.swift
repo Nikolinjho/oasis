@@ -12,14 +12,15 @@ struct PlayerView: View {
                 ArtworkFlip(info: info, side: 56, radius: 12)
                     .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(info?.title ?? "Not Playing")
+                    MarqueeText(text: info?.title ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(IslandPalette.foreground)
+                        .frame(height: 18)
                     Text(info?.artist ?? "")
                         .font(.system(size: 13))
                         .foregroundStyle(IslandPalette.secondary)
+                        .lineLimit(1)
                 }
-                .lineLimit(1)
                 Spacer(minLength: 8)
                 WaveformView(isPlaying: info?.isPlaying ?? false, color: IslandUI.accentColor(info), maxHeight: 16)
             }
