@@ -80,14 +80,13 @@ public enum IslandGeometry {
         return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height), shoulder: shoulder)
     }
 
-    /// Радиус нижних углов. Оценка по кадрам capture/analysis, уточняется при сверке в задаче 16
+    /// Радиус нижних углов (squircle-порт с сайта). Замер видео hover-открытия Alcove 2026-09-26,
+    /// подгонка контура по коду сайта: 10.5 pt в покое (высота 32), 35 pt в раскрытом (175), на пике 36.
+    /// Между ними линейно по высоте. Меньше половины высоты при любой высоте от 32
     public static func bottomRadius(forHeight height: CGFloat) -> CGFloat {
-        switch height {
-        case ..<40: 10
-        case ..<60: 14
-        case ..<100: 18
-        default: 28
-        }
+        let (h0, r0): (CGFloat, CGFloat) = (32, 10.5)
+        let (h1, r1): (CGFloat, CGFloat) = (175, 35)
+        return r0 + (height - h0) * (r1 - r0) / (h1 - h0)
     }
 
     /// Рамка окна: верх у края экрана, по центру выреза

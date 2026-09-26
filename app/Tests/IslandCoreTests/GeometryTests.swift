@@ -40,6 +40,13 @@ struct GeometryTests {
         #expect(size(.shrink) == CGSize(width: 195, height: 32))
     }
 
+    @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
+    func radiusFromVideo() {
+        #expect(abs(IslandGeometry.bottomRadius(forHeight: 32) - 10.5) < 1e-9)
+        #expect(abs(IslandGeometry.bottomRadius(forHeight: 175) - 35) < 1e-9)
+        #expect(abs(IslandGeometry.bottomRadius(forHeight: 103.5) - 22.75) < 1e-9)
+    }
+
     @Test("Радиус нижних углов меньше половины высоты")
     func radiusFitsHeight() {
         let surfaces: [Surface] = [.idle, .compact, .peek, .hover, .expanded, .shrink, .hud(.brightness, level: 1)]
