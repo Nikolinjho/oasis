@@ -17,6 +17,7 @@ public enum IslandMotion {
         // peek не мерили: берём пружины компакта
         case .peekOpen: SpringSpec(stiffness: 235, damping: 31)
         case .peekClose: SpringSpec(stiffness: 185, damping: 27.5)
+        // hover не мерили: берём пружину раскрытия по клику, уточним в задаче 16
         case .hoverOpen, .expand: SpringSpec(stiffness: 175, damping: 16)
         case .collapse: .smooth(duration: 0.4)
         case .hudIn: .smooth(duration: 0.44)
