@@ -34,6 +34,16 @@ struct MusicViewTests {
         #expect(ProgressRow.format(3600) == "60:00")
     }
 
+    @Test("Оставшееся время со знаком минус")
+    func remainingFormat() {
+        #expect(ProgressRow.remaining(position: 9, duration: 223) == "-3:34")
+        // 1:01 слева и -2:19 справа в сумме дают 3:20
+        #expect(ProgressRow.remaining(position: 61.9, duration: 200) == "-2:19")
+        #expect(ProgressRow.remaining(position: 0, duration: 0) == "-0:00")
+        // позиция за концом трека не даёт отрицательного остатка
+        #expect(ProgressRow.remaining(position: 250, duration: 200) == "-0:00")
+    }
+
     @MainActor
     @Test("Снимки компакта, peek и плеера")
     func snapshots() throws {

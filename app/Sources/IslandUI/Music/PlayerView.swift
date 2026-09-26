@@ -53,7 +53,7 @@ struct ProgressRow: View {
                     }
                 }
                 .frame(height: 4)
-                Text(Self.format(duration)).monospacedDigit()
+                Text(Self.remaining(position: position, duration: duration)).monospacedDigit()
             }
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(IslandPalette.secondary)
@@ -64,6 +64,12 @@ struct ProgressRow: View {
     nonisolated static func format(_ seconds: TimeInterval) -> String {
         let total = Int(max(0, seconds).rounded(.down))
         return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// Справа от прогресса, как в Alcove: «-m:ss» до конца трека.
+    /// Считается от уже округлённой позиции, чтобы сумма двух подписей всегда давала длительность
+    nonisolated static func remaining(position: TimeInterval, duration: TimeInterval) -> String {
+        "-" + format(duration - max(0, position).rounded(.down))
     }
 }
 
