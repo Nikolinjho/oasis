@@ -8,7 +8,7 @@ import SwiftUI
 @MainActor
 @Observable
 final class IslandStore {
-    private(set) var model = IslandModel()
+    private(set) var model: IslandModel
     private(set) var nowPlaying: NowPlayingInfo?
     var notch = CGSize(width: 186, height: 32)
 
@@ -16,6 +16,16 @@ final class IslandStore {
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}
     @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]
+
+    init(config: IslandMachine.Config = .user) {
+        model = IslandModel(config: config)
+    }
+
+    /// Режим машины. Demo-прогон переключает на .alcove: эталон сверки записан с поведением Alcove
+    var config: IslandMachine.Config {
+        get { model.config }
+        set { model.config = newValue }
+    }
 
     var spec: IslandShapeSpec {
         IslandGeometry.spec(for: model.surface, hasMedia: model.hasMedia, notch: notch)

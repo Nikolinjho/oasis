@@ -1,13 +1,14 @@
 import Testing
 @testable import IslandCore
 
+/// Режим Alcove: компакт в покое, hover даёт мини-состояние. На нём записан эталон сверки
 struct IslandMachineTests {
     static let hideHUD = IslandEffect.schedule(.hudHide, after: IslandTiming.hudVisible)
     static let startGrow = IslandEffect.schedule(.grow, after: IslandTiming.shrink)
     static let shrinkEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.shrink), startGrow]
 
     static func model(_ surface: Surface, media: Bool = false, pending: Surface? = nil) -> IslandModel {
-        var model = IslandModel()
+        var model = IslandModel(config: .alcove)
         model.surface = surface
         model.hasMedia = media
         model.pending = pending
@@ -18,7 +19,7 @@ struct IslandMachineTests {
 
     @Test("Первый трек из покоя открывает компакт")
     func firstTrack() {
-        var m = IslandModel()
+        var m = IslandModel(config: .alcove)
         let fx = IslandMachine.reduce(&m, .trackChanged)
         #expect(m.surface == .compact)
         #expect(m.hasMedia)
@@ -79,7 +80,7 @@ struct IslandMachineTests {
 
     @Test("HUD из покоя появляется сразу")
     func hudFromIdle() {
-        var m = IslandModel()
+        var m = IslandModel(config: .alcove)
         let fx = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5))
         #expect(m.surface == .hud(.volume, level: 0.5))
         #expect(fx == [.animate(.hudIn), Self.hideHUD])
@@ -198,7 +199,7 @@ struct IslandMachineTests {
 
     @Test("Hover из покоя и обратно")
     func hoverInAndOut() {
-        var m = IslandModel()
+        var m = IslandModel(config: .alcove)
         #expect(IslandMachine.reduce(&m, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverOpen)])
         #expect(m.surface == .hover)
         #expect(IslandMachine.reduce(&m, .hoverExited) == [.animate(.collapse)])
@@ -255,7 +256,7 @@ struct IslandMachineTests {
 
     @Test("Клик в покое без музыки раскрывает пустой плеер")
     func clickFromIdle() {
-        var m = IslandModel()
+        var m = IslandModel(config: .alcove)
         #expect(IslandMachine.reduce(&m, .clicked) == [.cancel(.peekEnd), .animate(.expand)])
         #expect(m.surface == .expanded)
         #expect(!m.hasMedia)

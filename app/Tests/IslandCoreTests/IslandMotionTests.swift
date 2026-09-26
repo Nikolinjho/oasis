@@ -3,7 +3,7 @@ import Testing
 
 struct IslandMotionTests {
     static let all: [IslandTransition] = [
-        .compactIn, .compactOut, .peekOpen, .peekClose, .hoverOpen, .expand,
+        .compactIn, .compactOut, .peekOpen, .peekClose, .hoverOpen, .hoverExpand, .expand,
         .collapse, .hudIn, .hudOut, .hudUpdate, .shrink, .grow,
     ]
 
