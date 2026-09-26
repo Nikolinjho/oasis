@@ -3,13 +3,34 @@ import CoreAudio
 import Foundation
 import os
 
+/// Устройство, на котором висят слушатели громкости и mute
+struct ListenedDevice: Equatable {
+    struct Switch: Equatable {
+        let attach: AudioObjectID
+        let detach: AudioObjectID?
+
+        /// Сменился дефолтный выход, а не первое подключение: громкость теперь другая, шлём событие
+        var isDeviceChange: Bool { detach != nil }
+    }
+
+    private(set) var current = AudioObjectID(kAudioObjectUnknown)
+
+    /// nil — устройство то же, делать нечего
+    mutating func switchTo(_ device: AudioObjectID) -> Switch? {
+        guard device != current else { return nil }
+        let previous = current
+        current = device
+        return Switch(attach: device, detach: previous == kAudioObjectUnknown ? nil : previous)
+    }
+}
+
 /// Громкость и mute дефолтного выхода через CoreAudio
 public final class VolumeControl: @unchecked Sendable {
     /// Любое изменение громкости или mute, в том числе чужое. Уровень 0…1, при mute — 0
     public let changes: AsyncStream<Double>
     private let continuation: AsyncStream<Double>.Continuation
     private let onChange: AudioObjectPropertyListenerBlock
-    private let attached = OSAllocatedUnfairLock(initialState: AudioObjectID(kAudioObjectUnknown))
+    private let listened = OSAllocatedUnfairLock(initialState: ListenedDevice())
     private let log = SourceLog.logger("volume")
 
     public init() {
@@ -18,10 +39,12 @@ public final class VolumeControl: @unchecked Sendable {
         self.continuation = continuation
         onChange = { _, _ in continuation.yield(VolumeControl.currentLevel()) }
 
-        // дефолтный выход сменился (наушники, AirPlay): переподписываемся на новое устройство
+        // дефолтный выход сменился (наушники, AirPlay, меню плеера): переподписываемся на новое устройство
+        // и шлём его уровень, иначе HUD до первого изменения громкости показывал бы старое
         var defaultAddress = Self.address(kAudioHardwarePropertyDefaultOutputDevice, scope: kAudioObjectPropertyScopeGlobal)
         AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defaultAddress, .main) { [weak self] _, _ in
-            self?.attach(to: Self.defaultDevice())
+            guard let self, self.attach(to: Self.defaultDevice())?.isDeviceChange == true else { return }
+            continuation.yield(Self.currentLevel())
         }
         attach(to: Self.defaultDevice())
     }
@@ -54,20 +77,18 @@ public final class VolumeControl: @unchecked Sendable {
         if status != noErr { log.error("set mute failed: \(status)") }
     }
 
-    private func attach(to device: AudioObjectID) {
-        let previous = attached.withLock { current in
-            defer { current = device }
-            return current
-        }
-        guard previous != device else { return }
+    @discardableResult
+    private func attach(to device: AudioObjectID) -> ListenedDevice.Switch? {
+        guard let change = listened.withLock({ $0.switchTo(device) }) else { return nil }
         var volumeAddress = Self.volumeAddress
         var muteAddress = Self.muteAddress
-        if previous != kAudioObjectUnknown {
+        if let previous = change.detach {
             AudioObjectRemovePropertyListenerBlock(previous, &volumeAddress, .main, onChange)
             AudioObjectRemovePropertyListenerBlock(previous, &muteAddress, .main, onChange)
         }
-        AudioObjectAddPropertyListenerBlock(device, &volumeAddress, .main, onChange)
-        AudioObjectAddPropertyListenerBlock(device, &muteAddress, .main, onChange)
+        AudioObjectAddPropertyListenerBlock(change.attach, &volumeAddress, .main, onChange)
+        AudioObjectAddPropertyListenerBlock(change.attach, &muteAddress, .main, onChange)
+        return change
     }
 
     // MARK: - CoreAudio
