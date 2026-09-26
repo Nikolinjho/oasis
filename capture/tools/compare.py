@@ -8,6 +8,8 @@ import numpy as np
 
 from springfit import fit, overshoot_pt, settle_time, spring
 
+LEAD = 0.05  # 3 кадра: offset и старт прототипа точны до ±1 кадра, плюс выпавшие кадры записи
+
 
 def evaluate(T, W, targets):
     T = np.asarray(T, dtype=float)
@@ -25,8 +27,10 @@ def evaluate(T, W, targets):
     offset = T[moved[0]] - 1 / 60 - anchor["demoTime"]
 
     rows = []
+    # offset общий для всего прогона: окно каждого сегмента якорится на старте самого первого
+    # движения после anchor, а не пересчитывается заново — по ходу записи может накопиться дрейф
     for s in targets["segments"]:
-        m = (T >= s["start"] + offset - 0.01) & (T <= s["end"] + offset)
+        m = (T >= s["start"] + offset - LEAD) & (T <= s["end"] + offset)
         ts, ws = T[m], W[m]
         row = {"name": s["name"], "x1": s["x1"]}
 
@@ -34,16 +38,16 @@ def evaluate(T, W, targets):
         if len(ts) > 0:
             # цепочка переходов: предыдущий сегмент мог закончиться раньше или позже
             # своего номинального x1 (задержка на кадр-другой), тогда этот сегмент трогается
-            # не с s["x0"], а с фактической точки разворота хода — ищем её в первые 0.1с
+            # не с s["x0"], а с фактической точки разворота хода — ищем её в первые LEAD+0.1с
             # окна и режем трек на ней, иначе весь ход посчитается «движением» от кадра 0
             d = np.sign(s["x1"] - s["x0"])
-            head = ts < ts[0] + 0.1
+            head = ts < ts[0] + LEAD + 0.1
             i = int(np.argmin(ws[head] * d))
             if (ws[0] - x0) * d > 1 or i > 0:
                 ts, ws = ts[i:], ws[i:]
                 x0 = float(ws[0])
 
-        got = fit(ts, ws, x0, s["x1"]) if len(ts) > 3 else None
+        got = fit(ts, ws, x0, s["x1"], t0_search=True) if len(ts) > 3 else None
         if got is None:
             row.update(ok=False, note="нет движения")
             rows.append(row)

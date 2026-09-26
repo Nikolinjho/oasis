@@ -18,7 +18,10 @@ def synthetic_track(targets, extra=0.0, fps=60, lead=2.0, override=None):
     сохраняем — только позицию). Так же ведёт себя реальная запись, где границы сегментов
     не всегда совпадают идеально с моментом разворота.
     override — {"name", "stiffness", "damping"}: подменяет пружину одного сегмента в самом
-    треке, чтобы проверить, что сверка ловит расхождение с эталоном"""
+    треке, чтобы проверить, что сверка ловит расхождение с эталоном.
+    Упрощение: между «раскрытие в компакт» (261) и «раскрытие плеера» (номинальный x0=190)
+    реального промежуточного hover-сжатия к ~190×73 здесь нет (см. analysis/README.md) — трек
+    просто держит 261 до начала сегмента плеера, а точку разворота находит сверка по факту"""
     segments = sorted(targets["segments"], key=lambda s: s["start"])
     ts = np.arange(0, segments[-1]["end"] + 1.0 + lead, 1 / fps)
     ws = np.empty_like(ts)
@@ -116,6 +119,17 @@ class CompareTests(unittest.TestCase):
         result = evaluate(ts, ws, TARGETS)
         failed = [r["name"] for r in result["rows"] if not r["ok"]]
         self.assertEqual(failed, [])
+
+    def test_quantised_dropped_frames_pass(self):
+        """Реальная запись квантуется до 0.5pt (ретина, px/2) и роняет кадры (track.py пишет
+        None, где ffmpeg не смог прочитать кадр) — сверка должна это выдерживать"""
+        ts, ws = synthetic_track(TARGETS)
+        ws = np.round(ws * 2) / 2
+        keep = np.arange(len(ts)) % 8 != 5  # каждый 8-й кадр выпал
+        ts, ws = ts[keep], ws[keep]
+        result = evaluate(ts, ws, TARGETS)
+        failed = [r["name"] for r in result["rows"] if not r["ok"]]
+        self.assertEqual(failed, [], f"провалились: {failed}")
 
 
 if __name__ == "__main__":

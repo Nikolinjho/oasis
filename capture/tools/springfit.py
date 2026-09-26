@@ -12,23 +12,33 @@ def spring(tt, x0, x1, k, c):
     return x1 + (x0 - x1) * np.exp(-w0 * tt) * (1 + w0 * tt)
 
 
-def fit(ts, ws, x0, x1):
-    """Перебором подбирает stiffness и damping. Старт — кадр перед первым сдвигом больше 1 pt в сторону x1"""
+def fit(ts, ws, x0, x1, t0_search=False):
+    """Перебором подбирает stiffness и damping. Старт — кадр перед первым сдвигом больше 1 pt в сторону x1.
+    t0_search=True: запись иногда роняет кадры (интервал >1/60), тогда «кадр перед движением» —
+    неверная оценка старта; перебирает несколько кандидатов между последним неподвижным и первым
+    сдвинутым кадром и берёт лучший по ошибке. Использует только compare.py — fit.py вызывает fit()
+    без этого параметра, его вывод не меняется"""
     ts = np.asarray(ts, dtype=float)
     ws = np.asarray(ws, dtype=float)
     moved = (ws - x0) * np.sign(x1 - x0) > 1
     if not moved.any():
         return None
-    t0 = ts[np.argmax(moved)] - 1 / 60  # кадр перед движением; частота записи считается 60 fps
-    tt = ts - t0
-    m = tt >= 0
+    i = int(np.argmax(moved))
+    if t0_search:
+        lo = ts[i - 1] if i > 0 else ts[i] - 1 / 60
+        t0_candidates = np.linspace(lo, ts[i], 6)
+    else:
+        t0_candidates = [ts[i] - 1 / 60]  # кадр перед движением; частота записи считается 60 fps
     best = None
-    for k in np.arange(50, 601, 5):
-        for c in np.arange(5, 61, 0.5):
-            e = np.mean((spring(tt[m], x0, x1, k, c) - ws[m]) ** 2)
-            if best is None or e < best[0]:
-                best = (e, k, c)
-    e, k, c = best
+    for t0 in t0_candidates:
+        tt = ts - t0
+        m = tt >= 0
+        for k in np.arange(50, 601, 5):
+            for c in np.arange(5, 61, 0.5):
+                e = np.mean((spring(tt[m], x0, x1, k, c) - ws[m]) ** 2)
+                if best is None or e < best[0]:
+                    best = (e, k, c, t0)
+    e, k, c, t0 = best
     return {"stiffness": float(k), "damping": float(c), "rmse": float(np.sqrt(e)), "t0": float(t0)}
 
 
