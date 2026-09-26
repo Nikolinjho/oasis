@@ -25,6 +25,9 @@ public enum IslandGeometry {
     public static let hoverWithMedia = CGSize(width: 190, height: 73)
     /// Тело не мерили: ширина из README (строка 1 pt, с ушками), оценка
     public static let hoverEmpty = CGSize(width: 203, height: 90)
+    /// Отклик на hover шире исходной формы в столько раз. Обзорное видео Alcove, 30 fps: за 4 кадра
+    /// до раскрытия ширина компакта +8…10%, высота почти та же. Оценка, в масштабе видео без точного замера
+    public static let hoverNudgeWidthScale: CGFloat = 1.1
     /// Видео hover-открытия Alcove 2026-09-26: 345.1×175.0 (пик 359.3×187.7); rec2 и кадр пользователя — те же 345
     public static let expanded = CGSize(width: 345, height: 175)
     /// states/t69.4.png (запись №1): тело 732.5 px, в строке 1 pt ушки добавляют по 3.6 pt с каждой стороны
@@ -85,6 +88,12 @@ public enum IslandGeometry {
     public static let windowSize = CGSize(width: 480, height: 232)
 
     public static func spec(for surface: Surface, hasMedia: Bool, notch: CGSize) -> IslandShapeSpec {
+        if case let .hoverNudge(from) = surface {
+            // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
+            var base = spec(for: from, hasMedia: hasMedia, notch: notch)
+            base.size.width *= hoverNudgeWidthScale
+            return base
+        }
         let size: CGSize = switch surface {
         case .idle: notch
         case .compact: compact
@@ -93,6 +102,8 @@ public enum IslandGeometry {
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
+        // разобран выше, сюда не доходит
+        case .hoverNudge: notch
         }
         let shoulder: CGFloat = switch surface {
         case .idle: Shoulder.idle
@@ -102,6 +113,7 @@ public enum IslandGeometry {
         case .expanded: Shoulder.expanded
         case .shrink: Shoulder.shrink
         case .hud: Shoulder.hud
+        case .hoverNudge: Shoulder.idle // разобран выше
         }
         return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height), shoulder: shoulder)
     }

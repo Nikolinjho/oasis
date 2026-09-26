@@ -49,7 +49,10 @@ struct GeometryTests {
 
     @Test("Радиус нижних углов меньше половины высоты")
     func radiusFitsHeight() {
-        let surfaces: [Surface] = [.idle, .compact, .peek, .hover, .expanded, .shrink, .hud(.brightness, level: 1)]
+        let surfaces: [Surface] = [
+            .idle, .compact, .peek, .hover, .expanded, .shrink, .hud(.brightness, level: 1),
+            .hoverNudge(from: .idle), .hoverNudge(from: .compact), .hoverNudge(from: .peek),
+        ]
         for surface in surfaces {
             let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: Self.mbp16.notchSize)
             #expect(spec.bottomRadius < spec.size.height / 2, "\(surface)")
@@ -160,6 +163,32 @@ struct GeometryTests {
         // уход за пределы обеих форм закрывает hover
         let away = CGPoint(x: compact.island.minX - 5, y: 1107)
         #expect(!IslandGeometry.pointerInside(away, body: hover.body, island: hover.island, openedFrom: compact.body))
+    }
+
+    @Test("Отклик на hover: на 10% шире исходного состояния, высота, радиус и ушки те же",
+          arguments: [Surface.idle, .compact, .peek])
+    func hoverNudgeShape(from: Surface) {
+        let notch = Self.mbp16.notchSize
+        let base = IslandGeometry.spec(for: from, hasMedia: true, notch: notch)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: from), hasMedia: true, notch: notch)
+        #expect(abs(nudge.size.width - base.size.width * 1.1) < 1e-9)
+        #expect(nudge.size.height == base.size.height)
+        #expect(nudge.bottomRadius == base.bottomRadius)
+        #expect(nudge.shoulder == base.shoulder)
+    }
+
+    @Test("Курсор над откликом внутри: у расширенного края и над компактом, из которого он открылся")
+    func hoverNudgeKeepsPointer() {
+        let compact = Self.rects(.compact)
+        let nudge = Self.rects(.hoverNudge(from: .compact))
+        #expect(nudge.body.contains(compact.body))
+        let center = CGPoint(x: compact.body.midX, y: 1107)
+        #expect(IslandGeometry.pointerInside(center, body: nudge.body, island: nudge.island, openedFrom: compact.body))
+        // за краем компакта, но над расширенной формой
+        let widened = CGPoint(x: compact.island.minX - 5, y: 1107)
+        #expect(IslandGeometry.pointerInside(widened, body: nudge.body, island: nudge.island, openedFrom: compact.body))
+        let away = CGPoint(x: nudge.island.minX - 5, y: 1107)
+        #expect(!IslandGeometry.pointerInside(away, body: nudge.body, island: nudge.island, openedFrom: compact.body))
     }
 
     @Test("Вход в hover только над телом: рядом с вырезом и над ушком не срабатывает")

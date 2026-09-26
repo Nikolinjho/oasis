@@ -4,7 +4,7 @@ import Testing
 struct IslandMotionTests {
     static let all: [IslandTransition] = [
         .compactIn, .compactOut, .peekOpen, .peekClose, .hoverOpen, .hoverExpand, .expand,
-        .collapse, .hudIn, .hudOut, .hudUpdate, .shrink, .grow,
+        .collapse, .hudIn, .hudOut, .hudUpdate, .shrink, .grow, .hoverNudge, .hoverNudgeBack,
     ]
 
     @Test("Схлопывание и сжатие без отскока")
@@ -26,6 +26,14 @@ struct IslandMotionTests {
         #expect(IslandMotion.spring(for: .hoverExpand) == SpringSpec(stiffness: 200, damping: 17.5))
         #expect(IslandMotion.spring(for: .expand) == SpringSpec(stiffness: 175, damping: 16))
         #expect(IslandMotion.spring(for: .collapse) == .smooth(duration: 0.4))
+    }
+
+    @Test("Отклик на hover и возврат из него — мягкая пружина без отскока, короче таймера раскрытия")
+    func hoverNudgeSpring() throws {
+        for transition in [IslandTransition.hoverNudge, .hoverNudgeBack] {
+            let spring = try #require(IslandMotion.spring(for: transition))
+            #expect(spring == .smooth(duration: 0.13), "\(transition)")
+        }
     }
 
     @Test("Новый уровень HUD не анимирует форму")

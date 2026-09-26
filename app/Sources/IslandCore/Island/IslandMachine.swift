@@ -1,6 +1,10 @@
 /// Таймеры машины. Новый schedule с тем же id отменяет прежний
 public enum TimerID: Hashable, Sendable {
     case peekEnd, hudHide, grow, collapseDone
+    /// Отклик на hover раскрывается в плеер
+    case hoverOpen
+    /// Курсор ушёл из раскрытого: схлопывание с задержкой
+    case hoverLeave
 }
 
 public enum IslandEvent: Equatable, Sendable {
@@ -28,6 +32,8 @@ public struct IslandModel: Equatable, Sendable {
     public var pending: Surface?
     /// На экране с вырезом полноэкранное приложение: музыка в покое не показывается
     public var isFullscreen = false
+    /// Курсор ушёл из раскрытого (режим пользователя): ждём таймер hoverLeave, возврат его отменяет
+    public var leaving = false
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
@@ -38,7 +44,7 @@ public struct IslandModel: Equatable, Sendable {
 }
 
 /// Чистая машина состояний острова: приоритеты и хореография смены активностей.
-/// Приоритет: HUD > раскрытый плеер > hover > peek > компакт > покой
+/// Приоритет: HUD > раскрытый плеер > hover и отклик на него > peek > компакт > покой
 public enum IslandMachine {
     /// Поведение, которое отличает наш режим от Alcove. Эталон сверки (задачи 15–16) записан
     /// в режиме Alcove, поэтому оба поведения — настройка, а не замена
@@ -72,11 +78,10 @@ public enum IslandMachine {
         case .mediaCleared: mediaCleared(&model)
         case let .hudChanged(kind, level): hudChanged(&model, .hud(kind, level: level))
         case .hoverEntered:
-            model.config.hoverOpensPlayer
-                ? open(&model, to: .expanded, with: .hoverExpand)
-                : open(&model, to: .hover, with: .hoverOpen)
+            model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
-        case .hoverExited, .clickedOutside: close(&model)
+        case .hoverExited: model.config.hoverOpensPlayer ? leave(&model) : close(&model)
+        case .clickedOutside: close(&model)
         case let .fullscreenChanged(on): fullscreenChanged(&model, on)
         case let .timerFired(id): timerFired(&model, id)
         }
@@ -137,6 +142,15 @@ public enum IslandMachine {
     }
 
     private static func hudChanged(_ m: inout IslandModel, _ hud: Surface) -> [IslandEffect] {
+        if case let .hoverNudge(from) = m.surface {
+            // раскрытие отменяется, HUD приходит как из исходного состояния
+            m.surface = from
+            return [.cancel(.hoverOpen)] + hudChanged(&m, hud)
+        }
+        if m.leaving {
+            m.leaving = false
+            return [.cancel(.hoverLeave)] + hudChanged(&m, hud)
+        }
         if m.pending != nil {
             // идёт сжатие или схлопывание: HUD покажется, когда оно закончится
             m.pending = hud
@@ -159,6 +173,8 @@ public enum IslandMachine {
         case .shrink:
             m.pending = hud
             return []
+        case .hoverNudge:
+            return []
         }
     }
 
@@ -167,15 +183,68 @@ public enum IslandMachine {
         switch m.surface {
         case .idle, .compact, .peek: break
         case .hover where target == .expanded: break
+        case .hoverNudge where target == .expanded:
+            // клик во время отклика раскрывает сразу, не дожидаясь таймера
+            m.surface = target
+            return [.cancel(.hoverOpen), .animate(transition)]
         default: return []
         }
         m.surface = target
         return [.cancel(.peekEnd), .animate(transition)]
     }
 
+    /// Hover в режиме пользователя: из покоя, компакта и peek сначала отклик, плеер по таймеру hoverOpen.
+    /// Возврат курсора, пока раскрытый ждёт схлопывания, отменяет его
+    private static func nudge(_ m: inout IslandModel) -> [IslandEffect] {
+        if m.leaving {
+            m.leaving = false
+            return [.cancel(.hoverLeave)]
+        }
+        guard m.pending == nil else { return [] }
+        switch m.surface {
+        case .idle, .compact, .peek:
+            m.surface = .hoverNudge(from: m.surface)
+            return [
+                .cancel(.peekEnd), .animate(.hoverNudge),
+                .schedule(.hoverOpen, after: IslandTiming.hoverNudge * m.config.timeScale),
+            ]
+        default:
+            return []
+        }
+    }
+
+    /// Уход курсора в режиме пользователя: отклик возвращается в покой сразу, раскрытый — после задержки
+    private static func leave(_ m: inout IslandModel) -> [IslandEffect] {
+        switch m.surface {
+        case let .hoverNudge(from):
+            m.surface = m.base
+            return [.cancel(.hoverOpen), .animate(settle(from: from, to: m.surface))]
+        case .hover, .expanded:
+            guard !m.leaving else { return [] }
+            m.leaving = true
+            return [.schedule(.hoverLeave, after: IslandTiming.hoverLeave * m.config.timeScale)]
+        default:
+            return []
+        }
+    }
+
+    /// Переход из отклика обратно в покой. Покой мог смениться за время отклика (трек, полноэкранный)
+    private static func settle(from: Surface, to base: Surface) -> IslandTransition {
+        switch (from, base) {
+        case _ where from == base: .hoverNudgeBack
+        case (.peek, .compact): .peekClose
+        case (_, .compact): .compactIn
+        default: .compactOut
+        }
+    }
+
     private static func close(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.surface == .hover || m.surface == .expanded else { return [] }
         m.surface = m.base
+        if m.leaving {
+            m.leaving = false
+            return [.cancel(.hoverLeave), .animate(.collapse)]
+        }
         return [.animate(.collapse)]
     }
 
@@ -201,6 +270,15 @@ public enum IslandMachine {
                 return [.animate(.grow), .schedule(.hudHide, after: IslandTiming.hudVisible)]
             }
             return [.animate(.grow)]
+        case .hoverOpen:
+            guard case .hoverNudge = m.surface, m.pending == nil else { return [] }
+            m.surface = .expanded
+            return [.animate(.hoverExpand)]
+        case .hoverLeave:
+            guard m.leaving else { return [] }
+            // таймер уже сработал: отменять нечего
+            m.leaving = false
+            return close(&m)
         case .collapseDone:
             guard m.surface != .shrink, let target = m.pending else { return [] }
             m.pending = nil

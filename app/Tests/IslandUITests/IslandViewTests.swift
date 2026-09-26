@@ -10,6 +10,7 @@ struct IslandViewTests {
     @Test("Снимки острова во всех состояниях", arguments: [
         ("idle", Surface.idle), ("compact", .compact), ("peek", .peek),
         ("hover", .hover), ("expanded", .expanded), ("hud", .hud(.volume, level: 0.5)),
+        ("nudge", .hoverNudge(from: .compact)),
     ])
     func snapshot(name: String, surface: Surface) throws {
         var model = IslandModel()

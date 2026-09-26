@@ -4,6 +4,8 @@ public enum IslandTransition: Equatable, Sendable {
     case peekOpen, peekClose
     /// hoverOpen — hover в мини-состояние (режим Alcove), hoverExpand — hover сразу в полный плеер
     case hoverOpen, hoverExpand, expand, collapse
+    /// Отклик на hover перед раскрытием (режим пользователя) и возврат из него, если курсор ушёл раньше
+    case hoverNudge, hoverNudgeBack
     case hudIn, hudOut, hudUpdate
     /// Сжатие почти до выреза перед сменой активности и раскрытие в новую
     case shrink, grow
@@ -32,6 +34,10 @@ public enum IslandMotion {
         // Ширина и высота идут одной пружиной. Схлопывание по уходу курсора — то же smooth(0.4)
         case .hoverExpand: SpringSpec(stiffness: 200, damping: 17.5)
         case .collapse: .smooth(duration: 0.4)
+        // оценка: пружину отклика не подгоняли, отклик прерывается раскрытием через ~130 мс,
+        // и по кадрам видно только монотонный рост ширины. Мягкая без отскока, та же в обе стороны.
+        // На сайте hover — scale 1.075 пружиной 250/14 (motion.md), в нативном отскока не видно
+        case .hoverNudge, .hoverNudgeBack: .smooth(duration: 0.13)
         case .hudIn: .smooth(duration: 0.44)
         case .hudOut: .smooth(duration: 0.45)
         // новый уровень HUD меняет только полоску, размер тот же
