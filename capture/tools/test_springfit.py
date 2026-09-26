@@ -11,8 +11,10 @@ from springfit import fit, overshoot_pt, settle_time, spring
 TARGETS = json.loads((Path(__file__).resolve().parent.parent / "targets.json").read_text())
 
 
-def synthetic_track(targets, extra=0.0, fps=60, lead=2.0):
-    """Трек ширины из самих targets: до сегмента держим его x0, внутри — эталонная пружина"""
+def synthetic_track(targets, extra=0.0, fps=60, lead=2.0, override=None):
+    """Трек ширины из самих targets: до сегмента держим его x0, внутри — эталонная пружина.
+    override — {"name", "stiffness", "damping"}: подменяет пружину одного сегмента в самом
+    треке, чтобы проверить, что сверка ловит расхождение с эталоном"""
     segments = sorted(targets["segments"], key=lambda s: s["start"])
     ts = np.arange(0, segments[-1]["end"] + 1.0 + lead, 1 / fps)
     ws = np.empty_like(ts)
@@ -24,7 +26,10 @@ def synthetic_track(targets, extra=0.0, fps=60, lead=2.0):
                 value = s["x0"]
                 break
             if demo_t <= s["end"]:
-                value = spring(demo_t - s["start"], s["x0"], s["x1"], s["stiffness"], s["damping"])
+                k, c = s["stiffness"], s["damping"]
+                if override and s["name"] == override["name"]:
+                    k, c = override["stiffness"], override["damping"]
+                value = spring(demo_t - s["start"], s["x0"], s["x1"], k, c)
                 break
         ws[i] = value + extra
     return ts, ws
@@ -72,6 +77,14 @@ class CompareTests(unittest.TestCase):
         result = evaluate(ts, ws, TARGETS)
         self.assertAlmostEqual(result["baseline"], 192, delta=0.01)
         self.assertTrue(all(r["ok"] for r in result["rows"]))
+
+    def test_interrupted_segment_checks_against_reference(self):
+        """Сегмент settle:false тоже сверяется по ширине — с эталонной пружиной на тех же кадрах,
+        а не только по перелёту: неверная пружина в записи должна проваливать сверку"""
+        ts, ws = synthetic_track(TARGETS, override={"name": "сжатие после HUD", "stiffness": 120, "damping": 30})
+        result = evaluate(ts, ws, TARGETS)
+        row = next(r for r in result["rows"] if r["name"] == "сжатие после HUD")
+        self.assertFalse(row["ok"])
 
 
 if __name__ == "__main__":

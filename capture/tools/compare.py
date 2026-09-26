@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from springfit import fit, overshoot_pt, settle_time
+from springfit import fit, overshoot_pt, settle_time, spring
 
 
 def evaluate(T, W, targets):
@@ -41,10 +41,15 @@ def evaluate(T, W, targets):
             overshoot=overshoot_pt(*ours), overshoot_ref=overshoot_pt(*ref),
             stiffness=got["stiffness"], damping=got["damping"])
         ok = abs(row["overshoot"] - row["overshoot_ref"]) <= tol["overshootPt"]
-        # settle: false — сегмент не успевает осесть к концу (следующая анимация стартует сразу),
-        # финальная ширина в targets приблизительна («~195» в analysis/README.md), сверять её не с чем
         if s.get("settle", True):
-            ok = ok and abs(final - s["x1"]) <= tol["sizePt"]
+            expected = s["x1"]
+        else:
+            # сегмент прерывается следующей анимацией: цель — где эталонная пружина
+            # окажется к тем же кадрам, а не номинальный x1 («~195» в analysis/README.md)
+            expected = float(np.median(spring(ts[-3:] - got["t0"], *ref)))
+        row["expected"] = expected
+        ok = ok and abs(final - expected) <= tol["sizePt"]
+        if s.get("settle", True):
             row.update(settle=settle_time(*ours), settle_ref=settle_time(*ref))
             ok = ok and abs(row["settle"] - row["settle_ref"]) * 1000 <= tol["settleMs"]
         row["ok"] = bool(ok)
@@ -69,7 +74,7 @@ def main():
             continue
         settle = f"{r['settle'] * 1000:6.0f}/{r['settle_ref'] * 1000:<6.0f}" if "settle" in r else f"{'—':>13s}"
         print(
-            f"{r['name']:22s} {r['final']:6.1f}/{r['x1']:<6.0f} {r['overshoot']:6.1f}/{r['overshoot_ref']:<6.1f}"
+            f"{r['name']:22s} {r['final']:6.1f}/{r['expected']:<6.0f} {r['overshoot']:6.1f}/{r['overshoot_ref']:<6.1f}"
             f"   {settle}   {r['stiffness']:4.0f}/{r['damping']:<4.1f}  {'ok' if r['ok'] else 'FAIL'}")
     failed = sum(not r["ok"] for r in result["rows"])
     print(f"\n{len(result['rows']) - failed}/{len(result['rows'])} сегментов в допуске")
