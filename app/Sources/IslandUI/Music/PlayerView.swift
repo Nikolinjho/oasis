@@ -7,7 +7,7 @@ struct PlayerView: View {
     let onAction: (PlayerAction) -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             HStack(spacing: 12) {
                 ArtworkFlip(info: info, side: 56, radius: 12)
                 VStack(alignment: .leading, spacing: 2) {
@@ -23,15 +23,17 @@ struct PlayerView: View {
                 WaveformView(isPlaying: info?.isPlaying ?? false, color: IslandUI.accentColor(info), maxHeight: 16)
             }
             ProgressRow(info: info)
-            HStack(spacing: 28) {
-                PlayerButton(symbol: "backward.fill") { onAction(.media(.previousTrack)) }
-                PlayerButton(symbol: info?.isPlaying == true ? "pause.fill" : "play.fill", size: 22) { onAction(.media(.togglePlayPause)) }
-                PlayerButton(symbol: "forward.fill") { onAction(.media(.nextTrack)) }
+            // центры кнопок через 63 pt, крайние на ~73% ширины плеера, как на кадрах Alcove
+            HStack(spacing: 15) {
+                // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку и не рвёт replace-переход
+                ForEach(Array(PlayerControl.row(info).enumerated()), id: \.offset) { _, control in
+                    PlayerButton(control: control) { onAction(control.action) }
+                }
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 36)
-        .padding(.bottom, 12)
+        .padding(.bottom, 10)
     }
 }
 
@@ -73,28 +75,78 @@ struct ProgressRow: View {
     }
 }
 
-struct PlayerButton: View {
+/// Кнопка ряда управления: символ и действие. Крайние мельче и приглушённее центральных
+struct PlayerControl: Equatable {
     let symbol: String
-    var size: CGFloat = 18
-    let action: () -> Void
+    let action: PlayerAction
+    let isSide: Bool
 
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: size, weight: .semibold))
-                .foregroundStyle(IslandPalette.foreground)
-                .frame(width: 44, height: 32)
+    /// ⭐ «в избранное» есть только у Apple Music, у остальных источников 🔗 открыть приложение
+    static func leading(_ info: NowPlayingInfo?) -> PlayerControl {
+        info?.bundleID == "com.apple.Music"
+            ? PlayerControl(symbol: "star.fill", action: .favorite, isSide: true)
+            : PlayerControl(symbol: "link", action: .openSource, isSide: true)
+    }
+
+    static func row(_ info: NowPlayingInfo?) -> [PlayerControl] {
+        [
+            leading(info),
+            PlayerControl(symbol: "backward.fill", action: .media(.previousTrack), isSide: false),
+            PlayerControl(
+                symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
+                action: .media(.togglePlayPause), isSide: false),
+            PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false),
+            PlayerControl(symbol: "laptopcomputer", action: .chooseOutput, isSide: true),
+        ]
+    }
+
+    /// Пауза крупнее перемоток; размеры по пропорциям кадров, замера нет
+    var size: CGFloat {
+        switch action {
+        case .media(.togglePlayPause): 24
+        case .media: 19
+        default: 16
         }
-        .buttonStyle(PressedBackgroundStyle())
     }
 }
 
-/// У нажатой кнопки скруглённая подложка #1C1C1E, как в записи Alcove
-struct PressedBackgroundStyle: ButtonStyle {
+struct PlayerButton: View {
+    let control: PlayerControl
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: control.symbol)
+                .font(.system(size: control.size, weight: .semibold))
+                .foregroundStyle(control.isSide ? IslandPalette.secondary : IslandPalette.foreground)
+                .contentTransition(.symbolEffect(.replace))
+                // замера нет, оценка по кадрам паузы: ⏸ → ▶ за ~0.4 с
+                .animation(.easeInOut(duration: 0.4), value: control.symbol)
+                .frame(width: 48, height: 40)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(HoverBackgroundStyle(isHovered: isHovered))
+        .onHover { isHovered = $0 }
+    }
+}
+
+/// Скруглённая подложка #1C1C1E, пока курсор над кнопкой; при нажатии чуть ярче
+struct HoverBackgroundStyle: ButtonStyle {
+    let isHovered: Bool
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(configuration.isPressed ? IslandPalette.pressed : .clear))
+                    .fill(fill(isPressed: configuration.isPressed)))
+            // замера нет, оценка
+            .animation(.easeOut(duration: 0.15), value: isHovered)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+
+    private func fill(isPressed: Bool) -> Color {
+        if isPressed { return IslandPalette.pressedActive }
+        return isHovered ? IslandPalette.pressed : .clear
     }
 }
