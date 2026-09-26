@@ -117,6 +117,6 @@ struct IslandRootView: View {
             notchWidth: store.notch.width,
             nowPlaying: store.nowPlaying,
             onClick: { store.send(.clicked) },
-            onCommand: { store.onCommand($0) })
+            onAction: { store.onAction($0) })
     }
 }

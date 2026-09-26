@@ -22,7 +22,7 @@ struct IslandViewTests {
             notchWidth: notch.width,
             nowPlaying: Self.info,
             onClick: {},
-            onCommand: { _ in })
+            onAction: { _ in })
         try Snapshot.write(view, size: IslandGeometry.windowSize, name: "island-\(name)")
     }
 }

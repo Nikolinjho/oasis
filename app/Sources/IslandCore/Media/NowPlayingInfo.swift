@@ -21,6 +21,17 @@ public enum MediaCommand: Int, Sendable {
     case previousTrack = 5
 }
 
+/// Действие кнопки раскрытого плеера. Медиакоманды уходят в адаптер, остальное исполняет приложение
+public enum PlayerAction: Equatable, Sendable {
+    case media(MediaCommand)
+    /// Левая кнопка у Apple Music: ⭐ «в избранное»
+    case favorite
+    /// Левая кнопка у остальных источников: 🔗 открыть приложение, откуда играет звук
+    case openSource
+    /// Правая кнопка 💻: выбор устройства вывода звука
+    case chooseOutput
+}
+
 public struct NowPlayingInfo: Equatable, Sendable {
     public var bundleID: String?
     public var title: String

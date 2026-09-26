@@ -51,7 +51,7 @@ struct MusicViewTests {
             island(IslandGeometry.peek, AnyView(MusicLiveView(info: Self.info, notchWidth: 186, showsTitle: true))),
             size: IslandGeometry.peek, name: "music-peek") == CGSize(width: 552, height: 102))
         #expect(try Snapshot.write(
-            island(IslandGeometry.expanded, AnyView(PlayerView(info: Self.info, onCommand: { _ in }))),
+            island(IslandGeometry.expanded, AnyView(PlayerView(info: Self.info, onAction: { _ in }))),
             size: IslandGeometry.expanded, name: "player") == CGSize(width: 690, height: 350))
     }
 }

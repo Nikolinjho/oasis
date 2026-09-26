@@ -4,7 +4,7 @@ import SwiftUI
 /// Раскрытый плеер 345×175: верхние 32 pt — полоса menu bar под вырезом, контент ниже
 struct PlayerView: View {
     let info: NowPlayingInfo?
-    let onCommand: (MediaCommand) -> Void
+    let onAction: (PlayerAction) -> Void
 
     var body: some View {
         VStack(spacing: 10) {
@@ -24,9 +24,9 @@ struct PlayerView: View {
             }
             ProgressRow(info: info)
             HStack(spacing: 28) {
-                PlayerButton(symbol: "backward.fill") { onCommand(.previousTrack) }
-                PlayerButton(symbol: info?.isPlaying == true ? "pause.fill" : "play.fill", size: 22) { onCommand(.togglePlayPause) }
-                PlayerButton(symbol: "forward.fill") { onCommand(.nextTrack) }
+                PlayerButton(symbol: "backward.fill") { onAction(.media(.previousTrack)) }
+                PlayerButton(symbol: info?.isPlaying == true ? "pause.fill" : "play.fill", size: 22) { onAction(.media(.togglePlayPause)) }
+                PlayerButton(symbol: "forward.fill") { onAction(.media(.nextTrack)) }
             }
         }
         .padding(.horizontal, 20)

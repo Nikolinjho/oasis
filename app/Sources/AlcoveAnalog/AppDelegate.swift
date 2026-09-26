@@ -50,7 +50,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         let source = AdapterNowPlayingSource(paths: paths)
-        store.onCommand = { [weak source] command in source?.send(command) }
+        store.onAction = { [weak source] action in
+            switch action {
+            case let .media(command): source?.send(command)
+            // исполнение остальных кнопок плеера — задача 17
+            case .favorite, .openSource, .chooseOutput: break
+            }
+        }
         tasks.append(Task { [store] in
             for await change in source.changes { store.apply(change) }
         })

@@ -20,7 +20,7 @@ struct OpenScaleTests {
         let mid = IslandShapeSpec(size: CGSize(width: 280, height: 118), bottomRadius: 25, shoulder: 14)
         let view = ZStack(alignment: .top) {
             IslandShape(spec: mid).fill(IslandPalette.background)
-            PlayerView(info: Self.info, onCommand: { _ in })
+            PlayerView(info: Self.info, onAction: { _ in })
                 .modifier(OpenScale(size: mid.size, target: IslandGeometry.expanded, scalesContent: true))
                 .clipShape(IslandShape(spec: mid, shoulder: 0))
         }

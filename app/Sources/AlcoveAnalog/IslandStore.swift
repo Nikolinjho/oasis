@@ -13,7 +13,7 @@ final class IslandStore {
     private(set) var nowPlaying: NowPlayingInfo?
     var notch = CGSize(width: 186, height: 32)
 
-    @ObservationIgnored var onCommand: (MediaCommand) -> Void = { _ in }
+    @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}
     @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]

@@ -8,18 +8,18 @@ public struct IslandView: View {
     let notchWidth: CGFloat
     let nowPlaying: NowPlayingInfo?
     let onClick: () -> Void
-    let onCommand: (MediaCommand) -> Void
+    let onAction: (PlayerAction) -> Void
 
     public init(
         model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
-        onClick: @escaping () -> Void, onCommand: @escaping (MediaCommand) -> Void
+        onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void
     ) {
         self.model = model
         self.spec = spec
         self.notchWidth = notchWidth
         self.nowPlaying = nowPlaying
         self.onClick = onClick
-        self.onCommand = onCommand
+        self.onAction = onAction
     }
 
     public var body: some View {
@@ -51,7 +51,7 @@ public struct IslandView: View {
                 .id(ContentID.music)
                 .transition(.slot)
         case .expanded:
-            PlayerView(info: nowPlaying, onCommand: onCommand)
+            PlayerView(info: nowPlaying, onAction: onAction)
                 .id(ContentID.player)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):
