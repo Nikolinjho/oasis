@@ -1,26 +1,28 @@
-import json, numpy as np
+# Подгонка пружин по записи 26.09 (track.json рядом): python3 fit.py
+import json
+
+import numpy as np
+
+from springfit import fit as fit_segment
+
 t = [r for r in json.load(open('track.json')) if r]
 T = np.array([r[0] for r in t]); Wd = np.array([r[1] for r in t])
-def seg(a, b): m = (T >= a) & (T <= b); return T[m], Wd[m]
-def spring(tt, x0, x1, k, c):
-    w0 = np.sqrt(k); z = c / (2*np.sqrt(k))
-    if z < 1:
-        wd = w0*np.sqrt(1-z*z)
-        return x1 + (x0-x1)*np.exp(-z*w0*tt)*(np.cos(wd*tt) + z*w0/wd*np.sin(wd*tt))
-    return x1 + (x0-x1)*np.exp(-w0*tt)*(1 + w0*tt)
+
+
+def seg(a, b):
+    m = (T >= a) & (T <= b)
+    return T[m], Wd[m]
+
+
 def fit(name, a, b, x0, x1):
     ts, ws = seg(a, b)
-    # старт — первый кадр, где ширина ушла от x0 больше чем на 1 pt
-    i0 = np.argmax(np.abs(ws - x0) > 1); t0 = ts[i0] - 1/60
-    tt = ts - t0; m = tt >= 0
-    best = None
-    for k in np.arange(50, 601, 5):
-        for c in np.arange(5, 61, 0.5):
-            e = np.mean((spring(tt[m], x0, x1, k, c) - ws[m])**2)
-            if best is None or e < best[0]: best = (e, k, c)
-    e, k, c = best; z = c/(2*np.sqrt(k)); resp = 2*np.pi/np.sqrt(k)
+    r = fit_segment(ts, ws, x0, x1)
+    k, c = r["stiffness"], r["damping"]
+    z = c / (2 * np.sqrt(k)); resp = 2 * np.pi / np.sqrt(k)
     peak = ws.max() if x1 > x0 else ws.min()
-    print(f'{name:28s} {x0:.0f}→{x1:.0f}  stiffness={k:.0f} damping={c:.1f}  ζ={z:.2f} response={resp:.3f}s  rmse={np.sqrt(e):.1f}pt  пик={peak:.1f}')
+    print(f'{name:28s} {x0:.0f}→{x1:.0f}  stiffness={k:.0f} damping={c:.1f}  ζ={z:.2f} response={resp:.3f}s  rmse={r["rmse"]:.1f}pt  пик={peak:.1f}')
+
+
 fit('клик: раскрытие (ширина)', 61.80, 62.60, 186, 365)
 fit('раскрытие #2', 66.15, 66.70, 186, 365)
 fit('схлопывание 365→186', 58.28, 59.05, 365, 186)
