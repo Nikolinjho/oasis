@@ -10,6 +10,7 @@ struct MusicLiveView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
+                // радиус 4: замера нет, оценка
                 ArtworkFlip(info: info, side: 16, radius: 4)
                     .scaleEffect(isPlaying ? 1 : 0.85)
                     .opacity(isPlaying ? 1 : 0.6)

@@ -6,7 +6,10 @@ struct MarqueeText: View {
     let text: String
     @State private var textWidth: CGFloat = 0
     @State private var start = Date()
+    // замера нет, оценка
     private let gap: CGFloat = 32
+    /// Начало полностью видимой полосы маски: с него стартует длинный текст
+    private let visibleStart: CGFloat = 0.11
 
     var body: some View {
         GeometryReader { proxy in
@@ -18,12 +21,14 @@ struct MarqueeText: View {
                     label
                     if overflow { label }
                 }
-                .offset(x: overflow ? -travelled.truncatingRemainder(dividingBy: cycle) : 0)
+                .offset(x: overflow ? proxy.size.width * visibleStart - travelled.truncatingRemainder(dividingBy: cycle) : 0)
                 .frame(width: proxy.size.width, alignment: overflow ? .leading : .center)
             }
             .mask(overflow ? AnyView(fadeMask) : AnyView(Color.black))
         }
         .clipped()
+        // новый текст бежит с начала
+        .onChange(of: text) { start = .now }
     }
 
     private var label: some View {

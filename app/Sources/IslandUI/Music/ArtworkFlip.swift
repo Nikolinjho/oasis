@@ -8,36 +8,41 @@ struct ArtworkFlip: View {
     let side: CGFloat
     let radius: CGFloat
 
-    @State private var shown: NowPlayingInfo?
+    /// Уходящий трек до ребра. После ребра рисуется живой info, поэтому поздняя обложка не теряется
+    @State private var outgoing: NowPlayingInfo?
+    @State private var flipTask: Task<Void, Never>?
     @State private var angle: Double = 0
     @State private var blur: CGFloat = 0
     @State private var scale: CGFloat = 1
 
     var body: some View {
-        ArtworkView(artwork: (shown ?? info)?.artwork, side: side, radius: radius)
+        ArtworkView(artwork: (outgoing ?? info)?.artwork, side: side, radius: radius)
             .blur(radius: blur)
             .scaleEffect(scale)
             .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
-            .onAppear { shown = info }
-            .onChange(of: info?.trackKey) { _, _ in flip() }
-            .onChange(of: info?.artwork) { _, _ in
-                // обложка у того же трека догрузилась позже: подменяем без переворота
-                if shown?.trackKey == info?.trackKey { shown = info }
+            .onChange(of: info) { old, new in
+                if old?.trackKey != new?.trackKey { flip(from: old) }
             }
+            .onDisappear { flipTask?.cancel() }
     }
 
-    private func flip() {
-        guard shown != nil else {
-            shown = info
-            return
-        }
-        Task { @MainActor in
+    private func flip(from old: NowPlayingInfo?) {
+        // первый трек появляется без переворота
+        guard let old else { return }
+        flipTask?.cancel()
+        // переворот ещё не дошёл до ребра: на экране по-прежнему прежний outgoing
+        if outgoing == nil { outgoing = old }
+        flipTask = Task { @MainActor in
             withAnimation(.easeIn(duration: 0.12)) { angle = 90 }
             try? await Task.sleep(for: .milliseconds(120))
-            shown = info
+            guard !Task.isCancelled else { return }
+            outgoing = nil
             angle = -90
+            // замера нет, оценка; вероятно, снято на большой обложке плеера
             blur = 20
+            // замера нет, оценка
             scale = 1.08
+            // замера нет, оценка: доворот 0.13 с
             withAnimation(.easeOut(duration: 0.13)) { angle = 0 }
             withAnimation(.easeOut(duration: 0.4)) {
                 blur = 0

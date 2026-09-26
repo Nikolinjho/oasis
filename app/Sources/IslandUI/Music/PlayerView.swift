@@ -62,7 +62,7 @@ struct ProgressRow: View {
     }
 
     nonisolated static func format(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds.rounded(.down))
+        let total = Int(max(0, seconds).rounded(.down))
         return String(format: "%d:%02d", total / 60, total % 60)
     }
 }

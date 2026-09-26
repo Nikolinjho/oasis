@@ -23,6 +23,7 @@ struct MusicViewTests {
     func titleLine() {
         #expect(MusicLiveView.titleLine(NowPlayingInfo(title: "Fire", artist: "A", isPlaying: true)) == "♪ Fire ∙ A")
         #expect(MusicLiveView.titleLine(NowPlayingInfo(title: "Fire", isPlaying: true)) == "♪ Fire")
+        #expect(MusicLiveView.titleLine(NowPlayingInfo(title: "Fire", artist: "", isPlaying: true)) == "♪ Fire")
         #expect(MusicLiveView.titleLine(nil) == "")
     }
 
@@ -43,14 +44,14 @@ struct MusicViewTests {
                 content
             }
         }
-        try Snapshot.write(
+        #expect(try Snapshot.write(
             island(IslandGeometry.compact, AnyView(MusicLiveView(info: Self.info, notchWidth: 186, showsTitle: false))),
-            size: IslandGeometry.compact, name: "music-compact")
-        try Snapshot.write(
+            size: IslandGeometry.compact, name: "music-compact") == CGSize(width: 522, height: 64))
+        #expect(try Snapshot.write(
             island(IslandGeometry.peek, AnyView(MusicLiveView(info: Self.info, notchWidth: 186, showsTitle: true))),
-            size: IslandGeometry.peek, name: "music-peek")
-        try Snapshot.write(
+            size: IslandGeometry.peek, name: "music-peek") == CGSize(width: 566, height: 102))
+        #expect(try Snapshot.write(
             island(IslandGeometry.expanded, AnyView(PlayerView(info: Self.info, onCommand: { _ in }))),
-            size: IslandGeometry.expanded, name: "player")
+            size: IslandGeometry.expanded, name: "player") == CGSize(width: 740, height: 350))
     }
 }
