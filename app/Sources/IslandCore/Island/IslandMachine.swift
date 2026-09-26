@@ -49,8 +49,9 @@ public enum IslandMachine {
             self.compactAtRest = compactAtRest
         }
 
-        /// Режим пользователя: компакт не закрывает иконки menu bar
-        public static let user = Config(hoverOpensPlayer: true, compactAtRest: false)
+        /// Режим пользователя: hover раскрывает плеер, при музыке в покое компакт, как у Alcove.
+        /// Покой в форме выреза пробовали и отказались: остаётся настройкой compactAtRest = false
+        public static let user = Config(hoverOpensPlayer: true, compactAtRest: true)
         /// Поведение Alcove, с которым записан эталон: для demo-прогона и сверки
         public static let alcove = Config(hoverOpensPlayer: false, compactAtRest: true)
     }
