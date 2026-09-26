@@ -21,11 +21,13 @@ struct HUDView: View {
             LevelBar(level: level)
                 .frame(width: 64, height: 5)
         }
+        // Шрифт 13, отступ иконки 6, ширина иконки 18, паддинг 14, полоска 64×5:
+        // не мерили, подогнано по capture/analysis/states/t69.4.png, уточняется в задаче 16
         .padding(.horizontal, 14)
         .frame(height: 32)
     }
 
-    static func symbol(_ kind: HUDKind, _ level: Double) -> String {
+    nonisolated static func symbol(_ kind: HUDKind, _ level: Double) -> String {
         switch kind {
         case .brightness:
             level < 0.5 ? "sun.min.fill" : "sun.max.fill"
@@ -47,9 +49,10 @@ struct LevelBar: View {
                 Capsule().fill(IslandPalette.foreground.opacity(0.2))
                 Capsule()
                     .fill(IslandPalette.foreground)
-                    .frame(width: proxy.size.width * level)
+                    .frame(width: proxy.size.width * min(max(level, 0), 1))
             }
         }
+        // Длительность 0.2 с: не мерили, подогнано по capture/analysis/states/t69.4.png, уточняется в задаче 16
         .animation(.smooth(duration: 0.2), value: level)
     }
 }
