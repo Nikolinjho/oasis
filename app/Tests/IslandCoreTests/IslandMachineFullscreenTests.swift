@@ -73,7 +73,9 @@ struct IslandMachineFullscreenTests {
     @Test("В полноэкранном hover и клик по-прежнему открывают остров")
     func pointerStillOpens() {
         var user = Self.model(.user, .idle)
-        #expect(IslandMachine.reduce(&user, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverExpand)])
+        _ = IslandMachine.reduce(&user, .hoverEntered)
+        #expect(user.surface == .hoverNudge(from: .idle))
+        #expect(IslandMachine.reduce(&user, .timerFired(.hoverOpen)) == [.animate(.hoverExpand)])
         #expect(user.surface == .expanded)
         var alcove = Self.model(.alcove, .idle)
         #expect(IslandMachine.reduce(&alcove, .hoverEntered) == [.cancel(.peekEnd), .animate(.hoverOpen)])
@@ -88,7 +90,10 @@ struct IslandMachineFullscreenTests {
         var m = Self.model(config, .expanded, fullscreen: false)
         #expect(IslandMachine.reduce(&m, .fullscreenChanged(true)).isEmpty)
         #expect(m.surface == .expanded)
-        #expect(IslandMachine.reduce(&m, .hoverExited) == [.animate(.collapse)])
+        // в режиме пользователя схлопывание идёт после задержки ухода
+        let exit = IslandMachine.reduce(&m, .hoverExited)
+        let collapse = config.hoverOpensPlayer ? IslandMachine.reduce(&m, .timerFired(.hoverLeave)) : exit
+        #expect(collapse == [.animate(.collapse)])
         #expect(m.surface == .idle)
     }
 
