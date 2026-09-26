@@ -46,12 +46,12 @@ struct MusicViewTests {
         }
         #expect(try Snapshot.write(
             island(IslandGeometry.compact, AnyView(MusicLiveView(info: Self.info, notchWidth: 186, showsTitle: false))),
-            size: IslandGeometry.compact, name: "music-compact") == CGSize(width: 522, height: 64))
+            size: IslandGeometry.compact, name: "music-compact") == CGSize(width: 514, height: 64))
         #expect(try Snapshot.write(
             island(IslandGeometry.peek, AnyView(MusicLiveView(info: Self.info, notchWidth: 186, showsTitle: true))),
-            size: IslandGeometry.peek, name: "music-peek") == CGSize(width: 566, height: 102))
+            size: IslandGeometry.peek, name: "music-peek") == CGSize(width: 552, height: 102))
         #expect(try Snapshot.write(
             island(IslandGeometry.expanded, AnyView(PlayerView(info: Self.info, onCommand: { _ in }))),
-            size: IslandGeometry.expanded, name: "player") == CGSize(width: 740, height: 350))
+            size: IslandGeometry.expanded, name: "player") == CGSize(width: 690, height: 350))
     }
 }

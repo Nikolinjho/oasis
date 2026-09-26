@@ -1,7 +1,7 @@
 import IslandCore
 import SwiftUI
 
-/// Live activity музыки: компакт 261×32, в peek снизу добавляется бегущая строка с названием
+/// Live activity музыки: компакт 257×32, в peek снизу добавляется бегущая строка с названием
 struct MusicLiveView: View {
     let info: NowPlayingInfo?
     let notchWidth: CGFloat

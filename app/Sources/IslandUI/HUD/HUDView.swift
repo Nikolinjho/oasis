@@ -1,7 +1,7 @@
 import IslandCore
 import SwiftUI
 
-/// HUD громкости и яркости живёт в строке menu bar: высота 32, растёт только в ширину до 374
+/// HUD громкости и яркости живёт в строке menu bar: высота 32, растёт только в ширину до 367
 struct HUDView: View {
     let kind: HUDKind
     let level: Double

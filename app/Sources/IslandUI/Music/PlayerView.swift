@@ -1,7 +1,7 @@
 import IslandCore
 import SwiftUI
 
-/// Раскрытый плеер 370×175: верхние 32 pt — полоса menu bar под вырезом, контент ниже
+/// Раскрытый плеер 345×175: верхние 32 pt — полоса menu bar под вырезом, контент ниже
 struct PlayerView: View {
     let info: NowPlayingInfo?
     let onCommand: (MediaCommand) -> Void

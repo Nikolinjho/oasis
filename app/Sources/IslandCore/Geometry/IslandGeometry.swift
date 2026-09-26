@@ -13,16 +13,25 @@ public struct IslandShapeSpec: Equatable, Sendable {
     }
 }
 
-/// Размеры состояний из capture/analysis/README.md (MacBook Pro 16")
+/// Размеры тела острова без ушек (MacBook Pro 16"). Ширины в capture/analysis/README.md сняты трекером
+/// по строке 1 pt ниже края экрана и включают часть ушек: компакт 263.5 (в README 261), peek 284 (283),
+/// раскрытый 370, HUD 374, сжатие 195. Здесь ширина тела по кадрам, где борт отделён от ушка
 public enum IslandGeometry {
-    public static let compact = CGSize(width: 261, height: 32)
-    public static let peek = CGSize(width: 283, height: 51)
+    /// rec2/player-sheet.png, 4-й ряд: тело 514 px
+    public static let compact = CGSize(width: 257, height: 32)
+    /// rec2/player-sheet.png, 5-й ряд: тело 552 px
+    public static let peek = CGSize(width: 276, height: 51)
+    /// Тело не мерили: ширина из README (строка 1 pt, с ушками), оценка
     public static let hoverWithMedia = CGSize(width: 190, height: 73)
+    /// Тело не мерили: ширина из README (строка 1 pt, с ушками), оценка
     public static let hoverEmpty = CGSize(width: 203, height: 90)
-    public static let expanded = CGSize(width: 370, height: 175)
-    public static let hud = CGSize(width: 374, height: 32)
-    /// Ширина, до которой остров сжимается при смене активности
-    public static let shrinkWidth: CGFloat = 195
+    /// Видео hover-открытия Alcove 2026-09-26: 345.1×175.0 (пик 359.3×187.7); rec2 и кадр пользователя — те же 345
+    public static let expanded = CGSize(width: 345, height: 175)
+    /// states/t69.4.png (запись №1): тело 732.5 px, в строке 1 pt ушки добавляют по 3.6 pt с каждой стороны
+    public static let hud = CGSize(width: 367, height: 32)
+    /// Ширина, до которой остров сжимается при смене активности. Трекер дал 195 по строке 1 pt;
+    /// минус те же 7 pt ушек, что у компакта и HUD той же высоты. Выведено, а не измерено напрямую
+    public static let shrinkWidth: CGFloat = 188
 
     /// Ушки (вогнутые плечи) по бокам: форма перетекает в menu bar. Ширина геометрическая,
     /// от кончика кривой у края экрана до борта острова; видимая ширина у края чуть меньше (≈0.88),

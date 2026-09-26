@@ -24,20 +24,20 @@ struct GeometryTests {
         #expect(metrics == nil)
     }
 
-    @Test("Размеры состояний совпадают с замерами Alcove")
+    @Test("Размеры тела острова совпадают с замерами Alcove без ушек")
     func surfaceSizes() {
         let notch = Self.mbp16.notchSize
         func size(_ surface: Surface, media: Bool = true) -> CGSize {
             IslandGeometry.spec(for: surface, hasMedia: media, notch: notch).size
         }
         #expect(size(.idle) == notch)
-        #expect(size(.compact) == CGSize(width: 261, height: 32))
-        #expect(size(.peek) == CGSize(width: 283, height: 51))
+        #expect(size(.compact) == CGSize(width: 257, height: 32))
+        #expect(size(.peek) == CGSize(width: 276, height: 51))
         #expect(size(.hover, media: true) == CGSize(width: 190, height: 73))
         #expect(size(.hover, media: false) == CGSize(width: 203, height: 90))
-        #expect(size(.expanded) == CGSize(width: 370, height: 175))
-        #expect(size(.hud(.volume, level: 0.5)) == CGSize(width: 374, height: 32))
-        #expect(size(.shrink) == CGSize(width: 195, height: 32))
+        #expect(size(.expanded) == CGSize(width: 345, height: 175))
+        #expect(size(.hud(.volume, level: 0.5)) == CGSize(width: 367, height: 32))
+        #expect(size(.shrink) == CGSize(width: 188, height: 32))
     }
 
     @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
@@ -78,9 +78,9 @@ struct GeometryTests {
     func islandScreenRect() {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
         let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize)
-        #expect(IslandGeometry.islandScreenRect(spec, windowFrame: window) == CGRect(x: 725.5, y: 1085, width: 277, height: 32))
+        #expect(IslandGeometry.islandScreenRect(spec, windowFrame: window) == CGRect(x: 727.5, y: 1085, width: 273, height: 32))
         let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
-        #expect(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width == 429)
+        #expect(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width == 404)
     }
 
     @Test("Ушки по состояниям: в покое нет, в раскрытом по кадру пользователя, hover — оценка")
