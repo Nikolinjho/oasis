@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window = IslandWindowController(store: store, menu: statusItem.menu)
         startFullscreenMonitor()
         startNowPlaying()
+        startPlayerActions()
         startLevels()
         startKeyTap()
     }
@@ -50,18 +51,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         let source = AdapterNowPlayingSource(paths: paths)
-        store.onAction = { [weak source] action in
-            switch action {
-            case let .media(command): source?.send(command)
-            // исполнение остальных кнопок плеера — задача 17
-            case .favorite, .openSource, .chooseOutput: break
-            }
-        }
         tasks.append(Task { [store] in
             for await change in source.changes { store.apply(change) }
         })
         source.start()
         nowPlaying = source
+    }
+
+    /// Кнопки плеера. Без адаптера медиакоманды пропадают, остальные кнопки работают
+    private func startPlayerActions() {
+        let performer = PlayerActions(source: nowPlaying) { [weak window] menu in window?.popUpUnderIsland(menu) }
+        let router = PlayerActionRouter(performer: performer)
+        store.onAction = { [weak store, log] action in
+            guard let store else { return }
+            log.debug("player action \(String(describing: action), privacy: .public)")
+            router.perform(action, nowPlaying: store.nowPlaying)
+        }
     }
 
     private func startLevels() {
