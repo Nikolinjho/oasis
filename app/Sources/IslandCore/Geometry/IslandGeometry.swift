@@ -22,6 +22,7 @@ public enum IslandGeometry {
     public static let shrinkWidth: CGFloat = 195
 
     /// Вогнутые плечи по бокам: форма перетекает в menu bar
+    /// Замера нет, оценка на глаз, уточняется при сверке в задаче 16
     public static let shoulder: CGFloat = 7
     /// Окно под самое большое состояние с перелётом (пик раскрытия 382×187.5) и плечами
     public static let windowSize = CGSize(width: 440, height: 210)
@@ -69,6 +70,7 @@ public enum IslandGeometry {
     }
 
     /// Зона hover в покое: вырез ±30 pt по бокам и 6 pt вниз
+    /// Замера нет, оценка на глаз, уточняется при сверке в задаче 16
     public static func hoverZone(for metrics: NotchMetrics) -> CGRect {
         let notch = metrics.notchRect
         return CGRect(x: notch.minX - 30, y: notch.minY - 6, width: notch.width + 60, height: notch.height + 6)
