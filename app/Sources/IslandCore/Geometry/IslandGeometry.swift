@@ -3,10 +3,13 @@ import CoreGraphics
 public struct IslandShapeSpec: Equatable, Sendable {
     public var size: CGSize
     public var bottomRadius: CGFloat
+    /// Ширина ушка с каждой стороны. Зависит от состояния и анимируется вместе с размером
+    public var shoulder: CGFloat
 
-    public init(size: CGSize, bottomRadius: CGFloat) {
+    public init(size: CGSize, bottomRadius: CGFloat, shoulder: CGFloat = 0) {
         self.size = size
         self.bottomRadius = bottomRadius
+        self.shoulder = shoulder
     }
 }
 
@@ -21,11 +24,39 @@ public enum IslandGeometry {
     /// Ширина, до которой остров сжимается при смене активности
     public static let shrinkWidth: CGFloat = 195
 
-    /// Вогнутые плечи по бокам: форма перетекает в menu bar
-    /// Замера нет, оценка на глаз, уточняется при сверке в задаче 16
-    public static let shoulder: CGFloat = 7
-    /// Окно под самое большое состояние с перелётом (пик раскрытия 382×187.5) и плечами
-    public static let windowSize = CGSize(width: 440, height: 210)
+    /// Ушки (вогнутые плечи) по бокам: форма перетекает в menu bar. Ширина геометрическая,
+    /// от кончика кривой у края экрана до борта острова; видимая ширина у края чуть меньше (≈0.88),
+    /// потому что кончик тоньше пикселя. Форма одна на все состояния (IslandOutline.EarProfile),
+    /// масштабируется шириной. Замеры: кадры Alcove, остров 0, фон по половине яркости, 1 pt = 2 px
+    public enum Shoulder {
+        /// В покое остров совпадает с вырезом, ушек нет: трекер по строке 1 pt ниже края
+        /// дал ровно 186 = ширина выреза (capture/analysis/track-2026-09-26.json)
+        public static let idle: CGFloat = 0
+        /// rec2/player-sheet.png, 4-й ряд: видимая 6.3 pt, эталонная форма легла с СКО 0.18 px
+        public static let compact: CGFloat = 8
+        /// rec2/player-sheet.png, 5-й ряд: видимая 7.1 pt, СКО 0.15 px
+        public static let peek: CGFloat = 9
+        /// states/t69.4.png (запись №1): видимая 6.3 pt, СКО 0.18 px
+        public static let hud: CGFloat = 8
+        /// Замера нет: как у компакта и HUD той же высоты 32
+        public static let shrink: CGFloat = 8
+        /// Раскрытый плеер по кадру пользователя ref-ears.png (масштаб принят 2x): видимая 25.8 pt.
+        /// Alcove 1.7.7 в записях давал меньше (rec2: 20 pt), берём кадр пользователя
+        public static let expanded: CGFloat = 29.5
+
+        /// Hover не мерили: оценка линейно по высоте между peek (51 → 9) и раскрытым (175 → 29.5)
+        public static func estimated(forHeight height: CGFloat) -> CGFloat {
+            let (h0, s0) = (peekHeight, peek)
+            let (h1, s1) = (IslandGeometry.expanded.height, expanded)
+            return ((s0 + (height - h0) * (s1 - s0) / (h1 - h0)) * 10).rounded() / 10
+        }
+
+        private static let peekHeight = IslandGeometry.peek.height
+    }
+
+    /// Окно под самое большое состояние с перелётом и ушками. Раскрытие из покоя (пружина 175/16,
+    /// перелёт 9.2%): тело 370 → пик 386.9, ушко 29.5 → 32.2, всего 451.3 × 188.1. Запас до 460
+    public static let windowSize = CGSize(width: 460, height: 210)
 
     public static func spec(for surface: Surface, hasMedia: Bool, notch: CGSize) -> IslandShapeSpec {
         let size: CGSize = switch surface {
@@ -37,7 +68,16 @@ public enum IslandGeometry {
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
         }
-        return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height))
+        let shoulder: CGFloat = switch surface {
+        case .idle: Shoulder.idle
+        case .compact: Shoulder.compact
+        case .peek: Shoulder.peek
+        case .hover: Shoulder.estimated(forHeight: size.height)
+        case .expanded: Shoulder.expanded
+        case .shrink: Shoulder.shrink
+        case .hud: Shoulder.hud
+        }
+        return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height), shoulder: shoulder)
     }
 
     /// Радиус нижних углов. Оценка по кадрам capture/analysis, уточняется при сверке в задаче 16
@@ -59,9 +99,9 @@ public enum IslandGeometry {
             height: windowSize.height)
     }
 
-    /// Контур острова вместе с плечами в координатах экрана
+    /// Контур острова вместе с ушками в координатах экрана
     public static func islandScreenRect(_ spec: IslandShapeSpec, windowFrame: CGRect) -> CGRect {
-        let width = spec.size.width + 2 * shoulder
+        let width = spec.size.width + 2 * spec.shoulder
         return CGRect(
             x: windowFrame.midX - width / 2,
             y: windowFrame.maxY - spec.size.height,

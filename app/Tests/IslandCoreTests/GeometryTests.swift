@@ -51,20 +51,65 @@ struct GeometryTests {
 
     @Test("Окно прижато к верху экрана по центру выреза")
     func windowFrame() {
-        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 644, y: 907, width: 440, height: 210))
+        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 634, y: 907, width: 460, height: 210))
     }
 
-    @Test("Окно вмещает пик перелёта раскрытия с плечами")
-    func windowFitsOvershoot() {
-        #expect(IslandGeometry.windowSize.width >= 382 + 2 * IslandGeometry.shoulder)
-        #expect(IslandGeometry.windowSize.height >= 187.5)
+    @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками")
+    func windowFitsOvershoot() throws {
+        let notch = Self.mbp16.notchSize
+        for transition in [IslandTransition.expand, .hoverExpand] {
+            let overshoot = try #require(IslandMotion.spring(for: transition)).overshoot
+            let expanded = IslandGeometry.expanded
+            let body = expanded.width + overshoot * (expanded.width - notch.width)
+            let shoulder = IslandGeometry.Shoulder.expanded * (1 + overshoot)
+            #expect(IslandGeometry.windowSize.width >= body + 2 * shoulder, "\(transition)")
+            #expect(IslandGeometry.windowSize.height >= expanded.height + overshoot * (expanded.height - notch.height))
+        }
     }
 
-    @Test("Экранный прямоугольник острова включает плечи")
+    @Test("Экранный прямоугольник острова включает ушки своего состояния")
     func islandScreenRect() {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
         let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize)
-        #expect(IslandGeometry.islandScreenRect(spec, windowFrame: window) == CGRect(x: 726.5, y: 1085, width: 275, height: 32))
+        #expect(IslandGeometry.islandScreenRect(spec, windowFrame: window) == CGRect(x: 725.5, y: 1085, width: 277, height: 32))
+        let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
+        #expect(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width == 429)
+    }
+
+    @Test("Ушки по состояниям: в покое нет, в раскрытом по кадру пользователя, hover — оценка")
+    func shoulders() {
+        let notch = Self.mbp16.notchSize
+        func shoulder(_ surface: Surface, media: Bool = true) -> CGFloat {
+            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch).shoulder
+        }
+        #expect(shoulder(.idle) == 0)
+        #expect(shoulder(.compact) == 8)
+        #expect(shoulder(.peek) == 9)
+        #expect(shoulder(.hud(.volume, level: 0.5)) == 8)
+        #expect(shoulder(.shrink) == 8)
+        #expect(shoulder(.expanded) == 29.5)
+        #expect(shoulder(.hover, media: true) == 12.6)
+        #expect(shoulder(.hover, media: false) == 15.4)
+    }
+
+    @Test("Профиль ушка раскрытого плеера совпадает с кадром Alcove в пределах 1 pt")
+    func earProfileMatchesReference() {
+        // ref-ears.png, 2x: строгая граница чёрного по строкам, тело острова с x = 421 px
+        let reference: [(y: CGFloat, x: CGFloat)] = [
+            (0, 370), (4, 385), (8, 393), (12, 399), (16, 403), (20, 407), (24, 410), (28, 412),
+            (32, 414), (36, 416), (40, 417), (44, 418), (48, 419), (52, 420), (56, 421), (64, 421), (72, 421),
+        ]
+        let spec = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
+        let path = IslandOutline.path(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder)
+        for row in reference {
+            // центр строки пикселей в пунктах
+            let y = (row.y + 0.5) / 2
+            var x: CGFloat = 0
+            while x < spec.shoulder, !path.contains(CGPoint(x: x, y: y)) { x += 0.05 }
+            let measured = spec.shoulder - x
+            let expected = (421 - row.x) / 2
+            #expect(abs(measured - expected) <= 1, "y = \(row.y) px: \(measured) против \(expected)")
+        }
     }
 
     @Test("Зона hover в покое: вырез ±30 pt по бокам и 6 pt вниз")
