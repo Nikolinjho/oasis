@@ -43,11 +43,13 @@ public struct IslandView: View {
     @ViewBuilder
     private var content: some View {
         switch model.surface {
-        case .compact, .peek:
-            MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: model.surface == .peek)
+        // отклик на hover в той же ветке: вью музыки не пересоздаётся и не играет переход
+        case .compact, .peek, .hoverNudge(from: .compact), .hoverNudge(from: .peek):
+            MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: musicSurface == .peek)
                 // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
-                // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку
-                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
+                // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку.
+                // В отклике рамка исходного состояния: форма расширяется вокруг контента, он не сдвигается
+                .frame(width: musicSize.width, height: musicSize.height, alignment: .top)
                 .id(ContentID.music)
                 .transition(.slot)
         case .expanded:
@@ -63,6 +65,17 @@ public struct IslandView: View {
         case .idle, .hover, .shrink, .hoverNudge:
             Color.clear
         }
+    }
+
+    /// Состояние, по которому раскладывается музыка: для отклика — то, из которого он открылся
+    private var musicSurface: Surface {
+        if case let .hoverNudge(from) = model.surface { return from }
+        return model.surface
+    }
+
+    private var musicSize: CGSize {
+        let notch = CGSize(width: notchWidth, height: spec.size.height)
+        return IslandGeometry.spec(for: musicSurface, hasMedia: model.hasMedia, notch: notch).size
     }
 
     private enum ContentID: Hashable {
