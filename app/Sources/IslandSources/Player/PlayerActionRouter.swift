@@ -13,7 +13,7 @@ public protocol PlayerActionPerforming: AnyObject {
 /// Решает, кому и с чем отдать действие кнопки плеера
 @MainActor
 public struct PlayerActionRouter {
-    public static let musicBundleID = "com.apple.Music"
+    public nonisolated static let musicBundleID = "com.apple.Music"
 
     private let performer: any PlayerActionPerforming
     private let log = SourceLog.logger("player")

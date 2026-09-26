@@ -18,5 +18,7 @@
     <string>26.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Alcove Analog needs your permission to add the playing Apple Music track to Favorites.</string>
 </dict>
 </plist>
