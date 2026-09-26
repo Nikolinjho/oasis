@@ -21,9 +21,11 @@ public enum IslandMotion {
         // peek не мерили: берём пружины компакта
         case .peekOpen: SpringSpec(stiffness: 235, damping: 31)
         case .peekClose: SpringSpec(stiffness: 185, damping: 27.5)
-        // hover не мерили: берём пружину раскрытия по клику. Замер hover-раскрытия по видео Alcove
-        // ожидается, тогда меняются только эти строки
-        case .hoverOpen, .hoverExpand, .expand: SpringSpec(stiffness: 175, damping: 16)
+        // hover в мини-состояние (режим Alcove) не мерили: берём пружину раскрытия по клику
+        case .hoverOpen, .expand: SpringSpec(stiffness: 175, damping: 16)
+        // замер видео hover-открытия Alcove 2026-09-26: 202.5/17.5, ζ ≈ 0.62, СКО 0.46 pt.
+        // Ширина и высота идут одной пружиной. Схлопывание по уходу курсора — то же smooth(0.4)
+        case .hoverExpand: SpringSpec(stiffness: 200, damping: 17.5)
         case .collapse: .smooth(duration: 0.4)
         case .hudIn: .smooth(duration: 0.44)
         case .hudOut: .smooth(duration: 0.45)

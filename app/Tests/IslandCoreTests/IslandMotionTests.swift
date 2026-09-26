@@ -21,6 +21,13 @@ struct IslandMotionTests {
         #expect(spring.overshoot > 0.05)
     }
 
+    @Test("Hover-раскрытие по замеру видео Alcove, раскрытие кликом по своему замеру")
+    func hoverExpandSpring() {
+        #expect(IslandMotion.spring(for: .hoverExpand) == SpringSpec(stiffness: 200, damping: 17.5))
+        #expect(IslandMotion.spring(for: .expand) == SpringSpec(stiffness: 175, damping: 16))
+        #expect(IslandMotion.spring(for: .collapse) == .smooth(duration: 0.4))
+    }
+
     @Test("Новый уровень HUD не анимирует форму")
     func hudUpdateHasNoSpring() {
         #expect(IslandMotion.spring(for: .hudUpdate) == nil)
