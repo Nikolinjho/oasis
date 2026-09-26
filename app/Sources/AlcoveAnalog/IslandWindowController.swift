@@ -14,6 +14,8 @@ final class IslandWindowController {
     private var pointerInside = false
     /// Тело острова, над которым курсор вошёл: держит hover, пока курсор над ним
     private var hoverOpenedFrom: CGRect?
+    /// Пока меню под островом открыто, курсор на меню и клики в нём не значат «ушёл с острова»
+    private var menuOpen = false
 
     init(store: IslandStore, menu: NSMenu) {
         self.store = store
@@ -73,7 +75,10 @@ final class IslandWindowController {
         }) { monitors.append(local) }
         // глобальный монитор видит только клики в чужих окнах: это и есть «клик мимо»
         if let outside = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown, handler: { [weak self] _ in
-            MainActor.assumeIsolated { self?.store.send(.clickedOutside) }
+            MainActor.assumeIsolated {
+                guard let self, !self.menuOpen else { return }
+                self.store.send(.clickedOutside)
+            }
         }) { monitors.append(outside) }
         // правый клик по острову открывает меню приложения: иконку в menu bar закрывает компакт
         if let rightClick = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown, handler: { [weak self] event in
@@ -83,16 +88,28 @@ final class IslandWindowController {
 
     /// Показывает меню под островом, если правый клик пришёлся на его форму
     private func showMenuIfOnIsland(_ event: NSEvent) -> Bool {
-        guard let panel, event.window === panel, let content = panel.contentView else { return false }
+        guard let panel, event.window === panel else { return false }
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
         guard IslandGeometry.reachingScreenTop(island).contains(NSEvent.mouseLocation) else { return false }
-        let bottomCentre = panel.convertPoint(fromScreen: CGPoint(x: island.midX, y: island.minY))
-        menu.popUp(positioning: nil, at: content.convert(bottomCentre, from: nil), in: content)
+        popUpUnderIsland(menu)
         return true
     }
 
+    /// Меню по центру под нижним краем острова. popUp возвращается, когда меню закрыто:
+    /// всё это время hover и клики мимо заморожены, чтобы раскрытый плеер не схлопнулся под меню.
+    /// После закрытия сверяемся с курсором: ушёл с острова — схлопнется как обычно
+    func popUpUnderIsland(_ menu: NSMenu) {
+        guard let panel, let content = panel.contentView, !menuOpen else { return }
+        let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
+        let bottomCentre = panel.convertPoint(fromScreen: CGPoint(x: island.midX, y: island.minY))
+        menuOpen = true
+        menu.popUp(positioning: nil, at: content.convert(bottomCentre, from: nil), in: content)
+        menuOpen = false
+        pointerMoved()
+    }
+
     private func pointerMoved() {
-        guard let panel, metrics != nil else { return }
+        guard let panel, metrics != nil, !menuOpen else { return }
         let point = NSEvent.mouseLocation
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
         // вне формы клики уходят в menu bar и окна под островом
