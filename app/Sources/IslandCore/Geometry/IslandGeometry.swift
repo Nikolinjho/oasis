@@ -75,4 +75,12 @@ public enum IslandGeometry {
         let notch = metrics.notchRect
         return CGRect(x: notch.minX - 30, y: notch.minY - 6, width: notch.width + 60, height: notch.height + 6)
     }
+
+    /// Курсор над островом с гистерезисом. Пока hover открыт (openedFrom не nil), он держится над
+    /// объединением текущей формы и формы, из которой открылся: hover уже компакта, и без этого
+    /// у краёв компакта hover открывался и закрывался на каждом движении мыши
+    public static func pointerInside(_ point: CGPoint, island: CGRect, hoverZone: CGRect?, openedFrom: CGRect?) -> Bool {
+        if let openedFrom { return island.union(openedFrom).contains(point) }
+        return (hoverZone.map(island.union) ?? island).contains(point)
+    }
 }
