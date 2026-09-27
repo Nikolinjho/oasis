@@ -8,6 +8,7 @@ site/
 capture/recordings/
 capture/frames/
 capture/analysis/**/*.png
+capture/analysis/**/*.mov
 
 # спеки и планы живут только на диске
 docs/superpowers/
