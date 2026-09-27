@@ -1,0 +1,11 @@
+0 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  0.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]
+    0.0.0 AXButton RoleDescription="button" Enabled=1 [713,32 45x25] {AXPress}
+    0.0.1 AXButton Description="Sat, 26" RoleDescription="button" Enabled=1 [978,18 40x50] {AXPress}
+    0.0.2 AXButton RoleDescription="button" Enabled=1 [709,75 138x40] {AXPress}
+    0.0.3 AXButton Description="тест для alcove, 11:05 PM – 11:30 PM" RoleDescription="button" Enabled=1 [880,72 138x28] {AXPress}
+    0.0.4 AXButton RoleDescription="button" Enabled=0 [712,121 42x40] {AXPress}
+    0.0.5 AXButton Description="Play" RoleDescription="button" Enabled=1 [757,121 42x40] {AXPress}
+    0.0.6 AXButton RoleDescription="button" Enabled=0 [801,121 42x40] {AXPress}
+1 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  1.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]

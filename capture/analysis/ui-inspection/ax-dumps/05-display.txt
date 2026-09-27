@@ -1,0 +1,52 @@
+2 AXWindow (AXStandardWindow) Title="Display" RoleDescription="standard window" [554,116 620x687] {AXRaise}
+  2.0 AXGroup (AXHostingView) RoleDescription="group" [554,116 620x687]
+    2.0.0 AXImage Description="Brightness Higher" Identifier="sun.max.fill" RoleDescription="image" Enabled=1 [799,134 14x14]
+    2.0.1 AXStaticText Value="Display" RoleDescription="text" Enabled=1 [825,131 53x19]
+    2.0.2 AXButton Description="General" RoleDescription="button" Enabled=1 [566,169 200x38] {AXPress}
+    2.0.3 AXStaticText Value="Notifications" RoleDescription="text" Enabled=1 [574,226 79x16]
+    2.0.4 AXButton Description="Battery" RoleDescription="button" Enabled=1 [566,248 200x38] {AXPress}
+    2.0.5 AXButton Description="Connectivity" RoleDescription="button" Enabled=1 [566,286 200x38] {AXPress}
+    2.0.6 AXButton Description="Focus" RoleDescription="button" Enabled=1 [566,324 200x38] {AXPress}
+    2.0.7 AXButton Description="Display" RoleDescription="button" Enabled=1 [566,362 200x38] {AXPress}
+    2.0.8 AXButton Description="Sound" RoleDescription="button" Enabled=1 [566,400 200x38] {AXPress}
+    2.0.9 AXStaticText Value="Live Activities" RoleDescription="text" Enabled=1 [574,458 86x16]
+    2.0.10 AXButton Description="Now Playing" RoleDescription="button" Enabled=1 [566,480 200x38] {AXPress}
+    2.0.11 AXButton Description="26, Calendar" RoleDescription="button" Enabled=1 [566,518 200x38] {AXPress}
+    2.0.12 AXButton Description="File Tray, Soon" RoleDescription="button" Enabled=0 [566,556 200x38] {AXPress}
+    2.0.13 AXButton Description="Lock Screen" RoleDescription="button" Enabled=1 [566,594 200x38] {AXPress}
+    2.0.14 AXStaticText Value="Alcove" RoleDescription="text" Enabled=1 [574,652 42x16]
+    2.0.15 AXButton Description="License, Trial" RoleDescription="button" Enabled=1 Selected=1 [566,674 200x38] {AXPress}
+    2.0.16 AXButton Description="About" RoleDescription="button" Enabled=1 [566,712 200x38] {AXPress}
+    2.0.17 AXScrollArea RoleDescription="scroll area" [779,166 395x637] {AXScrollLeftByPage,AXScrollRightByPage,AXScrollUpByPage,AXScrollDownByPage}
+      2.0.17.0 AXImage Description="Brightness Higher" Identifier="sun.max.fill" RoleDescription="image" Enabled=1 [808,182 14x14]
+      2.0.17.1 AXStaticText Value="Display" RoleDescription="text" Enabled=1 [833,181 44x16]
+      2.0.17.2 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,179 44x20] {AXPress}
+      2.0.17.3 AXStaticText Value="Duration" RoleDescription="text" Enabled=1 [806,229 52x16]
+      2.0.17.4 AXButton Description="1.5" RoleDescription="button" Enabled=1 [1103,229 24x16] {AXPress}
+      2.0.17.5 AXStaticText Value="s" RoleDescription="text" Enabled=1 [1130,229 8x16]
+      2.0.17.6 AXSlider Value="1.5" RoleDescription="slider" MinValue=1 MaxValue=2 Enabled=1 AllowedValues=(
+    1,
+    "1.5",
+    2
+) [806,257 340x16] {AXIncrement,AXDecrement}
+        2.0.17.6.0 AXValueIndicator RoleDescription="value indicator" Enabled=1 [966,257 20x16]
+      2.0.17.7 AXButton RoleDescription="button" Enabled=1 [806,300 107x40] {AXPress}
+      2.0.17.8 AXButton RoleDescription="button" Enabled=1 [923,300 107x40] {AXPress}
+      2.0.17.9 AXButton RoleDescription="button" Enabled=1 [1040,300 107x40] {AXPress}
+      2.0.17.10 AXStaticText Value="White" RoleDescription="text" Enabled=1 [841,347 35x16]
+      2.0.17.11 AXStaticText Value="Accent" RoleDescription="text" Enabled=1 [954,347 44x16]
+      2.0.17.12 AXStaticText Value="Glow" RoleDescription="text" Enabled=1 [1078,347 30x16]
+      2.0.17.13 AXStaticText Value="Show percentage" RoleDescription="text" Enabled=1 [806,386 106x16]
+      2.0.17.14 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,384 44x20] {AXPress}
+      2.0.17.15 AXStaticText Value="Hide label" RoleDescription="text" Enabled=1 [806,428 60x16]
+      2.0.17.16 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,426 44x20] {AXPress}
+      2.0.17.17 AXButton Description="Decrease Speed" Identifier="tortoise.fill" RoleDescription="button" Enabled=1 [806,468 107x40] {AXPress}
+      2.0.17.18 AXButton Description="Increase Speed" Identifier="hare.fill" RoleDescription="button" Enabled=1 [923,468 107x40] {AXPress}
+      2.0.17.19 AXButton Description="Flash" Identifier="bolt.fill" RoleDescription="button" Enabled=1 [1040,468 107x40] {AXPress}
+      2.0.17.20 AXStaticText Value="Smooth" RoleDescription="text" Enabled=1 [836,515 47x16]
+      2.0.17.21 AXStaticText Value="Fast" RoleDescription="text" Enabled=1 [963,515 27x16]
+      2.0.17.22 AXStaticText Value="Instant" RoleDescription="text" Enabled=1 [1072,515 41x16]
+  2.1 AXButton (AXCloseButton) RoleDescription="close button" Enabled=1 [572,134 16x16] {AXPress}
+  2.2 AXButton (AXZoomButton) RoleDescription="zoom button" Enabled=0 [618,134 16x16] {AXPress}
+    2.2.0 AXGroup RoleDescription="group" [619,135 14x14]
+  2.3 AXButton (AXMinimizeButton) RoleDescription="minimize button" Enabled=0 [595,134 16x16] {AXPress}

@@ -1,0 +1,7 @@
+0 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  0.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]
+    0.0.0 AXButton RoleDescription="button" Enabled=1 [707,34 47x26] {AXPress}
+    0.0.1 AXButton RoleDescription="button" Enabled=1 [703,78 143x41] {AXPress}
+    0.0.2 AXButton Description="Play" RoleDescription="button" Enabled=1 [750,122 49x47] {AXPress}
+1 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  1.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]

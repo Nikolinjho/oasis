@@ -1,0 +1,6 @@
+0 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  0.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]
+    0.0.0 AXButton Description="Date And Time" Identifier="calendar.badge.clock" RoleDescription="button" Enabled=1 [745,9 18x15]
+    0.0.1 AXButton Description="Date And Time" Identifier="calendar.badge.clock" RoleDescription="button" Enabled=1 [745,9 18x15]
+1 AXWindow (AXSystemDialog) RoleDescription="system dialog" [552,0 624x320] {AXRaise}
+  1.0 AXGroup (AXHostingView) RoleDescription="group" [552,0 624x320]

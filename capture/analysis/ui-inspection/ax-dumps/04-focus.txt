@@ -1,0 +1,62 @@
+2 AXWindow (AXStandardWindow) Title="Focus" RoleDescription="standard window" [554,116 620x687] {AXRaise}
+  2.0 AXGroup (AXHostingView) RoleDescription="group" [554,116 620x687]
+    2.0.0 AXImage Description="Do Not Disturb" Identifier="moon.fill" RoleDescription="image" Enabled=1 [800,135 12x12]
+    2.0.1 AXStaticText Value="Focus" RoleDescription="text" Enabled=1 [825,131 43x19]
+    2.0.2 AXButton Description="General" RoleDescription="button" Enabled=1 [566,169 200x38] {AXPress}
+    2.0.3 AXStaticText Value="Notifications" RoleDescription="text" Enabled=1 [574,226 79x16]
+    2.0.4 AXButton Description="Battery" RoleDescription="button" Enabled=1 [566,248 200x38] {AXPress}
+    2.0.5 AXButton Description="Connectivity" RoleDescription="button" Enabled=1 [566,286 200x38] {AXPress}
+    2.0.6 AXButton Description="Focus" RoleDescription="button" Enabled=1 [566,324 200x38] {AXPress}
+    2.0.7 AXButton Description="Display" RoleDescription="button" Enabled=1 [566,362 200x38] {AXPress}
+    2.0.8 AXButton Description="Sound" RoleDescription="button" Enabled=1 [566,400 200x38] {AXPress}
+    2.0.9 AXStaticText Value="Live Activities" RoleDescription="text" Enabled=1 [574,458 86x16]
+    2.0.10 AXButton Description="Now Playing" RoleDescription="button" Enabled=1 [566,480 200x38] {AXPress}
+    2.0.11 AXButton Description="26, Calendar" RoleDescription="button" Enabled=1 [566,518 200x38] {AXPress}
+    2.0.12 AXButton Description="File Tray, Soon" RoleDescription="button" Enabled=0 [566,556 200x38] {AXPress}
+    2.0.13 AXButton Description="Lock Screen" RoleDescription="button" Enabled=1 [566,594 200x38] {AXPress}
+    2.0.14 AXStaticText Value="Alcove" RoleDescription="text" Enabled=1 [574,652 42x16]
+    2.0.15 AXButton Description="License, Trial" RoleDescription="button" Enabled=1 Selected=1 [566,674 200x38] {AXPress}
+    2.0.16 AXButton Description="About" RoleDescription="button" Enabled=1 [566,712 200x38] {AXPress}
+    2.0.17 AXScrollArea RoleDescription="scroll area" [779,166 395x637] {AXScrollLeftByPage,AXScrollRightByPage,AXScrollUpByPage,AXScrollDownByPage}
+      2.0.17.0 AXImage Description="Do Not Disturb" Identifier="moon.fill" RoleDescription="image" Enabled=1 [808,183 13x13]
+      2.0.17.1 AXStaticText Value="Focus" RoleDescription="text" Enabled=1 [831,181 36x16]
+      2.0.17.2 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,179 44x20] {AXPress}
+      2.0.17.3 AXStaticText Value="Duration" RoleDescription="text" Enabled=1 [806,229 52x16]
+      2.0.17.4 AXButton Description="5.0" RoleDescription="button" Enabled=1 [1103,229 24x16] {AXPress}
+      2.0.17.5 AXStaticText Value="s" RoleDescription="text" Enabled=1 [1130,229 8x16]
+      2.0.17.6 AXSlider Value="5" RoleDescription="slider" MinValue=2.5 MaxValue=6 Enabled=1 AllowedValues=(
+    "2.5",
+    3,
+    "3.5",
+    4,
+    "4.5",
+    5,
+    "5.5",
+    6
+) [806,257 340x16] {AXIncrement,AXDecrement}
+        2.0.17.6.0 AXValueIndicator RoleDescription="value indicator" Enabled=1 [1035,257 20x16]
+      2.0.17.7 AXStaticText Value="Play sound on sleep focus" RoleDescription="text" Enabled=1 [806,301 158x16]
+      2.0.17.8 AXButton Description="Play" Identifier="play.circle.fill" RoleDescription="button" Enabled=1 [971,303 13x13]
+      2.0.17.9 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,299 44x20] {AXPress}
+      2.0.17.10 AXStaticText Value="Replace waveform during focus" RoleDescription="text" Enabled=1 [806,343 190x16]
+      2.0.17.11 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,341 44x20] {AXPress}
+      2.0.17.12 AXStaticText Value="Hide label" RoleDescription="text" Enabled=1 [806,385 60x16]
+      2.0.17.13 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,383 44x20] {AXPress}
+      2.0.17.14 AXStaticText Value="Allowed Notifications" RoleDescription="text" Enabled=1 [803,430 131x16]
+      2.0.17.15 AXImage Description="Flash" Identifier="bolt.fill" RoleDescription="image" Enabled=1 [813,468 8x13]
+      2.0.17.16 AXStaticText Value="Battery" RoleDescription="text" Enabled=1 [835,466 44x16]
+      2.0.17.17 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,464 44x20] {AXPress}
+      2.0.17.18 AXImage Description="Audiobook" Identifier="headphones" RoleDescription="image" Enabled=1 [812,510 11x12]
+      2.0.17.19 AXStaticText Value="Connectivity" RoleDescription="text" Enabled=1 [835,508 76x16]
+      2.0.17.20 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,506 44x20] {AXPress}
+      2.0.17.21 AXImage Description="Brightness Higher" Identifier="sun.max.fill" RoleDescription="image" Enabled=1 [811,552 12x12]
+      2.0.17.22 AXStaticText Value="Display" RoleDescription="text" Enabled=1 [835,550 44x16]
+      2.0.17.23 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,548 44x20] {AXPress}
+      2.0.17.24 AXImage Description="Volume High" Identifier="speaker.wave.2.fill" RoleDescription="image" Enabled=1 [811,595 12x10]
+      2.0.17.25 AXStaticText Value="Sound" RoleDescription="text" Enabled=1 [835,592 39x16]
+      2.0.17.26 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,590 44x20] {AXPress}
+  2.1 AXButton (AXCloseButton) RoleDescription="close button" Enabled=1 [572,134 16x16] {AXPress}
+  2.2 AXButton (AXZoomButton) RoleDescription="zoom button" Enabled=0 [618,134 16x16] {AXPress}
+    2.2.0 AXGroup RoleDescription="group" [619,135 14x14]
+      2.2.0.0 AXGroup RoleDescription="group" [619,135 14x14]
+  2.3 AXButton (AXMinimizeButton) RoleDescription="minimize button" Enabled=0 [595,134 16x16] {AXPress}

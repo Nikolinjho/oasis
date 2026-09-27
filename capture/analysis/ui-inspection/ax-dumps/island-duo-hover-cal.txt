@@ -1,0 +1,8 @@
+    0.0.0 AXButton RoleDescription="button" Enabled=1 [713,32 45x25] {AXPress}
+    0.0.1 AXButton Description="Sat, 26" RoleDescription="button" Enabled=1 [978,18 40x50] {AXPress}
+    0.0.2 AXButton RoleDescription="button" Enabled=1 [709,75 138x40] {AXPress}
+    0.0.3 AXButton Description="No more events today" RoleDescription="button" Enabled=1 [880,92 119x14]
+    0.0.4 AXButton Description="Your day is clear" RoleDescription="button" Enabled=1 [880,108 88x14]
+    0.0.5 AXButton RoleDescription="button" Enabled=0 [712,121 42x40] {AXPress}
+    0.0.6 AXButton Description="Play" RoleDescription="button" Enabled=1 [757,121 42x40] {AXPress}
+    0.0.7 AXButton RoleDescription="button" Enabled=0 [801,121 42x40] {AXPress}

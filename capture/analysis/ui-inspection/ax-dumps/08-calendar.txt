@@ -1,0 +1,119 @@
+2 AXWindow (AXStandardWindow) Title="Calendar" RoleDescription="standard window" [554,116 620x687] {AXRaise}
+  2.0 AXGroup (AXHostingView) RoleDescription="group" [554,116 620x687]
+    2.0.0 AXStaticText Value="26" RoleDescription="text" Enabled=1 [798,136 15x14]
+    2.0.1 AXStaticText Value="Calendar" RoleDescription="text" Enabled=1 [825,131 64x19]
+    2.0.2 AXButton Description="General" RoleDescription="button" Enabled=1 [566,169 200x38] {AXPress}
+    2.0.3 AXStaticText Value="Notifications" RoleDescription="text" Enabled=1 [574,226 79x16]
+    2.0.4 AXButton Description="Battery" RoleDescription="button" Enabled=1 [566,248 200x38] {AXPress}
+    2.0.5 AXButton Description="Connectivity" RoleDescription="button" Enabled=1 [566,286 200x38] {AXPress}
+    2.0.6 AXButton Description="Focus" RoleDescription="button" Enabled=1 [566,324 200x38] {AXPress}
+    2.0.7 AXButton Description="Display" RoleDescription="button" Enabled=1 [566,362 200x38] {AXPress}
+    2.0.8 AXButton Description="Sound" RoleDescription="button" Enabled=1 [566,400 200x38] {AXPress}
+    2.0.9 AXStaticText Value="Live Activities" RoleDescription="text" Enabled=1 [574,458 86x16]
+    2.0.10 AXButton Description="Now Playing" RoleDescription="button" Enabled=1 [566,480 200x38] {AXPress}
+    2.0.11 AXButton Description="26, Calendar" RoleDescription="button" Enabled=1 [566,518 200x38] {AXPress}
+    2.0.12 AXButton Description="File Tray, Soon" RoleDescription="button" Enabled=0 [566,556 200x38] {AXPress}
+    2.0.13 AXButton Description="Lock Screen" RoleDescription="button" Enabled=1 [566,594 200x38] {AXPress}
+    2.0.14 AXStaticText Value="Alcove" RoleDescription="text" Enabled=1 [574,652 42x16]
+    2.0.15 AXButton Description="License, Trial" RoleDescription="button" Enabled=1 Selected=1 [566,674 200x38] {AXPress}
+    2.0.16 AXButton Description="About" RoleDescription="button" Enabled=1 [566,712 200x38] {AXPress}
+    2.0.17 AXScrollArea RoleDescription="scroll area" [779,166 395x637] {AXScrollLeftByPage,AXScrollRightByPage,AXScrollUpByPage,AXScrollDownByPage}
+      2.0.17.0 AXImage Description="Date And Time" Identifier="calendar.badge.clock" RoleDescription="image" Enabled=1 [809,182 16x14]
+      2.0.17.1 AXStaticText Value="Calendar" RoleDescription="text" Enabled=1 [832,181 54x16]
+      2.0.17.2 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,179 44x20] {AXPress}
+      2.0.17.3 AXStaticText Value="Time before event" RoleDescription="text" Enabled=1 [806,229 110x16]
+      2.0.17.4 AXButton Description="15" RoleDescription="button" Enabled=1 [1111,229 16x16] {AXPress}
+      2.0.17.5 AXStaticText Value="m" RoleDescription="text" Enabled=1 [1130,229 8x16]
+      2.0.17.6 AXSlider Value="15" RoleDescription="slider" MinValue=5 MaxValue=30 Enabled=1 AllowedValues=(
+    5,
+    10,
+    15,
+    20,
+    25,
+    30
+) [806,257 340x16] {AXIncrement,AXDecrement}
+        2.0.17.6.0 AXValueIndicator RoleDescription="value indicator" Enabled=1 [934,257 20x16]
+      2.0.17.7 AXStaticText Value="Play sound on calendar event" RoleDescription="text" Enabled=1 [806,301 178x16]
+      2.0.17.8 AXButton Description="Play" Identifier="play.circle.fill" RoleDescription="button" Enabled=1 [991,303 13x13]
+      2.0.17.9 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,299 44x20] {AXPress}
+      2.0.17.10 AXStaticText Value="Play hourly chime" RoleDescription="text" Enabled=1 [806,343 107x16]
+      2.0.17.11 AXButton Description="Play" Identifier="play.circle.fill" RoleDescription="button" Enabled=1 [920,345 13x13]
+      2.0.17.12 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,341 44x20] {AXPress}
+      2.0.17.13 AXStaticText Value="Use calendar color" RoleDescription="text" Enabled=1 [806,385 113x16]
+      2.0.17.14 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,383 44x20] {AXPress}
+      2.0.17.15 AXStaticText Value="Disable activity during events" RoleDescription="text" Enabled=1 [806,427 178x16]
+      2.0.17.16 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,425 44x20] {AXPress}
+      2.0.17.17 AXStaticText Value="Show weather on empty day" RoleDescription="text" Enabled=1 [806,469 171x16]
+      2.0.17.18 AXButton Description="lock" RoleDescription="button" Enabled=1 [1083,470 13x15]
+      2.0.17.19 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=0 [1102,467 44x20] {AXPress}
+      2.0.17.20 AXStaticText Value="Use event indicators" RoleDescription="text" Enabled=1 [806,511 124x16]
+      2.0.17.21 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,509 44x20] {AXPress}
+      2.0.17.22 AXStaticText Value="Always show month view" RoleDescription="text" Enabled=1 [806,553 150x16]
+      2.0.17.23 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,551 44x20] {AXPress}
+      2.0.17.24 AXStaticText Value="Notify when time to leave" RoleDescription="text" Enabled=1 [806,610 153x16]
+      2.0.17.25 AXButton Description="unblock" RoleDescription="button" Enabled=1 [1078,608 18x20]
+      2.0.17.26 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=0 [1102,608 44x20] {AXPress}
+      2.0.17.27 AXStaticText Value="Calendars" RoleDescription="text" Enabled=1 [803,655 63x16]
+      2.0.17.28 AXCheckBox (AXToggle) Value="1" Description="Family" RoleDescription="toggle button" Enabled=1 Selected=1 [806,691 63x16] {AXPress}
+      2.0.17.29 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,688 55x23] {AXPress}
+      2.0.17.30 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,688 55x23]
+      2.0.17.31 AXCheckBox (AXToggle) Value="1" Description="Work" RoleDescription="toggle button" Enabled=1 Selected=1 [806,733 55x16] {AXPress}
+      2.0.17.32 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,730 55x23] {AXPress}
+      2.0.17.33 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,730 55x23]
+      2.0.17.34 AXCheckBox (AXToggle) Value="1" Description="nikita.pyanov@sputnik8.com" RoleDescription="toggle button" Enabled=1 Selected=1 [806,775 197x16] {AXPress}
+      2.0.17.35 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,772 55x23] {AXPress}
+      2.0.17.36 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,772 55x23]
+      2.0.17.37 AXCheckBox (AXToggle) Value="1" Description="Праздники России" RoleDescription="toggle button" Enabled=1 Selected=1 [806,817 143x16] {AXPress}
+      2.0.17.38 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,814 55x23] {AXPress}
+      2.0.17.39 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,814 55x23]
+      2.0.17.40 AXCheckBox (AXToggle) Value="1" Description="nikolinjho@gmail.com" RoleDescription="toggle button" Enabled=1 Selected=1 [806,859 155x16] {AXPress}
+      2.0.17.41 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,856 55x23] {AXPress}
+      2.0.17.42 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,856 55x23]
+      2.0.17.43 AXCheckBox (AXToggle) Value="1" Description="Holidays in Russia" RoleDescription="toggle button" Enabled=1 Selected=1 [806,901 133x16] {AXPress}
+      2.0.17.44 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,898 55x23] {AXPress}
+      2.0.17.45 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,898 55x23]
+      2.0.17.46 AXCheckBox (AXToggle) Value="1" Description="Calendar" RoleDescription="toggle button" Enabled=1 Selected=1 [806,943 78x16] {AXPress}
+      2.0.17.47 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,940 55x23] {AXPress}
+      2.0.17.48 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,940 55x23]
+      2.0.17.49 AXCheckBox (AXToggle) Value="1" Description="Уши" RoleDescription="toggle button" Enabled=1 Selected=1 [806,985 50x16] {AXPress}
+      2.0.17.50 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,982 55x23] {AXPress}
+      2.0.17.51 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,982 55x23]
+      2.0.17.52 AXCheckBox (AXToggle) Value="1" Description="Праздники России" RoleDescription="toggle button" Enabled=1 Selected=1 [806,1018 167x34] {AXPress}
+      2.0.17.53 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,1024 55x23] {AXPress}
+      2.0.17.54 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,1024 55x23]
+      2.0.17.55 AXCheckBox (AXToggle) Value="1" Description="Birthdays" RoleDescription="toggle button" Enabled=1 Selected=1 [806,1060 108x34] {AXPress}
+      2.0.17.56 AXButton Value="Both" RoleDescription="button" Enabled=1 [1091,1066 55x23] {AXPress}
+      2.0.17.57 AXButton Description="Both" RoleDescription="button" Enabled=1 [1091,1066 55x23]
+      2.0.17.58 AXStaticText Value="Extension" RoleDescription="text" Enabled=1 [803,1114 61x16]
+      2.0.17.59 AXImage Description="Reading List" Identifier="eyeglasses" RoleDescription="image" Enabled=1 [807,1154 20x8]
+      2.0.17.60 AXStaticText Value="Quick Peek" RoleDescription="text" Enabled=1 [835,1150 68x16]
+      2.0.17.61 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,1148 44x20] {AXPress}
+      2.0.17.62 AXStaticText Value="Before event starts" RoleDescription="text" Enabled=1 [806,1192 115x16]
+      2.0.17.63 AXCheckBox (AXToggle) Value="0" RoleDescription="toggle button" Enabled=1 [1102,1190 44x20] {AXPress}
+      2.0.17.64 AXStaticText Value="When event is starting" RoleDescription="text" Enabled=1 [806,1234 136x16]
+      2.0.17.65 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,1232 44x20] {AXPress}
+      2.0.17.66 AXStaticText Value="Peek duration" RoleDescription="text" Enabled=1 [806,1282 84x16]
+      2.0.17.67 AXButton Description="4" RoleDescription="button" Enabled=1 [1119,1282 8x16] {AXPress}
+      2.0.17.68 AXStaticText Value="s" RoleDescription="text" Enabled=1 [1130,1282 8x16]
+      2.0.17.69 AXSlider Value="4" RoleDescription="slider" MinValue=1 MaxValue=6 Enabled=1 AllowedValues=(
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+) [806,1310 340x16] {AXIncrement,AXDecrement}
+        2.0.17.69.0 AXValueIndicator RoleDescription="value indicator" Enabled=1 [998,1310 20x16]
+      2.0.17.70 AXStaticText Value="Use colored calendar indicator" RoleDescription="text" Enabled=1 [806,1354 185x16]
+      2.0.17.71 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,1352 44x20] {AXPress}
+      2.0.17.72 AXScrollBar Value="0" RoleDescription="scroll bar" Enabled=1 [1156,165 19x631]
+        2.0.17.72.0 AXValueIndicator Value="0" RoleDescription="value indicator" [1165,169 6x333]
+        2.0.17.72.1 AXButton (AXIncrementArrow) RoleDescription="increment arrow button" [1157,166 0x0] {AXPress}
+        2.0.17.72.2 AXButton (AXDecrementArrow) RoleDescription="decrement arrow button" [1157,166 0x0] {AXPress}
+        2.0.17.72.3 AXButton (AXIncrementPage) RoleDescription="increment page button" [1165,503 6x289] {AXPress}
+        2.0.17.72.4 AXButton (AXDecrementPage) RoleDescription="decrement page button" [1165,169 6x0] {AXPress}
+  2.1 AXButton (AXCloseButton) RoleDescription="close button" Enabled=1 [572,134 16x16] {AXPress}
+  2.2 AXButton (AXZoomButton) RoleDescription="zoom button" Enabled=0 [618,134 16x16] {AXPress}
+    2.2.0 AXGroup RoleDescription="group" [619,135 14x14]
+      2.2.0.0 AXGroup RoleDescription="group" [619,135 14x14]
+  2.3 AXButton (AXMinimizeButton) RoleDescription="minimize button" Enabled=0 [595,134 16x16] {AXPress}

@@ -1,0 +1,2 @@
+    0.0.0 AXButton RoleDescription="button" Enabled=1 [765,1 37x36]
+    0.0.1 AXButton RoleDescription="button" Enabled=1 [924,1 37x36]

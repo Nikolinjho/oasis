@@ -1,0 +1,32 @@
+2 AXWindow (AXStandardWindow) Title="License" RoleDescription="standard window" [554,116 620x687] {AXRaise}
+  2.0 AXGroup (AXHostingView) RoleDescription="group" [554,116 620x687]
+    2.0.0 AXImage Description="Verified" Identifier="checkmark.seal.fill" RoleDescription="image" Enabled=1 Selected=1 [799,134 14x14]
+    2.0.1 AXStaticText Value="License" RoleDescription="text" Enabled=1 [825,131 55x19]
+    2.0.2 AXButton Description="General" RoleDescription="button" Enabled=1 [566,169 200x38] {AXPress}
+    2.0.3 AXStaticText Value="Notifications" RoleDescription="text" Enabled=1 [574,226 79x16]
+    2.0.4 AXButton Description="Battery" RoleDescription="button" Enabled=1 [566,248 200x38] {AXPress}
+    2.0.5 AXButton Description="Connectivity" RoleDescription="button" Enabled=1 [566,286 200x38] {AXPress}
+    2.0.6 AXButton Description="Focus" RoleDescription="button" Enabled=1 [566,324 200x38] {AXPress}
+    2.0.7 AXButton Description="Display" RoleDescription="button" Enabled=1 [566,362 200x38] {AXPress}
+    2.0.8 AXButton Description="Sound" RoleDescription="button" Enabled=1 [566,400 200x38] {AXPress}
+    2.0.9 AXStaticText Value="Live Activities" RoleDescription="text" Enabled=1 [574,458 86x16]
+    2.0.10 AXButton Description="Now Playing" RoleDescription="button" Enabled=1 [566,480 200x38] {AXPress}
+    2.0.11 AXButton Description="26, Calendar" RoleDescription="button" Enabled=1 [566,518 200x38] {AXPress}
+    2.0.12 AXButton Description="File Tray, Soon" RoleDescription="button" Enabled=0 [566,556 200x38] {AXPress}
+    2.0.13 AXButton Description="Lock Screen" RoleDescription="button" Enabled=1 [566,594 200x38] {AXPress}
+    2.0.14 AXStaticText Value="Alcove" RoleDescription="text" Enabled=1 [574,652 42x16]
+    2.0.15 AXButton Description="License, Trial" RoleDescription="button" Enabled=1 Selected=1 [566,674 200x38] {AXPress}
+    2.0.16 AXButton Description="About" RoleDescription="button" Enabled=1 [566,712 200x38] {AXPress}
+    2.0.17 AXScrollArea RoleDescription="scroll area" [779,166 395x637] {AXScrollLeftByPage,AXScrollRightByPage,AXScrollUpByPage,AXScrollDownByPage}
+      2.0.17.0 AXImage Description="Clock" Identifier="clock.fill" RoleDescription="image" Enabled=1 [808,182 13x13]
+      2.0.17.1 AXStaticText Value="Trial" RoleDescription="text" Enabled=1 [831,180 26x16]
+      2.0.17.2 AXStaticText Value="2d 5m 22s" RoleDescription="text" Enabled=1 [1080,180 65x16]
+      2.0.17.3 AXStaticText Value="Activate" RoleDescription="text" Enabled=1 [803,224 51x16]
+      2.0.17.4 AXButton Description="Purchase" RoleDescription="button" Enabled=1 [1098,224 58x16] {AXPress}
+      2.0.17.5 AXImage Description="Passwords" Identifier="key.fill" RoleDescription="image" Enabled=1 [807,260 8x16]
+      2.0.17.6 AXTextField PlaceholderValue="License Key" RoleDescription="text field" Enabled=1 [823,260 289x16] {AXConfirm}
+  2.1 AXButton (AXCloseButton) RoleDescription="close button" Enabled=1 [572,134 16x16] {AXPress}
+  2.2 AXButton (AXZoomButton) RoleDescription="zoom button" Enabled=0 [618,134 16x16] {AXPress}
+    2.2.0 AXGroup RoleDescription="group" [619,135 14x14]
+      2.2.0.0 AXGroup RoleDescription="group" [619,135 14x14]
+  2.3 AXButton (AXMinimizeButton) RoleDescription="minimize button" Enabled=0 [595,134 16x16] {AXPress}

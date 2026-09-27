@@ -1,0 +1,34 @@
+2 AXWindow (AXStandardWindow) Title="About" RoleDescription="standard window" [554,116 620x687] {AXRaise}
+  2.0 AXGroup (AXHostingView) RoleDescription="group" [554,116 620x687]
+    2.0.0 AXImage Description="Info" Identifier="info.circle.fill" RoleDescription="image" Enabled=1 [800,135 12x12]
+    2.0.1 AXStaticText Value="About" RoleDescription="text" Enabled=1 [825,131 43x19]
+    2.0.2 AXButton Description="General" RoleDescription="button" Enabled=1 [566,169 200x38] {AXPress}
+    2.0.3 AXStaticText Value="Notifications" RoleDescription="text" Enabled=1 [574,226 79x16]
+    2.0.4 AXButton Description="Battery" RoleDescription="button" Enabled=1 [566,248 200x38] {AXPress}
+    2.0.5 AXButton Description="Connectivity" RoleDescription="button" Enabled=1 [566,286 200x38] {AXPress}
+    2.0.6 AXButton Description="Focus" RoleDescription="button" Enabled=1 [566,324 200x38] {AXPress}
+    2.0.7 AXButton Description="Display" RoleDescription="button" Enabled=1 [566,362 200x38] {AXPress}
+    2.0.8 AXButton Description="Sound" RoleDescription="button" Enabled=1 [566,400 200x38] {AXPress}
+    2.0.9 AXStaticText Value="Live Activities" RoleDescription="text" Enabled=1 [574,458 86x16]
+    2.0.10 AXButton Description="Now Playing" RoleDescription="button" Enabled=1 [566,480 200x38] {AXPress}
+    2.0.11 AXButton Description="26, Calendar" RoleDescription="button" Enabled=1 [566,518 200x38] {AXPress}
+    2.0.12 AXButton Description="File Tray, Soon" RoleDescription="button" Enabled=0 [566,556 200x38] {AXPress}
+    2.0.13 AXButton Description="Lock Screen" RoleDescription="button" Enabled=1 [566,594 200x38] {AXPress}
+    2.0.14 AXStaticText Value="Alcove" RoleDescription="text" Enabled=1 [574,652 42x16]
+    2.0.15 AXButton Description="License, Trial" RoleDescription="button" Enabled=1 Selected=1 [566,674 200x38] {AXPress}
+    2.0.16 AXButton Description="About" RoleDescription="button" Enabled=1 [566,712 200x38] {AXPress}
+    2.0.17 AXScrollArea RoleDescription="scroll area" [779,166 395x637] {AXScrollLeftByPage,AXScrollRightByPage,AXScrollUpByPage,AXScrollDownByPage}
+      2.0.17.0 AXButton Description="Check Updates..., 1.7.7" RoleDescription="button" Enabled=1 [800,174 352x35] {AXPress}
+      2.0.17.1 AXImage Description="Gear With A Badge" Identifier="gear.badge" RoleDescription="image" Enabled=1 [808,229 15x15]
+      2.0.17.2 AXStaticText Value="Automatically check for updates" RoleDescription="text" Enabled=1 [834,228 195x16]
+      2.0.17.3 AXCheckBox (AXToggle) Value="1" RoleDescription="toggle button" Enabled=1 [1102,226 44x20] {AXPress}
+      2.0.17.4 AXStaticText Value="Share feedback regarding bugs, suggested features, or provide other valuable input." RoleDescription="text" Enabled=1 [808,286 322x32]
+      2.0.17.5 AXImage Description="Duration End" Identifier="hourglass.tophalf.filled" RoleDescription="image" Enabled=1 [809,332 7x11]
+      2.0.17.6 AXStaticText Value="Estimated reply: 48h" RoleDescription="text" Enabled=1 [822,330 117x15]
+      2.0.17.7 AXButton Description="Send Feedback..." RoleDescription="button" Enabled=1 [800,363 173x35] {AXPress}
+      2.0.17.8 AXButton Description="Join Discord..." RoleDescription="button" Enabled=1 [979,363 173x35] {AXPress}
+  2.1 AXButton (AXCloseButton) RoleDescription="close button" Enabled=1 [572,134 16x16] {AXPress}
+  2.2 AXButton (AXZoomButton) RoleDescription="zoom button" Enabled=0 [618,134 16x16] {AXPress}
+    2.2.0 AXGroup RoleDescription="group" [619,135 14x14]
+      2.2.0.0 AXGroup RoleDescription="group" [619,135 14x14]
+  2.3 AXButton (AXMinimizeButton) RoleDescription="minimize button" Enabled=0 [595,134 16x16] {AXPress}
