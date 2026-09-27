@@ -32,8 +32,11 @@ enum DebugCatalog {
                 info.isPlaying.toggle()
                 store.apply(.updated(info))
             }),
-            // тот же трек ещё раз: машина показывает peek из компакта, как при смене трека
-            .action(DebugAction(id: "music.peek", title: "Peek Now") { store.send(.trackChanged) }),
+            // повторный peek текущего трека: без трека действия нет
+            .action(DebugAction(id: "music.peek", title: "Peek Now") {
+                guard let info = store.nowPlaying else { return }
+                store.apply(.newTrack(info))
+            }),
             .separator,
             .action(DebugAction(id: "music.clear", title: "Clear Track") { store.apply(.cleared) }),
         ])

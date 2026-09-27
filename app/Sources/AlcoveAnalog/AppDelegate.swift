@@ -18,8 +18,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var debugSections: [DebugSection] = []
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    /// При холодном запуске по ссылке (`open -g -a … "alcove-analog://…"`) AppKit доставляет
+    /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
+    func applicationWillFinishLaunching(_ notification: Notification) {
         debugSections = DebugCatalog.sections(store: store)
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
             debugItem: DebugMenu.item(sections: debugSections),
@@ -40,10 +45,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// alcove-analog://debug/<id>: то же действие, что пункт меню Debug
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            guard let id = DebugURL.actionID(from: url),
-                  let action = debugSections.lazy.flatMap(\.actions).first(where: { $0.id == id })
-            else {
-                log.error("unknown url \(url.absoluteString, privacy: .public)")
+            guard let id = DebugURL.actionID(from: url) else {
+                DebugAction.log.error("unknown url \(url.absoluteString, privacy: .public)")
+                continue
+            }
+            guard let action = debugSections.lazy.flatMap(\.actions).first(where: { $0.id == id }) else {
+                DebugAction.log.error("unknown id \(id, privacy: .public)")
                 continue
             }
             action.perform()

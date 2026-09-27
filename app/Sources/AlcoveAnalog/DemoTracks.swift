@@ -5,15 +5,20 @@ import IslandSources
 /// Фейковые треки для отладки и demo-прогона: однотонные обложки известного цвета
 @MainActor
 enum DemoTracks {
-    static let all: [NowPlayingInfo] = [
-        make("Fire", color: NSColor(srgbRed: 0.95, green: 0.45, blue: 0.1, alpha: 1)),
-        make("Water", color: NSColor(srgbRed: 0.2, green: 0.5, blue: 0.95, alpha: 1)),
-    ]
+    // вычисляемые: static let заморозил бы elapsedAt в момент первого обращения, и трек сразу стал бы старым
+    static var all: [NowPlayingInfo] {
+        [
+            make("Fire", color: NSColor(srgbRed: 0.95, green: 0.45, blue: 0.1, alpha: 1)),
+            make("Water", color: NSColor(srgbRed: 0.2, green: 0.5, blue: 0.95, alpha: 1)),
+        ]
+    }
 
     /// Браузерный источник без обложки: в острове плейсхолдер ♪
-    static let withoutArtwork = NowPlayingInfo(
-        bundleID: "com.google.Chrome", title: "Fake Track Without Artwork", artist: "Demo Artist",
-        isPlaying: true, duration: 200, elapsed: 10, elapsedAt: Date())
+    static var withoutArtwork: NowPlayingInfo {
+        NowPlayingInfo(
+            bundleID: "com.google.Chrome", title: "Fake Track Without Artwork", artist: "Demo Artist",
+            isPlaying: true, duration: 200, elapsed: 10, elapsedAt: Date())
+    }
 
     static func make(_ title: String, color: NSColor) -> NowPlayingInfo {
         let artwork = png(color)

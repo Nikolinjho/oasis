@@ -43,8 +43,8 @@ enum DebugURL {
     static let scheme = "alcove-analog"
 
     static func actionID(from url: URL) -> String? {
-        guard url.scheme == scheme, url.host() == "debug" else { return nil }
-        let id = url.path().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard url.scheme?.lowercased() == scheme, url.host()?.lowercased() == "debug" else { return nil }
+        let id = url.path(percentEncoded: false).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         return id.isEmpty ? nil : id
     }
 }

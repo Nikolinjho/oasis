@@ -24,6 +24,10 @@ struct DebugCatalogTests {
         #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/")!) == nil)
         #expect(DebugURL.actionID(from: URL(string: "alcove-analog://settings/general")!) == nil)
         #expect(DebugURL.actionID(from: URL(string: "https://debug/hud.sound.50")!) == nil)
+        // регистр схемы и хоста не важен, хвостовой слэш и query не мешают разбору
+        #expect(DebugURL.actionID(from: URL(string: "ALCOVE-ANALOG://DEBUG/hud.sound.50")!) == "hud.sound.50")
+        #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/hud.sound.50/")!) == "hud.sound.50")
+        #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/hud.sound.50?x=1")!) == "hud.sound.50")
     }
 
     @Test("Sound 50% ставит остров в HUD громкости с уровнем 0.5")
@@ -32,6 +36,23 @@ struct DebugCatalogTests {
         let action = try #require(Self.actions(store).first { $0.id == "hud.sound.50" })
         action.run()
         #expect(store.model.surface == .hud(.volume, level: 0.5))
+    }
+
+    @Test("Peek Now без трека ничего не делает, с треком повторяет peek из компакта")
+    func peekActionNeedsTrack() throws {
+        let store = IslandStore(config: .alcove)
+        let peek = try #require(Self.actions(store).first { $0.id == "music.peek" })
+        peek.run()
+        #expect(store.model.surface == .idle)
+        #expect(store.nowPlaying == nil)
+
+        let next = try #require(Self.actions(store).first { $0.id == "music.next" })
+        next.run()
+        #expect(store.model.surface == .compact)
+
+        peek.run()
+        #expect(store.model.surface == .peek)
+        #expect(store.nowPlaying != nil)
     }
 
     @Test("Переключатели таймингов меняют timeScale и отмечают текущий")
