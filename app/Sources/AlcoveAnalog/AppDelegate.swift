@@ -15,12 +15,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var trustTimer: Timer?
     private var fullscreen: FullscreenMonitor?
     private var tasks: [Task<Void, Never>] = []
+    private var debugSections: [DebugSection] = []
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        debugSections = DebugCatalog.sections(store: store)
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
-            debugItems: DebugMenu.items(store: store),
+            debugItem: DebugMenu.item(sections: debugSections),
             isTrusted: { Permissions.isAccessibilityTrusted })
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
@@ -33,6 +35,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         nowPlaying?.stop()
+    }
+
+    /// alcove-analog://debug/<id>: то же действие, что пункт меню Debug
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            guard let id = DebugURL.actionID(from: url),
+                  let action = debugSections.lazy.flatMap(\.actions).first(where: { $0.id == id })
+            else {
+                log.error("unknown url \(url.absoluteString, privacy: .public)")
+                continue
+            }
+            action.perform()
+        }
     }
 
     /// Полноэкранное приложение на экране с вырезом прячет компакт музыки

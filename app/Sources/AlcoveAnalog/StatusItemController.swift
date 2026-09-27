@@ -28,7 +28,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let grantAccessibility = ClosureMenuItem("Grant Accessibility…") { Permissions.openAccessibilitySettings() }
     private let isTrusted: () -> Bool
 
-    init(debugItems: [NSMenuItem], isTrusted: @escaping () -> Bool) {
+    init(debugItem: NSMenuItem, isTrusted: @escaping () -> Bool) {
         self.isTrusted = isTrusted
         super.init()
         item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
@@ -40,11 +40,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(grantAccessibility)
         menu.addItem(.separator())
 
-        let debug = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
-        let debugMenu = NSMenu()
-        for item in debugItems { debugMenu.addItem(item) }
-        debug.submenu = debugMenu
-        menu.addItem(debug)
+        menu.addItem(debugItem)
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.menu = menu

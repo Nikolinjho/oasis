@@ -10,6 +10,11 @@ enum DemoTracks {
         make("Water", color: NSColor(srgbRed: 0.2, green: 0.5, blue: 0.95, alpha: 1)),
     ]
 
+    /// Браузерный источник без обложки: в острове плейсхолдер ♪
+    static let withoutArtwork = NowPlayingInfo(
+        bundleID: "com.google.Chrome", title: "Fake Track Without Artwork", artist: "Demo Artist",
+        isPlaying: true, duration: 200, elapsed: 10, elapsedAt: Date())
+
     static func make(_ title: String, color: NSColor) -> NowPlayingInfo {
         let artwork = png(color)
         return NowPlayingInfo(
@@ -26,5 +31,16 @@ enum DemoTracks {
         }
         guard let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) else { return nil }
         return rep.representation(using: .png, properties: [:])
+    }
+}
+
+/// Следующий демо-трек по кругу: общий для пунктов меню и сценариев
+@MainActor
+final class DemoTrackCursor {
+    private var index = -1
+
+    func next() -> NowPlayingInfo {
+        index += 1
+        return DemoTracks.all[index % DemoTracks.all.count]
     }
 }

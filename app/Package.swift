@@ -12,5 +12,7 @@ let package = Package(
         .testTarget(name: "IslandCoreTests", dependencies: ["IslandCore"], resources: [.copy("Fixtures")]),
         .testTarget(name: "IslandSourcesTests", dependencies: ["IslandSources", "IslandCore"], resources: [.copy("Fixtures")]),
         .testTarget(name: "IslandUITests", dependencies: ["IslandUI", "IslandCore"]),
+        // исполняемый таргет тестируется через @testable import: SwiftPM переименовывает точку входа main
+        .testTarget(name: "AlcoveAnalogTests", dependencies: ["AlcoveAnalog", "IslandCore"]),
     ]
 )
