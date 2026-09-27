@@ -44,6 +44,18 @@ public enum IslandOutline {
         return path
     }
 
+    /// Ширина тёмной области контура на глубине depth от края экрана: тело плюс заполненная часть ушек.
+    /// Так остров меряет capture/tools/track.py: строка пикселей 2 при 2x, её середина на 1.25 pt
+    public static func rowWidth(size: CGSize, bottomRadius: CGFloat, shoulder: CGFloat, depth: CGFloat) -> CGFloat {
+        let outline = path(size: size, bottomRadius: bottomRadius, shoulder: shoulder)
+        let total = size.width + 2 * shoulder
+        var left: CGFloat = 0
+        while left < shoulder, !outline.contains(CGPoint(x: left, y: depth)) { left += 0.01 }
+        var right = total
+        while right > total - shoulder, !outline.contains(CGPoint(x: right, y: depth)) { right -= 0.01 }
+        return right - left
+    }
+
     /// Профиль ушка: кубическая кривая Безье от кончика у края экрана (касательная горизонтальна)
     /// к борту острова (касательная вертикальна). Совместная подгонка по видео hover-открытия Alcove
     /// 2026-09-26, профили покоя и раскрытого: максимум 0.39 px при 2x. Четверть окружности легла хуже

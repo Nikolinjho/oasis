@@ -2,6 +2,7 @@ import AppKit
 import IslandCore
 import IslandUI
 import SwiftUI
+import os
 
 /// Ставит окно над вырезом встроенного экрана, переключает клики насквозь и отдаёт hover в store
 @MainActor
@@ -16,6 +17,7 @@ final class IslandWindowController {
     private var hoverOpenedFrom: CGRect?
     /// Пока меню под островом открыто, курсор на меню и клики в нём не значат «ушёл с острова»
     private var menuOpen = false
+    private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "window")
 
     init(store: IslandStore, menu: NSMenu) {
         self.store = store
@@ -46,6 +48,7 @@ final class IslandWindowController {
             return
         }
         self.metrics = metrics
+        log.info("notch \(metrics.notchSize.width, privacy: .public)x\(metrics.notchSize.height, privacy: .public)")
         store.notch = metrics.notchSize
         let frame = IslandGeometry.windowFrame(for: metrics)
         let panel = self.panel ?? makePanel(frame: frame)

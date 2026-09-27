@@ -31,6 +31,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isTrusted: { Permissions.isAccessibilityTrusted })
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
+        if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
+            // живые источники мешали бы записи: музыка, клавиши и полноэкранный режим не стартуют
+            DebugScript.run(DemoSequence.steps(store: store), after: delay)
+            return
+        }
         startFullscreenMonitor()
         startNowPlaying()
         startPlayerActions()

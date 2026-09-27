@@ -81,6 +81,10 @@ enum DebugCatalog {
 
     private static func scenarios(_ store: IslandStore, _ tracks: DemoTrackCursor) -> DebugSection {
         DebugSection(title: "Scenarios", entries: [
+            .action(DebugAction(id: "demo.run", title: "Demo Sequence (Alcove Mode)") {
+                DebugScript.run(DemoSequence.steps(store: store))
+            }),
+            .separator,
             .action(DebugAction(id: "scenario.compact-hud", title: "Compact → HUD → Compact") {
                 DebugScript.run([
                     (at: 0, run: { store.apply(.newTrack(tracks.next())) }),
