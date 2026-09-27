@@ -46,6 +46,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startNowPlaying() {
+        // kill -9 и падение не дают выйти штатно: сироты прошлых запусков гасим здесь
+        let stale = StaleAdapters.terminate()
+        if stale > 0 { log.info("terminated \(stale) stale adapter(s)") }
         guard let paths = AdapterPaths.locate() else {
             log.error("mediaremote-adapter not found in bundle resources")
             return

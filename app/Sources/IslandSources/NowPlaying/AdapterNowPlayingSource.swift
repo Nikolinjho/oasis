@@ -42,12 +42,18 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         launch()
     }
 
+    /// Гасит адаптер и ждёт его выхода до 0.5 с, затем SIGKILL. Зовётся из applicationWillTerminate:
+    /// без ожидания приложение выходило раньше, чем perl получал SIGTERM
     public func stop() {
         let process = state.withLockUnchecked { s -> Process? in
             s.stopped = true
             return s.process
         }
-        process?.terminate()
+        guard let process, process.isRunning else { return }
+        process.terminate()
+        let deadline = Date().addingTimeInterval(0.5)
+        while process.isRunning, Date() < deadline { usleep(10_000) }
+        if process.isRunning { kill(process.processIdentifier, SIGKILL) }
     }
 
     public func send(_ command: MediaCommand) {
