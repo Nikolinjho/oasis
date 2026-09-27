@@ -16,7 +16,7 @@ public enum StaleAdapters {
         }
     }
 
-    /// Гасит сирот SIGTERM. Возвращает, сколько нашлось
+    /// Гасит сирот SIGTERM. Возвращает, скольких реально удалось убить
     @discardableResult
     public static func terminate() -> Int {
         let ps = Process()
@@ -32,7 +32,8 @@ public enum StaleAdapters {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         ps.waitUntilExit()
         let found = pids(psOutput: String(decoding: data, as: UTF8.self))
-        for pid in found { kill(pid, SIGTERM) }
-        return found.count
+        return found.reduce(into: 0) { count, pid in
+            if kill(pid, SIGTERM) == 0 { count += 1 }
+        }
     }
 }

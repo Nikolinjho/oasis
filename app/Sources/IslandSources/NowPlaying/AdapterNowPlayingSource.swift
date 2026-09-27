@@ -42,8 +42,8 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         launch()
     }
 
-    /// Гасит адаптер и ждёт его выхода до 0.5 с, затем SIGKILL. Зовётся из applicationWillTerminate:
-    /// без ожидания приложение выходило раньше, чем perl получал SIGTERM
+    /// Гасит адаптер и ждёт его выхода до 0.5 с. Если perl не завершился по SIGTERM — SIGKILL.
+    /// Зовётся из applicationWillTerminate
     public func stop() {
         let process = state.withLockUnchecked { s -> Process? in
             s.stopped = true
@@ -100,6 +100,10 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         do {
             try process.run()
             log.info("adapter started")
+            // stop() мог отработать между s.process = process и run(): isRunning тогда был false,
+            // и process.terminate() не случился. Проверяем ещё раз после запуска
+            let shouldStop = state.withLockUnchecked { s in s.stopped || s.generation != generation }
+            if shouldStop { process.terminate() }
         } catch {
             log.error("adapter launch failed: \(error.localizedDescription)")
             processEnded(generation: generation, status: nil)

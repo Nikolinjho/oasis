@@ -20,4 +20,18 @@ struct StaleAdaptersTests {
     func emptyOutput() {
         #expect(StaleAdapters.pids(psOutput: "").isEmpty)
     }
+
+    @Test("Путь сборки с пробелом всё равно находится")
+    func pathWithSpace() {
+        let ps = """
+              201     1 /usr/bin/perl /Users/me/My Builds/AlcoveAnalog.app/Contents/Resources/mediaremote-adapter.pl /x stream
+            """
+        #expect(StaleAdapters.pids(psOutput: ps) == [201])
+    }
+
+    @Test("Строка заголовка ps без числовых pid/ppid игнорируется")
+    func headerLineIgnored() {
+        let ps = "  PID  PPID COMMAND"
+        #expect(StaleAdapters.pids(psOutput: ps).isEmpty)
+    }
 }
