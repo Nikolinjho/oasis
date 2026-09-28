@@ -50,4 +50,15 @@ struct DayAgendaTests {
         #expect(agenda.current(at: Self.at(26, 23, 35))?.id == "later")
         #expect(agenda.current(at: Self.at(26, 23, 55)) == nil)
     }
+
+    @Test("Окно календаря открыто: карточка Duo — событие окна (как компакт и меню), а не первое не закончившееся")
+    func currentPrefersLiveEvent() {
+        let long = Self.event("long", Self.at(26, 22), Self.at(26, 23, 30))
+        let inner = Self.event("inner", Self.at(26, 23, 5), Self.at(26, 23, 20))
+        let agenda = DayAgenda.make(events: [long, inner], now: Self.now, calendar: Self.calendar)
+        #expect(agenda.current(at: Self.now)?.id == "long")
+        #expect(agenda.current(at: Self.now, live: inner)?.id == "inner")
+        // окно закрыто: прежнее правило
+        #expect(agenda.current(at: Self.now, live: nil)?.id == "long")
+    }
 }

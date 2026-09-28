@@ -57,8 +57,10 @@ public struct DayAgenda: Equatable, Sendable {
     }
 
     /// Идущее или ближайшее событие сегодня: его карточку показывает Duo.
-    /// Считается от момента показа: agenda могла собраться несколько минут назад
-    public func current(at now: Date) -> CalendarEvent? {
-        today.first { $0.end > now }
+    /// Считается от момента показа: agenda могла собраться несколько минут назад.
+    /// live — событие открытого окна календаря (CalendarSchedule.liveEvent без отклонённых): при пересечении
+    /// событий карточка и Join относятся к тому же событию, что компакт и меню, а не к первому не закончившемуся
+    public func current(at now: Date, live: CalendarEvent? = nil) -> CalendarEvent? {
+        live ?? today.first { $0.end > now }
     }
 }

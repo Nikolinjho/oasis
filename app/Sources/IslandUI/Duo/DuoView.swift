@@ -6,6 +6,8 @@ import SwiftUI
 struct DuoView: View {
     let info: NowPlayingInfo?
     let agenda: DayAgenda
+    /// Событие открытого окна календаря: карточка и Join — о нём, как компакт и меню (DayAgenda.current)
+    var liveEvent: CalendarEvent? = nil
     var now: Date? = nil
     var onJoin: (URL) -> Void = { _ in }
     let onAction: (PlayerAction) -> Void
@@ -38,7 +40,7 @@ struct DuoView: View {
             DateBadge(date: now)
                 .frame(width: DuoLayout.dateWidth, height: DuoLayout.dateFrame.height, alignment: .topTrailing)
                 .offset(x: DuoLayout.dateFrame.maxX - DuoLayout.dateWidth, y: DuoLayout.dateFrame.minY)
-            if let event = agenda.current(at: now) {
+            if let event = agenda.current(at: now, live: liveEvent) {
                 EventCard(event: event, onJoin: MeetingLink.find(in: event).map { url in { onJoin(url) } })
                     .offset(x: DuoLayout.eventOrigin.x, y: DuoLayout.eventOrigin.y)
             } else {

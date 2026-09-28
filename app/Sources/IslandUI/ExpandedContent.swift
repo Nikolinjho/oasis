@@ -6,6 +6,7 @@ struct ExpandedContent: View {
     let view: ExpandedView
     let info: NowPlayingInfo?
     let agenda: DayAgenda
+    var liveEvent: CalendarEvent? = nil
     let onAction: (PlayerAction) -> Void
     let onJoin: (URL) -> Void
     var timeScale: Double = 1
@@ -14,7 +15,7 @@ struct ExpandedContent: View {
         ZStack(alignment: .topLeading) {
             switch view {
             case .duo:
-                DuoView(info: info, agenda: agenda, onJoin: onJoin, onAction: onAction)
+                DuoView(info: info, agenda: agenda, liveEvent: liveEvent, onJoin: onJoin, onAction: onAction)
                     .transition(.viewSwap(timeScale: timeScale))
             case .player:
                 PlayerView(info: info, onAction: onAction)
