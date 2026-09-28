@@ -10,8 +10,8 @@ public enum IslandTransition: Equatable, Sendable {
     /// Раскрытый остров перетекает прямо в HUD
     case hudMorph
     /// Сжатие почти до выреза перед сменой активности и раскрытие в новую.
-    /// shrinkFromHud — то же сжатие из HUD обратно к компакту: у Alcove у него своя пружина
-    case shrink, shrinkFromHud, grow
+    /// shrinkFromWide — то же сжатие из широкого состояния (HUD) обратно к компакту: у Alcove у него своя пружина
+    case shrink, shrinkFromWide, grow
 
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
@@ -52,7 +52,7 @@ public enum IslandMotion {
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)
         case .shrink: SpringSpec(stiffness: 345, damping: 30.5)
-        case .shrinkFromHud: SpringSpec(stiffness: 360, damping: 38)
+        case .shrinkFromWide: SpringSpec(stiffness: 360, damping: 38)
         case .grow: .spring(duration: 0.45, bounce: 0.1)
         }
     }

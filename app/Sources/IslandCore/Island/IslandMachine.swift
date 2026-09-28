@@ -268,7 +268,7 @@ public enum IslandMachine {
             return [.animate(m.surface == .compact ? .peekClose : .compactOut)]
         case .hudHide:
             guard case .hud = m.surface, m.pending == nil else { return [] }
-            if m.base == .compact { return shrink(&m, then: .compact, with: .shrinkFromHud) }
+            if m.base == .compact { return shrink(&m, then: .compact) }
             m.surface = .idle
             return [.animate(.hudOut)]
         case .grow:
@@ -292,11 +292,24 @@ public enum IslandMachine {
     }
 
     /// Смена активности: сжатие почти до выреза, раскрытие в target по таймеру grow
-    private static func shrink(
-        _ m: inout IslandModel, then target: Surface, with transition: IslandTransition = .shrink
-    ) -> [IslandEffect] {
+    private static func shrink(_ m: inout IslandModel, then target: Surface) -> [IslandEffect] {
+        let transition = shrinkTransition(from: m.surface)
         m.surface = .shrink
         m.pending = target
         return [.cancel(.peekEnd), .animate(transition), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
+    }
+
+    /// Пружина сжатия выбирается по исходному состоянию: у Alcove сжатие из компакта (261 → ~195)
+    /// пружинит (345/30.5, ζ 0.82), а из широкого HUD (369 → ~199) идёт без отскока (360/38).
+    /// Каждый новый широкий источник (alert, календарь) добавляет сюда свой case со своим замером
+    /// (P0 Task 8: .alert → .alertShrink), а не попадает молча в пружину компакта: switch без default
+    private static func shrinkTransition(from source: Surface) -> IslandTransition {
+        switch source {
+        case .hud: .shrinkFromWide
+        // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged)
+        case .compact, .peek, .hoverNudge: .shrink
+        // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт
+        case .idle, .hover, .expanded, .shrink: .shrink
+        }
     }
 }
