@@ -199,7 +199,8 @@ enum DebugCatalog {
             .separator,
             // синтетический свайп двумя пальцами по раскрытому (Task 9): те же фазы, что шлёт монитор scrollWheel.
             // Шаги по 30 мс, travel — сжатие/растяжение в pt, hold — пауза перед отпусканием для скриншота
-            swipe(store, id: "island.swipe-down", title: "Swipe Down (Cycle View)", travel: 10, hold: 0.8),
+            swipe(store, id: "island.swipe-down", title: "Swipe Down (Cycle View)", travel: 30, hold: 0.8),
+            swipe(store, id: "island.swipe-down-hold", title: "Swipe Down, Release Before Threshold", travel: 15, hold: 1.0),
             swipe(store, id: "island.swipe-up-hold", title: "Swipe Up, Release Before Threshold", travel: -15, hold: 1.0),
             swipe(store, id: "island.swipe-up", title: "Swipe Up (Close)", travel: -30, hold: 0.3),
             .separator,

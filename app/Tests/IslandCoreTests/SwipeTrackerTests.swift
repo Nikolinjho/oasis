@@ -6,24 +6,38 @@ struct SwipeTrackerTests {
     /// Дельта скролла, которая даёт travel pt
     static func delta(_ travel: CGFloat) -> CGFloat { travel / SwipeTracker.pointsPerDelta }
 
-    @Test("Вниз — растяжение с потолком 7 pt, отпускание листает вид")
+    @Test("Вниз — растяжение с сопротивлением, на 21 pt хода вид листается сразу и один раз, остаток жеста игнорируется")
     func downCycles() {
         var tracker = SwipeTracker()
         #expect(tracker.feed(.began, dy: 0) == nil)
         guard case let .stretch(small)? = tracker.feed(.changed, dy: Self.delta(5)) else { Issue.record("нет растяжения"); return }
         #expect(small > 0 && small < 5)
-        guard case let .stretch(big)? = tracker.feed(.changed, dy: Self.delta(200)) else { Issue.record("нет растяжения"); return }
-        #expect(big <= SwipeTracker.stretchCeiling)
-        #expect(big > 6.9)
-        #expect(tracker.feed(.ended, dy: 0) == .cycle)
+        guard case .stretch? = tracker.feed(.changed, dy: Self.delta(15)) else { Issue.record("нет растяжения"); return }
+        #expect(tracker.feed(.changed, dy: Self.delta(2)) == .cycle)
+        #expect(tracker.feed(.changed, dy: Self.delta(20)) == nil)
+        #expect(tracker.feed(.ended, dy: 0) == nil)
     }
 
-    @Test("Вниз меньше 3 pt хода — не листает: порог утроен по решению 28.09")
+    @Test("Растяжение вниз упирается в потолок 7 pt")
+    func stretchCeiling() {
+        #expect(SwipeTracker.rubber(200) <= SwipeTracker.stretchCeiling)
+        #expect(SwipeTracker.rubber(200) > 6.9)
+    }
+
+    @Test("Вниз меньше 21 pt хода — отпускание не листает: порог как у свайпа вверх (решение 28.09)")
     func shortDownSettles() {
         var tracker = SwipeTracker()
         _ = tracker.feed(.began, dy: 0)
-        _ = tracker.feed(.changed, dy: Self.delta(2))
+        _ = tracker.feed(.changed, dy: Self.delta(15))
         #expect(tracker.feed(.ended, dy: 0) == .settle)
+    }
+
+    @Test("Отмена после листания порогом ничего не делает")
+    func cancelledAfterCycleIgnored() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        #expect(tracker.feed(.changed, dy: Self.delta(25)) == .cycle)
+        #expect(tracker.feed(.cancelled, dy: 0) == nil)
     }
 
     @Test("Вверх — за пальцами без сопротивления, отпускание до порога возвращает")
@@ -89,9 +103,8 @@ struct SwipeTrackerTests {
         _ = tracker.feed(.changed, dx: 1, dy: 1)
         // решение по оси принято, дальше события с dx > dy не отбрасываются
         #expect(tracker.feed(.changed, dx: 3, dy: 2) != nil)
-        // до порога листания (3 pt = 15 дельты) не хватает 9: без события с dx > dy сумма была бы 13 — settle
-        _ = tracker.feed(.changed, dy: 9)
-        #expect(tracker.feed(.ended, dy: 0) == .cycle)
+        // порог листания 21 pt = 105 дельты: 3 + 1 + 2 + 99 = 105 — листает, без события с dx > dy было бы 103
+        #expect(tracker.feed(.changed, dy: 99) == .cycle)
     }
 
     @Test("Пока ось не решена, растяжения нет: мелкие первые события копятся")

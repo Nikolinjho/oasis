@@ -14,20 +14,24 @@ struct IslandStoreSwipeTests {
 
     static func delta(_ travel: CGFloat) -> CGFloat { travel / SwipeTracker.pointsPerDelta }
 
-    @Test("Свайп вниз тянет форму и на отпускании листает вид, тяга сбрасывается")
+    @Test("Свайп вниз тянет форму и на пороге 21 pt сразу листает вид, тяга сбрасывается, отпускание ничего не делает")
     func downCyclesView() {
         let store = Self.expanded()
         #expect(store.model.surface == .expanded)
         let rest = store.spec.size.height
         store.swipe(.began, dy: 0)
-        store.swipe(.changed, dy: Self.delta(20))
+        store.swipe(.changed, dy: Self.delta(15))
         #expect(store.stretch > 0)
         #expect(store.spec.size.height == rest + store.stretch)
         #expect(!store.dragBlurred)
-        store.swipe(.ended, dy: 0)
+        #expect(store.model.expandedView == .duo)
+        store.swipe(.changed, dy: Self.delta(10))
         #expect(store.model.expandedView == .player)
         #expect(store.stretch == 0)
         #expect(store.spec.size.height == rest)
+        store.swipe(.changed, dy: Self.delta(30))
+        store.swipe(.ended, dy: 0)
+        #expect(store.model.expandedView == .player)
     }
 
     @Test("Свайп вверх до порога — блюр и сжатие, отпускание возвращает без смены вида")

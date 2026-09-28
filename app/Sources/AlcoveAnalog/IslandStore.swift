@@ -97,7 +97,9 @@ final class IslandStore {
             send(.clickedOutside)
         case .cycle:
             // высота возвращается к 175 за ~0.2 с одновременно со сменой вида (ui-inspection 3.7).
-            // Замедляется timeScale, как остальные анимации острова
+            // Замедляется timeScale, как остальные анимации острова. Порог пройден посреди жеста, как у закрытия,
+            // и отдача та же (решение 28.09): пользователь чувствует, что вид сменился, не отпуская пальцев
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
             withAnimation(.smooth(duration: 0.2 * timeScale)) { stretch = 0 }
             send(.expandedViewCycled)
         case .settle:

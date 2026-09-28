@@ -14,7 +14,7 @@ public struct SwipeTracker: Sendable {
         case stretch(CGFloat)
         /// Порог вверх пройден: схлопнуть сразу, не дожидаясь отпускания
         case close
-        /// Отпустили после движения вниз: следующий вид
+        /// Порог вниз пройден: следующий вид сразу, не дожидаясь отпускания
         case cycle
         /// Отпустили, не дотянув: вернуть высоту
         case settle
@@ -32,9 +32,10 @@ public struct SwipeTracker: Sendable {
     public static let closeThreshold: CGFloat = 21
     /// Потолок растяжения вниз: 175 → 182 сколько ни тяни (ui-inspection 3.7)
     public static let stretchCeiling: CGFloat = 7
-    /// Меньше этого вниз — не свайп, а касание. Замера нет: было 1 pt (оценка), по решению пользователя 28.09
-    /// на приёмке утроено до 3 pt — 15 единиц дельты скролла
-    public static let minimumCycle: CGFloat = 3
+    /// Ход вниз, на котором вид листается: сразу и один раз за жест, как схлопывание вверх (решение пользователя
+    /// 28.09 на приёмке). Раньше листало отпускание после 1–3 pt хода — любой свайп. Порог взят у закрытия,
+    /// замера листания у Alcove нет. Растяжение (rubber) к этому моменту ~6 pt из потолка 7
+    public static let cycleThreshold: CGFloat = closeThreshold
     /// Сколько дельты (по большей оси) копится в начале жеста, прежде чем решить, вертикальный он или
     /// горизонтальный. В scroll-1.log первые события — dy 1, 3, 1, 5 при dx 0–1: 4 набирается за 2–3 события
     /// (~0.8 pt острова). Замера порога у Alcove нет, оценка
@@ -43,7 +44,8 @@ public struct SwipeTracker: Sendable {
     private enum Axis { case undecided, vertical, horizontal }
 
     private var total: CGFloat = 0
-    private var closed = false
+    /// Порог (вверх или вниз) пройден: остаток жеста и отпускание игнорируются
+    private var fired = false
     private var axis = Axis.undecided
     private var pendingX: CGFloat = 0
 
@@ -59,7 +61,7 @@ public struct SwipeTracker: Sendable {
             reset()
             return nil
         case .changed:
-            guard !closed, axis != .horizontal else { return nil }
+            guard !fired, axis != .horizontal else { return nil }
             total += dy
             if axis == .undecided {
                 pendingX += dx
@@ -69,21 +71,24 @@ public struct SwipeTracker: Sendable {
             }
             let travel = total * Self.pointsPerDelta
             if travel <= -Self.closeThreshold {
-                closed = true
+                fired = true
                 return .close
+            }
+            if travel >= Self.cycleThreshold {
+                fired = true
+                return .cycle
             }
             return .stretch(travel < 0 ? travel : Self.rubber(travel))
         case .ended, .cancelled:
             defer { reset() }
-            guard !closed, axis != .horizontal else { return nil }
-            guard phase == .ended else { return .settle }
-            return total * Self.pointsPerDelta >= Self.minimumCycle ? .cycle : .settle
+            guard !fired, axis != .horizontal else { return nil }
+            return .settle
         }
     }
 
     private mutating func reset() {
         total = 0
-        closed = false
+        fired = false
         axis = .undecided
         pendingX = 0
     }
