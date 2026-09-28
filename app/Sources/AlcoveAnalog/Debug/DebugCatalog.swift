@@ -104,6 +104,14 @@ enum DebugCatalog {
                 store.send(.calendarStarted)
             }),
             .action(DebugAction(id: "calendar.live-off", title: "Live Off") { store.setCalendarLive(nil) }),
+            .action(DebugAction(id: "calendar.remind", title: "Reminder in 2 s (15 min before)") {
+                // событие через 15 мин 2 с: часы получат повестку через onAgendaChange и сами пересекут отметку T−15.
+                // Закреплённая повестка, как у calendar.duo-event: живой источник её не перезапишет, снимает calendar.real
+                let start = Date().addingTimeInterval(15 * 60 + 2)
+                store.pinDebugEvents([CalendarEvent(
+                    id: "fake-remind", title: "Fake Call", start: start, end: start.addingTimeInterval(1800),
+                    isAllDay: false, color: RGB(red: 0.2, green: 0.5, blue: 1))])
+            }),
         ])
     }
 

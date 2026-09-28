@@ -91,6 +91,11 @@ public struct IslandView: View {
     public nonisolated static let calendarIndicatorWidth =
         ActivityCompactView.indicatorWidth(ActivityLayouts.calendarWidestIndicator)
 
+    /// Ширина «15m», самого широкого индикатора напоминания: пол ширины напоминания
+    /// (IslandGeometry.size(for:notch:reminderIndicatorWidth:)). Store берёт её же, как calendarIndicatorWidth
+    public nonisolated static let reminderIndicatorWidth =
+        ActivityCompactView.indicatorWidth(ActivityLayouts.reminderWidestIndicator)
+
     /// Состояние, по которому раскладывается живая активность (музыка, календарь): для отклика — то,
     /// из которого он открылся
     private var liveSurface: Surface {
@@ -101,7 +106,8 @@ public struct IslandView: View {
     private var liveSize: CGSize {
         let notch = CGSize(width: notchWidth, height: spec.size.height)
         return IslandGeometry.spec(
-            for: liveSurface, hasMedia: model.hasMedia, notch: notch, calendarIndicatorWidth: Self.calendarIndicatorWidth
+            for: liveSurface, hasMedia: model.hasMedia, notch: notch, calendarIndicatorWidth: Self.calendarIndicatorWidth,
+            reminderIndicatorWidth: Self.reminderIndicatorWidth
         ).size
     }
 

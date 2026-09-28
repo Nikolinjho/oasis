@@ -28,7 +28,7 @@ struct GeometryTests {
     func surfaceSizes() {
         let notch = Self.mbp16.notchSize
         func size(_ surface: Surface, media: Bool = true) -> CGSize {
-            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0).size
+            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0).size
         }
         #expect(size(.idle) == notch)
         #expect(size(.compact) == CGSize(width: 257, height: 32))
@@ -42,7 +42,7 @@ struct GeometryTests {
 
     @Test("Charging: тело 350×32, ушко как у HUD")
     func chargingSize() {
-        let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         #expect(spec.size == CGSize(width: 350, height: 32))
         #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
     }
@@ -50,10 +50,10 @@ struct GeometryTests {
     @Test("Календарь: компакт 254×32 и peek 270×73.5 на обычном вырезе, ушко компакта как у музыки")
     func calendarSizes() {
         let notch = Self.mbp16.notchSize
-        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: notch, calendarIndicatorWidth: 22)
+        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: notch, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
         #expect(compact.size == CGSize(width: 254, height: 32))
         #expect(compact.shoulder == IslandGeometry.Shoulder.compact)
-        let peek = IslandGeometry.spec(for: .calendarPeek, hasMedia: false, notch: notch, calendarIndicatorWidth: 22)
+        let peek = IslandGeometry.spec(for: .calendarPeek, hasMedia: false, notch: notch, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
         #expect(peek.size == CGSize(width: 270, height: 73.5))
     }
 
@@ -61,9 +61,9 @@ struct GeometryTests {
     func calendarWidthFloor() {
         let wide = CGSize(width: 240, height: 32)
         // 240 + 2 × (8 + 22): индикатор шире иконки 18
-        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: wide, calendarIndicatorWidth: 22)
+        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: wide, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
         #expect(compact.size.width == 300)
-        let nudge = IslandGeometry.spec(for: .hoverNudge(from: .calendar), hasMedia: false, notch: wide, calendarIndicatorWidth: 22)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: .calendar), hasMedia: false, notch: wide, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
         #expect(nudge.size.width == 300 * IslandGeometry.hoverNudgeWidthScale)
     }
 
@@ -81,7 +81,7 @@ struct GeometryTests {
             .hoverNudge(from: .idle), .hoverNudge(from: .compact), .hoverNudge(from: .peek),
         ]
         for surface in surfaces {
-            let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
+            let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
             #expect(spec.bottomRadius < spec.size.height / 2, "\(surface)")
         }
     }
@@ -110,11 +110,11 @@ struct GeometryTests {
     @Test("Экранный прямоугольник острова включает ушки своего состояния")
     func islandScreenRect() {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
-        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         let rect = IslandGeometry.islandScreenRect(spec, windowFrame: window)
         #expect(abs(rect.minX - 726.7) < 1e-9 && abs(rect.width - 274.6) < 1e-9)
         #expect(rect.maxY == 1117 && rect.height == 32)
-        let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
+        let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         #expect(abs(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width - 381.6) < 1e-9)
     }
 
@@ -122,7 +122,7 @@ struct GeometryTests {
     func shoulders() {
         let notch = Self.mbp16.notchSize
         func shoulder(_ surface: Surface, media: Bool = true) -> CGFloat {
-            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0).shoulder
+            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0).shoulder
         }
         #expect(shoulder(.idle) == 5.15)
         #expect(shoulder(.compact) == 8.8)
@@ -136,7 +136,7 @@ struct GeometryTests {
 
     /// Расстояние от борта до края ушка по строкам пикселей (2x) на центре строки
     static func earProfile(_ surface: Surface, rows: [CGFloat]) -> [CGFloat] {
-        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: mbp16.notchSize, calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         let path = IslandOutline.path(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder)
         return rows.map { row in
             let y = (row + 0.5) / 2
@@ -164,7 +164,7 @@ struct GeometryTests {
 
     static func rects(_ surface: Surface, media: Bool = true) -> (body: CGRect, island: CGRect) {
         let window = IslandGeometry.windowFrame(for: mbp16)
-        let spec = IslandGeometry.spec(for: surface, hasMedia: media, notch: mbp16.notchSize, calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: media, notch: mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         return (IslandGeometry.bodyScreenRect(spec, windowFrame: window), IslandGeometry.islandScreenRect(spec, windowFrame: window))
     }
 
@@ -196,8 +196,8 @@ struct GeometryTests {
           arguments: [Surface.idle, .compact, .peek])
     func hoverNudgeShape(from: Surface) {
         let notch = Self.mbp16.notchSize
-        let base = IslandGeometry.spec(for: from, hasMedia: true, notch: notch, calendarIndicatorWidth: 0)
-        let nudge = IslandGeometry.spec(for: .hoverNudge(from: from), hasMedia: true, notch: notch, calendarIndicatorWidth: 0)
+        let base = IslandGeometry.spec(for: from, hasMedia: true, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: from), hasMedia: true, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         #expect(abs(nudge.size.width - base.size.width * 1.1) < 1e-9)
         #expect(nudge.size.height == base.size.height)
         #expect(nudge.bottomRadius == base.bottomRadius)
@@ -244,5 +244,27 @@ struct GeometryTests {
         // выше края экрана курсор не бывает, но и там остров не растягивается дальше 1 pt
         let above = CGPoint(x: top.x, y: top.y + 2)
         #expect(!IslandGeometry.pointerInside(above, body: idle.body, island: idle.island, openedFrom: nil))
+    }
+
+    static let reminder = IslandAlert.calendarReminder(CalendarReminder(title: "Созвон", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+
+    @Test("Напоминание: 270×73.5 на обычном вырезе, ушко — оценка по высоте, как у peek календаря")
+    func reminderSize() {
+        let spec = IslandGeometry.spec(
+            for: .alert(Self.reminder), hasMedia: false, notch: Self.mbp16.notchSize,
+            calendarIndicatorWidth: 22, reminderIndicatorWidth: 26)
+        #expect(spec.size == CGSize(width: 270, height: 73.5))
+        #expect(spec.shoulder == IslandGeometry.Shoulder.estimated(forHeight: 73.5))
+    }
+
+    @Test("Напоминание на широком вырезе не уже, чем нужно «15m» по обе стороны, — пол свой, не календаря")
+    func reminderWidthFloor() {
+        let wide = CGSize(width: 240, height: 32)
+        // 240 + 2 × (8 + 26): пол по индикатору напоминания, ширина календаря (22) здесь ни при чём
+        let spec = IslandGeometry.spec(
+            for: .alert(Self.reminder), hasMedia: false, notch: wide,
+            calendarIndicatorWidth: 22, reminderIndicatorWidth: 26)
+        #expect(spec.size.width == 308)
+        #expect(IslandGeometry.size(for: Self.reminder, notch: wide, reminderIndicatorWidth: 26).width == 308)
     }
 }

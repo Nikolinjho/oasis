@@ -46,7 +46,7 @@ struct DemoTargetsTests {
     }
 
     static func rowWidth(_ surface: Surface, notch: CGSize) -> Double {
-        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: notch, calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         let width = IslandOutline.rowWidth(
             size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder, depth: depth)
         return (Double(width) * 10).rounded() / 10
@@ -54,7 +54,7 @@ struct DemoTargetsTests {
 
     @Test("Ширина контура: на глубине ушка — тело, у края — тело плюс часть ушек")
     func rowWidthBounds() {
-        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: CGSize(width: 186, height: 32), calendarIndicatorWidth: 0)
+        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: CGSize(width: 186, height: 32), calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         let deep = IslandOutline.rowWidth(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder, depth: 12)
         let edge = IslandOutline.rowWidth(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder, depth: Self.depth)
         #expect(abs(deep - spec.size.width) < 0.05)

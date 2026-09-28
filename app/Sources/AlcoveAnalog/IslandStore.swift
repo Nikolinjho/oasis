@@ -26,6 +26,8 @@ final class IslandStore {
     @ObservationIgnored var onSound: (IslandSound) -> Void = { _ in }
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}
+    /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной): AppDelegate кормит ею CalendarClock
+    @ObservationIgnored var onAgendaChange: (DayAgenda) -> Void = { _ in }
     @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]
 
     init(config: IslandMachine.Config = .user) {
@@ -41,7 +43,8 @@ final class IslandStore {
     var spec: IslandShapeSpec {
         IslandGeometry.spec(
             for: model.surface, hasMedia: model.hasMedia, notch: notch,
-            calendarIndicatorWidth: IslandView.calendarIndicatorWidth)
+            calendarIndicatorWidth: IslandView.calendarIndicatorWidth,
+            reminderIndicatorWidth: IslandView.reminderIndicatorWidth)
     }
 
     /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
@@ -112,6 +115,7 @@ final class IslandStore {
         lastRealEvents = events
         guard !isDebugAgendaPinned else { return }
         agenda = DayAgenda.make(events: events, now: now)
+        onAgendaChange(agenda)
     }
 
     /// Отладочная повестка вместо реальной: держится до unpinDebugEvents, реальные события не пропадают,
@@ -119,11 +123,13 @@ final class IslandStore {
     func pinDebugEvents(_ events: [CalendarEvent], now: Date = Date()) {
         isDebugAgendaPinned = true
         agenda = DayAgenda.make(events: events, now: now)
+        onAgendaChange(agenda)
     }
 
     /// Возврат к реальному календарю: agenda пересобирается из последних событий живого источника
     func unpinDebugEvents(now: Date = Date()) {
         isDebugAgendaPinned = false
         agenda = DayAgenda.make(events: lastRealEvents, now: now)
+        onAgendaChange(agenda)
     }
 }

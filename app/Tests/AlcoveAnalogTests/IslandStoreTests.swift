@@ -52,4 +52,17 @@ struct IslandStoreTests {
         store.unpinDebugEvents(now: now)
         #expect(store.agenda.today.map(\.id) == ["real"])
     }
+
+    @Test("onAgendaChange получает повестку после apply, pin и unpin, закреплённая apply молчит")
+    func agendaChangeFeedsClock() {
+        let store = IslandStore()
+        let now = Date()
+        var seen: [[String]] = []
+        store.onAgendaChange = { seen.append($0.today.map(\.id)) }
+        store.apply(events: [Self.event("real", now: now)], now: now)
+        store.pinDebugEvents([Self.event("fake", now: now)], now: now)
+        store.apply(events: [Self.event("real2", now: now)], now: now)
+        store.unpinDebugEvents(now: now)
+        #expect(seen == [["real"], ["fake"], ["real2"]])
+    }
 }

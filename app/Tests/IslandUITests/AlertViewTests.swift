@@ -28,7 +28,7 @@ struct AlertViewTests {
     func lowSnapshots() throws {
         let notch = CGSize(width: 186, height: 32)
         for (name, alert) in [("alert-low-battery", IslandAlert.lowBattery(level: 0.1)), ("alert-low-power", .lowPower(level: 0.4))] {
-            let size = IslandGeometry.size(for: alert, notch: notch)
+            let size = IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: 0)
             let view = ZStack(alignment: .top) {
                 IslandShape(spec: IslandShapeSpec(size: size, bottomRadius: 10.5), shoulder: 0)
                     .fill(IslandPalette.background)
@@ -54,7 +54,7 @@ struct AlertViewTests {
             ("Low Power Mode", .lowPower(level: 0.4)),
         ]
         for (label, alert) in cases {
-            let width = IslandGeometry.size(for: alert, notch: notch).width
+            let width = IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: 0).width
             let leftWing = (width - notchWidth) / 2
             #expect(Self.labelWidth(label) + BatteryAlertView.padding <= leftWing)
         }
@@ -63,8 +63,29 @@ struct AlertViewTests {
     @Test("Подпись Charging умещается в левом крыле при вырезе по умолчанию: ширина измерена, не от notch")
     func chargingLabelFitsDefaultNotch() {
         let notchWidth: CGFloat = 186
-        let width = IslandGeometry.size(for: .charging(level: 0.51), notch: CGSize(width: notchWidth, height: 32)).width
+        let width = IslandGeometry.size(for: .charging(level: 0.51), notch: CGSize(width: notchWidth, height: 32), reminderIndicatorWidth: 0).width
         let leftWing = (width - notchWidth) / 2
         #expect(Self.labelWidth("Charging") + BatteryAlertView.padding <= leftWing)
+    }
+
+    @MainActor
+    @Test("Снимок напоминания за 15 минут")
+    func reminderSnapshot() throws {
+        let notch = CGSize(width: 186, height: 32)
+        let alert = IslandAlert.calendarReminder(CalendarReminder(title: "Fake Call", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+        let size = IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: IslandView.reminderIndicatorWidth)
+        let view = ZStack(alignment: .top) {
+            IslandShape(spec: IslandShapeSpec(size: size, bottomRadius: IslandGeometry.bottomRadius(forHeight: size.height)), shoulder: 0)
+                .fill(IslandPalette.background)
+            AlertView(alert: alert, notchWidth: notch.width)
+                .frame(width: size.width, height: size.height, alignment: .top)
+        }
+        try Snapshot.write(view, size: size, name: "alert-calendar-reminder")
+    }
+
+    @Test("Пол ширины напоминания меряется по «15m», самому широкому индикатору напоминания")
+    func reminderIndicatorWidth() {
+        #expect(IslandView.reminderIndicatorWidth == ActivityCompactView.indicatorWidth(.text("15m", color: ActivityLayouts.calendarRed)))
+        #expect(IslandView.reminderIndicatorWidth > IslandView.calendarIndicatorWidth)
     }
 }

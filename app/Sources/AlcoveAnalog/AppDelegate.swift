@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var trustTimer: Timer?
     private var fullscreen: FullscreenMonitor?
     private var calendar: EventKitCalendarSource?
+    private lazy var calendarClock = CalendarClock(store: store)
     private var power: PowerSource?
     private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
@@ -28,6 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
     func applicationWillFinishLaunching(_ notification: Notification) {
         debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds)
+        // здесь, а не в applicationDidFinishLaunching: холодный запуск по ссылке calendar.remind закрепляет повестку раньше
+        store.onAgendaChange = { [weak self] agenda in self?.calendarClock.update(agenda: agenda) }
         store.onSound = { [weak self] sound in
             guard let self, settings.playSounds else { return }
             sounds.play(sound)

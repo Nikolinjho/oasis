@@ -120,4 +120,13 @@ struct IslandMachineQueueTests {
         let fx = IslandMachine.reduce(&m, .alertArrived(Self.low))
         #expect(fx == [.animate(.hudMorph), .schedule(.alertHide, after: Self.low.duration), .play(.lowBattery)])
     }
+
+    @Test("Напоминание календаря: приоритет 2, держится 4.2 с, звук события")
+    func reminderAlert() {
+        let reminder = IslandAlert.calendarReminder(CalendarReminder(title: "Созвон", minutes: 5, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+        #expect(reminder.kind == .calendarReminder)
+        #expect(reminder.priority == 2)
+        #expect(reminder.duration == .milliseconds(4200))
+        #expect(reminder.sound == .event)
+    }
 }

@@ -63,12 +63,16 @@ public enum IslandGeometry {
     }
 
     /// Low Battery и Low Power вживую не снимались: ширина под реальный вырез — см. BatteryAlertWing.
-    /// Charging остаётся абсолютным (измеренным), от notch не зависит
-    public static func size(for alert: IslandAlert, notch: CGSize) -> CGSize {
+    /// Charging остаётся абсолютным (измеренным), от notch не зависит.
+    /// reminderIndicatorWidth — ширина самого широкого индикатора напоминания («15m», меряет IslandUI):
+    /// пол ширины напоминания, как calendarIndicatorWidth у компакта календаря. Нужна только .calendarReminder
+    public static func size(for alert: IslandAlert, notch: CGSize, reminderIndicatorWidth: CGFloat) -> CGSize {
         switch alert {
         case .charging: charging
         case .lowBattery: CGSize(width: notch.width + 2 * BatteryAlertWing.lowBattery, height: charging.height)
         case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPower, height: charging.height)
+        // напоминание не снималось: размер peek календаря (ui-inspection 3.5), тот же вид строки
+        case .calendarReminder: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
         }
     }
 
@@ -124,13 +128,17 @@ public enum IslandGeometry {
     public static let windowSize = CGSize(width: 480, height: 232)
 
     /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
-    /// нужна только .calendar и .calendarPeek
+    /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
+    /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:)
     public static func spec(
-        for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat
+        for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
+        reminderIndicatorWidth: CGFloat
     ) -> IslandShapeSpec {
         if case let .hoverNudge(from) = surface {
             // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
-            var base = spec(for: from, hasMedia: hasMedia, notch: notch, calendarIndicatorWidth: calendarIndicatorWidth)
+            var base = spec(
+                for: from, hasMedia: hasMedia, notch: notch, calendarIndicatorWidth: calendarIndicatorWidth,
+                reminderIndicatorWidth: reminderIndicatorWidth)
             base.size.width *= hoverNudgeWidthScale
             return base
         }
@@ -142,7 +150,7 @@ public enum IslandGeometry {
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
-        case let .alert(alert): size(for: alert, notch: notch)
+        case let .alert(alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth)
         case .calendar: calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
         case .calendarPeek: calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
         // разобран выше, сюда не доходит
@@ -156,8 +164,8 @@ public enum IslandGeometry {
         case .expanded: Shoulder.expanded
         case .shrink: Shoulder.shrink
         case .hud: Shoulder.hud
-        // замера нет: как у HUD той же высоты
-        case .alert: Shoulder.hud
+        // замера нет: у строки menu bar — как у HUD, у высоких (напоминание) — оценка по высоте
+        case .alert: size.height > 32 ? Shoulder.estimated(forHeight: size.height) : Shoulder.hud
         // замера нет: компакт как у музыки той же высоты, peek — оценка по высоте
         case .calendar: Shoulder.compact
         case .calendarPeek: Shoulder.estimated(forHeight: calendarPeek.height)

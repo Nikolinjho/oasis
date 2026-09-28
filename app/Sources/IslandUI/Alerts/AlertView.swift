@@ -16,12 +16,14 @@ struct AlertView: View {
         case let .lowPower(level):
             // по ожидаемому виду из репорта: «Low Power Mode» и батарейка без процента
             BatteryAlertView(label: "Low Power Mode", level: level, showsPercent: false, fill: IslandPalette.lowPower, notchWidth: notchWidth)
+        case let .calendarReminder(reminder):
+            ActivityCompactView(layout: ActivityLayouts.reminder(reminder), notchWidth: notchWidth)
         }
     }
 }
 
 /// Уведомление батареи высотой 32: подпись слева, процент и батарейка справа (Charging — rec2/states-sheet.png,
-/// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:notch:).
+/// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:notch:reminderIndicatorWidth:).
 /// Шрифт и отступы как у HUD, отдельно не мерили
 struct BatteryAlertView: View {
     let label: String

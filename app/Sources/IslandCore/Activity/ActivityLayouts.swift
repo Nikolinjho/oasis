@@ -10,6 +10,9 @@ public enum ActivityLayouts {
     /// только убывают, кольцо уже иконки. У Alcove ширина компакта фиксирована, поэтому пол ширины
     /// (IslandGeometry.calendarSize) считается по нему, а не по текущему индикатору
     public static let calendarWidestIndicator = ActivityLayout.Indicator.text("60s", color: calendarRed)
+    /// Самый широкий индикатор напоминания: «15m» шире «60s», поэтому у напоминания свой пол ширины
+    /// (IslandGeometry.size(for:notch:reminderIndicatorWidth:)). Самое раннее напоминание — за 15 минут
+    public static let reminderWidestIndicator = ActivityLayout.Indicator.text("15m", color: calendarRed)
 
     /// Компакт календаря: до начала — секунды, во время события — кольцо хода.
     /// С showsLine — строка peek на старте: «▌название ⏳ время до конца»
@@ -27,6 +30,15 @@ public enum ActivityLayouts {
                                   trailing: remaining(event.end.timeIntervalSince(now)))
             : nil
         return ActivityLayout(symbol: "calendar.badge.clock", symbolColor: calendarRed, indicator: indicator, line: line)
+    }
+
+    /// Напоминание за N минут: тот же вид, что peek календаря, но вместо кольца — минуты до начала.
+    /// У Alcove такого нет (peek Before event starts не снимался): вид — решение плана P1
+    public static func reminder(_ reminder: CalendarReminder) -> ActivityLayout {
+        ActivityLayout(
+            symbol: "calendar.badge.clock", symbolColor: calendarRed,
+            indicator: .text("\(reminder.minutes)m", color: calendarRed),
+            line: .init(bar: reminder.color, title: reminder.title, trailingSymbol: "clock", trailing: "in \(reminder.minutes) min"))
     }
 
     /// «59s», «12m», «1h 5m»: как в peek Alcove на старте события
