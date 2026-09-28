@@ -133,6 +133,26 @@ class CompareTests(unittest.TestCase):
         failed = [r["name"] for r in result["rows"] if not r["ok"]]
         self.assertEqual(failed, [], f"провалились: {failed}")
 
+    def test_step_latency_and_idle_gap_pass(self):
+        """Шаги demo приходят с задержкой (запись 28.09: HUD и клик на 0.07–0.1 с раньше, чем
+        предсказывал общий offset), а перед первым движением запись статичного экрана роняет
+        ~90 мс кадров. Сверка ищет старт каждого сегмента по факту и не режет начало хода"""
+        shifted = copy.deepcopy(TARGETS)
+        for s in shifted["segments"]:
+            if s["name"] in ("сжатие перед HUD", "раскрытие в HUD", "раскрытие плеера"):
+                s["start"] -= 0.09
+                s["end"] -= 0.09
+            if s["name"] in ("сжатие после HUD", "раскрытие в компакт"):
+                s["start"] += 0.12
+                s["end"] += 0.12
+        ts, ws = synthetic_track(shifted)
+        ws = np.round(ws * 2) / 2
+        lead = 2.0
+        keep = ~((ts > lead + TARGETS["anchor"]["demoTime"] - 0.09) & (ts < lead + TARGETS["anchor"]["demoTime"]))
+        result = evaluate(ts[keep], ws[keep], TARGETS)
+        failed = [r["name"] for r in result["rows"] if not r["ok"]]
+        self.assertEqual(failed, [], f"провалились: {failed}")
+
 
 if __name__ == "__main__":
     unittest.main()

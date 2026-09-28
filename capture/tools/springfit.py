@@ -25,8 +25,11 @@ def fit(ts, ws, x0, x1, t0_search=False):
         return None
     i = int(np.argmax(moved))
     if t0_search:
-        lo = ts[i - 1] if i > 0 else ts[i] - 1 / 60
-        t0_candidates = np.linspace(lo, ts[i], 6)
+        # от последнего кадра, где ширина ещё у x0 (±0.5 pt): перед ним может быть
+        # разрыв записи, а кадр i-1 уже сдвинут меньше чем на 1 pt
+        still = np.where(np.abs(ws[:i] - x0) <= 0.5)[0]
+        lo = ts[still[-1]] if len(still) else (ts[i - 1] if i > 0 else ts[i] - 1 / 60)
+        t0_candidates = np.linspace(lo, ts[i], 12)
     else:
         t0_candidates = [ts[i] - 1 / 60]  # кадр перед движением; частота записи считается 60 fps
     best = None
