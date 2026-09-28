@@ -49,12 +49,13 @@ public struct IslandModel: Equatable, Sendable {
 }
 
 /// Чистая машина состояний острова: приоритеты и хореография смены активностей.
-/// Приоритет: HUD > раскрытый плеер > hover и отклик на него > peek > компакт > покой
+/// Приоритет: HUD > уведомления > раскрытый (Duo/плеер) > hover и отклик на него > peek > компакт > покой
 public enum IslandMachine {
-    /// Поведение, которое отличает наш режим от Alcove. Эталон сверки (задачи 15–16) записан
+    /// Поведение, которое отличает наш режим от Alcove. Эталон сверки записан
     /// в режиме Alcove, поэтому оба поведения — настройка, а не замена
     public struct Config: Equatable, Sendable {
-        /// Hover сразу раскрывает полный плеер. Выключено: hover даёт мини-состояние, плеер по клику
+        /// Hover сразу раскрывает expanded (по умолчанию — Duo, полный плеер по свайпу). Выключено:
+        /// hover даёт мини-состояние, раскрытие — по клику
         public var hoverOpensPlayer: Bool
         /// При музыке остров стоит в компакте. Выключено: компакт только на время peek, в покое форма выреза
         public var compactAtRest: Bool
@@ -379,7 +380,7 @@ public enum IslandMachine {
     /// Пружина сжатия выбирается по исходному состоянию: у Alcove сжатие из компакта (261 → ~195)
     /// пружинит (345/30.5, ζ 0.82), а из широкого HUD (369 → ~199) идёт без отскока (360/38).
     /// Каждый новый широкий источник (alert, календарь) добавляет сюда свой case со своим замером
-    /// (P0 Task 8: .alert → .alertShrink), а не попадает молча в пружину компакта: switch без default
+    /// (пример — .alert → .alertShrink), а не попадает молча в пружину компакта: switch без default
     private static func shrinkTransition(from source: Surface) -> IslandTransition {
         switch source {
         case .hud: .shrinkFromWide

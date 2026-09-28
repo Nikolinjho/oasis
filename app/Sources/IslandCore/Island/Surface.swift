@@ -14,7 +14,7 @@ public enum Surface: Equatable, Sendable {
     /// Отклик на наведение (режим пользователя): форма from чуть шире, контент тот же,
     /// по таймеру hoverOpen раскрывается в плеер. from — idle, compact или peek
     indirect case hoverNudge(from: Surface)
-    /// Раскрытый плеер
+    /// Раскрытый: по умолчанию Duo (плеер + повестка), полный плеер — свайпом (см. IslandView)
     case expanded
     /// Сжатие почти до выреза перед сменой активности
     case shrink

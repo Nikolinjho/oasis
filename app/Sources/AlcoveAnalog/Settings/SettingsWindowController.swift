@@ -12,10 +12,9 @@ enum SettingsShortcut {
     }
 }
 
-/// LSUIElement-приложение без mainMenu: NSApplication ищет ⌘-эквиваленты через NSApp.mainMenu
-/// раньше, чем через performKeyEquivalent окна, и без меню часть путей его не находит.
-/// override — первый (дешёвый) слой перехвата, локальный монитор в контроллере — второй, независимый
-/// от того, дошло ли дело до performKeyEquivalent вообще
+/// mainMenu есть (MainMenu.build(), пункт Close Window с ⌘W), но окно настроек не полагается
+/// на путь через него: override — первый (дешёвый) слой перехвата, локальный монитор в контроллере —
+/// второй, независимый от того, дошло ли дело до performKeyEquivalent вообще
 private final class SettingsWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if SettingsShortcut.isClose(event) {

@@ -4,7 +4,8 @@ import Foundation
 import IslandCore
 
 /// Настройки приложения в UserDefaults. Изменение сразу уходит в onChange: AppDelegate применяет его
-/// к машине острова и к выбору экрана. ObservableObject: окно настроек держит его через @ObservedObject
+/// к машине острова. Выбор экрана (display) пока никуда не применяется — отдельная задача, P2.
+/// ObservableObject: окно настроек держит его через @ObservedObject
 @MainActor
 final class AppSettings: ObservableObject {
     enum Key {
