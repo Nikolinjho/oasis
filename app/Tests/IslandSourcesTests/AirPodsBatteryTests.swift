@@ -110,6 +110,24 @@ struct AirPodsBatteryTests {
         #expect(AirPodsBattery.device(json: data, name: "Nobody", address: "aa-bb-cc-dd-ee-99") == nil)
     }
 
+    @Test("Одно подключение под двумя именами (IOBluetooth шлёт и имя модели, и пользовательское) — одно уведомление")
+    func oneAlertPerAddress() throws {
+        typealias Connection = AirPodsBattery.Connection
+        let data = try Self.fixture()
+        // замер 28.09: «thegreatnikos» дважды и «AirPods 4 (ANC)» за 30 мс по одному адресу.
+        // В фикстуре по этому адресу — наушники Apple («Office»), так что оба имени проходят как наушники
+        let both = [
+            Connection(name: "thegreatnikos", address: "aa-bb-cc-dd-ee-0a"): false,
+            Connection(name: "AirPods 4 (ANC)", address: "AA:BB:CC:DD:EE:0A"): false,
+        ]
+        let result = AirPodsBattery.resolve(both, json: data)
+        #expect(result.show.map(\.name) == ["AirPods 4 (ANC)"])
+        #expect(result.retry.isEmpty)
+        // system_profiler не ответил: на повтор идёт тоже одно
+        let failed = AirPodsBattery.resolve(both, json: nil)
+        #expect(failed.retry == [Connection(name: "AirPods 4 (ANC)", address: "AA:BB:CC:DD:EE:0A")])
+    }
+
     @Test("Дубли одной записи в system_profiler сливаются: недостающие поля берутся из любой")
     func mergeDuplicates() throws {
         let data = try Self.fixture()

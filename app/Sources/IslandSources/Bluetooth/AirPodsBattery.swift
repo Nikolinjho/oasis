@@ -107,7 +107,11 @@ public enum AirPodsBattery {
         var show: [AirPodsInfo] = []
         var retry: [Connection] = []
         let sorted = connections.sorted { ($0.key.name, $0.key.address ?? "") < ($1.key.name, $1.key.address ?? "") }
+        // IOBluetooth присылает одно подключение под именем модели и под пользовательским (замер 28.09):
+        // по адресу — одно уведомление, первое по сортировке имя
+        var seen: Set<String> = []
         for (connection, retried) in sorted {
+            if let address = connection.address, !seen.insert(normalized(address: address)).inserted { continue }
             let device = json.flatMap { device(json: $0, name: connection.name, address: connection.address) }
             let info = info(name: connection.name, device: device)
             if !retried, info?.battery == nil, info != nil || json == nil {
