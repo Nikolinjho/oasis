@@ -47,10 +47,10 @@ public struct IslandView: View {
             content
                 .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
                 .clipShape(IslandShape(spec: spec, shoulder: 0))
-                // тянут вверх: контент уходит в блюр и темнеет с первого движения (ui-inspection 3.7). Сила — оценка
+                // тянут вверх: контент уходит в блюр и темнеет с первого движения (ui-inspection 3.7). Сила — оценка.
+                // Анимацию задаёт store (withAnimation), своей здесь нет: иначе она перебивала бы пружины переходов
                 .blur(radius: dragBlurred ? 8 : 0)
                 .opacity(dragBlurred ? 0.6 : 1)
-                .animation(.easeOut(duration: 0.1), value: dragBlurred)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .contentShape(IslandShape(spec: spec))

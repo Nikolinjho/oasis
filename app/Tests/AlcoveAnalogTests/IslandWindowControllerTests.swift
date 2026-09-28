@@ -1,3 +1,4 @@
+import AppKit
 import IslandCore
 import Testing
 @testable import AlcoveAnalog
@@ -42,5 +43,54 @@ struct IslandWindowControllerSwipeCloseTests {
         #expect(!IslandWindowController.shouldReenterHover(surface: .idle, pointerInside: true, closedBySwipe: true))
         #expect(!IslandWindowController.shouldReenterHover(surface: .compact, pointerInside: true, closedBySwipe: true))
         #expect(IslandWindowController.shouldReenterHover(surface: .compact, pointerInside: true, closedBySwipe: false))
+    }
+
+    @Test("Флаг закрытия свайпом снимается, когда остров снова раскрыт или курсор ушёл")
+    func swipeCloseFlagClears() {
+        #expect(IslandWindowController.keepsClosedBySwipe(true, surface: .idle, pointerInside: true))
+        #expect(!IslandWindowController.keepsClosedBySwipe(true, surface: .expanded, pointerInside: true))
+        #expect(!IslandWindowController.keepsClosedBySwipe(true, surface: .idle, pointerInside: false))
+        #expect(!IslandWindowController.keepsClosedBySwipe(false, surface: .idle, pointerInside: true))
+    }
+}
+
+@MainActor
+struct IslandWindowControllerSwipeInputTests {
+    typealias W = IslandWindowController
+
+    static func input(
+        _ phase: NSEvent.Phase, momentum: NSEvent.Phase = [], precise: Bool = true,
+        dx: CGFloat = 0, dy: CGFloat = 0, inverted: Bool = true
+    ) -> SwipeInput? {
+        W.swipeInput(phase: phase, momentumPhase: momentum, precise: precise, deltaX: dx, deltaY: dy, inverted: inverted)
+    }
+
+    @Test("Фазы трекпада переходят в фазы трекера, касание и прочие — нет")
+    func phases() {
+        #expect(Self.input(.began)?.phase == .began)
+        #expect(Self.input(.changed, dy: 2)?.phase == .changed)
+        #expect(Self.input(.ended)?.phase == .ended)
+        #expect(Self.input(.cancelled)?.phase == .cancelled)
+        #expect(Self.input(.mayBegin) == nil)
+        #expect(Self.input(.stationary) == nil)
+        #expect(Self.input([]) == nil)
+    }
+
+    @Test("Инерция и колесо мыши без точных дельт отбрасываются")
+    func dropped() {
+        #expect(Self.input([], momentum: .changed, dy: 5) == nil)
+        #expect(Self.input(.changed, momentum: .began, dy: 5) == nil)
+        #expect(Self.input(.changed, precise: false, dy: 5) == nil)
+    }
+
+    @Test("Знак: при натуральной прокрутке дельта как есть, без неё обратная. Пальцы вниз — dy > 0")
+    func sign() {
+        #expect(Self.input(.changed, dx: 1, dy: 3, inverted: true) == SwipeInput(phase: .changed, dx: 1, dy: 3))
+        #expect(Self.input(.changed, dx: 1, dy: 3, inverted: false) == SwipeInput(phase: .changed, dx: -1, dy: -3))
+    }
+
+    @Test("Горизонтальная дельта доходит до трекера: ось решает он")
+    func horizontalPassesThrough() {
+        #expect(Self.input(.changed, dx: 7, dy: 0) == SwipeInput(phase: .changed, dx: 7, dy: 0))
     }
 }

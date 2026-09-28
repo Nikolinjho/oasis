@@ -67,24 +67,29 @@ final class IslandStore {
         send(.calendarLiveChanged(event != nil))
     }
 
-    /// Двухпальцевый свайп над раскрытым (ui-inspection 3.7). Тяга идёт за пальцами без анимации
-    func swipe(_ phase: SwipeTracker.Phase, dy: CGFloat) {
+    /// Двухпальцевый свайп над раскрытым (ui-inspection 3.7). Тяга идёт за пальцами без анимации.
+    /// Блюр анимируется здесь, через withAnimation, а не .animation во вью: так он не перебивает
+    /// пружину перехода машины (HUD или уведомление посреди жеста), а едет в её транзакции
+    func swipe(_ phase: SwipeTracker.Phase, dx: CGFloat = 0, dy: CGFloat) {
         guard model.surface == .expanded else {
             tracker = SwipeTracker()
             stretch = 0
             dragBlurred = false
             return
         }
-        guard let output = tracker.feed(phase, dy: dy) else { return }
+        guard let output = tracker.feed(phase, dx: dx, dy: dy) else { return }
         let timeScale = model.config.timeScale
         switch output {
         case let .stretch(value):
             stretch = value
-            dragBlurred = value < 0
+            let blurred = value < 0
+            if blurred != dragBlurred {
+                // контент уходит в блюр за ~0.1 с (ui-inspection 3.7), замедляется timeScale
+                withAnimation(.easeOut(duration: 0.1 * timeScale)) { dragBlurred = blurred }
+            }
         case .close:
-            stretch = 0
-            dragBlurred = false
-            // отдача трекпада на закрытии: пользователь чувствует её у Alcove (ui-inspection 3.7).
+            // тягу и блюр сбрасывает send: остров уходит из раскрытого, и они едут той же пружиной схлопывания.
+            // Отдача трекпада на закрытии: пользователь чувствует её у Alcove (ui-inspection 3.7).
             // Момент у Alcove не замерен: даём на пересечении порога, вместе со схлопыванием
             NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
             onSwipeClose()

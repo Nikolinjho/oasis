@@ -83,4 +83,25 @@ struct IslandStoreSwipeTests {
         #expect(store.stretch == 0)
         #expect(store.model.surface != .expanded)
     }
+
+    @Test("Жест, отменённый системой после движения вниз, возвращает высоту и не листает")
+    func cancelledDoesNotCycle() {
+        let store = Self.expanded()
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(20))
+        store.swipe(.cancelled, dy: 0)
+        #expect(store.model.expandedView == .duo)
+        #expect(store.stretch == 0)
+    }
+
+    @Test("Горизонтальный свайп по раскрытому ничего не делает")
+    func horizontalIgnored() {
+        let store = Self.expanded()
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dx: 40, dy: 5)
+        store.swipe(.ended, dy: 0)
+        #expect(store.model.expandedView == .duo)
+        #expect(store.stretch == 0)
+        #expect(store.model.surface == .expanded)
+    }
 }

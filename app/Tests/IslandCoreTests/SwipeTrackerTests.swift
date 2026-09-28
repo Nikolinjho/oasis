@@ -43,4 +43,52 @@ struct SwipeTrackerTests {
         _ = tracker.feed(.changed, dy: Self.delta(0.5))
         #expect(tracker.feed(.ended, dy: 0) == .settle)
     }
+
+    @Test("Отмена жеста системой возвращает, но не листает, даже после движения вниз")
+    func cancelledSettles() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        _ = tracker.feed(.changed, dy: Self.delta(10))
+        #expect(tracker.feed(.cancelled, dy: 0) == .settle)
+    }
+
+    @Test("Отмена после закрытия порогом ничего не делает")
+    func cancelledAfterCloseIgnored() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        #expect(tracker.feed(.changed, dy: Self.delta(-25)) == .close)
+        #expect(tracker.feed(.cancelled, dy: 0) == nil)
+    }
+
+    @Test("Горизонтальный жест: ось фиксируется в начале, весь жест игнорируется, даже если потом пошёл вниз")
+    func horizontalIgnored() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        #expect(tracker.feed(.changed, dx: 6, dy: 1) == nil)
+        #expect(tracker.feed(.changed, dx: 1, dy: Self.delta(-30)) == nil)
+        #expect(tracker.feed(.ended, dy: 0) == nil)
+        // следующий жест снова свой: ось решается заново
+        _ = tracker.feed(.began, dy: 0)
+        #expect(tracker.feed(.changed, dy: Self.delta(-10)) == .stretch(-10))
+    }
+
+    @Test("Вертикальный жест с дрожью по горизонтали не теряет событий")
+    func verticalWithJitter() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        // как в scroll-1.log: dy=3 dx=1, dy=1 dx=1
+        _ = tracker.feed(.changed, dx: 1, dy: 3)
+        _ = tracker.feed(.changed, dx: 1, dy: 1)
+        // решение по оси принято, дальше события с dx > dy не отбрасываются
+        #expect(tracker.feed(.changed, dx: 3, dy: 2) != nil)
+        #expect(tracker.feed(.ended, dy: 0) == .cycle)
+    }
+
+    @Test("Пока ось не решена, растяжения нет: мелкие первые события копятся")
+    func axisPendingNoOutput() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        #expect(tracker.feed(.changed, dx: 0, dy: 1) == nil)
+        guard case .stretch? = tracker.feed(.changed, dx: 0, dy: 4) else { Issue.record("нет растяжения"); return }
+    }
 }

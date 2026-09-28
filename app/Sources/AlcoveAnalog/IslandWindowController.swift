@@ -105,19 +105,37 @@ final class IslandWindowController {
         return true
     }
 
-    /// Жест трекпада над островом. Инерцию не берём: у Alcove её нет. Колесо мыши (без точных дельт) не трогаем
+    /// Жест трекпада над островом. Не раскрытый — событие не наше: скролл уходит дальше как обычно
     private func handleScroll(_ event: NSEvent) -> Bool {
-        guard let panel, event.window === panel, event.hasPreciseScrollingDeltas, event.momentumPhase.isEmpty
+        guard store.model.surface == .expanded, let panel, event.window === panel,
+              let input = Self.swipeInput(
+                phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
+                deltaX: event.scrollingDeltaX, deltaY: event.scrollingDeltaY,
+                inverted: event.isDirectionInvertedFromDevice)
         else { return false }
-        // натуральная прокрутка: пальцы вниз — dy > 0, как в записи жестов. Без неё знак обратный
-        let dy = event.isDirectionInvertedFromDevice ? event.scrollingDeltaY : -event.scrollingDeltaY
-        switch event.phase {
-        case .began: store.swipe(.began, dy: 0)
-        case .changed: store.swipe(.changed, dy: dy)
-        case .ended, .cancelled: store.swipe(.ended, dy: 0)
-        default: return false
-        }
+        store.swipe(input.phase, dx: input.dx, dy: input.dy)
         return true
+    }
+
+    /// Разбор события scrollWheel для SwipeTracker. Инерцию не берём: у Alcove её нет. Колесо мыши
+    /// (без точных дельт) не трогаем. Натуральная прокрутка: пальцы вниз — dy > 0, как в записи жестов,
+    /// без неё знак обратный. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь) решает трекер
+    static func swipeInput(
+        phase: NSEvent.Phase, momentumPhase: NSEvent.Phase, precise: Bool,
+        deltaX: CGFloat, deltaY: CGFloat, inverted: Bool
+    ) -> SwipeInput? {
+        guard precise, momentumPhase.isEmpty else { return nil }
+        let sign: CGFloat = inverted ? 1 : -1
+        let trackerPhase: SwipeTracker.Phase
+        switch phase {
+        case .began: trackerPhase = .began
+        case .changed: trackerPhase = .changed
+        case .ended: trackerPhase = .ended
+        case .cancelled: trackerPhase = .cancelled
+        default: return nil
+        }
+        guard trackerPhase == .changed else { return SwipeInput(phase: trackerPhase, dx: 0, dy: 0) }
+        return SwipeInput(phase: .changed, dx: sign * deltaX, dy: sign * deltaY)
     }
 
     /// Меню по центру под нижним краем острова. popUp возвращается, когда меню закрыто:
@@ -144,7 +162,7 @@ final class IslandWindowController {
         let inside = IslandGeometry.pointerInside(point, body: body, island: island, openedFrom: hoverOpenedFrom)
         guard inside != pointerInside else { return }
         pointerInside = inside
-        if !inside { closedBySwipe = false }
+        closedBySwipe = Self.keepsClosedBySwipe(closedBySwipe, surface: store.model.surface, pointerInside: inside)
         hoverOpenedFrom = inside ? body : nil
         store.send(inside ? .hoverEntered : .hoverExited)
     }
@@ -155,11 +173,18 @@ final class IslandWindowController {
     /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
     private func surfaceChanged() {
         pointerMoved()
+        closedBySwipe = Self.keepsClosedBySwipe(closedBySwipe, surface: store.model.surface, pointerInside: pointerInside)
         guard let panel, metrics != nil, !menuOpen,
               Self.shouldReenterHover(surface: store.model.surface, pointerInside: pointerInside, closedBySwipe: closedBySwipe)
         else { return }
         hoverOpenedFrom = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
         store.send(.hoverEntered)
+    }
+
+    /// Флаг закрытия свайпом держится, пока курсор над островом и остров не раскрыт снова (кликом,
+    /// отладкой): иначе он пережил бы новое раскрытие и съел законное переоткрытие после следующего уведомления
+    static func keepsClosedBySwipe(_ flag: Bool, surface: Surface, pointerInside: Bool) -> Bool {
+        flag && pointerInside && surface != .expanded
     }
 
     /// true, если сейчас стоит досылать hoverEntered: курсор над островом и surface — состояние покоя
