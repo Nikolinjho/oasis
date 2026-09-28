@@ -18,6 +18,14 @@ struct SwipeTrackerTests {
         #expect(tracker.feed(.ended, dy: 0) == .cycle)
     }
 
+    @Test("Вниз меньше 3 pt хода — не листает: порог утроен по решению 28.09")
+    func shortDownSettles() {
+        var tracker = SwipeTracker()
+        _ = tracker.feed(.began, dy: 0)
+        _ = tracker.feed(.changed, dy: Self.delta(2))
+        #expect(tracker.feed(.ended, dy: 0) == .settle)
+    }
+
     @Test("Вверх — за пальцами без сопротивления, отпускание до порога возвращает")
     func upSettles() {
         var tracker = SwipeTracker()
@@ -81,6 +89,8 @@ struct SwipeTrackerTests {
         _ = tracker.feed(.changed, dx: 1, dy: 1)
         // решение по оси принято, дальше события с dx > dy не отбрасываются
         #expect(tracker.feed(.changed, dx: 3, dy: 2) != nil)
+        // до порога листания (3 pt = 15 дельты) не хватает 9: без события с dx > dy сумма была бы 13 — settle
+        _ = tracker.feed(.changed, dy: 9)
         #expect(tracker.feed(.ended, dy: 0) == .cycle)
     }
 
