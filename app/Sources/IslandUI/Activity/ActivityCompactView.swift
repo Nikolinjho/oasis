@@ -21,16 +21,21 @@ struct ActivityCompactView: View {
                 indicator
             }
             .padding(.horizontal, ActivityLayout.compactPadding)
-            .frame(height: 32)
+            .frame(height: Self.rowHeight)
 
             if let line = layout.line {
                 ActivityLine(line: line)
                     .padding(.horizontal, 14)
-                    .frame(height: 41.5)
+                    .frame(height: Self.lineHeight)
                     .transition(.slot)
             }
         }
     }
+
+    /// Строка компакта — высота компакта календаря (32)
+    nonisolated static let rowHeight = IslandGeometry.calendarCompact.height
+    /// Строка peek — остаток высоты peek календаря (73.5) под строкой компакта: 41.5
+    nonisolated static let lineHeight = IslandGeometry.calendarPeek.height - rowHeight
 
     @ViewBuilder
     private var indicator: some View {
@@ -50,8 +55,8 @@ struct ActivityCompactView: View {
         }
     }
 
-    /// Ширина индикатора без построения SwiftUI-дерева — нужна вызывающей стороне (Task 4/5/7) заранее,
-    /// чтобы посчитать ActivityLayout.width. Кольцо — фиксированные 16 pt, текст — метрика того же шрифта,
+    /// Ширина индикатора без построения SwiftUI-дерева — нужна вызывающей стороне (ширины компакта и peek
+    /// календаря, напоминания в IslandView) заранее, чтобы посчитать ActivityLayout.width. Кольцо — фиксированные 16 pt, текст — метрика того же шрифта,
     /// что рисует .text выше (indicatorFontSize, полужирный, моноширинные цифры), с округлением вверх
     nonisolated static func indicatorWidth(_ indicator: ActivityLayout.Indicator) -> CGFloat {
         switch indicator {
