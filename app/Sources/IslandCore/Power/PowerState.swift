@@ -14,7 +14,7 @@ public struct PowerState: Equatable, Sendable {
     }
 }
 
-/// Какие уведомления даёт смена состояния питания. P1 добавляет Low Battery и Low Power
+/// Какие уведомления даёт смена состояния питания
 public enum PowerNotices {
     /// Low battery threshold по умолчанию — 10% (ui-inspection 1.3)
     public static let lowBatteryThreshold = 0.10
@@ -29,6 +29,7 @@ public enum PowerNotices {
             alerts.append(.lowBattery(level: new.level))
         }
         if new.isLowPowerMode, !old.isLowPowerMode { alerts.append(.lowPower(level: new.level)) }
-        return alerts
+        // несколько уведомлений сразу — по приоритету очереди (Low Battery выше Low Power выше Charging)
+        return alerts.sorted { $0.priority > $1.priority }
     }
 }

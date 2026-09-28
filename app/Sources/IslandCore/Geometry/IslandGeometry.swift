@@ -35,21 +35,28 @@ public enum IslandGeometry {
     /// Ширина, до которой остров сжимается при смене активности. Трекер дал 195 по строке 1 pt;
     /// минус те же 7 pt ушек, что у компакта и HUD той же высоты. Выведено, а не измерено напрямую
     public static let shrinkWidth: CGFloat = 188
-    /// rec2/states-sheet.png: Charging 357 по строке 1 pt. Тело не мерили: минус 7 pt ушек, как у HUD той же высоты
+    /// rec2/states-sheet.png: Charging 357 по строке 1 pt. Тело не мерили: минус 7 pt ушек, как у HUD той же высоты.
+    /// Абсолютная ширина, не от выреза: реальный замер, в отличие от lowBattery/lowPower ниже
     public static let charging = CGSize(width: 350, height: 32)
-    /// Замера нет, оценка: подпись целиком в левом крыле выреза. «Low Battery» при 13pt semibold — 75.5 pt,
-    /// левое крыло = notch(186)/2 + label + 14 padding + 4 запаса, крылья симметричны относительно выреза
-    public static let lowBattery = CGSize(width: 374, height: 32)
-    /// Замера нет, оценка: подпись целиком в левом крыле выреза. «Low Power Mode» при 13pt semibold — 106.5 pt,
-    /// тот же расчёт, что у lowBattery
-    public static let lowPower = CGSize(width: 436, height: 32)
 
-    /// Low Battery и Low Power вживую не снимались: своя ширина под подпись — см. lowBattery/lowPower
-    public static func size(for alert: IslandAlert) -> CGSize {
+    /// Крыло Low Battery/Low Power по одной стороне от выреза: подпись + 14 padding (BatteryAlertView.padding)
+    /// + 4 запаса, замера нет — оценка. Итоговая ширина = notch.width + 2×wing, крылья симметричны.
+    /// В отличие от Charging (абсолютный замер) считается от реального выреза: на экране с укрупнённым текстом
+    /// вырез шире 186, и подпись на фиксированной ширине заехала бы под него (ui review, задача 1)
+    public enum BatteryAlertWing {
+        /// «Low Battery» при 13pt semibold — 75.5 pt, ceil 76 + 14 + 4
+        public static let lowBattery: CGFloat = 94
+        /// «Low Power Mode» при 13pt semibold — 106.5 pt, ceil 107 + 14 + 4
+        public static let lowPower: CGFloat = 125
+    }
+
+    /// Low Battery и Low Power вживую не снимались: ширина под реальный вырез — см. BatteryAlertWing.
+    /// Charging остаётся абсолютным (измеренным), от notch не зависит
+    public static func size(for alert: IslandAlert, notch: CGSize) -> CGSize {
         switch alert {
         case .charging: charging
-        case .lowBattery: lowBattery
-        case .lowPower: lowPower
+        case .lowBattery: CGSize(width: notch.width + 2 * BatteryAlertWing.lowBattery, height: charging.height)
+        case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPower, height: charging.height)
         }
     }
 
@@ -119,7 +126,7 @@ public enum IslandGeometry {
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
-        case let .alert(alert): size(for: alert)
+        case let .alert(alert): size(for: alert, notch: notch)
         // разобран выше, сюда не доходит
         case .hoverNudge: notch
         }

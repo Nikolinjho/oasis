@@ -38,4 +38,11 @@ struct PowerNoticesTests {
         #expect(PowerNotices.alerts(from: Self.battery(0.4), to: Self.battery(0.4, lowPower: true)) == [.lowPower(level: 0.4)])
         #expect(PowerNotices.alerts(from: Self.battery(0.4, lowPower: true), to: Self.battery(0.4)).isEmpty)
     }
+
+    @Test("Одновременные Charging и Low Power отсортированы по приоритету очереди: Low Power первым")
+    func simultaneousAlertsSortedByPriority() {
+        let old = Self.battery(0.4)
+        let new = PowerState(isPluggedIn: true, isCharging: true, level: 0.4, isLowPowerMode: true)
+        #expect(PowerNotices.alerts(from: old, to: new) == [.lowPower(level: 0.4), .charging(level: 0.4)])
+    }
 }

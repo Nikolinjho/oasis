@@ -21,7 +21,7 @@ struct AlertView: View {
 }
 
 /// Уведомление батареи высотой 32: подпись слева, процент и батарейка справа (Charging — rec2/states-sheet.png,
-/// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:)).
+/// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:notch:).
 /// Шрифт и отступы как у HUD, отдельно не мерили
 struct BatteryAlertView: View {
     let label: String
@@ -29,6 +29,11 @@ struct BatteryAlertView: View {
     let showsPercent: Bool
     let fill: Color
     let notchWidth: CGFloat
+
+    /// Боковой отступ подписи и правого блока. Тот же 14, что учтён в IslandGeometry.BatteryAlertWing
+    /// при расчёте ширины Low Battery/Low Power — держать в одном месте, чтобы вью и геометрия не разъехались.
+    /// nonisolated: константа, а не состояние UI — тест читает её вне MainActor
+    nonisolated static let padding: CGFloat = 14
 
     var body: some View {
         HStack(spacing: 0) {
@@ -50,7 +55,7 @@ struct BatteryAlertView: View {
                 BatteryGlyph(level: level, fill: fill)
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, Self.padding)
         .frame(height: 32)
     }
 
