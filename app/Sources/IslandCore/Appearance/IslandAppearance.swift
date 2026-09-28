@@ -62,6 +62,8 @@ public struct IslandAppearance: Equatable, Sendable {
     public var volumeHUD = HUDAppearance(style: .decibel, icon: .device)
     /// Display: по умолчанию Accent (ui-inspection 1.6)
     public var brightnessHUD = HUDAppearance(style: .accent)
+    /// Текущий выход: глиф для Show device в HUD громкости (VolumeControl.outputs)
+    public var output = OutputDeviceKind.speakers
 
     public init() {}
 

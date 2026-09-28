@@ -9,7 +9,7 @@ struct SettingsPageTests {
             "General", "Battery", "Connectivity", "Focus", "Display", "Sound",
             "Now Playing", "Calendar", "File Tray", "Lock Screen", "About",
         ])
-        #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity])
+        #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity, .display, .sound])
         #expect(SettingsPage.battery.group == "Notifications")
         #expect(SettingsPage.lockScreen.group == "Live Activities")
         #expect(SettingsPage.about.group == "Alcove")

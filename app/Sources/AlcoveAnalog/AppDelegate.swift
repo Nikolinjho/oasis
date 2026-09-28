@@ -25,6 +25,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var bluetooth: BluetoothWatcher?
     private var headphonesMonitor: HeadphonesBatteryMonitor?
     private var headphonesBattery = HeadphonesBatteryTracker()
+    /// Нормализованный адрес → модель наушников, о которых сообщал BluetoothWatcher: глиф Show device
+    private var knownHeadphones: [String: AirPodsInfo.Model?] = [:]
+    private var output = OutputDeviceInfo(transport: 0, uid: "", name: "")
     private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
@@ -48,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         store.config = settings.machineConfig(from: store.config)
-        store.appearance = settings.appearance
+        applyAppearance()
         settings.onChange = { [weak self] in self?.applySettings() }
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
@@ -96,9 +99,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Выбор экрана (DisplayChoice) пока не влияет на окно — это отдельная задача
     private func applySettings() {
         store.config = settings.machineConfig(from: store.config)
-        store.appearance = settings.appearance
+        applyAppearance()
         statusItem?.setIconHidden(settings.hideMenuBarIcon)
         window?.tuning = settings.notchTuning
+    }
+
+    /// Вид острова: настройки плюс текущее устройство вывода
+    private func applyAppearance() {
+        var appearance = settings.appearance
+        appearance.output = OutputDeviceKind.classify(
+            transport: output.transport, uid: output.uid, name: output.name, knownHeadphones: knownHeadphones)
+        store.appearance = appearance
     }
 
     /// Повторный запуск (open -a, Spotlight) открывает настройки: с Hide menu bar icon при закрытой крышке
@@ -199,6 +210,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func headphonesConnected(_ info: AirPodsInfo) {
         var info = info
         if let address = info.address {
+            knownHeadphones[AirPodsBattery.normalized(address: address)] = info.model
+            applyAppearance()
             let low = headphonesBattery.connected(
                 address: address, level: info.battery, threshold: settings.headphonesLowBatteryThreshold)
             info.isLowBattery = low && settings.warnHeadphonesLowBattery
@@ -218,10 +231,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startLevels() {
-        // HUD громкости всегда идёт от слушателя CoreAudio: и в режиме перехвата, и без Accessibility
+        // HUD громкости всегда идёт от слушателя CoreAudio: и в режиме перехвата, и без Accessibility.
+        // Sound выключен — клавиши у системы, и изменения громкости HUD не показывают
         let volume = VolumeControl()
-        tasks.append(Task { [store] in
-            for await level in volume.changes { store.send(.hudChanged(.volume, level: level)) }
+        tasks.append(Task { [weak self] in
+            for await level in volume.changes {
+                guard let self, settings.soundHUDEnabled else { continue }
+                store.send(.hudChanged(.volume, level: level))
+            }
+        })
+        tasks.append(Task { [weak self] in
+            for await info in volume.outputs {
+                self?.output = info
+                self?.applyAppearance()
+            }
         })
         self.volume = volume
         brightness = BrightnessControl()
@@ -250,6 +273,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handleKey(_ press: MediaKeyPress) -> Bool {
         switch press.key {
         case .volumeUp, .volumeDown:
+            guard settings.soundHUDEnabled else { return false }
             if press.isDown, let volume {
                 let before = volume.volume
                 volume.step(up: press.key == .volumeUp, fine: press.fine)
@@ -260,10 +284,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return true
         case .mute:
+            guard settings.soundHUDEnabled else { return false }
             if press.isDown, !press.isRepeat { volume?.toggleMute() }
             return true
         case .brightnessUp, .brightnessDown:
-            guard let brightness else { return false }
+            guard settings.displayHUDEnabled, let brightness else { return false }
             guard press.isDown else { return true }
             // DisplayServices не смог прочитать или выставить яркость: отдаём клавишу системе
             guard let level = brightness.step(up: press.key == .brightnessUp, fine: press.fine) else { return false }

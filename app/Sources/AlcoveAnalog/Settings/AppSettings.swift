@@ -32,6 +32,19 @@ final class AppSettings: ObservableObject {
         static let warnHeadphonesLowBattery = "warnHeadphonesLowBattery"
         static let headphonesLowBatteryThreshold = "headphonesLowBatteryThreshold"
         static let headphonesLowBatterySound = "headphonesLowBatterySound"
+        static let soundHUDEnabled = "soundHUDEnabled"
+        static let soundHUDDuration = "soundHUDDuration"
+        static let soundHUDStyle = "soundHUDStyle"
+        static let soundHUDPercentage = "soundHUDPercentage"
+        static let soundHUDHideLabel = "soundHUDHideLabel"
+        static let soundHUDSpeed = "soundHUDSpeed"
+        static let soundHUDIcon = "soundHUDIcon"
+        static let displayHUDEnabled = "displayHUDEnabled"
+        static let displayHUDDuration = "displayHUDDuration"
+        static let displayHUDStyle = "displayHUDStyle"
+        static let displayHUDPercentage = "displayHUDPercentage"
+        static let displayHUDHideLabel = "displayHUDHideLabel"
+        static let displayHUDSpeed = "displayHUDSpeed"
     }
 
     var onChange: () -> Void = {}
@@ -131,6 +144,23 @@ final class AppSettings: ObservableObject {
         didSet { save(oldValue, headphonesLowBatterySound, Key.headphonesLowBatterySound) }
     }
 
+    // Sound (ui-inspection 1.7)
+    @Published var soundHUDEnabled: Bool { didSet { save(oldValue, soundHUDEnabled, Key.soundHUDEnabled) } }
+    /// 1, 1.5 или 2 с
+    @Published var soundHUDDuration: Double { didSet { save(oldValue, soundHUDDuration, Key.soundHUDDuration) } }
+    @Published var soundHUDStyle: HUDBarStyle { didSet { saveRaw(oldValue, soundHUDStyle, Key.soundHUDStyle) } }
+    @Published var soundHUDPercentage: Bool { didSet { save(oldValue, soundHUDPercentage, Key.soundHUDPercentage) } }
+    @Published var soundHUDHideLabel: Bool { didSet { save(oldValue, soundHUDHideLabel, Key.soundHUDHideLabel) } }
+    @Published var soundHUDSpeed: HUDSpeed { didSet { saveRaw(oldValue, soundHUDSpeed, Key.soundHUDSpeed) } }
+    @Published var soundHUDIcon: HUDIcon { didSet { saveRaw(oldValue, soundHUDIcon, Key.soundHUDIcon) } }
+    // Display (ui-inspection 1.6)
+    @Published var displayHUDEnabled: Bool { didSet { save(oldValue, displayHUDEnabled, Key.displayHUDEnabled) } }
+    @Published var displayHUDDuration: Double { didSet { save(oldValue, displayHUDDuration, Key.displayHUDDuration) } }
+    @Published var displayHUDStyle: HUDBarStyle { didSet { saveRaw(oldValue, displayHUDStyle, Key.displayHUDStyle) } }
+    @Published var displayHUDPercentage: Bool { didSet { save(oldValue, displayHUDPercentage, Key.displayHUDPercentage) } }
+    @Published var displayHUDHideLabel: Bool { didSet { save(oldValue, displayHUDHideLabel, Key.displayHUDHideLabel) } }
+    @Published var displayHUDSpeed: HUDSpeed { didSet { saveRaw(oldValue, displayHUDSpeed, Key.displayHUDSpeed) } }
+
     /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
     var notchTuning: NotchTuning {
         NotchTuning(width: min(max(notchWidthOffset, -2), 2), height: min(max(notchHeightOffset, -2), 2))
@@ -178,6 +208,19 @@ final class AppSettings: ObservableObject {
         warnHeadphonesLowBattery = Self.read(defaults, Key.warnHeadphonesLowBattery, true)
         headphonesLowBatteryThreshold = Self.read(defaults, Key.headphonesLowBatteryThreshold, 0.2)
         headphonesLowBatterySound = Self.read(defaults, Key.headphonesLowBatterySound, true)
+        soundHUDEnabled = Self.read(defaults, Key.soundHUDEnabled, true)
+        soundHUDDuration = Self.read(defaults, Key.soundHUDDuration, 1.5)
+        soundHUDStyle = Self.readRaw(defaults, Key.soundHUDStyle, HUDBarStyle.decibel)
+        soundHUDPercentage = Self.read(defaults, Key.soundHUDPercentage, false)
+        soundHUDHideLabel = Self.read(defaults, Key.soundHUDHideLabel, false)
+        soundHUDSpeed = Self.readRaw(defaults, Key.soundHUDSpeed, HUDSpeed.fast)
+        soundHUDIcon = Self.readRaw(defaults, Key.soundHUDIcon, HUDIcon.device)
+        displayHUDEnabled = Self.read(defaults, Key.displayHUDEnabled, true)
+        displayHUDDuration = Self.read(defaults, Key.displayHUDDuration, 1.5)
+        displayHUDStyle = Self.readRaw(defaults, Key.displayHUDStyle, HUDBarStyle.accent)
+        displayHUDPercentage = Self.read(defaults, Key.displayHUDPercentage, false)
+        displayHUDHideLabel = Self.read(defaults, Key.displayHUDHideLabel, false)
+        displayHUDSpeed = Self.readRaw(defaults, Key.displayHUDSpeed, HUDSpeed.fast)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -189,6 +232,18 @@ final class AppSettings: ObservableObject {
 
     private static func read<T>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T {
         defaults.object(forKey: key) as? T ?? fallback
+    }
+
+    /// Перечисления пишутся rawValue: отдельное имя, чтобы не спорить с save<T: Equatable> при разрешении перегрузки
+    private func saveRaw<T: RawRepresentable & Equatable>(_ old: T, _ new: T, _ key: String) where T.RawValue == String {
+        guard old != new else { return }
+        defaults.set(new.rawValue, forKey: key)
+        onChange()
+    }
+
+    private static func readRaw<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T
+        where T.RawValue == String {
+        defaults.string(forKey: key).flatMap(T.init(rawValue:)) ?? fallback
     }
 
     var powerRules: PowerRules {
@@ -208,12 +263,20 @@ final class AppSettings: ObservableObject {
     var appearance: IslandAppearance {
         var appearance = IslandAppearance()
         appearance.battery = BatteryAlertStyle(hidesLabel: hideBatteryLabel, hidesPercentage: hideBatteryPercentage)
+        appearance.volumeHUD = HUDAppearance(
+            style: soundHUDStyle, showsPercentage: soundHUDPercentage, hidesLabel: soundHUDHideLabel,
+            speed: soundHUDSpeed, icon: soundHUDIcon)
+        appearance.brightnessHUD = HUDAppearance(
+            style: displayHUDStyle, showsPercentage: displayHUDPercentage, hidesLabel: displayHUDHideLabel,
+            speed: displayHUDSpeed)
         return appearance
     }
 
     func machineConfig(from base: IslandMachine.Config) -> IslandMachine.Config {
         var config = base.applying(expandOnHover: expandOnHover, hoverDuration: hoverDuration)
         config.alerts = alertRules
+        config.hudDurations.volume = .seconds(soundHUDDuration)
+        config.hudDurations.brightness = .seconds(displayHUDDuration)
         return config
     }
 }

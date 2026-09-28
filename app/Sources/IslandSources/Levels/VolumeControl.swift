@@ -1,6 +1,7 @@
 import AudioToolbox
 import CoreAudio
 import Foundation
+import IslandCore
 import os
 
 /// Громкость и mute выхода в момент уведомления
@@ -45,6 +46,9 @@ public final class VolumeControl: @unchecked Sendable {
     /// Любое изменение громкости или mute, в том числе чужое. Уровень 0…1, при mute — 0
     public let changes: AsyncStream<Double>
     private let continuation: AsyncStream<Double>.Continuation
+    /// Текущий выход: при старте и при каждой смене дефолтного устройства
+    public let outputs: AsyncStream<OutputDeviceInfo>
+    private let outputContinuation: AsyncStream<OutputDeviceInfo>.Continuation
     private let onChange: AudioObjectPropertyListenerBlock
     private let listened: OSAllocatedUnfairLock<ListenedDevice>
     private let log = SourceLog.logger("volume")
@@ -53,6 +57,7 @@ public final class VolumeControl: @unchecked Sendable {
         let (stream, continuation) = AsyncStream.makeStream(of: Double.self, bufferingPolicy: .bufferingNewest(1))
         changes = stream
         self.continuation = continuation
+        (outputs, outputContinuation) = AsyncStream.makeStream(of: OutputDeviceInfo.self, bufferingPolicy: .bufferingNewest(1))
         let listened = OSAllocatedUnfairLock(initialState: ListenedDevice())
         self.listened = listened
         onChange = { _, _ in
@@ -110,6 +115,7 @@ public final class VolumeControl: @unchecked Sendable {
         }
         AudioObjectAddPropertyListenerBlock(change.attach, &volumeAddress, .main, onChange)
         AudioObjectAddPropertyListenerBlock(change.attach, &muteAddress, .main, onChange)
+        outputContinuation.yield(Self.outputInfo(change.attach))
         return change
     }
 
@@ -156,4 +162,68 @@ public final class VolumeControl: @unchecked Sendable {
     }
 
     static func currentState() -> VolumeState { state(of: defaultDevice()) }
+
+    static func outputInfo(_ device: AudioObjectID) -> OutputDeviceInfo {
+        OutputDeviceInfo(
+            transport: uint32(kAudioDevicePropertyTransportType, of: device),
+            uid: string(kAudioDevicePropertyDeviceUID, of: device) ?? "",
+            name: string(kAudioObjectPropertyName, of: device) ?? "")
+    }
+
+    private static func uint32(_ selector: AudioObjectPropertySelector, of device: AudioObjectID) -> UInt32 {
+        var address = address(selector, scope: kAudioObjectPropertyScopeGlobal)
+        var value: UInt32 = 0
+        var size = UInt32(MemoryLayout<UInt32>.size)
+        guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, &value) == noErr else { return 0 }
+        return value
+    }
+
+    private static func string(_ selector: AudioObjectPropertySelector, of device: AudioObjectID) -> String? {
+        var address = address(selector, scope: kAudioObjectPropertyScopeGlobal)
+        var value: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, &value) == noErr else { return nil }
+        return value?.takeRetainedValue() as String?
+    }
+}
+
+/// Что CoreAudio знает о выходе: для OutputDeviceKind.classify
+public struct OutputDeviceInfo: Equatable, Sendable {
+    public let transport: UInt32
+    public let uid: String
+    public let name: String
+
+    public init(transport: UInt32, uid: String, name: String) {
+        self.transport = transport
+        self.uid = uid
+        self.name = name
+    }
+}
+
+extension OutputDeviceKind {
+    /// knownHeadphones — нормализованный адрес → модель наушников, о которых сообщил BluetoothWatcher:
+    /// переименованные AirPods («thegreatnikos») по имени не узнать, адрес — в UID Bluetooth-выхода
+    public static func classify(
+        transport: UInt32, uid: String, name: String, knownHeadphones: [String: AirPodsInfo.Model?]
+    ) -> OutputDeviceKind {
+        switch transport {
+        case kAudioDeviceTransportTypeBuiltIn:
+            return uid.contains("Headphone") ? .headphones : .speakers
+        case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE:
+            if let address = BluetoothAudioOutputs.address(uid: uid, transport: transport),
+               let model = knownHeadphones[AirPodsBattery.normalized(address: address)] {
+                return .airpods(model)
+            }
+            if name.localizedCaseInsensitiveContains("AirPods") {
+                let symbol = AirPodsInfo(name: name, battery: nil).symbol
+                return .airpods(symbol == "airpodsmax" ? .max : symbol == "airpodspro" ? .pro : nil)
+            }
+            // прочие Bluetooth-выходы у этой машины — наушники (Beats, JBL); колонки — редкость, оценка
+            return .headphones
+        case kAudioDeviceTransportTypeHDMI, kAudioDeviceTransportTypeDisplayPort:
+            return .display
+        default:
+            return .other
+        }
+    }
 }

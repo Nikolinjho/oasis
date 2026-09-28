@@ -168,4 +168,23 @@ struct AppSettingsTests {
         #expect(rules.connectivityDuration == .milliseconds(2500))
         #expect(!rules.headphonesLowBatterySound)
     }
+
+    @Test("Display и Sound: по умолчанию как у Alcove, вид и длительности собираются из настроек")
+    func huds() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.soundHUDEnabled && settings.displayHUDEnabled)
+        #expect(settings.appearance.hud(.volume) == HUDAppearance(style: .decibel, icon: .device))
+        #expect(settings.appearance.hud(.brightness) == HUDAppearance(style: .accent))
+        settings.soundHUDDuration = 2
+        settings.soundHUDStyle = .white
+        settings.soundHUDPercentage = true
+        settings.displayHUDSpeed = .instant
+        settings.displayHUDHideLabel = true
+        #expect(settings.machineConfig(from: .user).hudDurations.volume == .seconds(2))
+        #expect(settings.appearance.hud(.volume) == HUDAppearance(style: .white, showsPercentage: true, icon: .device))
+        #expect(settings.appearance.hud(.brightness) == HUDAppearance(style: .accent, hidesLabel: true, speed: .instant))
+        #expect(AppSettings(defaults: defaults).soundHUDStyle == .white)
+    }
 }

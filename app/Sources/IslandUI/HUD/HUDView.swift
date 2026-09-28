@@ -82,12 +82,18 @@ struct HUDView: View {
     }
 }
 
-struct LevelBar: View {
+public struct LevelBar: View {
     let level: Double
     var style = HUDBarStyle.white
     var speed = HUDSpeed.fast
 
-    var body: some View {
+    public init(level: Double, style: HUDBarStyle = .white, speed: HUDSpeed = .fast) {
+        self.level = level
+        self.style = style
+        self.speed = speed
+    }
+
+    public var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 Capsule().fill(track)
