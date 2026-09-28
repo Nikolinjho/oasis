@@ -42,7 +42,8 @@ enum CalendarMenuSection {
         let icon: NSImage? = switch service {
         case .googleMeet: sized(Bundle.main.resourceURL.flatMap { NSImage(contentsOf: $0.appendingPathComponent("Icons/google-meet.png")) })
         case .zoom: appIcon(bundleID: "us.zoom.xos")
-        case .teams: appIcon(bundleID: "com.microsoft.teams2")
+        // новый Teams, затем классический
+        case .teams: appIcon(bundleID: "com.microsoft.teams2") ?? appIcon(bundleID: "com.microsoft.teams")
         case .telemost, nil: nil
         }
         return icon ?? symbol("video.fill")

@@ -183,4 +183,42 @@ struct CalendarClockDismissTests {
         clock.update(agenda: DayAgenda(today: [first], tomorrow: []), now: Self.at(4))
         #expect(clock.menuModel(now: Self.at(4))?.event.id == "first")
     }
+
+    @Test("Пересечение событий: меню по событию компакта, Dismiss из меню убирает именно его")
+    func menuFollowsCompact() {
+        let long = CalendarEvent(
+            id: "long", title: "long", start: Self.at(0), end: Self.at(3600), isAllDay: false, color: CalendarClockTests.event.color)
+        let inner = CalendarEvent(
+            id: "inner", title: "inner", start: Self.at(1800), end: Self.at(2700), isAllDay: false, color: long.color)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(-600))
+        clock.update(agenda: DayAgenda.make(events: [long, inner], now: Self.at(-600)), now: Self.at(-600))
+        // окно ещё закрыто: самое раннее из T−15…конец
+        #expect(clock.menuModel(now: Self.at(-600))?.event.id == "long")
+
+        clock.tick(now: Self.at(1790))
+        #expect(store.calendarEvent == inner)
+        #expect(clock.menuModel(now: Self.at(1790))?.event.id == "inner")
+
+        clock.dismiss(try! #require(clock.menuModel(now: Self.at(1790))).event.id, now: Self.at(1790))
+        #expect(store.calendarEvent == long)
+        #expect(store.model.calendarLive)
+        #expect(clock.menuModel(now: Self.at(1790))?.event.id == "long")
+    }
+
+    @Test("Dismiss убирает ждущее в очереди напоминание события, показанное дослуживает")
+    func dismissRetractsQueuedReminder() {
+        let first = Self.event("call", startsAt: 0)
+        let later = Self.event("later", startsAt: 600)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(-301))
+        clock.update(agenda: DayAgenda(today: [first, later], tomorrow: []), now: Self.at(-300))
+        let shown = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "call", minutes: 5, color: first.color))
+        #expect(store.model.surface == .alert(shown))
+        #expect(store.model.alertQueue.count == 1)
+
+        clock.dismiss("later", now: Self.at(-300))
+        #expect(store.model.alertQueue.isEmpty)
+        #expect(store.model.surface == .alert(shown))
+    }
 }

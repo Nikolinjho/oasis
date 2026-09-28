@@ -16,6 +16,9 @@ public enum IslandEvent: Equatable, Sendable {
     case mediaCleared
     case hudChanged(HUDKind, level: Double)
     case alertArrived(IslandAlert)
+    /// Уведомление этого вида больше не нужно (Dismiss Event): ждущие в очереди уходят. Показанное и то,
+    /// к которому уже идёт сжатие, дослуживают свой срок (напоминание — 4.2 с): отдельного ухода у уведомления нет
+    case alertRetracted(IslandAlert.Kind)
     /// Открылось или закрылось окно календаря: от минуты до начала события до его конца
     case calendarLiveChanged(Bool)
     /// Событие началось: peek с названием поверх компакта календаря и звук
@@ -136,6 +139,7 @@ public enum IslandMachine {
         case .mediaCleared: mediaCleared(&model)
         case let .hudChanged(kind, level): hudChanged(&model, .hud(kind, level: level))
         case let .alertArrived(alert): alertArrived(&model, alert)
+        case let .alertRetracted(kind): alertRetracted(&model, kind)
         case let .calendarLiveChanged(live): calendarLiveChanged(&model, live)
         case .calendarStarted: calendarStarted(&model)
         case .expandedViewCycled: expandedViewCycled(&model)
@@ -292,6 +296,11 @@ public enum IslandMachine {
             // сжатие всегда с pending, отклик разобран выше
             return []
         }
+    }
+
+    private static func alertRetracted(_ m: inout IslandModel, _ kind: IslandAlert.Kind) -> [IslandEffect] {
+        m.alertQueue.removeAll { $0.kind == kind }
+        return []
     }
 
     /// Уведомление появилось на экране: таймер ухода и звук

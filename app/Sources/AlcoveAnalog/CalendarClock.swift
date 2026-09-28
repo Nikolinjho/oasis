@@ -66,14 +66,21 @@ final class CalendarClock {
     }
 
     /// Dismiss Event: событие уходит из компакта, напоминаний и меню, пока оно есть в agenda
+    /// Ждущие в очереди напоминания события тоже уходят, показанное дослуживает свои 4.2 с
     func dismiss(_ id: String, now: Date = Date()) {
         dismissed.insert(id)
+        store.send(.alertRetracted(.calendarReminder(eventID: id)))
         tick(now: now)
     }
 
-    /// Пункты события для меню menu bar
+    /// Пункты события для меню menu bar. Окно календаря открыто — событие компакта (начавшееся позже всех), иначе
+    /// самое раннее из T−15…конец. Отступление от «самое раннее» плана намеренное: при пересечении (A 10:00–11:00,
+    /// B с 10:30) Join и Dismiss должны относиться к B, которое показывает остров, а не к A
     func menuModel(now: Date = Date()) -> CalendarMenuModel? {
-        CalendarMenuModel.make(agenda: agenda, now: now, dismissed: dismissed)
+        if let live = CalendarSchedule.liveEvent(in: visible, at: now) {
+            return CalendarMenuModel(event: live, meeting: MeetingLink.find(in: live))
+        }
+        return CalendarMenuModel.make(agenda: agenda, now: now, dismissed: dismissed)
     }
 
     /// События без отклонённых: по ним считаются напоминания, старт, окно календаря и граница таймера
