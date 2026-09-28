@@ -61,6 +61,8 @@ public struct DayAgenda: Equatable, Sendable {
     /// live — событие открытого окна календаря (CalendarSchedule.liveEvent без отклонённых): при пересечении
     /// событий карточка и Join относятся к тому же событию, что компакт и меню, а не к первому не закончившемуся
     public func current(at now: Date, live: CalendarEvent? = nil) -> CalendarEvent? {
-        live ?? today.first { $0.end > now }
+        // событие окна уже кончилось, а store ещё не узнал (TimelineView тикает раньше часов): прежнее правило
+        if let live, live.end > now { return live }
+        return today.first { $0.end > now }
     }
 }

@@ -60,5 +60,7 @@ struct DayAgendaTests {
         #expect(agenda.current(at: Self.now, live: inner)?.id == "inner")
         // окно закрыто: прежнее правило
         #expect(agenda.current(at: Self.now, live: nil)?.id == "long")
+        // событие окна уже кончилось (store ещё не узнал): прежнее правило
+        #expect(agenda.current(at: Self.at(26, 23, 25), live: inner)?.id == "long")
     }
 }

@@ -71,7 +71,7 @@ final class CalendarClock {
     }
 
     /// Dismiss Event: событие уходит из компакта, напоминаний и меню, пока оно есть в agenda
-    /// Ждущие в очереди напоминания события тоже уходят, сжатие к напоминанию уходит в покой, показанное дослуживает свои 4.2 с
+    /// Напоминания события тоже уходят: ждущие в очереди, показанное (сразу) и то, к которому идёт сжатие
     func dismiss(_ id: String, now: Date = Date()) {
         dismissed.insert(id)
         store.send(.alertRetracted(.calendarReminder(eventID: id)))

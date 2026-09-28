@@ -1,7 +1,7 @@
 import Testing
 @testable import IslandCore
 
-/// Отзыв уведомления (Dismiss Event): ждущие в очереди и то, к которому идёт сжатие, уходят, показанное дослуживает свой срок
+/// Отзыв уведомления (Dismiss Event): ждущие в очереди, то, к которому идёт сжатие, и показанное уходят
 struct IslandMachineRetractTests {
     static let color = RGB(red: 0.2, green: 0.5, blue: 1)
     static func reminder(_ id: String, _ minutes: Int) -> IslandAlert {
@@ -25,12 +25,38 @@ struct IslandMachineRetractTests {
         #expect(m.surface == .alert(Self.low))
     }
 
-    @Test("Показанное напоминание дослуживает свой срок: таймер alertHide не трогаем")
-    func keepsVisible() {
+    @Test("Отзыв показанного: уходит сразу в следующее из очереди, таймер alertHide снят")
+    func shownGoesToNextQueued() {
         var m = Self.model(.alert(Self.reminder("a", 5)), queue: [Self.low])
-        #expect(IslandMachine.reduce(&m, .alertRetracted(.calendarReminder(eventID: "a"))).isEmpty)
-        #expect(m.surface == .alert(Self.reminder("a", 5)))
-        #expect(m.alertQueue == [Self.low])
+        let fx = IslandMachine.reduce(&m, .alertRetracted(.calendarReminder(eventID: "a")))
+        #expect(fx == [.cancel(.alertHide), .cancel(.peekEnd), .animate(.alertShrink), .schedule(.grow, after: IslandTiming.shrink)])
+        #expect(m.pending == .alert(Self.low))
+        #expect(m.alertQueue.isEmpty)
+    }
+
+    @Test("Отзыв показанного без очереди: уходит сразу в покой")
+    func shownGoesToRest() {
+        var idle = Self.model(.alert(Self.reminder("a", 5)))
+        #expect(IslandMachine.reduce(&idle, .alertRetracted(.calendarReminder(eventID: "a"))) == [.cancel(.alertHide), .animate(.alertOut)])
+        #expect(idle.surface == .idle)
+
+        var live = Self.model(.alert(Self.reminder("a", 5)))
+        live.calendarLive = true
+        _ = IslandMachine.reduce(&live, .alertRetracted(.calendarReminder(eventID: "a")))
+        #expect(live.pending == .calendar)
+    }
+
+    @Test("Отзыв показанного, затем HUD, затем hudHide: покой, очередь пустая")
+    func shownRetractedThenHUD() {
+        let reminder = Self.reminder("a", 5)
+        var m = Self.model(.alert(reminder))
+        _ = IslandMachine.reduce(&m, .alertRetracted(reminder.kind))
+        _ = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5))
+        #expect(m.alertQueue.isEmpty)
+        #expect(m.heardAlerts.isEmpty)
+        _ = IslandMachine.reduce(&m, .timerFired(.hudHide))
+        #expect(m.surface == .idle)
+        #expect(m.alertQueue.isEmpty)
     }
 
     @Test("Сжатие шло к напоминанию отклонённого события: вместо него покой, после grow ни напоминания, ни звука")

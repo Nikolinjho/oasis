@@ -220,7 +220,7 @@ struct CalendarClockDismissTests {
         #expect(clock.menuModel(now: Self.at(1790))?.event.id == "long")
     }
 
-    @Test("Dismiss убирает ждущее в очереди напоминание события, показанное дослуживает")
+    @Test("Dismiss убирает ждущее в очереди напоминание события, показанное напоминание другого события остаётся")
     func dismissRetractsQueuedReminder() {
         let first = Self.event("call", startsAt: 0)
         let later = Self.event("later", startsAt: 600)

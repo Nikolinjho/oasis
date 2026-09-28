@@ -16,9 +16,8 @@ public enum IslandEvent: Equatable, Sendable {
     case mediaCleared
     case hudChanged(HUDKind, level: Double)
     case alertArrived(IslandAlert)
-    /// Уведомление этого вида больше не нужно (Dismiss Event): ждущие в очереди уходят. Если к нему уже идёт
-    /// сжатие, оно идёт к следующему из очереди или в покой. Показанное дослуживает свой срок (напоминание — 4.2 с):
-    /// отдельного ухода у уведомления нет
+    /// Уведомление этого вида больше не нужно (Dismiss Event): ждущие в очереди уходят. Показанное уходит сразу,
+    /// как по alertHide, а сжатие к нему идёт к следующему из очереди или в покой
     case alertRetracted(IslandAlert.Kind)
     /// Открылось или закрылось окно календаря: от минуты до начала события до его конца
     case calendarLiveChanged(Bool)
@@ -84,6 +83,8 @@ public struct IslandModel: Equatable, Sendable {
     /// (решение по ревью P1). heard — звук уже прозвучал: повторный показ без него
     mutating func displaceByHUD(_ alert: IslandAlert, heard: Bool) {
         guard alert.priority >= 2 else { return }
+        // показанное уведомление всегда одно своего вида: ждущее того же вида обновило бы показанное, а не встало в очередь
+        assert(!heard || !alertQueue.contains { $0.kind == alert.kind })
         enqueue(alert)
         if heard { heardAlerts.insert(alert.kind) }
     }
@@ -325,6 +326,10 @@ public enum IslandMachine {
         if case let .alert(pending) = m.pending, pending.kind == kind {
             m.pending = m.dequeueAlert().map(Surface.alert) ?? m.base
         }
+        // показанное уходит сразу: иначе его вытеснил бы HUD и вернул в очередь (displaceByHUD)
+        if case let .alert(shown) = m.surface, shown.kind == kind, m.pending == nil {
+            return [.cancel(.alertHide)] + hideAlert(&m)
+        }
         return []
     }
 
@@ -513,15 +518,20 @@ public enum IslandMachine {
             return close(&m)
         case .alertHide:
             guard case .alert = m.surface, m.pending == nil else { return [] }
-            if let next = m.dequeueAlert() { return shrink(&m, then: .alert(next)) }
-            if m.base != .idle { return shrink(&m, then: m.base) }
-            m.surface = .idle
-            return [.animate(.alertOut)]
+            return hideAlert(&m)
         case .calendarPeekEnd:
             guard m.surface == .calendarPeek else { return [] }
             m.surface = .calendar
             return [.animate(.calendarPeekClose)]
         }
+    }
+
+    /// Уход показанного уведомления: к следующему из очереди, иначе в покой
+    private static func hideAlert(_ m: inout IslandModel) -> [IslandEffect] {
+        if let next = m.dequeueAlert() { return shrink(&m, then: .alert(next)) }
+        if m.base != .idle { return shrink(&m, then: m.base) }
+        m.surface = .idle
+        return [.animate(.alertOut)]
     }
 
     /// Смена активности: сжатие почти до выреза, раскрытие в target по таймеру grow
