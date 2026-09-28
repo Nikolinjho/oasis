@@ -24,7 +24,16 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     /// То же меню открывается правым кликом по острову: компакт закрывает иконку в menu bar
     let menu = NSMenu()
-    private let launchAtLogin = ClosureMenuItem("Launch at Login") { LoginItem.toggle() }
+    private let launchAtLogin = ClosureMenuItem("Launch at Login") {
+        Task { @MainActor in
+            do {
+                try LoginItem.toggle()
+            } catch {
+                // окна настроек тут нет: обычный runModal
+                LoginItem.presentError(error, on: nil)
+            }
+        }
+    }
     private let grantAccessibility = ClosureMenuItem("Grant Accessibility…") { Permissions.openAccessibilitySettings() }
     private let isTrusted: () -> Bool
 

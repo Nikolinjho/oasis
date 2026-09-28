@@ -1,8 +1,17 @@
+import AppKit
 import SwiftUI
 
 /// Акцент Alcove: тумблер и заливка слайдера (ui-inspection 1.1)
 enum SettingsPalette {
     static let accent = Color(red: 233 / 255, green: 98 / 255, blue: 96 / 255)
+
+    /// Подложка карточки: должна быть светлее окна в обеих темах.
+    /// .controlBackgroundColor темнее окна в тёмной теме — карточки «проваливались»
+    static let cardBackground = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(white: 0.227, alpha: 1)
+            : NSColor.white
+    })
 }
 
 /// Цветная squircle-иконка пункта: ~22 pt в сайдбаре, 26 в заголовке страницы
@@ -49,7 +58,7 @@ struct SettingsCard<Content: View>: View {
             VStack(spacing: 0) { content }
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(nsColor: .controlBackgroundColor)))
+                        .fill(SettingsPalette.cardBackground))
         }
     }
 }

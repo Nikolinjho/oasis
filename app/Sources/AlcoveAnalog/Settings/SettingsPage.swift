@@ -49,7 +49,8 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         case .display: .purple
         case .sound: .pink
         case .nowPlaying, .calendar: .red
-        case .lockScreen: Color(white: 0.15)
+        // 0.15 сливался с тёмной темой окна: чуть светлее, чтобы иконка не пропадала
+        case .lockScreen: Color(white: 0.3)
         }
     }
 
