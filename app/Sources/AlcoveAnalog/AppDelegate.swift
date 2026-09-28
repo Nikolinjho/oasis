@@ -204,14 +204,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         monitor.start()
         headphonesMonitor = monitor
+        // наушники, подключённые ещё до запуска: BluetoothWatcher считает первый снимок исходным
+        // и по нему onConnect не шлёт — без этого переименованные AirPods после запуска были бы просто headphones
+        tasks.append(Task { [weak self] in
+            let list = await AirPodsBattery.connectedHeadphonesNow()
+            self?.rememberHeadphones(list)
+        })
+    }
+
+    /// Запоминает модель наушников по адресу для глифа Show device (OutputDeviceKind.classify) и обновляет вид острова
+    private func rememberHeadphones(_ list: [AirPodsInfo]) {
+        for info in list {
+            guard let address = info.address else { continue }
+            knownHeadphones[AirPodsBattery.normalized(address: address)] = info.model
+        }
+        applyAppearance()
     }
 
     /// Connectivity выключен — уведомлений нет. Заряд уже ниже порога — сразу красное кольцо и звук
     private func headphonesConnected(_ info: AirPodsInfo) {
         var info = info
+        rememberHeadphones([info])
         if let address = info.address {
-            knownHeadphones[AirPodsBattery.normalized(address: address)] = info.model
-            applyAppearance()
             let low = headphonesBattery.connected(
                 address: address, level: info.battery, threshold: settings.headphonesLowBatteryThreshold)
             info.isLowBattery = low && settings.warnHeadphonesLowBattery
@@ -221,6 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func headphonesPolled(_ list: [AirPodsInfo]) {
+        rememberHeadphones(list)
         for var info in list {
             guard let address = info.address, let level = info.battery,
                   headphonesBattery.update(address: address, level: level, threshold: settings.headphonesLowBatteryThreshold),
@@ -236,14 +251,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let volume = VolumeControl()
         tasks.append(Task { [weak self] in
             for await level in volume.changes {
-                guard let self, settings.soundHUDEnabled else { continue }
+                guard let self else { return }
+                guard settings.soundHUDEnabled else { continue }
                 store.send(.hudChanged(.volume, level: level))
             }
         })
         tasks.append(Task { [weak self] in
             for await info in volume.outputs {
-                self?.output = info
-                self?.applyAppearance()
+                guard let self else { return }
+                output = info
+                applyAppearance()
             }
         })
         self.volume = volume

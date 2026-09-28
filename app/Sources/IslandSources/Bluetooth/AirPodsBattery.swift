@@ -93,6 +93,13 @@ public enum AirPodsBattery {
         }
     }
 
+    /// Наушники, подключённые уже сейчас: для запоминания моделей при старте приложения —
+    /// BluetoothWatcher считает первый снимок исходным и по нему onConnect не шлёт. Сбой чтения — пустой список
+    public static func connectedHeadphonesNow() async -> [AirPodsInfo] {
+        guard let json = await readProfile() else { return [] }
+        return connectedHeadphones(json: json)
+    }
+
     /// Меньший из наушников, иначе Main (у Max один аккумулятор)
     static func battery(_ device: [String: Any]) -> Double? {
         let buds = ["device_batteryLevelLeft", "device_batteryLevelRight"].compactMap { percent(device[$0]) }

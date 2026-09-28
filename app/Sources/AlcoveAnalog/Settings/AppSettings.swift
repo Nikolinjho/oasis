@@ -230,7 +230,7 @@ final class AppSettings: ObservableObject {
         onChange()
     }
 
-    private static func read<T>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T {
+    nonisolated private static func read<T>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T {
         defaults.object(forKey: key) as? T ?? fallback
     }
 
@@ -241,7 +241,8 @@ final class AppSettings: ObservableObject {
         onChange()
     }
 
-    private static func readRaw<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T
+    /// nonisolated: T.init(rawValue:) не привязан к MainActor, а Swift 6 иначе считает передачу через границу гонкой
+    nonisolated private static func readRaw<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T
         where T.RawValue == String {
         defaults.string(forKey: key).flatMap(T.init(rawValue:)) ?? fallback
     }
