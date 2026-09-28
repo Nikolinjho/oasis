@@ -140,12 +140,13 @@ final class IslandWindowController {
     }
 
     /// true, если сейчас стоит досылать hoverEntered: курсор над островом и surface — состояние покоя
-    /// (idle/compact/peek/calendar/calendarPeek). Раскрытые им состояния (hover, hoverNudge, expanded) в этот список не входят,
-    /// поэтому повторного hoverEntered из них не будет — зациклиться некому
+    /// (idle/compact/peek/calendar/calendarPeek). Раскрытые им состояния (hover, hoverNudge, expanded)
+    /// в этот список не входят, поэтому повторного hoverEntered из них не будет — зациклиться некому
     static func shouldReenterHover(surface: Surface, pointerInside: Bool) -> Bool {
         guard pointerInside else { return false }
         switch surface {
-        // компакт календаря тоже покой: иначе после уведомления поверх календаря остров остаётся закрытым под курсором
+        // компакт календаря тоже покой: иначе после уведомления поверх календаря
+        // остров остаётся закрытым под курсором
         case .idle, .compact, .peek, .calendar, .calendarPeek: return true
         default: return false
         }

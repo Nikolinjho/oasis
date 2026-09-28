@@ -126,7 +126,7 @@ public enum IslandGeometry {
     /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
     /// нужна только .calendar и .calendarPeek
     public static func spec(
-        for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat = 0
+        for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat
     ) -> IslandShapeSpec {
         if case let .hoverNudge(from) = surface {
             // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)

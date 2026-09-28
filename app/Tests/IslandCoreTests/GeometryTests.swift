@@ -28,7 +28,7 @@ struct GeometryTests {
     func surfaceSizes() {
         let notch = Self.mbp16.notchSize
         func size(_ surface: Surface, media: Bool = true) -> CGSize {
-            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch).size
+            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0).size
         }
         #expect(size(.idle) == notch)
         #expect(size(.compact) == CGSize(width: 257, height: 32))
@@ -42,7 +42,7 @@ struct GeometryTests {
 
     @Test("Charging: тело 350×32, ушко как у HUD")
     func chargingSize() {
-        let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize)
+        let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
         #expect(spec.size == CGSize(width: 350, height: 32))
         #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
     }
@@ -81,7 +81,7 @@ struct GeometryTests {
             .hoverNudge(from: .idle), .hoverNudge(from: .compact), .hoverNudge(from: .peek),
         ]
         for surface in surfaces {
-            let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: Self.mbp16.notchSize)
+            let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
             #expect(spec.bottomRadius < spec.size.height / 2, "\(surface)")
         }
     }
@@ -110,11 +110,11 @@ struct GeometryTests {
     @Test("Экранный прямоугольник острова включает ушки своего состояния")
     func islandScreenRect() {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
-        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize)
+        let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
         let rect = IslandGeometry.islandScreenRect(spec, windowFrame: window)
         #expect(abs(rect.minX - 726.7) < 1e-9 && abs(rect.width - 274.6) < 1e-9)
         #expect(rect.maxY == 1117 && rect.height == 32)
-        let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize)
+        let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0)
         #expect(abs(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width - 381.6) < 1e-9)
     }
 
@@ -122,7 +122,7 @@ struct GeometryTests {
     func shoulders() {
         let notch = Self.mbp16.notchSize
         func shoulder(_ surface: Surface, media: Bool = true) -> CGFloat {
-            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch).shoulder
+            IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0).shoulder
         }
         #expect(shoulder(.idle) == 5.15)
         #expect(shoulder(.compact) == 8.8)
@@ -136,7 +136,7 @@ struct GeometryTests {
 
     /// Расстояние от борта до края ушка по строкам пикселей (2x) на центре строки
     static func earProfile(_ surface: Surface, rows: [CGFloat]) -> [CGFloat] {
-        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: mbp16.notchSize)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: true, notch: mbp16.notchSize, calendarIndicatorWidth: 0)
         let path = IslandOutline.path(size: spec.size, bottomRadius: spec.bottomRadius, shoulder: spec.shoulder)
         return rows.map { row in
             let y = (row + 0.5) / 2
@@ -164,7 +164,7 @@ struct GeometryTests {
 
     static func rects(_ surface: Surface, media: Bool = true) -> (body: CGRect, island: CGRect) {
         let window = IslandGeometry.windowFrame(for: mbp16)
-        let spec = IslandGeometry.spec(for: surface, hasMedia: media, notch: mbp16.notchSize)
+        let spec = IslandGeometry.spec(for: surface, hasMedia: media, notch: mbp16.notchSize, calendarIndicatorWidth: 0)
         return (IslandGeometry.bodyScreenRect(spec, windowFrame: window), IslandGeometry.islandScreenRect(spec, windowFrame: window))
     }
 
@@ -196,8 +196,8 @@ struct GeometryTests {
           arguments: [Surface.idle, .compact, .peek])
     func hoverNudgeShape(from: Surface) {
         let notch = Self.mbp16.notchSize
-        let base = IslandGeometry.spec(for: from, hasMedia: true, notch: notch)
-        let nudge = IslandGeometry.spec(for: .hoverNudge(from: from), hasMedia: true, notch: notch)
+        let base = IslandGeometry.spec(for: from, hasMedia: true, notch: notch, calendarIndicatorWidth: 0)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: from), hasMedia: true, notch: notch, calendarIndicatorWidth: 0)
         #expect(abs(nudge.size.width - base.size.width * 1.1) < 1e-9)
         #expect(nudge.size.height == base.size.height)
         #expect(nudge.bottomRadius == base.bottomRadius)

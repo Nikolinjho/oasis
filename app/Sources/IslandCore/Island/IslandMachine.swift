@@ -83,7 +83,7 @@ public enum IslandMachine {
         /// hover даёт мини-состояние, раскрытие — по клику
         public var hoverOpensPlayer: Bool
         /// При живой активности (музыка, окно календаря) остров стоит в компакте. Выключено: компакт
-        /// только на время peek, в покое форма выреза
+        /// только на время peek, в покое форма выреза. Компакт и peek календаря при этом не показываются вовсе
         public var compactAtRest: Bool
 
         /// Во сколько раз анимации острова медленнее замеров Alcove: пружины (IslandMotion) и таймеры,
@@ -304,7 +304,9 @@ public enum IslandMachine {
         guard old != m.base, m.pending == nil else { return [] }
         switch m.surface {
         case .calendarPeek where !live:
-            // событие кончилось во время peek: сразу в новый покой
+            // событие кончилось во время peek: сразу в новый покой. Таймер снят здесь, дальше peek
+            // считается компактом календаря: shrink и rest не отменят его второй раз
+            m.surface = .calendar
             return [.cancel(.calendarPeekEnd)] + rest(&m, from: .calendar)
         case _ where m.surface == old:
             return rest(&m, from: old)
@@ -331,7 +333,9 @@ public enum IslandMachine {
         }
     }
 
-    /// Звук на старте события играет всегда (Play sound on calendar event), peek — только из компакта календаря
+    /// Звук на старте события играет всегда (Play sound on calendar event), peek — только из компакта календаря.
+    /// Во время HUD, сжатия и раскрытого — только звук. Вживую окно открывается за 60 с до старта, и сжатие
+    /// к календарю к этому времени давно закончилось: сюда попадает разве что отладочная кнопка calendar.start
     private static func calendarStarted(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.surface == .calendar, m.pending == nil else { return [.play(.event)] }
         m.surface = .calendarPeek
@@ -349,8 +353,9 @@ public enum IslandMachine {
             return [.cancel(.hoverOpen), .animate(transition)]
         default: return []
         }
+        let cancels = peekCancels(from: m.surface)
         m.surface = target
-        return [.cancel(.peekEnd), .animate(transition)]
+        return cancels + [.animate(transition)]
     }
 
     /// Hover в режиме пользователя: из покоя, компактов и peek раскрытие сразу, а при ненулевой hoverDelay —
@@ -363,15 +368,16 @@ public enum IslandMachine {
         guard m.pending == nil else { return [] }
         switch m.surface {
         case .idle, .compact, .peek, .calendar, .calendarPeek:
+            let cancels = peekCancels(from: m.surface)
             if m.config.expandsOnHover, m.config.hoverDelay == .zero {
                 m.surface = .expanded
-                return [.cancel(.peekEnd), .animate(.hoverExpand)]
+                return cancels + [.animate(.hoverExpand)]
             }
             m.surface = .hoverNudge(from: m.surface)
             // Expand on hover выключен: отклик держится, пока курсор над островом, раскрывает клик
-            guard m.config.expandsOnHover else { return [.cancel(.peekEnd), .animate(.hoverNudge)] }
-            return [
-                .cancel(.peekEnd), .animate(.hoverNudge),
+            guard m.config.expandsOnHover else { return cancels + [.animate(.hoverNudge)] }
+            return cancels + [
+                .animate(.hoverNudge),
                 .schedule(.hoverOpen, after: m.config.hoverDelay * m.config.timeScale),
             ]
         default:
@@ -467,9 +473,16 @@ public enum IslandMachine {
     /// Смена активности: сжатие почти до выреза, раскрытие в target по таймеру grow
     private static func shrink(_ m: inout IslandModel, then target: Surface) -> [IslandEffect] {
         let transition = shrinkTransition(from: m.surface)
+        let cancels = peekCancels(from: m.surface)
         m.surface = .shrink
         m.pending = target
-        return [.cancel(.peekEnd), .animate(transition), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
+        return cancels + [.animate(transition), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
+    }
+
+    /// Остров уходит из peek: таймер peek музыки снимается всегда (как было), таймер peek календаря — при
+    /// уходе из него, иначе он сработает позже впустую или, после нового старта события, оборвёт новый peek
+    private static func peekCancels(from source: Surface) -> [IslandEffect] {
+        source == .calendarPeek ? [.cancel(.peekEnd), .cancel(.calendarPeekEnd)] : [.cancel(.peekEnd)]
     }
 
     /// Пружина сжатия выбирается по исходному состоянию: у Alcove сжатие из компакта (261 → ~195)

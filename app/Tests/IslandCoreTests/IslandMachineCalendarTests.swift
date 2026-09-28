@@ -117,4 +117,74 @@ struct IslandMachineCalendarTests {
         #expect(IslandMachine.reduce(&m, .timerFired(.peekEnd)) == Self.shrinkEffects)
         #expect(m.pending == .calendar)
     }
+
+    @Test("Peek музыки на экране, открылось окно календаря: peek прерывается сжатием в календарь")
+    func liveInterruptsMusicPeek() {
+        var m = Self.model(.compact, media: true)
+        _ = IslandMachine.reduce(&m, .trackChanged)
+        #expect(m.surface == .peek)
+        #expect(IslandMachine.reduce(&m, .calendarLiveChanged(true)) == Self.shrinkEffects)
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .calendar)
+        #expect(IslandMachine.reduce(&m, .timerFired(.grow)) == [.animate(.grow)])
+        #expect(m.surface == .calendar)
+    }
+
+    @Test("Сжатие HUD к компакту музыки, открылось окно: цель сжатия — компакт календаря")
+    func liveRetargetsShrinkToCalendar() {
+        var m = Self.model(.hud(.volume, level: 0.5), media: true)
+        _ = IslandMachine.reduce(&m, .timerFired(.hudHide))
+        #expect(m.pending == .compact)
+        #expect(IslandMachine.reduce(&m, .calendarLiveChanged(true)).isEmpty)
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .calendar)
+    }
+
+    @Test("Сжатие к компакту календаря, окно закрылось: цель — музыка, без неё форма выреза")
+    func liveEndRetargetsShrink() {
+        var music = Self.model(.hud(.volume, level: 0.5), media: true, live: true)
+        _ = IslandMachine.reduce(&music, .timerFired(.hudHide))
+        #expect(music.pending == .calendar)
+        #expect(IslandMachine.reduce(&music, .calendarLiveChanged(false)).isEmpty)
+        #expect(music.pending == .compact)
+
+        var silent = Self.model(.hud(.volume, level: 0.5), live: true)
+        _ = IslandMachine.reduce(&silent, .timerFired(.hudHide))
+        #expect(silent.pending == .calendar)
+        #expect(IslandMachine.reduce(&silent, .calendarLiveChanged(false)).isEmpty)
+        #expect(silent.pending == .idle)
+    }
+
+    @Test("Окно закрылось во время peek календаря при музыке: таймер peek снимается, сжатие в музыку")
+    func liveEndsDuringPeekWithMusic() {
+        var m = Self.model(.calendarPeek, media: true, live: true)
+        let fx = IslandMachine.reduce(&m, .calendarLiveChanged(false))
+        #expect(fx == [.cancel(.calendarPeekEnd)] + Self.shrinkEffects)
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .compact)
+    }
+
+    @Test("Полноэкранное приложение во время peek календаря снимает его таймер")
+    func fullscreenDuringCalendarPeek() {
+        var m = Self.model(.calendarPeek, live: true)
+        #expect(IslandMachine.reduce(&m, .fullscreenChanged(true)) == [.cancel(.calendarPeekEnd), .animate(.compactOut)])
+        #expect(m.surface == .idle)
+    }
+
+    @Test("Hover, клик и HUD поверх peek календаря снимают таймер peek календаря")
+    func leavingCalendarPeekCancelsTimer() {
+        var hover = Self.model(.calendarPeek, live: true, config: .user)
+        #expect(IslandMachine.reduce(&hover, .hoverEntered) == [
+            .cancel(.peekEnd), .cancel(.calendarPeekEnd), .animate(.hoverExpand),
+        ])
+
+        var click = Self.model(.calendarPeek, live: true)
+        #expect(IslandMachine.reduce(&click, .clicked) == [.cancel(.peekEnd), .cancel(.calendarPeekEnd), .animate(.expand)])
+
+        var hud = Self.model(.calendarPeek, live: true)
+        #expect(IslandMachine.reduce(&hud, .hudChanged(.volume, level: 0.5)) == [
+            .cancel(.peekEnd), .cancel(.calendarPeekEnd), .animate(.shrink), Self.startGrow,
+        ])
+        #expect(hud.pending == .hud(.volume, level: 0.5))
+    }
 }

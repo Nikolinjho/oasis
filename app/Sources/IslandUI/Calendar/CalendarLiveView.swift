@@ -8,7 +8,8 @@ struct CalendarLiveView: View {
     let notchWidth: CGFloat
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        // тики от начала события: смена «12s» → «11s» и шаг кольца совпадают с секундами события
+        TimelineView(.periodic(from: event?.start ?? .now, by: 1)) { context in
             if let event {
                 ActivityCompactView(
                     layout: ActivityLayouts.calendar(event: event, now: context.date, showsLine: showsLine),

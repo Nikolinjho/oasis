@@ -19,7 +19,7 @@ struct IslandViewTests {
         let notch = CGSize(width: 186, height: 32)
         let view = IslandView(
             model: model,
-            spec: IslandGeometry.spec(for: surface, hasMedia: true, notch: notch),
+            spec: IslandGeometry.spec(for: surface, hasMedia: true, notch: notch, calendarIndicatorWidth: IslandView.calendarIndicatorWidth),
             notchWidth: notch.width,
             nowPlaying: Self.info,
             onClick: {},
