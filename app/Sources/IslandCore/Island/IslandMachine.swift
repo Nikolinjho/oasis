@@ -119,6 +119,8 @@ public enum IslandMachine {
         public var expandsOnHover: Bool
         /// Battery и Connectivity: длительность и звук уведомлений
         public var alerts = AlertRules()
+        /// Display / Sound → Duration: 1, 1.5 или 2 с (ui-inspection 1.6, 1.7)
+        public var hudDurations = HUDDurations()
 
         public init(
             hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
@@ -251,10 +253,10 @@ public enum IslandMachine {
         switch m.surface {
         case .hud:
             m.surface = hud
-            return [.animate(.hudUpdate), .schedule(.hudHide, after: IslandTiming.hudVisible)]
+            return [.animate(.hudUpdate), .schedule(.hudHide, after: hudVisible(m, hud))]
         case .idle:
             m.surface = hud
-            return [.animate(.hudIn), .schedule(.hudHide, after: IslandTiming.hudVisible)]
+            return [.animate(.hudIn), .schedule(.hudHide, after: hudVisible(m, hud))]
         // HUD важнее уведомления: уведомление уходит через сжатие, важное вернётся после HUD (displaceByHUD)
         case let .alert(alert):
             m.displaceByHUD(alert, heard: true)
@@ -265,13 +267,19 @@ public enum IslandMachine {
             // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
             // После HUD раскрытый не возвращается: hudHide уводит в покой
             m.surface = hud
-            return [.animate(.hudMorph), .schedule(.hudHide, after: IslandTiming.hudVisible)]
+            return [.animate(.hudMorph), .schedule(.hudHide, after: hudVisible(m, hud))]
         case .shrink:
             m.pending = hud
             return []
         case .hoverNudge:
             return []
         }
+    }
+
+    /// Длительность HUD по виду: surface — сам HUD, иначе значение по умолчанию
+    private static func hudVisible(_ m: IslandModel, _ hud: Surface) -> Duration {
+        guard case let .hud(kind, _) = hud else { return IslandTiming.hudVisible }
+        return m.config.hudDurations.duration(for: kind)
     }
 
     /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
@@ -505,7 +513,7 @@ public enum IslandMachine {
             m.surface = target
             if case let .alert(alert) = target { return [.animate(.alertGrow)] + shown(&m, alert) }
             if case .hud = target {
-                return [.animate(.grow), .schedule(.hudHide, after: IslandTiming.hudVisible)]
+                return [.animate(.grow), .schedule(.hudHide, after: hudVisible(m, target))]
             }
             return [.animate(.grow)]
         case .hoverOpen:
@@ -569,5 +577,17 @@ public enum IslandMachine {
         // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт
         case .idle, .hover, .expanded, .shrink: .shrink
         }
+    }
+}
+
+/// Сколько HUD держится после последнего изменения, по виду
+public struct HUDDurations: Equatable, Sendable {
+    public var volume: Duration = IslandTiming.hudVisible
+    public var brightness: Duration = IslandTiming.hudVisible
+
+    public init() {}
+
+    public func duration(for kind: HUDKind) -> Duration {
+        kind == .volume ? volume : brightness
     }
 }

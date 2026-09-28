@@ -24,8 +24,26 @@ struct HUDViewTests {
         let view = ZStack(alignment: .top) {
             IslandShape(spec: IslandShapeSpec(size: IslandGeometry.hud, bottomRadius: 10), shoulder: 0)
                 .fill(IslandPalette.background)
-            HUDView(kind: .volume, level: 0.5, notchWidth: 186)
+            HUDView(kind: .volume, level: 0.5, notchWidth: 185, appearance: IslandAppearance.default.hud(.volume),
+                    deviceSymbol: "airpodspro")
         }
         try Snapshot.write(view, size: IslandGeometry.hud, name: "hud-volume")
+    }
+
+    @Test("Иконка громкости: глиф устройства по настройке, без звука — перечёркнутый динамик, яркость — солнце")
+    func iconSymbol() {
+        let device = HUDAppearance(style: .decibel, icon: .device)
+        let symbol = HUDAppearance(style: .decibel, icon: .symbol)
+        #expect(HUDView.iconSymbol(.volume, 0.5, device, deviceSymbol: "airpodspro") == "airpodspro")
+        #expect(HUDView.iconSymbol(.volume, 0, device, deviceSymbol: "airpodspro") == "speaker.slash.fill")
+        #expect(HUDView.iconSymbol(.volume, 0.5, symbol, deviceSymbol: "airpodspro") == "speaker.wave.2.fill")
+        #expect(HUDView.iconSymbol(.brightness, 0.8, device, deviceSymbol: "airpodspro") == "sun.max.fill")
+    }
+
+    @Test("Полоска уже, когда рядом процент")
+    func barWidth() {
+        #expect(HUDView.barWidth(HUDAppearance(style: .white)) == 64)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true)) == 40)
+        #expect(HUDView.percent(0.456) == "46%")
     }
 }

@@ -159,6 +159,19 @@ struct IslandMachineTests {
         #expect(m.surface == .compact)
     }
 
+    @Test("Длительность HUD из настроек Display и Sound, раздельно по виду")
+    func configuredHUDDuration() {
+        var config = IslandMachine.Config.alcove
+        config.hudDurations.volume = .seconds(2)
+        config.hudDurations.brightness = .seconds(1)
+        var volume = IslandModel(config: config)
+        #expect(IslandMachine.reduce(&volume, .hudChanged(.volume, level: 0.5))
+            == [.animate(.hudIn), .schedule(.hudHide, after: .seconds(2))])
+        var brightness = IslandModel(config: config)
+        #expect(IslandMachine.reduce(&brightness, .hudChanged(.brightness, level: 0.5))
+            == [.animate(.hudIn), .schedule(.hudHide, after: .seconds(1))])
+    }
+
     // MARK: - HUD при раскрытом острове
 
     @Test("HUD при раскрытом плеере: прямой морф в HUD без сжатия, после него компакт через сжатие")

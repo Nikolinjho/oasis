@@ -87,7 +87,8 @@ public struct IslandView: View {
                 .id(ContentID.expanded)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):
-            HUDView(kind: kind, level: level, notchWidth: notchWidth)
+            // appearance.output появится в задаче 7: до неё передаём deviceSymbol: nil
+            HUDView(kind: kind, level: level, notchWidth: notchWidth, appearance: appearance.hud(kind), deviceSymbol: nil)
                 // как у музыки: в узкой рамке растущей формы подпись переносилась на две строки
                 .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.hud(kind))
