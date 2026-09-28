@@ -14,8 +14,9 @@ struct AlertView: View {
     }
 }
 
-/// Charging 350×32: подпись слева, процент и батарейка справа (rec2/states-sheet.png).
+/// Charging 350×32: подпись слева, батарейка справа (rec2/states-sheet.png).
 /// Шрифт и отступы как у HUD: отдельно не мерили
+/// решение пользователя 28.09: у Charging процент не пишем
 struct ChargingView: View {
     let level: Double
     let notchWidth: CGFloat
@@ -26,20 +27,10 @@ struct ChargingView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(IslandPalette.foreground)
             Spacer(minLength: notchWidth)
-            HStack(spacing: 6) {
-                Text(Self.percent(level))
-                    .font(.system(size: 13, weight: .semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(IslandPalette.foreground)
-                BatteryGlyph(level: level, fill: IslandPalette.charging)
-            }
+            BatteryGlyph(level: level, fill: IslandPalette.charging)
         }
         .padding(.horizontal, 14)
         .frame(height: 32)
-    }
-
-    nonisolated static func percent(_ level: Double) -> String {
-        "\(Int((min(max(level, 0), 1) * 100).rounded()))%"
     }
 }
 

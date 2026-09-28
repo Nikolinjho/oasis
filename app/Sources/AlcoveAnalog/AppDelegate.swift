@@ -39,7 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
             // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
-            // (адаптер медиа), startPlayerActions, startLevels (CoreAudio HUD громкости/яркости), startKeyTap
+            // (адаптер медиа), startPlayerActions, startCalendar, startPower, startLevels (CoreAudio HUD
+            // громкости/яркости), startKeyTap
             log.info("demo mode after \(delay, privacy: .public) s")
             DemoSequence.run(store: store, after: delay)
             return
@@ -55,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         nowPlaying?.stop()
+        power?.stop()
     }
 
     /// Настройки меняются на лету из окна настроек и меню: машина подхватывает их сразу.

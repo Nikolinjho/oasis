@@ -9,10 +9,14 @@ public final class PowerSource {
     public var onChange: (PowerState) -> Void = { _ in }
     private var runLoopSource: CFRunLoopSource?
     private var lowPowerObserver: NSObjectProtocol?
+    private var lastEmitted: PowerState?
 
     public init() {}
 
     public func start() {
+        guard runLoopSource == nil, lowPowerObserver == nil else { return }
+        // Unmanaged.passUnretained: колбэк держит объект без retain, поэтому PowerSource обязан
+        // пережить run loop source — stop() снимает источник до освобождения объекта
         let context = Unmanaged.passUnretained(self).toOpaque()
         // C-колбэк без захватов: объект приходит через context. Источник добавлен в главный run loop
         if let source = IOPSNotificationCreateRunLoopSource({ context in
@@ -31,6 +35,19 @@ public final class PowerSource {
         emit()
     }
 
+    /// Снимает источник из run loop и слушателя energy-режима. Зовётся из applicationWillTerminate
+    public func stop() {
+        if let runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            CFRunLoopSourceInvalidate(runLoopSource)
+            self.runLoopSource = nil
+        }
+        if let lowPowerObserver {
+            NotificationCenter.default.removeObserver(lowPowerObserver)
+            self.lowPowerObserver = nil
+        }
+    }
+
     public var current: PowerState? {
         guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
               let list = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef]
@@ -42,6 +59,8 @@ public final class PowerSource {
     }
 
     private func emit() {
-        if let state = current { onChange(state) }
+        guard let state = current, state != lastEmitted else { return }
+        lastEmitted = state
+        onChange(state)
     }
 }

@@ -4,14 +4,6 @@ import Testing
 @testable import IslandUI
 
 struct AlertViewTests {
-    @Test("Процент заряда округляется и зажимается в 0…100")
-    func percent() {
-        #expect(ChargingView.percent(0.514) == "51%")
-        #expect(ChargingView.percent(1) == "100%")
-        #expect(ChargingView.percent(1.2) == "100%")
-        #expect(ChargingView.percent(-0.1) == "0%")
-    }
-
     @MainActor
     @Test("Снимок Charging")
     func snapshot() throws {
