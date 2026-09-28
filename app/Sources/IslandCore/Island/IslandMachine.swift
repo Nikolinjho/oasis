@@ -268,7 +268,7 @@ public enum IslandMachine {
             return [.animate(m.surface == .compact ? .peekClose : .compactOut)]
         case .hudHide:
             guard case .hud = m.surface, m.pending == nil else { return [] }
-            if m.base == .compact { return shrink(&m, then: .compact) }
+            if m.base == .compact { return shrink(&m, then: .compact, with: .shrinkFromHud) }
             m.surface = .idle
             return [.animate(.hudOut)]
         case .grow:
@@ -292,9 +292,11 @@ public enum IslandMachine {
     }
 
     /// Смена активности: сжатие почти до выреза, раскрытие в target по таймеру grow
-    private static func shrink(_ m: inout IslandModel, then target: Surface) -> [IslandEffect] {
+    private static func shrink(
+        _ m: inout IslandModel, then target: Surface, with transition: IslandTransition = .shrink
+    ) -> [IslandEffect] {
         m.surface = .shrink
         m.pending = target
-        return [.cancel(.peekEnd), .animate(.shrink), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
+        return [.cancel(.peekEnd), .animate(transition), .schedule(.grow, after: IslandTiming.shrink * m.config.timeScale)]
     }
 }

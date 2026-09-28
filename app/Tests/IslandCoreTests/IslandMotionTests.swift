@@ -4,15 +4,22 @@ import Testing
 struct IslandMotionTests {
     static let all: [IslandTransition] = [
         .compactIn, .compactOut, .peekOpen, .peekClose, .hoverOpen, .hoverExpand, .expand,
-        .collapse, .hudIn, .hudOut, .hudUpdate, .shrink, .grow, .hoverNudge, .hoverNudgeBack,
+        .collapse, .hudIn, .hudOut, .hudUpdate, .shrink, .shrinkFromHud, .grow, .hoverNudge, .hoverNudgeBack,
     ]
 
-    @Test("Схлопывание и сжатие без отскока")
+    @Test("Схлопывание и сжатие из HUD без отскока")
     func collapseAndShrinkAreCritical() throws {
-        for transition in [IslandTransition.collapse, .shrink, .hudIn, .hudOut] {
+        for transition in [IslandTransition.collapse, .shrinkFromHud, .hudIn, .hudOut] {
             let spring = try #require(IslandMotion.spring(for: transition))
-            #expect(abs(spring.dampingRatio - 1) < 1e-9, "\(transition)")
+            // 360/38 из HUD — замер, его ζ = 1.001, а не ровно 1
+            #expect(abs(spring.dampingRatio - 1) < 0.01, "\(transition)")
         }
+    }
+
+    @Test("Сжатие перед сменой по замерам Alcove: из компакта 345/30.5, из HUD 360/38")
+    func shrinkSprings() {
+        #expect(IslandMotion.spring(for: .shrink) == SpringSpec(stiffness: 345, damping: 30.5))
+        #expect(IslandMotion.spring(for: .shrinkFromHud) == SpringSpec(stiffness: 360, damping: 38))
     }
 
     @Test("Раскрытие пружинит")

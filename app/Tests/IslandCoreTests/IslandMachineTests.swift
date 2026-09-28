@@ -6,6 +6,8 @@ struct IslandMachineTests {
     static let hideHUD = IslandEffect.schedule(.hudHide, after: IslandTiming.hudVisible)
     static let startGrow = IslandEffect.schedule(.grow, after: IslandTiming.shrink)
     static let shrinkEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.shrink), startGrow]
+    /// Сжатие из HUD обратно к компакту: своя пружина по замеру, тот же таймер grow
+    static let shrinkFromHudEffects: [IslandEffect] = [.cancel(.peekEnd), .animate(.shrinkFromHud), startGrow]
 
     static func model(_ surface: Surface, media: Bool = false, pending: Surface? = nil) -> IslandModel {
         var model = IslandModel(config: .alcove)
@@ -72,7 +74,7 @@ struct IslandMachineTests {
         #expect(IslandMachine.reduce(&m, .trackChanged).isEmpty)
         #expect(m.hasMedia)
         #expect(m.surface == .hud(.volume, level: 0.5))
-        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkEffects)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkFromHudEffects)
         #expect(m.pending == .compact)
     }
 
@@ -118,7 +120,7 @@ struct IslandMachineTests {
     @Test("С музыкой HUD уходит через сжатие обратно в компакт")
     func hudReturnsToCompact() {
         var m = Self.model(.hud(.volume, level: 0.5), media: true)
-        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkEffects)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkFromHudEffects)
         #expect(m.surface == .shrink)
         #expect(m.pending == .compact)
 
@@ -159,7 +161,7 @@ struct IslandMachineTests {
         #expect(m.surface == .hud(.volume, level: 0.4))
         #expect(m.pending == nil)
         // после HUD плеер не возвращается, даже если курсор над островом
-        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkEffects)
+        #expect(IslandMachine.reduce(&m, .timerFired(.hudHide)) == Self.shrinkFromHudEffects)
         #expect(m.pending == .compact)
     }
 
