@@ -6,6 +6,7 @@ import os
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = IslandStore()
+    private let settings = AppSettings()
     private var window: IslandWindowController?
     private var statusItem: StatusItemController?
     private var nowPlaying: AdapterNowPlayingSource?
@@ -25,6 +26,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        store.config = settings.machineConfig(from: store.config)
+        settings.onChange = { [weak self] in self?.applySettings() }
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
             debugItem: DebugMenu.item(sections: debugSections),
@@ -47,6 +50,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         nowPlaying?.stop()
+    }
+
+    /// Настройки меняются на лету из окна настроек и меню: машина и экран подхватывают их сразу
+    private func applySettings() {
+        store.config = settings.machineConfig(from: store.config)
     }
 
     /// alcove-analog://debug/<id>: то же действие, что пункт меню Debug

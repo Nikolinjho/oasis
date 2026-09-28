@@ -61,12 +61,27 @@ public enum IslandMachine {
         /// Ноль — плеер сразу, без промежуточного отклика: так у нативного Alcove по умолчанию.
         /// Ненулевая задержка — отклик hoverNudge на это время. Замедляется timeScale
         public var hoverDelay: Duration
+        /// Expand on hover (General). Выключено: hover даёт только отклик без таймера, раскрывает клик.
+        /// Так ведёт себя Alcove 1.7.7 (ui-inspection 3.4, «Hover при Expand on hover = выкл»)
+        public var expandsOnHover: Bool
 
-        public init(hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero) {
+        public init(
+            hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
+            expandsOnHover: Bool = true
+        ) {
             self.hoverOpensPlayer = hoverOpensPlayer
             self.compactAtRest = compactAtRest
             self.timeScale = timeScale
             self.hoverDelay = hoverDelay
+            self.expandsOnHover = expandsOnHover
+        }
+
+        /// Настройки General: Expand on hover и Hover duration (0…0.6 с, шаг 0.1 в окне настроек)
+        public func applying(expandOnHover: Bool, hoverDuration: Double) -> Config {
+            var config = self
+            config.expandsOnHover = expandOnHover
+            config.hoverDelay = .milliseconds(Int((min(max(hoverDuration, 0), 0.6) * 1000).rounded()))
+            return config
         }
 
         /// Режим пользователя: hover раскрывает плеер, при музыке в покое компакт, как у Alcove.
@@ -208,11 +223,13 @@ public enum IslandMachine {
         guard m.pending == nil else { return [] }
         switch m.surface {
         case .idle, .compact, .peek:
-            if m.config.hoverDelay == .zero {
+            if m.config.expandsOnHover, m.config.hoverDelay == .zero {
                 m.surface = .expanded
                 return [.cancel(.peekEnd), .animate(.hoverExpand)]
             }
             m.surface = .hoverNudge(from: m.surface)
+            // Expand on hover выключен: отклик держится, пока курсор над островом, раскрывает клик
+            guard m.config.expandsOnHover else { return [.cancel(.peekEnd), .animate(.hoverNudge)] }
             return [
                 .cancel(.peekEnd), .animate(.hoverNudge),
                 .schedule(.hoverOpen, after: m.config.hoverDelay * m.config.timeScale),
