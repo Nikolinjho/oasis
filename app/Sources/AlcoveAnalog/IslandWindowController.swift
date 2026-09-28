@@ -220,6 +220,7 @@ struct IslandRootView: View {
             agenda: store.agenda,
             calendarEvent: store.calendarEvent,
             dragBlurred: store.dragBlurred,
+            appearance: store.appearance,
             onClick: { store.send(.clicked) },
             onAction: { store.onAction($0) },
             onJoin: { store.onJoin($0) })

@@ -19,6 +19,14 @@ final class AppSettings: ObservableObject {
         static let hideMenuBarIcon = "hideMenuBarIcon"
         static let notchWidthOffset = "notchWidthOffset"
         static let notchHeightOffset = "notchHeightOffset"
+        static let batteryEnabled = "batteryEnabled"
+        static let batteryDuration = "batteryDuration"
+        static let notifyLowPower = "notifyLowPower"
+        static let warnLowBattery = "warnLowBattery"
+        static let lowBatteryThreshold = "lowBatteryThreshold"
+        static let lowBatterySound = "lowBatterySound"
+        static let hideBatteryLabel = "hideBatteryLabel"
+        static let hideBatteryPercentage = "hideBatteryPercentage"
     }
 
     var onChange: () -> Void = {}
@@ -91,6 +99,18 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    // Battery (ui-inspection 1.3). batteryDuration и enableBattery — единственные подтверждённые ключи Alcove
+    @Published var batteryEnabled: Bool { didSet { save(oldValue, batteryEnabled, Key.batteryEnabled) } }
+    /// 2.5…6 с, шаг 0.5
+    @Published var batteryDuration: Double { didSet { save(oldValue, batteryDuration, Key.batteryDuration) } }
+    @Published var notifyLowPower: Bool { didSet { save(oldValue, notifyLowPower, Key.notifyLowPower) } }
+    @Published var warnLowBattery: Bool { didSet { save(oldValue, warnLowBattery, Key.warnLowBattery) } }
+    /// 0.1, 0.2 или 0.3
+    @Published var lowBatteryThreshold: Double { didSet { save(oldValue, lowBatteryThreshold, Key.lowBatteryThreshold) } }
+    @Published var lowBatterySound: Bool { didSet { save(oldValue, lowBatterySound, Key.lowBatterySound) } }
+    @Published var hideBatteryLabel: Bool { didSet { save(oldValue, hideBatteryLabel, Key.hideBatteryLabel) } }
+    @Published var hideBatteryPercentage: Bool { didSet { save(oldValue, hideBatteryPercentage, Key.hideBatteryPercentage) } }
+
     /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
     var notchTuning: NotchTuning {
         NotchTuning(width: min(max(notchWidthOffset, -2), 2), height: min(max(notchHeightOffset, -2), 2))
@@ -125,9 +145,48 @@ final class AppSettings: ObservableObject {
         hideMenuBarIcon = defaults.bool(forKey: Key.hideMenuBarIcon)
         notchWidthOffset = defaults.double(forKey: Key.notchWidthOffset)
         notchHeightOffset = defaults.double(forKey: Key.notchHeightOffset)
+        batteryEnabled = Self.read(defaults, Key.batteryEnabled, true)
+        batteryDuration = Self.read(defaults, Key.batteryDuration, 5.0)
+        notifyLowPower = Self.read(defaults, Key.notifyLowPower, true)
+        warnLowBattery = Self.read(defaults, Key.warnLowBattery, true)
+        lowBatteryThreshold = Self.read(defaults, Key.lowBatteryThreshold, 0.1)
+        lowBatterySound = Self.read(defaults, Key.lowBatterySound, true)
+        hideBatteryLabel = Self.read(defaults, Key.hideBatteryLabel, false)
+        hideBatteryPercentage = Self.read(defaults, Key.hideBatteryPercentage, false)
+    }
+
+    /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
+    private func save<T: Equatable>(_ old: T, _ new: T, _ key: String) {
+        guard old != new else { return }
+        defaults.set(new, forKey: key)
+        onChange()
+    }
+
+    private static func read<T>(_ defaults: UserDefaults, _ key: String, _ fallback: T) -> T {
+        defaults.object(forKey: key) as? T ?? fallback
+    }
+
+    var powerRules: PowerRules {
+        PowerRules(isEnabled: batteryEnabled, notifiesLowPower: notifyLowPower, warnsLowBattery: warnLowBattery,
+                   lowBatteryThreshold: lowBatteryThreshold)
+    }
+
+    var alertRules: AlertRules {
+        var rules = AlertRules()
+        rules.batteryDuration = .seconds(batteryDuration)
+        rules.lowBatterySound = lowBatterySound
+        return rules
+    }
+
+    var appearance: IslandAppearance {
+        var appearance = IslandAppearance()
+        appearance.battery = BatteryAlertStyle(hidesLabel: hideBatteryLabel, hidesPercentage: hideBatteryPercentage)
+        return appearance
     }
 
     func machineConfig(from base: IslandMachine.Config) -> IslandMachine.Config {
-        base.applying(expandOnHover: expandOnHover, hoverDuration: hoverDuration)
+        var config = base.applying(expandOnHover: expandOnHover, hoverDuration: hoverDuration)
+        config.alerts = alertRules
+        return config
     }
 }

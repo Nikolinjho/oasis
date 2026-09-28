@@ -167,4 +167,20 @@ struct IslandMachineAlertTests {
         #expect(IslandMachine.reduce(&m, .timerFired(.alertHide)) == [.cancel(.peekEnd), .animate(.alertShrink), Self.startGrow])
         #expect(m.pending == .calendar)
     }
+
+    @Test("Длительность уведомления из настроек Battery")
+    func configuredDuration() {
+        var m = Self.model(.idle)
+        m.config.alerts.batteryDuration = .seconds(3)
+        let fx = IslandMachine.reduce(&m, .alertArrived(Self.charging))
+        #expect(fx == [.animate(.alertIn), .schedule(.alertHide, after: .seconds(3))])
+    }
+
+    @Test("Play sound on low battery выключен: Low Battery без эффекта звука")
+    func mutedLowBattery() {
+        var m = Self.model(.idle)
+        m.config.alerts.lowBatterySound = false
+        let fx = IslandMachine.reduce(&m, .alertArrived(.lowBattery(level: 0.1)))
+        #expect(!fx.contains(.play(.lowBattery)))
+    }
 }

@@ -46,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         store.config = settings.machineConfig(from: store.config)
+        store.appearance = settings.appearance
         settings.onChange = { [weak self] in self?.applySettings() }
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
@@ -92,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Выбор экрана (DisplayChoice) пока не влияет на окно — это отдельная задача
     private func applySettings() {
         store.config = settings.machineConfig(from: store.config)
+        store.appearance = settings.appearance
         statusItem?.setIconHidden(settings.hideMenuBarIcon)
         window?.tuning = settings.notchTuning
     }
@@ -168,7 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let power = PowerSource()
         power.onChange = { [weak self] state in
             guard let self else { return }
-            for alert in PowerNotices.alerts(from: lastPower, to: state) { store.send(.alertArrived(alert)) }
+            for alert in PowerNotices.alerts(from: lastPower, to: state, rules: settings.powerRules) { store.send(.alertArrived(alert)) }
             lastPower = state
         }
         power.start()

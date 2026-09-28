@@ -63,5 +63,8 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         }
     }
 
-    var isAvailable: Bool { self == .general }
+    /// Страницы, готовые в P2. Остальные — затенены и подписаны Soon
+    var isAvailable: Bool { Self.available.contains(self) }
+
+    private static let available: Set<SettingsPage> = [.general, .battery]
 }

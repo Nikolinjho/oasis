@@ -11,6 +11,7 @@ public struct IslandView: View {
     let calendarEvent: CalendarEvent?
     /// Остров тянут свайпом вверх: контент в блюре
     let dragBlurred: Bool
+    let appearance: IslandAppearance
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
     let onJoin: (URL) -> Void
@@ -20,6 +21,7 @@ public struct IslandView: View {
         agenda: DayAgenda = .empty,
         calendarEvent: CalendarEvent? = nil,
         dragBlurred: Bool = false,
+        appearance: IslandAppearance = .default,
         onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
         onJoin: @escaping (URL) -> Void = { _ in }
     ) {
@@ -30,6 +32,7 @@ public struct IslandView: View {
         self.agenda = agenda
         self.calendarEvent = calendarEvent
         self.dragBlurred = dragBlurred
+        self.appearance = appearance
         self.onClick = onClick
         self.onAction = onAction
         self.onJoin = onJoin
@@ -90,7 +93,7 @@ public struct IslandView: View {
                 .id(ContentID.hud(kind))
                 .transition(.slot)
         case let .alert(alert):
-            AlertView(alert: alert, notchWidth: notchWidth)
+            AlertView(alert: alert, notchWidth: notchWidth, battery: appearance.battery)
                 // как у HUD: рамка текущей формы, контент разъезжается вместе с краями
                 .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.alert)

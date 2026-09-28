@@ -295,4 +295,18 @@ struct GeometryTests {
         // 240 + 2 × (8 + 18): кольцо 16 уже иконки 18, крыло по иконке
         #expect(IslandGeometry.size(for: airpods, notch: CGSize(width: 240, height: 32), reminderIndicatorWidth: 0).width == 292)
     }
+
+    @Test("Hide label: крыло Low Battery и Low Power по правому блоку (замера нет, оценка)")
+    func unlabeledBatteryAlerts() {
+        let notch = Self.mbp16.notchSize
+        func width(_ alert: IslandAlert, _ style: BatteryAlertStyle) -> CGFloat {
+            IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: 0, battery: style).width
+        }
+        let hidden = BatteryAlertStyle(hidesLabel: true)
+        #expect(width(.lowBattery(level: 0.1), hidden) == notch.width + 2 * 80)
+        #expect(width(.lowBattery(level: 0.1), BatteryAlertStyle(hidesLabel: true, hidesPercentage: true)) == notch.width + 2 * 46)
+        #expect(width(.lowPower(level: 0.4), hidden) == notch.width + 2 * 46)
+        #expect(width(.lowBattery(level: 0.1), BatteryAlertStyle()) == notch.width + 2 * IslandGeometry.BatteryAlertWing.lowBattery)
+        #expect(width(.charging(level: 0.5), hidden) == IslandGeometry.charging.width)
+    }
 }

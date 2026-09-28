@@ -45,4 +45,27 @@ struct PowerNoticesTests {
         let new = PowerState(isPluggedIn: true, isCharging: true, level: 0.4, isLowPowerMode: true)
         #expect(PowerNotices.alerts(from: old, to: new) == [.lowPower(level: 0.4), .charging(level: 0.4)])
     }
+
+    @Test("Battery выключен: никаких уведомлений питания")
+    func disabled() {
+        let rules = PowerRules(isEnabled: false)
+        #expect(PowerNotices.alerts(from: Self.state(plugged: false), to: Self.state(plugged: true), rules: rules).isEmpty)
+        #expect(PowerNotices.alerts(from: Self.battery(0.11), to: Self.battery(0.10), rules: rules).isEmpty)
+    }
+
+    @Test("Notify on low power mode и Warn on low battery выключают свои уведомления, Charging остаётся")
+    func toggles() {
+        let quiet = PowerRules(notifiesLowPower: false, warnsLowBattery: false)
+        #expect(PowerNotices.alerts(from: Self.battery(0.4), to: Self.battery(0.4, lowPower: true), rules: quiet).isEmpty)
+        #expect(PowerNotices.alerts(from: Self.battery(0.11), to: Self.battery(0.10), rules: quiet).isEmpty)
+        #expect(PowerNotices.alerts(from: Self.state(plugged: false), to: Self.state(plugged: true, level: 0.8), rules: quiet)
+            == [.charging(level: 0.8)])
+    }
+
+    @Test("Порог 20%: Low Battery при переходе через 20, не через 10")
+    func threshold() {
+        let rules = PowerRules(lowBatteryThreshold: 0.2)
+        #expect(PowerNotices.alerts(from: Self.battery(0.21), to: Self.battery(0.20), rules: rules) == [.lowBattery(level: 0.20)])
+        #expect(PowerNotices.alerts(from: Self.battery(0.11), to: Self.battery(0.10), rules: rules).isEmpty)
+    }
 }

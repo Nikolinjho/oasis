@@ -131,4 +131,26 @@ struct AppSettingsTests {
         #expect(config.hoverDelay == .milliseconds(200))
         #expect(config.timeScale == IslandMachine.Config.user.timeScale)
     }
+
+    @Test("Battery: по умолчанию как у Alcove, правила и вид собираются из настроек")
+    func battery() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.batteryEnabled && settings.notifyLowPower && settings.warnLowBattery && settings.lowBatterySound)
+        #expect(settings.batteryDuration == 5)
+        #expect(settings.lowBatteryThreshold == 0.1)
+        #expect(!settings.hideBatteryLabel && !settings.hideBatteryPercentage)
+        #expect(settings.powerRules == PowerRules())
+
+        settings.batteryDuration = 3.5
+        settings.lowBatteryThreshold = 0.3
+        settings.lowBatterySound = false
+        settings.hideBatteryLabel = true
+        #expect(settings.powerRules.lowBatteryThreshold == 0.3)
+        #expect(settings.machineConfig(from: .user).alerts.batteryDuration == .milliseconds(3500))
+        #expect(!settings.machineConfig(from: .user).alerts.lowBatterySound)
+        #expect(settings.appearance.battery == BatteryAlertStyle(hidesLabel: true))
+        #expect(AppSettings(defaults: defaults).lowBatteryThreshold == 0.3)
+    }
 }

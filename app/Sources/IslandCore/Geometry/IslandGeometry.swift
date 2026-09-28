@@ -69,17 +69,33 @@ public enum IslandGeometry {
         public static let lowBattery: CGFloat = 94
         /// «Low Power Mode» при 13pt semibold — 106.5 pt, ceil 107 + 14 + 4
         public static let lowPower: CGFloat = 125
+
+        /// Hide label: крыло по правому блоку. «10%» при 13pt semibold ~27 pt + зазор 6 + батарейка с носиком 27.5
+        /// + padding 14 + 4 запаса ≈ 79 → 80. Без процента: 27.5 + 14 + 4 → 46. Замера нет, оценка
+        public static let unlabeledWithPercent: CGFloat = 80
+        public static let unlabeled: CGFloat = 46
+
+        public static func lowBatteryWing(_ style: BatteryAlertStyle) -> CGFloat {
+            guard style.hidesLabel else { return lowBattery }
+            return style.hidesPercentage ? unlabeled : unlabeledWithPercent
+        }
+
+        public static func lowPowerWing(_ style: BatteryAlertStyle) -> CGFloat {
+            style.hidesLabel ? unlabeled : lowPower
+        }
     }
 
     /// Low Battery и Low Power вживую не снимались: ширина под реальный вырез — см. BatteryAlertWing.
     /// Charging остаётся абсолютным (измеренным), от notch не зависит.
     /// reminderIndicatorWidth — ширина самого широкого индикатора напоминания («15m», меряет IslandUI):
     /// пол ширины напоминания, как calendarIndicatorWidth у компакта календаря. Нужна только .calendarReminder
-    public static func size(for alert: IslandAlert, notch: CGSize, reminderIndicatorWidth: CGFloat) -> CGSize {
+    public static func size(
+        for alert: IslandAlert, notch: CGSize, reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle()
+    ) -> CGSize {
         switch alert {
         case .charging: charging
-        case .lowBattery: CGSize(width: notch.width + 2 * BatteryAlertWing.lowBattery, height: charging.height)
-        case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPower, height: charging.height)
+        case .lowBattery: CGSize(width: notch.width + 2 * BatteryAlertWing.lowBatteryWing(battery), height: charging.height)
+        case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPowerWing(battery), height: charging.height)
         // напоминание не снималось: размер peek календаря (ui-inspection 3.5), тот же вид строки
         case .calendarReminder: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
         case .airpods: airpodsSize(notch: notch)
@@ -142,13 +158,13 @@ public enum IslandGeometry {
     /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:)
     public static func spec(
         for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
-        reminderIndicatorWidth: CGFloat
+        reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle()
     ) -> IslandShapeSpec {
         if case let .hoverNudge(from) = surface {
             // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
             var base = spec(
                 for: from, hasMedia: hasMedia, notch: notch, calendarIndicatorWidth: calendarIndicatorWidth,
-                reminderIndicatorWidth: reminderIndicatorWidth)
+                reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
             base.size.width *= hoverNudgeWidthScale
             return base
         }
@@ -160,7 +176,7 @@ public enum IslandGeometry {
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
-        case let .alert(alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth)
+        case let .alert(alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
         case .calendar: calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
         case .calendarPeek: calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
         // разобран выше, сюда не доходит

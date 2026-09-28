@@ -5,22 +5,28 @@ import SwiftUI
 struct AlertView: View {
     let alert: IslandAlert
     let notchWidth: CGFloat
+    var battery = BatteryAlertStyle()
 
     var body: some View {
         switch alert {
         case let .charging(level):
             // решение пользователя 28.09: у Charging процент не пишем, только батарейка
-            BatteryAlertView(label: "Charging", level: level, showsPercent: false, fill: IslandPalette.charging, notchWidth: notchWidth)
+            BatteryAlertView(label: label("Charging"), level: level, showsPercent: false, fill: IslandPalette.charging, notchWidth: notchWidth)
         case let .lowBattery(level):
-            BatteryAlertView(label: "Low Battery", level: level, showsPercent: true, fill: IslandPalette.lowBattery, notchWidth: notchWidth)
+            BatteryAlertView(label: label("Low Battery"), level: level, showsPercent: !battery.hidesPercentage,
+                             fill: IslandPalette.lowBattery, notchWidth: notchWidth)
         case let .lowPower(level):
             // по ожидаемому виду из репорта: «Low Power Mode» и батарейка без процента
-            BatteryAlertView(label: "Low Power Mode", level: level, showsPercent: false, fill: IslandPalette.lowPower, notchWidth: notchWidth)
+            BatteryAlertView(label: label("Low Power Mode"), level: level, showsPercent: false, fill: IslandPalette.lowPower, notchWidth: notchWidth)
         case let .calendarReminder(reminder):
             ActivityCompactView(layout: ActivityLayouts.reminder(reminder), notchWidth: notchWidth)
         case let .airpods(info):
             ActivityCompactView(layout: ActivityLayouts.airpods(info), notchWidth: notchWidth)
         }
+    }
+
+    private func label(_ text: String) -> String? {
+        battery.hidesLabel ? nil : text
     }
 }
 
@@ -28,7 +34,7 @@ struct AlertView: View {
 /// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:notch:reminderIndicatorWidth:).
 /// Шрифт и отступы как у HUD, отдельно не мерили
 struct BatteryAlertView: View {
-    let label: String
+    let label: String?
     let level: Double
     let showsPercent: Bool
     let fill: Color
@@ -41,13 +47,15 @@ struct BatteryAlertView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(label)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(IslandPalette.foreground)
-                // без этого длинная подпись (Low Battery, Low Power Mode) переносится на вторую строку
-                // или уезжает вправо под вырез — она должна целиком остаться в левом крыле
-                .lineLimit(1)
-                .fixedSize()
+            if let label {
+                Text(label)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(IslandPalette.foreground)
+                    // без этого длинная подпись (Low Battery, Low Power Mode) переносится на вторую строку
+                    // или уезжает вправо под вырез — она должна целиком остаться в левом крыле
+                    .lineLimit(1)
+                    .fixedSize()
+            }
             Spacer(minLength: notchWidth)
             HStack(spacing: 6) {
                 if showsPercent {

@@ -117,6 +117,8 @@ public enum IslandMachine {
         /// Expand on hover (General). Выключено: hover даёт только отклик без таймера, раскрывает клик.
         /// Так ведёт себя Alcove 1.7.7 (ui-inspection 3.4, «Hover при Expand on hover = выкл»)
         public var expandsOnHover: Bool
+        /// Battery и Connectivity: длительность и звук уведомлений
+        public var alerts = AlertRules()
 
         public init(
             hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
@@ -303,7 +305,7 @@ public enum IslandMachine {
             return [.animate(.alertIn)] + shown(&m, alert)
         case let .alert(current) where current.kind == alert.kind:
             m.surface = .alert(alert)
-            return [.animate(.alertUpdate), .schedule(.alertHide, after: alert.duration)]
+            return [.animate(.alertUpdate), .schedule(.alertHide, after: m.config.alerts.duration(for: alert))]
         case .alert, .hud:
             m.enqueue(alert)
             return []
@@ -337,8 +339,9 @@ public enum IslandMachine {
     /// Уже звучавшее и вытесненное HUD (heardAlerts) показывается без звука
     private static func shown(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
         let heard = m.heardAlerts.remove(alert.kind) != nil
-        let sound = heard ? nil : alert.sound
-        return [.schedule(.alertHide, after: alert.duration)] + (sound.map { [IslandEffect.play($0)] } ?? [])
+        let sound = heard ? nil : m.config.alerts.sound(for: alert)
+        return [.schedule(.alertHide, after: m.config.alerts.duration(for: alert))]
+            + (sound.map { [IslandEffect.play($0)] } ?? [])
     }
 
     /// Окно календаря открылось или закрылось. Остров в покое переходит в новый покой: из формы выреза —
