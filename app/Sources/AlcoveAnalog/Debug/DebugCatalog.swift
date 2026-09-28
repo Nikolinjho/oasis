@@ -123,7 +123,7 @@ enum DebugCatalog {
             }),
             .action(DebugAction(id: "calendar.menu-event", title: "Meet Call in 8 min (menu items)") {
                 // как на скрине меню Alcove: событие через 8 минут, в меню Join, Open in Calendar, Dismiss Event.
-                // Закреплённая повестка: часы получат её через onAgendaChange (Task 5), снимает calendar.real
+                // Закреплённая повестка: часы получат её через onAgendaChange, снимает calendar.real
                 let start = Date().addingTimeInterval(8 * 60)
                 store.pinDebugEvents([CalendarEvent(
                     id: "fake-menu@\(start.timeIntervalSince1970)", title: "Fake Call", start: start,

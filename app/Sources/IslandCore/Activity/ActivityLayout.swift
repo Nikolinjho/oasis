@@ -58,7 +58,7 @@ public struct ActivityLayout: Equatable, Sendable {
     /// (ActivityCompactView.indicatorWidth в IslandUI, кольцо — фиксированные 16).
     ///
     /// Alcove держит фиксированную ширину компакта (~254 pt на кадрах), это значение — только нижняя
-    /// граница под длинные индикаторы вроде "15m"/"59m". Вызывающая сторона (Task 4) должна брать
+    /// граница под длинные индикаторы вроде "15m"/"59m". Вызывающая сторона (IslandGeometry.calendarSize) должна брать
     /// max(измеренная фиксированная ширина, width(...)), а не одно только width(...)
     public static func width(notchWidth: CGFloat, indicatorWidth: CGFloat) -> CGFloat {
         notchWidth + 2 * (compactPadding + max(iconWidth, indicatorWidth))

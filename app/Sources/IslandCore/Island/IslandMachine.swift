@@ -546,7 +546,8 @@ public enum IslandMachine {
     private static func shrinkTransition(from source: Surface) -> IslandTransition {
         switch source {
         case .hud: .shrinkFromWide
-        // замер записи №2 (capture/analysis/README.md): Charging → сжатие 335/37
+        // замер записи №2 (capture/analysis/README.md): Charging → сжатие 335/37. Замера нет для сжатия
+        // из напоминания календаря (высота 73.5) и AirPods, взят замер Charging
         case .alert: .alertShrink
         // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged, alertArrived)
         case .compact, .peek, .hoverNudge: .shrink
