@@ -29,7 +29,7 @@ final class IslandWindowController {
         }
         placeOnNotchScreen()
         installMonitors()
-        store.onSurfaceChange = { [weak self] in self?.pointerMoved() }
+        store.onSurfaceChange = { [weak self] in self?.surfaceChanged() }
     }
 
     private func placeOnNotchScreen() {
@@ -124,6 +124,30 @@ final class IslandWindowController {
         pointerInside = inside
         hoverOpenedFrom = inside ? body : nil
         store.send(inside ? .hoverEntered : .hoverExited)
+    }
+
+    /// Смена surface (store.onSurfaceChange): пересчитывает hit-testing и, если курсор всё это время
+    /// простоял над островом, а машина как раз вернулась в покой, досылает hoverEntered — иначе
+    /// alert/HUD/shrink съедают исходный hoverEntered (машина в этих состояниях его игнорирует),
+    /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
+    private func surfaceChanged() {
+        pointerMoved()
+        guard let panel, metrics != nil, !menuOpen,
+              Self.shouldReenterHover(surface: store.model.surface, pointerInside: pointerInside)
+        else { return }
+        hoverOpenedFrom = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
+        store.send(.hoverEntered)
+    }
+
+    /// true, если сейчас стоит досылать hoverEntered: курсор над островом и surface — состояние покоя
+    /// (idle/compact/peek). Раскрытые им состояния (hover, hoverNudge, expanded) в этот список не входят,
+    /// поэтому повторного hoverEntered из них не будет — зациклиться некому
+    static func shouldReenterHover(surface: Surface, pointerInside: Bool) -> Bool {
+        guard pointerInside else { return false }
+        switch surface {
+        case .idle, .compact, .peek: return true
+        default: return false
+        }
     }
 }
 

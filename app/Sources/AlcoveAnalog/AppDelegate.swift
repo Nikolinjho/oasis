@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// При холодном запуске по ссылке (`open -g -a … "alcove-analog://…"`) AppKit доставляет
     /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
     func applicationWillFinishLaunching(_ notification: Notification) {
-        debugSections = DebugCatalog.sections(store: store)
+        debugSections = DebugCatalog.sections(store: store, settings: settings)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

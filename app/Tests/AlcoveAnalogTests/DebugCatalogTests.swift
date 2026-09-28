@@ -7,8 +7,8 @@ import Testing
 // у DebugScript.current общий на процесс слот, для них место в сериализованной суите DebugScriptTests
 @MainActor
 struct DebugCatalogTests {
-    static func actions(_ store: IslandStore) -> [DebugAction] {
-        DebugCatalog.sections(store: store).flatMap(\.actions)
+    static func actions(_ store: IslandStore, _ settings: AppSettings? = nil) -> [DebugAction] {
+        DebugCatalog.sections(store: store, settings: settings).flatMap(\.actions)
     }
 
     @Test("id отладочных действий уникальны и годятся для ссылки")
@@ -90,8 +90,32 @@ struct DebugCatalogTests {
         #expect(!store.isDebugAgendaPinned)
     }
 
-    @Test("Debug-переключатель Expand on Hover отражает и меняет конфиг машины")
+    @Test("Debug-переключатель Expand on Hover идёт через AppSettings, а не мимо него в store.config")
     func expandOnHoverToggle() throws {
+        let (name, defaults) = AppSettingsTests.freshDefaults()
+        defer { AppSettingsTests.cleanup(name, defaults) }
+        let store = IslandStore(config: .user)
+        let settings = AppSettings(defaults: defaults)
+        // как в AppDelegate.applySettings: изменение настройки долетает до машины через onChange
+        settings.onChange = { store.config = settings.machineConfig(from: store.config) }
+
+        #expect(settings.expandOnHover)
+        let toggle = try #require(Self.actions(store, settings).first { $0.id == "settings.expand-on-hover" })
+        #expect(toggle.isOn?() == true)
+
+        toggle.run()
+        #expect(!settings.expandOnHover)
+        #expect(!store.config.expandsOnHover)
+        #expect(toggle.isOn?() == false)
+
+        toggle.run()
+        #expect(settings.expandOnHover)
+        #expect(store.config.expandsOnHover)
+        #expect(toggle.isOn?() == true)
+    }
+
+    @Test("Без settings (запасной путь) переключатель по-прежнему меняет store.config напрямую")
+    func expandOnHoverToggleFallsBackWithoutSettings() throws {
         let store = IslandStore(config: .user)
         #expect(store.config.expandsOnHover)
         let toggle = try #require(Self.actions(store).first { $0.id == "settings.expand-on-hover" })
@@ -99,8 +123,5 @@ struct DebugCatalogTests {
         toggle.run()
         #expect(!store.config.expandsOnHover)
         #expect(toggle.isOn?() == false)
-        toggle.run()
-        #expect(store.config.expandsOnHover)
-        #expect(toggle.isOn?() == true)
     }
 }

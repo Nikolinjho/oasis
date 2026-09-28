@@ -5,7 +5,7 @@ import IslandSources
 /// Все отладочные действия по разделам. Новая поверхность приходит вместе со своим разделом или пунктом
 @MainActor
 enum DebugCatalog {
-    static func sections(store: IslandStore) -> [DebugSection] {
+    static func sections(store: IslandStore, settings: AppSettings? = nil) -> [DebugSection] {
         let tracks = DemoTrackCursor()
         return [
             music(store, tracks),
@@ -14,7 +14,7 @@ enum DebugCatalog {
             battery(store),
             island(store),
             scenarios(store, tracks),
-            timing(store),
+            timing(store, settings),
         ]
     }
 
@@ -131,7 +131,7 @@ enum DebugCatalog {
         ])
     }
 
-    private static func timing(_ store: IslandStore) -> DebugSection {
+    private static func timing(_ store: IslandStore, _ settings: AppSettings?) -> DebugSection {
         func mode(_ id: String, _ title: String, _ scale: Double) -> DebugEntry {
             .action(DebugAction(id: id, title: title, isOn: { store.config.timeScale == scale }) {
                 store.config.timeScale = scale
@@ -142,12 +142,18 @@ enum DebugCatalog {
             mode("timing.user", "User Timing ×1.18", IslandMachine.Config.user.timeScale),
             mode("timing.slow", "Slow Animations ×5", 5),
             .separator,
-            // General → Expand on hover без окна настроек: тот же переключатель, что появится там
+            // General → Expand on hover: тот же переключатель, что в окне настроек. Идёт через AppSettings,
+            // а не в store.config напрямую — иначе окно настроек не знает о переключении и следующее
+            // изменение там же тихо откатывает его обратно
             .action(DebugAction(
                 id: "settings.expand-on-hover", title: "Expand on Hover",
-                isOn: { store.config.expandsOnHover }
+                isOn: { settings?.expandOnHover ?? store.config.expandsOnHover }
             ) {
-                store.config.expandsOnHover.toggle()
+                if let settings {
+                    settings.expandOnHover.toggle()
+                } else {
+                    store.config.expandsOnHover.toggle()
+                }
             }),
         ])
     }
