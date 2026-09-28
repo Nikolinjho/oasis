@@ -25,6 +25,8 @@ public enum IslandEffect: Equatable, Sendable {
     case animate(IslandTransition)
     case schedule(TimerID, after: Duration)
     case cancel(TimerID)
+    /// Звук уведомления: играет store, если звуки включены в настройках
+    case play(IslandSound)
 }
 
 public struct IslandModel: Equatable, Sendable {
@@ -37,8 +39,19 @@ public struct IslandModel: Equatable, Sendable {
     public var isFullscreen = false
     /// Курсор ушёл из раскрытого (режим пользователя): ждём таймер hoverLeave, возврат его отменяет
     public var leaving = false
-    /// Уведомление ждёт конца HUD. Одно место: полноценная очередь с приоритетами — P1
-    public var queuedAlert: IslandAlert?
+    /// Уведомления ждут конца HUD или текущего уведомления: по приоритету, при равном — по приходу
+    public var alertQueue: [IslandAlert] = []
+
+    /// Повтор того же вида заменяет ждущее
+    mutating func enqueue(_ alert: IslandAlert) {
+        alertQueue.removeAll { $0.kind == alert.kind }
+        let index = alertQueue.firstIndex { $0.priority < alert.priority } ?? alertQueue.endIndex
+        alertQueue.insert(alert, at: index)
+    }
+
+    mutating func dequeueAlert() -> IslandAlert? {
+        alertQueue.isEmpty ? nil : alertQueue.removeFirst()
+    }
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
@@ -210,7 +223,7 @@ public enum IslandMachine {
     }
 
     /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
-    /// Во время HUD ждёт его конца. Новое уведомление поверх текущего заменяет его и продлевает показ
+    /// Во время HUD и уведомления другого вида ждёт в очереди. Тот же вид обновляет показанное и продлевает его
     private static func alertArrived(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
         if case let .hoverNudge(from) = m.surface {
             m.surface = from
@@ -221,29 +234,41 @@ public enum IslandMachine {
             return [.cancel(.hoverLeave)] + alertArrived(&m, alert)
         }
         if let pending = m.pending {
-            // идёт сжатие: к HUD — уведомление ждёт его конца, к остальному — раскрываемся в уведомление
-            if case .hud = pending { m.queuedAlert = alert } else { m.pending = .alert(alert) }
+            switch pending {
+            case .hud:
+                m.enqueue(alert)
+            case let .alert(next) where next.kind != alert.kind:
+                // сжатие уже идёт к другому уведомлению: новое ждёт своей очереди
+                m.enqueue(alert)
+            default:
+                m.pending = .alert(alert)
+            }
             return []
         }
         switch m.surface {
         case .idle:
             m.surface = .alert(alert)
-            return [.animate(.alertIn), .schedule(.alertHide, after: IslandTiming.alertVisible)]
-        case .alert:
+            return [.animate(.alertIn)] + shown(alert)
+        case let .alert(current) where current.kind == alert.kind:
             m.surface = .alert(alert)
-            return [.animate(.alertUpdate), .schedule(.alertHide, after: IslandTiming.alertVisible)]
+            return [.animate(.alertUpdate), .schedule(.alertHide, after: alert.duration)]
+        case .alert, .hud:
+            m.enqueue(alert)
+            return []
         case .compact, .peek:
             return shrink(&m, then: .alert(alert))
         case .hover, .expanded:
             m.surface = .alert(alert)
-            return [.animate(.hudMorph), .schedule(.alertHide, after: IslandTiming.alertVisible)]
-        case .hud:
-            m.queuedAlert = alert
-            return []
+            return [.animate(.hudMorph)] + shown(alert)
         case .shrink, .hoverNudge:
             // сжатие всегда с pending, отклик разобран выше
             return []
         }
+    }
+
+    /// Уведомление появилось на экране: таймер ухода и звук
+    private static func shown(_ alert: IslandAlert) -> [IslandEffect] {
+        [.schedule(.alertHide, after: alert.duration)] + (alert.sound.map { [IslandEffect.play($0)] } ?? [])
     }
 
     private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {
@@ -333,10 +358,7 @@ public enum IslandMachine {
             return [.animate(m.surface == .compact ? .peekClose : .compactOut)]
         case .hudHide:
             guard case .hud = m.surface, m.pending == nil else { return [] }
-            if let alert = m.queuedAlert {
-                m.queuedAlert = nil
-                return shrink(&m, then: .alert(alert))
-            }
+            if let alert = m.dequeueAlert() { return shrink(&m, then: .alert(alert)) }
             if m.base == .compact { return shrink(&m, then: .compact) }
             m.surface = .idle
             return [.animate(.hudOut)]
@@ -344,9 +366,7 @@ public enum IslandMachine {
             guard m.surface == .shrink, let target = m.pending else { return [] }
             m.pending = nil
             m.surface = target
-            if case .alert = target {
-                return [.animate(.alertGrow), .schedule(.alertHide, after: IslandTiming.alertVisible)]
-            }
+            if case let .alert(alert) = target { return [.animate(.alertGrow)] + shown(alert) }
             if case .hud = target {
                 return [.animate(.grow), .schedule(.hudHide, after: IslandTiming.hudVisible)]
             }
@@ -363,6 +383,7 @@ public enum IslandMachine {
             return close(&m)
         case .alertHide:
             guard case .alert = m.surface, m.pending == nil else { return [] }
+            if let next = m.dequeueAlert() { return shrink(&m, then: .alert(next)) }
             if m.base == .compact { return shrink(&m, then: .compact) }
             m.surface = .idle
             return [.animate(.alertOut)]

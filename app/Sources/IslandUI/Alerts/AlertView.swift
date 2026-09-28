@@ -9,28 +9,48 @@ struct AlertView: View {
     var body: some View {
         switch alert {
         case let .charging(level):
-            ChargingView(level: level, notchWidth: notchWidth)
+            // решение пользователя 28.09: у Charging процент не пишем, только батарейка
+            BatteryAlertView(label: "Charging", level: level, showsPercent: false, fill: IslandPalette.charging, notchWidth: notchWidth)
+        case let .lowBattery(level):
+            BatteryAlertView(label: "Low Battery", level: level, showsPercent: true, fill: IslandPalette.lowBattery, notchWidth: notchWidth)
+        case let .lowPower(level):
+            // по ожидаемому виду из репорта: «Low Power Mode» и батарейка без процента
+            BatteryAlertView(label: "Low Power Mode", level: level, showsPercent: false, fill: IslandPalette.lowPower, notchWidth: notchWidth)
         }
     }
 }
 
-/// Charging 350×32: подпись слева, батарейка справа (rec2/states-sheet.png).
-/// Шрифт и отступы как у HUD: отдельно не мерили
-/// решение пользователя 28.09: у Charging процент не пишем
-struct ChargingView: View {
+/// Уведомление батареи 350×32: подпись слева, процент и батарейка справа (Charging — rec2/states-sheet.png,
+/// Low Battery и Low Power не снимались: тот же паттерн). Шрифт и отступы как у HUD, отдельно не мерили
+struct BatteryAlertView: View {
+    let label: String
     let level: Double
+    let showsPercent: Bool
+    let fill: Color
     let notchWidth: CGFloat
 
     var body: some View {
         HStack(spacing: 0) {
-            Text("Charging")
+            Text(label)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(IslandPalette.foreground)
             Spacer(minLength: notchWidth)
-            BatteryGlyph(level: level, fill: IslandPalette.charging)
+            HStack(spacing: 6) {
+                if showsPercent {
+                    Text(Self.percent(level))
+                        .font(.system(size: 13, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(IslandPalette.foreground)
+                }
+                BatteryGlyph(level: level, fill: fill)
+            }
         }
         .padding(.horizontal, 14)
         .frame(height: 32)
+    }
+
+    nonisolated static func percent(_ level: Double) -> String {
+        "\(Int((min(max(level, 0), 1) * 100).rounded()))%"
     }
 }
 

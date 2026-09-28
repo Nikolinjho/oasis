@@ -97,6 +97,21 @@ enum DebugCatalog {
             .action(DebugAction(id: "battery.charging-100", title: "Charging 100%") {
                 store.send(.alertArrived(.charging(level: 1)))
             }),
+            .separator,
+            .action(DebugAction(id: "battery.low", title: "Low Battery 10%") {
+                store.send(.alertArrived(.lowBattery(level: 0.1)))
+            }),
+            .action(DebugAction(id: "battery.low-power", title: "Low Power Mode") {
+                store.send(.alertArrived(.lowPower(level: 0.4)))
+            }),
+            .separator,
+            // очередь: HUD держит все три, после него — по приоритету Low Battery, Low Power, Charging
+            .action(DebugAction(id: "battery.queue", title: "HUD + Three Alerts (Queue)") {
+                store.send(.hudChanged(.volume, level: 0.5))
+                store.send(.alertArrived(.charging(level: 0.8)))
+                store.send(.alertArrived(.lowPower(level: 0.4)))
+                store.send(.alertArrived(.lowBattery(level: 0.1)))
+            }),
         ])
     }
 

@@ -61,12 +61,12 @@ struct IslandMachineAlertTests {
     func waitsForHUD() {
         var m = Self.model(Self.hud)
         #expect(IslandMachine.reduce(&m, .alertArrived(Self.charging)).isEmpty)
-        #expect(m.queuedAlert == Self.charging)
+        #expect(m.alertQueue == [Self.charging])
         let fx = IslandMachine.reduce(&m, .timerFired(.hudHide))
         // из широкого HUD — пружина широкого сжатия
         #expect(fx == [.cancel(.peekEnd), .animate(.shrinkFromWide), Self.startGrow])
         #expect(m.pending == .alert(Self.charging))
-        #expect(m.queuedAlert == nil)
+        #expect(m.alertQueue.isEmpty)
     }
 
     @Test("HUD важнее уведомления: вытесняет его через сжатие")
@@ -93,7 +93,7 @@ struct IslandMachineAlertTests {
         m.pending = .alert(Self.charging)
         #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5)).isEmpty)
         #expect(m.pending == Self.hud)
-        #expect(m.queuedAlert == nil)
+        #expect(m.alertQueue.isEmpty)
     }
 
     @Test("Уведомление во время отклика на hover: раскрытие отменяется, дальше — как из исходного состояния")

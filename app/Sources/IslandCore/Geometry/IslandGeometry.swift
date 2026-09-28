@@ -38,9 +38,10 @@ public enum IslandGeometry {
     /// rec2/states-sheet.png: Charging 357 по строке 1 pt. Тело не мерили: минус 7 pt ушек, как у HUD той же высоты
     public static let charging = CGSize(width: 350, height: 32)
 
+    /// Low Battery и Low Power вживую не снимались: подпись длиннее, ширина как у Charging — оценка
     public static func size(for alert: IslandAlert) -> CGSize {
         switch alert {
-        case .charging: charging
+        case .charging, .lowBattery, .lowPower: charging
         }
     }
 
