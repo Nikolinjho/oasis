@@ -52,13 +52,18 @@ final class CalendarClock {
             self.live = live
             store.setCalendarLive(live)
         }
+        // старт — не больше одного за тик: у событий с общим началом peek один, и звук не играет дважды
+        var started = false
         for tick in CalendarSchedule.crossings(in: visible, from: lastTick, to: now) {
             switch tick {
             case let .reminder(event, minutes):
                 store.send(.alertArrived(.calendarReminder(CalendarReminder(
                     eventID: event.id, title: event.title, minutes: minutes, color: event.color))))
-            case .started:
+            case .started where !started:
+                started = true
                 store.send(.calendarStarted)
+            case .started:
+                break
             }
         }
         lastTick = now

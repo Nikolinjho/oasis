@@ -87,6 +87,20 @@ struct CalendarClockTests {
         #expect(store.model.alertQueue == [second])
     }
 
+    @Test("Два события с общим началом: один старт за тик, звук события один раз")
+    func commonStartPlaysOnce() {
+        let twin = CalendarEvent(
+            id: "twin", title: "Второе", start: Self.start, end: Self.at(900), isAllDay: false, color: Self.event.color)
+        let store = IslandStore(config: .alcove)
+        var sounds: [IslandSound] = []
+        store.onSound = { sounds.append($0) }
+        let clock = CalendarClock(store: store, start: Self.at(-30))
+        clock.update(agenda: DayAgenda.make(events: [Self.event, twin], now: Self.at(-30)), now: Self.at(-30))
+        clock.tick(now: Self.at(1))
+        #expect(sounds == [.event])
+        #expect(store.model.surface == .calendarPeek)
+    }
+
     @Test("Смена системного времени будит часы сразу, не дожидаясь таймера")
     func clockChangeWakesClock() async {
         let now = Date()
