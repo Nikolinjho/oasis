@@ -87,7 +87,7 @@ struct IslandMachineAlertTests {
         #expect(fx == [.animate(.alertUpdate), Self.hideAlert])
     }
 
-    @Test("HUD во время сжатия к уведомлению: HUD раскрывается первым, уведомление отбрасывается (активные действия вытесняют)")
+    @Test("HUD во время сжатия к Charging: HUD раскрывается первым, Charging (приоритет 0) отбрасывается")
     func hudDuringShrinkDropsAlert() {
         var m = Self.model(.shrink, media: true)
         m.pending = .alert(Self.charging)

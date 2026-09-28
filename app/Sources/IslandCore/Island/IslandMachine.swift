@@ -52,6 +52,9 @@ public struct IslandModel: Equatable, Sendable {
     public var leaving = false
     /// Уведомления ждут конца HUD или текущего уведомления: по приоритету, при равном — по приходу
     public var alertQueue: [IslandAlert] = []
+    /// Виды уведомлений, которые HUD вытеснил с экрана и вернул в очередь: их звук уже прозвучал,
+    /// повторный показ после HUD идёт без звука. Новое уведомление того же вида и отзыв снимают отметку
+    public var heardAlerts: Set<IslandAlert.Kind> = []
     /// Открыто окно календаря (T−1 мин … конец события): компакт календаря вытесняет музыку (решение 27.09)
     public var calendarLive = false
     /// Вид раскрытого. Каждое раскрытие начинается с Duo (ui-inspection 3.7, «Переоткрытие сбрасывает вид на Duo»)
@@ -73,6 +76,15 @@ public struct IslandModel: Equatable, Sendable {
         alertQueue.removeAll { $0.kind == alert.kind }
         let index = alertQueue.firstIndex { $0.priority < alert.priority } ?? alertQueue.endIndex
         alertQueue.insert(alert, at: index)
+    }
+
+    /// HUD вытеснил уведомление (показанное или то, к которому шло сжатие). Приоритет 2 и выше (напоминание
+    /// календаря, Low Battery) возвращается в очередь и покажется после HUD, остальные пропадают, как в P0
+    /// (решение по ревью P1). heard — звук уже прозвучал: повторный показ без него
+    mutating func displaceByHUD(_ alert: IslandAlert, heard: Bool) {
+        guard alert.priority >= 2 else { return }
+        enqueue(alert)
+        if heard { heardAlerts.insert(alert.kind) }
     }
 
     mutating func dequeueAlert() -> IslandAlert? {
@@ -226,8 +238,9 @@ public enum IslandMachine {
             return [.cancel(.hoverLeave)] + hudChanged(&m, hud)
         }
         if m.pending != nil {
-            // идёт сжатие: HUD покажется, когда оно закончится. Активные действия вытесняют другие: если сжатие
-            // шло к уведомлению, оно просто пропадает, не уходя в очередь (решение — HUD важнее уведомления всегда)
+            // идёт сжатие: HUD покажется, когда оно закончится. Если сжатие шло к уведомлению, HUD его вытесняет:
+            // важное возвращается в очередь, остальное пропадает (displaceByHUD)
+            if case let .alert(alert) = m.pending { m.displaceByHUD(alert, heard: false) }
             m.pending = hud
             return []
         }
@@ -238,8 +251,11 @@ public enum IslandMachine {
         case .idle:
             m.surface = hud
             return [.animate(.hudIn), .schedule(.hudHide, after: IslandTiming.hudVisible)]
-        // HUD важнее уведомления: уведомление уходит через сжатие и не возвращается
-        case .compact, .peek, .alert, .calendar, .calendarPeek:
+        // HUD важнее уведомления: уведомление уходит через сжатие, важное вернётся после HUD (displaceByHUD)
+        case let .alert(alert):
+            m.displaceByHUD(alert, heard: true)
+            return shrink(&m, then: hud)
+        case .compact, .peek, .calendar, .calendarPeek:
             return shrink(&m, then: hud)
         case .hover, .expanded:
             // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
@@ -257,6 +273,8 @@ public enum IslandMachine {
     /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
     /// Во время HUD и уведомления другого вида ждёт в очереди. Тот же вид обновляет показанное и продлевает его
     private static func alertArrived(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
+        // новое уведомление вида, вытесненного HUD, — новый показ со звуком
+        m.heardAlerts.remove(alert.kind)
         if case let .hoverNudge(from) = m.surface {
             m.surface = from
             return [.cancel(.hoverOpen)] + alertArrived(&m, alert)
@@ -280,7 +298,7 @@ public enum IslandMachine {
         switch m.surface {
         case .idle:
             m.surface = .alert(alert)
-            return [.animate(.alertIn)] + shown(alert)
+            return [.animate(.alertIn)] + shown(&m, alert)
         case let .alert(current) where current.kind == alert.kind:
             m.surface = .alert(alert)
             return [.animate(.alertUpdate), .schedule(.alertHide, after: alert.duration)]
@@ -291,7 +309,7 @@ public enum IslandMachine {
             return shrink(&m, then: .alert(alert))
         case .hover, .expanded:
             m.surface = .alert(alert)
-            return [.animate(.hudMorph)] + shown(alert)
+            return [.animate(.hudMorph)] + shown(&m, alert)
         case .shrink, .hoverNudge:
             // сжатие всегда с pending, отклик разобран выше
             return []
@@ -300,12 +318,16 @@ public enum IslandMachine {
 
     private static func alertRetracted(_ m: inout IslandModel, _ kind: IslandAlert.Kind) -> [IslandEffect] {
         m.alertQueue.removeAll { $0.kind == kind }
+        m.heardAlerts.remove(kind)
         return []
     }
 
     /// Уведомление появилось на экране: таймер ухода и звук
-    private static func shown(_ alert: IslandAlert) -> [IslandEffect] {
-        [.schedule(.alertHide, after: alert.duration)] + (alert.sound.map { [IslandEffect.play($0)] } ?? [])
+    /// Уже звучавшее и вытесненное HUD (heardAlerts) показывается без звука
+    private static func shown(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
+        let heard = m.heardAlerts.remove(alert.kind) != nil
+        let sound = heard ? nil : alert.sound
+        return [.schedule(.alertHide, after: alert.duration)] + (sound.map { [IslandEffect.play($0)] } ?? [])
     }
 
     /// Окно календаря открылось или закрылось. Остров в покое переходит в новый покой: из формы выреза —
@@ -467,7 +489,7 @@ public enum IslandMachine {
             guard m.surface == .shrink, let target = m.pending else { return [] }
             m.pending = nil
             m.surface = target
-            if case let .alert(alert) = target { return [.animate(.alertGrow)] + shown(alert) }
+            if case let .alert(alert) = target { return [.animate(.alertGrow)] + shown(&m, alert) }
             if case .hud = target {
                 return [.animate(.grow), .schedule(.hudHide, after: IslandTiming.hudVisible)]
             }
