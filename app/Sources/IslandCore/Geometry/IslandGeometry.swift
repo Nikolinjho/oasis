@@ -35,6 +35,14 @@ public enum IslandGeometry {
     /// Ширина, до которой остров сжимается при смене активности. Трекер дал 195 по строке 1 pt;
     /// минус те же 7 pt ушек, что у компакта и HUD той же высоты. Выведено, а не измерено напрямую
     public static let shrinkWidth: CGFloat = 188
+    /// rec2/states-sheet.png: Charging 357 по строке 1 pt. Тело не мерили: минус 7 pt ушек, как у HUD той же высоты
+    public static let charging = CGSize(width: 350, height: 32)
+
+    public static func size(for alert: IslandAlert) -> CGSize {
+        switch alert {
+        case .charging: charging
+        }
+    }
 
     /// Ушки (вогнутые плечи) по бокам: форма перетекает в menu bar. Ширина геометрическая,
     /// от кончика кривой у края экрана до борта острова; видимая у края меньше (≈0.8), кончик тоньше пикселя.
@@ -102,6 +110,7 @@ public enum IslandGeometry {
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
+        case let .alert(alert): size(for: alert)
         // разобран выше, сюда не доходит
         case .hoverNudge: notch
         }
@@ -113,6 +122,8 @@ public enum IslandGeometry {
         case .expanded: Shoulder.expanded
         case .shrink: Shoulder.shrink
         case .hud: Shoulder.hud
+        // замера нет: как у HUD той же высоты
+        case .alert: Shoulder.hud
         case .hoverNudge: Shoulder.idle // разобран выше
         }
         return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height), shoulder: shoulder)

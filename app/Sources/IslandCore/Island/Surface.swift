@@ -19,4 +19,6 @@ public enum Surface: Equatable, Sendable {
     /// Сжатие почти до выреза перед сменой активности
     case shrink
     case hud(HUDKind, level: Double)
+    /// Уведомление: Charging, в P1 — батарея, AirPods, напоминания календаря
+    case alert(IslandAlert)
 }

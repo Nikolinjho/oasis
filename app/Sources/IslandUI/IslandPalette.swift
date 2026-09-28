@@ -20,4 +20,6 @@ public enum IslandPalette {
     public static let dateAccent = Color(red: 233 / 255, green: 98 / 255, blue: 96 / 255)
     /// Вторая строка пустого дня темнее первой. Оценка по кадру
     public static let tertiary = foreground.opacity(0.35)
+    /// Батарейка Charging: зелёная (rec2/states-sheet.png). Точного цвета нет: системный зелёный, оценка
+    public static let charging = Color(red: 48 / 255, green: 209 / 255, blue: 88 / 255)
 }

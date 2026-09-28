@@ -66,6 +66,12 @@ public struct IslandView: View {
                 .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.hud(kind))
                 .transition(.slot)
+        case let .alert(alert):
+            AlertView(alert: alert, notchWidth: notchWidth)
+                // как у HUD: рамка текущей формы, контент разъезжается вместе с краями
+                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
+                .id(ContentID.alert)
+                .transition(.slot)
         case .idle, .hover, .shrink, .hoverNudge:
             Color.clear
         }
@@ -85,5 +91,6 @@ public struct IslandView: View {
     private enum ContentID: Hashable {
         case music, expanded
         case hud(HUDKind)
+        case alert
     }
 }

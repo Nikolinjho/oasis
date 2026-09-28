@@ -5,12 +5,15 @@ public enum TimerID: Hashable, Sendable {
     case hoverOpen
     /// Курсор ушёл из раскрытого: схлопывание с задержкой
     case hoverLeave
+    /// Уведомление отслужило свой срок
+    case alertHide
 }
 
 public enum IslandEvent: Equatable, Sendable {
     case trackChanged
     case mediaCleared
     case hudChanged(HUDKind, level: Double)
+    case alertArrived(IslandAlert)
     case hoverEntered, hoverExited
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
@@ -34,6 +37,8 @@ public struct IslandModel: Equatable, Sendable {
     public var isFullscreen = false
     /// Курсор ушёл из раскрытого (режим пользователя): ждём таймер hoverLeave, возврат его отменяет
     public var leaving = false
+    /// Уведомление ждёт конца HUD. Одно место: полноценная очередь с приоритетами — P1
+    public var queuedAlert: IslandAlert?
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
@@ -99,6 +104,7 @@ public enum IslandMachine {
         case .trackChanged: trackChanged(&model)
         case .mediaCleared: mediaCleared(&model)
         case let .hudChanged(kind, level): hudChanged(&model, .hud(kind, level: level))
+        case let .alertArrived(alert): alertArrived(&model, alert)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
@@ -173,8 +179,9 @@ public enum IslandMachine {
             m.leaving = false
             return [.cancel(.hoverLeave)] + hudChanged(&m, hud)
         }
-        if m.pending != nil {
-            // идёт сжатие: HUD покажется, когда оно закончится
+        if let pending = m.pending {
+            // идёт сжатие: HUD покажется, когда оно закончится. Уведомление, к которому шло сжатие, ждёт HUD
+            if case let .alert(alert) = pending { m.queuedAlert = alert }
             m.pending = hud
             return []
         }
@@ -185,7 +192,8 @@ public enum IslandMachine {
         case .idle:
             m.surface = hud
             return [.animate(.hudIn), .schedule(.hudHide, after: IslandTiming.hudVisible)]
-        case .compact, .peek:
+        // HUD важнее уведомления: уведомление уходит через сжатие и не возвращается
+        case .compact, .peek, .alert:
             return shrink(&m, then: hud)
         case .hover, .expanded:
             // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
@@ -196,6 +204,43 @@ public enum IslandMachine {
             m.pending = hud
             return []
         case .hoverNudge:
+            return []
+        }
+    }
+
+    /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
+    /// Во время HUD ждёт его конца. Новое уведомление поверх текущего заменяет его и продлевает показ
+    private static func alertArrived(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
+        if case let .hoverNudge(from) = m.surface {
+            m.surface = from
+            return [.cancel(.hoverOpen)] + alertArrived(&m, alert)
+        }
+        if m.leaving {
+            m.leaving = false
+            return [.cancel(.hoverLeave)] + alertArrived(&m, alert)
+        }
+        if let pending = m.pending {
+            // идёт сжатие: к HUD — уведомление ждёт его конца, к остальному — раскрываемся в уведомление
+            if case .hud = pending { m.queuedAlert = alert } else { m.pending = .alert(alert) }
+            return []
+        }
+        switch m.surface {
+        case .idle:
+            m.surface = .alert(alert)
+            return [.animate(.alertIn), .schedule(.alertHide, after: IslandTiming.alertVisible)]
+        case .alert:
+            m.surface = .alert(alert)
+            return [.animate(.alertUpdate), .schedule(.alertHide, after: IslandTiming.alertVisible)]
+        case .compact, .peek:
+            return shrink(&m, then: .alert(alert))
+        case .hover, .expanded:
+            m.surface = .alert(alert)
+            return [.animate(.hudMorph), .schedule(.alertHide, after: IslandTiming.alertVisible)]
+        case .hud:
+            m.queuedAlert = alert
+            return []
+        case .shrink, .hoverNudge:
+            // сжатие всегда с pending, отклик разобран выше
             return []
         }
     }
@@ -287,6 +332,10 @@ public enum IslandMachine {
             return [.animate(m.surface == .compact ? .peekClose : .compactOut)]
         case .hudHide:
             guard case .hud = m.surface, m.pending == nil else { return [] }
+            if let alert = m.queuedAlert {
+                m.queuedAlert = nil
+                return shrink(&m, then: .alert(alert))
+            }
             if m.base == .compact { return shrink(&m, then: .compact) }
             m.surface = .idle
             return [.animate(.hudOut)]
@@ -294,6 +343,9 @@ public enum IslandMachine {
             guard m.surface == .shrink, let target = m.pending else { return [] }
             m.pending = nil
             m.surface = target
+            if case .alert = target {
+                return [.animate(.alertGrow), .schedule(.alertHide, after: IslandTiming.alertVisible)]
+            }
             if case .hud = target {
                 return [.animate(.grow), .schedule(.hudHide, after: IslandTiming.hudVisible)]
             }
@@ -308,6 +360,11 @@ public enum IslandMachine {
             // таймер уже сработал: отменять нечего
             m.leaving = false
             return close(&m)
+        case .alertHide:
+            guard case .alert = m.surface, m.pending == nil else { return [] }
+            if m.base == .compact { return shrink(&m, then: .compact) }
+            m.surface = .idle
+            return [.animate(.alertOut)]
         }
     }
 
@@ -326,6 +383,8 @@ public enum IslandMachine {
     private static func shrinkTransition(from source: Surface) -> IslandTransition {
         switch source {
         case .hud: .shrinkFromWide
+        // замер записи №2 (capture/analysis/README.md): Charging → сжатие 335/37
+        case .alert: .alertShrink
         // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged)
         case .compact, .peek, .hoverNudge: .shrink
         // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт

@@ -6,6 +6,8 @@ public enum IslandTiming {
     public static let quickPeek: Duration = .seconds(2)
     /// HUD скрывается через 1.5 с после последнего изменения
     public static let hudVisible: Duration = .milliseconds(1500)
+    /// Уведомление держится 5 с: Duration по умолчанию на странице Battery (ui-inspection 1.3)
+    public static let alertVisible: Duration = .seconds(5)
     /// Сжатие перед сменой активности
     public static let shrink: Duration = .milliseconds(330)
     /// Отклик на hover перед раскрытием в плеер. Обзорное видео Alcove, 30 fps: форма подрастает

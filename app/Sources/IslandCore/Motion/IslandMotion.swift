@@ -13,6 +13,9 @@ public enum IslandTransition: Equatable, Sendable {
     /// shrinkFromWide — то же сжатие из широкого состояния (HUD) обратно к компакту: у Alcove у него своя пружина
     case shrink, shrinkFromWide, grow
 
+    /// Уведомление: вход из покоя, раскрытие после сжатия, сжатие перед возвратом в компакт, уход в покой, новое содержимое
+    case alertIn, alertGrow, alertShrink, alertOut, alertUpdate
+
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
 }
@@ -51,6 +54,15 @@ public enum IslandMotion {
         // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)
+        // замер записи №2 (capture/analysis/README.md): раскрытие в Charging 195 → 357, ζ 0.92.
+        // Вход из покоя не мерили: та же пружина, путь почти тот же
+        case .alertIn, .alertGrow: SpringSpec(stiffness: 125, damping: 20.5)
+        // замер той же записи: Charging → сжатие
+        case .alertShrink: SpringSpec(stiffness: 335, damping: 37)
+        // не мерили: как уход HUD в покой
+        case .alertOut: .smooth(duration: 0.45)
+        // новое содержимое того же размера
+        case .alertUpdate: nil
         case .shrink: SpringSpec(stiffness: 345, damping: 30.5)
         case .shrinkFromWide: SpringSpec(stiffness: 360, damping: 38)
         case .grow: .spring(duration: 0.45, bounce: 0.1)

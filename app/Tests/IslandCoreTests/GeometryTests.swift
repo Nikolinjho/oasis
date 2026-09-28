@@ -40,6 +40,13 @@ struct GeometryTests {
         #expect(size(.shrink) == CGSize(width: 188, height: 32))
     }
 
+    @Test("Charging: тело 350×32, ушко как у HUD")
+    func chargingSize() {
+        let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize)
+        #expect(spec.size == CGSize(width: 350, height: 32))
+        #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
+    }
+
     @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
     func radiusFromVideo() {
         #expect(abs(IslandGeometry.bottomRadius(forHeight: 32) - 10.5) < 1e-9)
