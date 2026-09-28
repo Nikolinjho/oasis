@@ -253,6 +253,9 @@ struct TileRow<Value: Hashable>: View {
                 .opacity(tile.isEnabled ? 1 : 0.45)
                 .contentShape(Rectangle())
                 .onTapGesture { if tile.isEnabled { selection = tile.value } }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+                .disabled(!tile.isEnabled)
             }
         }
         .padding(12)

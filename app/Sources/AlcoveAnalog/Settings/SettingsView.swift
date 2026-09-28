@@ -119,7 +119,7 @@ struct GeneralPage: View {
                 ToggleRow(title: "Expand on hover", info: "Disables certain interactions", isOn: $settings.expandOnHover)
                 if settings.expandOnHover {
                     RowDivider()
-                    SliderRow(title: "Hover duration", value: hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
+                    SliderRow(title: "Hover duration", value: $settings.hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
                 }
             }
         }
@@ -129,13 +129,5 @@ struct GeneralPage: View {
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
             launchAtLogin = LoginItem.isEnabled
         }
-    }
-
-    /// Слайдер шагает по 0.1, но Double-арифметика даёт 0.30000000000000004: округляем перед записью,
-    /// иначе в UserDefaults и в подписи попадает мусор после запятой
-    private var hoverDuration: Binding<Double> {
-        Binding(
-            get: { settings.hoverDuration },
-            set: { settings.hoverDuration = (($0 * 10).rounded()) / 10 })
     }
 }
