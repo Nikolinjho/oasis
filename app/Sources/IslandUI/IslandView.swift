@@ -69,7 +69,8 @@ public struct IslandView: View {
                 .transition(.slot)
         case .expanded:
             // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
-            ExpandedContent(view: model.expandedView, info: nowPlaying, agenda: agenda, onAction: onAction, onJoin: onJoin)
+            ExpandedContent(view: model.expandedView, info: nowPlaying, agenda: agenda, onAction: onAction, onJoin: onJoin,
+                            timeScale: model.config.timeScale)
                 .id(ContentID.expanded)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):

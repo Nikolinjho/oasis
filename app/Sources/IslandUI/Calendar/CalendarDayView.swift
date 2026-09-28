@@ -42,6 +42,7 @@ struct CalendarDayView: View {
             }
             .offset(x: 17.5, y: 72)
 
+            // пустой завтрашний день: только заголовок TMRW. Как это рисует Alcove, эталона нет
             VStack(alignment: .trailing, spacing: 4) {
                 Text("TMRW")
                     .font(.system(size: 10, weight: .bold))

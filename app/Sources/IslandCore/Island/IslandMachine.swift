@@ -347,7 +347,8 @@ public enum IslandMachine {
         return [.animate(.calendarPeekOpen), .schedule(.calendarPeekEnd, after: IslandTiming.calendarPeek), .play(.event)]
     }
 
-    /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент
+    /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент.
+    /// Плеер в цикле и без музыки: пропускает ли его Alcove, эталона нет (ui-inspection 3.7, «Не проверено»)
     private static func expandedViewCycled(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.surface == .expanded else { return [] }
         m.expandedView = m.expandedView.next
@@ -361,7 +362,7 @@ public enum IslandMachine {
         case .hover where target == .expanded: break
         case .hoverNudge where target == .expanded:
             // клик во время отклика раскрывает сразу, не дожидаясь таймера
-            if target == .expanded { m.expandedView = .duo }
+            m.expandedView = .duo
             m.surface = target
             return [.cancel(.hoverOpen), .animate(transition)]
         default: return []
