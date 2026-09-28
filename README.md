@@ -89,7 +89,7 @@
 
 | Путь | Что |
 |---|---|
-| `app/` | код приложения (появится в фазе 0) |
+| `app/` | код приложения: SwiftPM-пакет, `Scripts/bundle.sh` собирает `build/AlcoveAnalog.app` |
 | `motion/` | геометрия, пружины, тайминги. `motion.md` — главный документ, `AlcoveMotion.swift` — константы |
 | `design/` | палитра Alcove: 66 цветов, JSON, Swift |
 | `architecture/` | как устроен Alcove: модули, API, приватные обходы, все UI-строки |
@@ -97,6 +97,23 @@
 | `site/` | исходники tryalcove.com с веб-демо острова |
 | `capture/` | сценарии записи, скрипты замеров, разборы записей в `analysis/` |
 | `references/` | разборы чужих проектов (T3Notch) |
+
+## Сборка и запуск
+
+```bash
+cd app
+./Scripts/make-cert.sh      # один раз: сертификат для стабильной подписи
+./Scripts/fetch-adapter.sh  # один раз: mediaremote-adapter для музыки (нужен cmake)
+./Scripts/bundle.sh         # сборка build/AlcoveAnalog.app
+open build/AlcoveAnalog.app
+```
+
+Отладочные состояния без железа: меню Debug у иконки в menu bar или ссылка
+`open -g -a "$PWD/build/AlcoveAnalog.app" "alcove-analog://debug/<id>"` (id — в `Sources/AlcoveAnalog/Debug/DebugCatalog.swift`).
+
+Сверка анимаций с эталоном: `open -n app/build/AlcoveAnalog.app --args --demo-after 3`, затем
+`capture/record.sh demo 21` и `PYTHON=/usr/bin/python3 capture/tools/measure.sh capture/recordings/demo.mov`.
+Файл записи перед повторной записью удалить: `screencapture` не перезаписывает существующий.
 
 ## Reference pack: ключевые числа
 
