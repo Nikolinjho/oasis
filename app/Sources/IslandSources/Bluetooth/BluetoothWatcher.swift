@@ -49,10 +49,17 @@ public final class BluetoothWatcher: NSObject {
         connectedAtStart = []
     }
 
-    /// IOBluetooth доставляет уведомление на run loop потока, где шла регистрация, — главный (start() на MainActor)
-    @objc private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
-        if let address = device.addressString, connectedAtStart.remove(address) != nil { return }
-        guard let name = device.name else { return }
+    /// IOBluetooth шлёт уведомление с фоновой очереди CoreBluetooth, а не с главного потока (краш 28.09 в проверке
+    /// изоляции MainActor). Здесь только адрес и имя, остальное — на главном
+    @objc nonisolated private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        let address = device.addressString
+        let name = device.name
+        Task { @MainActor [weak self] in self?.connected(address: address, name: name) }
+    }
+
+    private func connected(address: String?, name: String?) {
+        if let address, connectedAtStart.remove(address) != nil { return }
+        guard let name else { return }
         if pending[name] == nil { pending[name] = false }
         guard batch == nil else { return }
         batch = Task { [weak self] in await self?.drain() }
