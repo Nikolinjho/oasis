@@ -97,23 +97,31 @@ public enum AirPodsBattery {
     }
 
     /// stdout процесса без блокировки пула задач: конец — terminationHandler, pipe читается на своей очереди
-    /// (иначе полный буфер pipe держит процесс). Не уложился в timeout — terminate и nil. Ненулевой код — nil
-    static func output(of executable: URL, arguments: [String], timeout: TimeInterval) async -> Data? {
+    /// (иначе полный буфер pipe держит процесс). Ненулевой код — nil. Не уложился в timeout — сразу nil,
+    /// затем terminate, а через killGrace SIGKILL, если процесс глушит SIGTERM. Результат отдаётся один раз
+    /// (finish): процесс или его потомок, держащий stdout, не может подвесить вызывающего
+    static func output(of executable: URL, arguments: [String], timeout: TimeInterval, killGrace: TimeInterval = 1) async -> Data? {
         await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
+            let finished = OSAllocatedUnfairLock(initialState: false)
+            @Sendable func finish(_ data: Data?) {
+                let first = finished.withLock { done in
+                    defer { done = true }
+                    return !done
+                }
+                if first { continuation.resume(returning: data) }
+            }
             let process = Process()
             process.executableURL = executable
             process.arguments = arguments
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = FileHandle.nullDevice
-            let timedOut = OSAllocatedUnfairLock(initialState: false)
             let output = OSAllocatedUnfairLock(initialState: Data())
             let reading = DispatchGroup()
             process.terminationHandler = { process in
                 let status = process.terminationStatus
                 reading.notify(queue: .global()) {
-                    let failed = timedOut.withLock { $0 } || status != 0
-                    continuation.resume(returning: failed ? nil : output.withLock { $0 })
+                    finish(status == 0 ? output.withLock { $0 } : nil)
                 }
             }
             // enter до run: быстрый процесс может закончиться раньше, чем стартует чтение,
@@ -123,7 +131,7 @@ public enum AirPodsBattery {
                 try process.run()
             } catch {
                 reading.leave()
-                continuation.resume(returning: nil)
+                finish(nil)
                 return
             }
             // читать только после запуска: иначе при сбое run() чтение ждало бы EOF вечно
@@ -134,8 +142,12 @@ public enum AirPodsBattery {
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
                 guard process.isRunning else { return }
-                timedOut.withLock { $0 = true }
+                finish(nil)
                 process.terminate()
+                let pid = process.processIdentifier
+                DispatchQueue.global().asyncAfter(deadline: .now() + killGrace) {
+                    if process.isRunning { kill(pid, SIGKILL) }
+                }
             }
         }
     }

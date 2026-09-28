@@ -101,6 +101,15 @@ struct AirPodsBatteryTests {
         #expect(ContinuousClock.now - start < .seconds(3))
     }
 
+    @Test("Процесс глушит SIGTERM: результат nil по таймауту, не дожидаясь конца процесса")
+    func outputIgnoresTerm() async {
+        let start = ContinuousClock.now
+        let data = await AirPodsBattery.output(
+            of: URL(fileURLWithPath: "/bin/sh"), arguments: ["-c", "trap '' TERM; sleep 10"], timeout: 0.3)
+        #expect(data == nil)
+        #expect(ContinuousClock.now - start < .seconds(3))
+    }
+
     @Test("Не запустился процесс — nil, без зависания")
     func outputMissingExecutable() async {
         let data = await AirPodsBattery.output(of: URL(fileURLWithPath: "/nonexistent/tool"), arguments: [], timeout: 5)
