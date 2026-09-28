@@ -1,4 +1,5 @@
 import AppKit
+import IslandCore
 import SwiftUI
 
 /// Чистая проверка «это ⌘W», без окна и responder chain — можно проверить юнит-тестом на синтетическом NSEvent.
@@ -29,11 +30,13 @@ private final class SettingsWindow: NSWindow {
 @MainActor
 final class SettingsWindowController {
     private let settings: AppSettings
+    private let playSound: (IslandSound) -> Void
     private var window: NSWindow?
     private var closeShortcutMonitor: Any?
 
-    init(settings: AppSettings) {
+    init(settings: AppSettings, playSound: @escaping (IslandSound) -> Void = { _ in }) {
         self.settings = settings
+        self.playSound = playSound
     }
 
     func show() {
@@ -50,7 +53,9 @@ final class SettingsWindowController {
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = SettingsPage.general.title
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: SettingsView(settings: settings))
+        window.contentView = NSHostingView(rootView: SettingsView(
+            settings: settings, playSound: playSound,
+            onPageChange: { [weak window] page in window?.title = page.title }))
         window.center()
         installCloseShortcut(on: window)
         return window

@@ -5,6 +5,10 @@ import SwiftUI
 /// Окно настроек: сайдбар 200 pt и прокрутка контента (ui-inspection 1.1)
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
+    /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
+    var playSound: (IslandSound) -> Void = { _ in }
+    /// Заголовок окна у Alcove — название страницы
+    var onPageChange: (SettingsPage) -> Void = { _ in }
     @State private var page: SettingsPage = .general
 
     var body: some View {
@@ -13,13 +17,23 @@ struct SettingsView: View {
                 .frame(width: 200)
             Divider()
             ScrollView {
-                GeneralPage(settings: settings)
+                pageContent
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         // 687 pt у Alcove — рамка окна вместе с заголовком 28 pt
         .frame(width: 620, height: 659)
+        .onChange(of: page) { _, new in onPageChange(new) }
+    }
+
+    /// Страницы P2 подключаются по мере готовности (задачи 4–9): недоступные в сайдбар не выбираются
+    @ViewBuilder
+    private var pageContent: some View {
+        switch page {
+        case .general: GeneralPage(settings: settings)
+        default: EmptyView()
+        }
     }
 }
 

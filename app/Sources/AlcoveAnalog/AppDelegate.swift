@@ -8,7 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = IslandStore()
     private let settings = AppSettings()
     private let sounds = SoundPlayer()
-    private lazy var settingsWindow = SettingsWindowController(settings: settings)
+    private lazy var settingsWindow = SettingsWindowController(settings: settings) { [weak self] sound in
+        self?.sounds.play(sound)
+    }
     private var window: IslandWindowController?
     private var statusItem: StatusItemController?
     private var nowPlaying: AdapterNowPlayingSource?
