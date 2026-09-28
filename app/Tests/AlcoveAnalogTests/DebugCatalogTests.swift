@@ -68,4 +68,18 @@ struct DebugCatalogTests {
         #expect(slow.isOn?() == true)
         #expect(user.isOn?() == false)
     }
+
+    @Test("Debug-переключатель Expand on Hover отражает и меняет конфиг машины")
+    func expandOnHoverToggle() throws {
+        let store = IslandStore(config: .user)
+        #expect(store.config.expandsOnHover)
+        let toggle = try #require(Self.actions(store).first { $0.id == "settings.expand-on-hover" })
+        #expect(toggle.isOn?() == true)
+        toggle.run()
+        #expect(!store.config.expandsOnHover)
+        #expect(toggle.isOn?() == false)
+        toggle.run()
+        #expect(store.config.expandsOnHover)
+        #expect(toggle.isOn?() == true)
+    }
 }

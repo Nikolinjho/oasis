@@ -80,7 +80,9 @@ public enum IslandMachine {
         public func applying(expandOnHover: Bool, hoverDuration: Double) -> Config {
             var config = self
             config.expandsOnHover = expandOnHover
-            config.hoverDelay = .milliseconds(Int((min(max(hoverDuration, 0), 0.6) * 1000).rounded()))
+            // NaN/inf не проходят Int(): читаем как 0, а не роняем машину настройками из UI
+            let duration = hoverDuration.isFinite ? hoverDuration : 0
+            config.hoverDelay = .milliseconds(Int((min(max(duration, 0), 0.6) * 1000).rounded()))
             return config
         }
 
@@ -297,7 +299,8 @@ public enum IslandMachine {
             }
             return [.animate(.grow)]
         case .hoverOpen:
-            guard case .hoverNudge = m.surface, m.pending == nil else { return [] }
+            // настройку могли выключить, пока таймер уже стоял в очереди: не раскрываем задним числом
+            guard m.config.expandsOnHover, case .hoverNudge = m.surface, m.pending == nil else { return [] }
             m.surface = .expanded
             return [.animate(.hoverExpand)]
         case .hoverLeave:

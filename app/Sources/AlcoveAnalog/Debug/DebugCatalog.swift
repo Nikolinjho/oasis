@@ -104,6 +104,14 @@ enum DebugCatalog {
             mode("timing.alcove", "Alcove Timing ×1.0", 1),
             mode("timing.user", "User Timing ×1.18", IslandMachine.Config.user.timeScale),
             mode("timing.slow", "Slow Animations ×5", 5),
+            .separator,
+            // General → Expand on hover без окна настроек: тот же переключатель, что появится там
+            .action(DebugAction(
+                id: "settings.expand-on-hover", title: "Expand on Hover",
+                isOn: { store.config.expandsOnHover }
+            ) {
+                store.config.expandsOnHover.toggle()
+            }),
         ])
     }
 }

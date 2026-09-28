@@ -21,19 +21,35 @@ final class AppSettings: ObservableObject {
 
     /// General → Expand on hover, по умолчанию вкл
     @Published var expandOnHover: Bool {
-        didSet { defaults.set(expandOnHover, forKey: Key.expandOnHover); onChange() }
+        didSet {
+            guard oldValue != expandOnHover else { return }
+            defaults.set(expandOnHover, forKey: Key.expandOnHover)
+            onChange()
+        }
     }
     /// General → Hover duration, 0…0.6 с, по умолчанию 0
     @Published var hoverDuration: Double {
-        didSet { defaults.set(hoverDuration, forKey: Key.hoverDuration); onChange() }
+        didSet {
+            guard oldValue != hoverDuration else { return }
+            defaults.set(hoverDuration, forKey: Key.hoverDuration)
+            onChange()
+        }
     }
     /// General → Force simulated notch: виртуальный вырез на экране без настоящего
     @Published var forceSimulatedNotch: Bool {
-        didSet { defaults.set(forceSimulatedNotch, forKey: Key.forceSimulatedNotch); onChange() }
+        didSet {
+            guard oldValue != forceSimulatedNotch else { return }
+            defaults.set(forceSimulatedNotch, forKey: Key.forceSimulatedNotch)
+            onChange()
+        }
     }
     /// General → Display on
     @Published var display: DisplayChoice {
-        didSet { defaults.set(display.storageValue, forKey: Key.display); onChange() }
+        didSet {
+            guard oldValue != display else { return }
+            defaults.set(display.storageValue, forKey: Key.display)
+            onChange()
+        }
     }
 
     /// Последний вырез встроенного экрана: размер виртуального выреза, когда крышка закрыта.
@@ -45,8 +61,13 @@ final class AppSettings: ObservableObject {
             return width > 0 && height > 0 ? CGSize(width: width, height: height) : nil
         }
         set {
-            defaults.set(newValue?.width ?? 0, forKey: Key.builtInNotchWidth)
-            defaults.set(newValue?.height ?? 0, forKey: Key.builtInNotchHeight)
+            guard let newValue else {
+                defaults.removeObject(forKey: Key.builtInNotchWidth)
+                defaults.removeObject(forKey: Key.builtInNotchHeight)
+                return
+            }
+            defaults.set(newValue.width, forKey: Key.builtInNotchWidth)
+            defaults.set(newValue.height, forKey: Key.builtInNotchHeight)
         }
     }
 

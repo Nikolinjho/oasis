@@ -52,7 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nowPlaying?.stop()
     }
 
-    /// Настройки меняются на лету из окна настроек и меню: машина и экран подхватывают их сразу
+    /// Настройки меняются на лету из окна настроек и меню: машина подхватывает их сразу.
+    /// Выбор экрана (DisplayChoice) пока не влияет на окно — это отдельная задача
     private func applySettings() {
         store.config = settings.machineConfig(from: store.config)
     }
