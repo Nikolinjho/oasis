@@ -1,9 +1,11 @@
+import CoreAudio
 import Foundation
 import IOBluetooth
 import IslandCore
 
 /// Подключения Bluetooth-наушников. Через 2 с после подключения читает заряд и сообщает:
-/// у Alcove уведомление приходит примерно через 2 с (ui-inspection 3.6). Отключение уведомления не даёт
+/// у Alcove уведомление приходит примерно через 2 с (ui-inspection 3.6). Отключение уведомления не даёт.
+/// Подключение — и уведомление IOBluetooth, и появление Bluetooth-выхода в CoreAudio (наушники достали из кейса)
 @MainActor
 public final class BluetoothWatcher: NSObject {
     public var onConnect: (AirPodsInfo) -> Void = { _ in }
@@ -17,6 +19,8 @@ public final class BluetoothWatcher: NSObject {
     /// запускается один раз на окно и разбирается для всех подключений
     private var batch: Task<Void, Never>?
     private var startupGrace: Task<Void, Never>?
+    private var outputs = BluetoothAudioOutputs.Tracker()
+    private var onDevicesChanged: AudioObjectPropertyListenerBlock?
     private let log = SourceLog.logger("bluetooth")
 
     /// Окно пачки и задержка уведомления: ~2 с, как у Alcove (ui-inspection 3.6)
@@ -31,6 +35,7 @@ public final class BluetoothWatcher: NSObject {
         connectedAtStart = Set(devices.filter { $0.isConnected() }.compactMap(\.addressString))
         registration = IOBluetoothDevice.register(forConnectNotifications: self, selector: #selector(connected(_:device:)))
         if registration == nil { log.error("bluetooth connect notifications unavailable") }
+        startOutputs()
         // не пришло уведомление по подключённому до старта — адрес не должен глушить его следующее подключение
         startupGrace = Task { [weak self] in
             try? await Task.sleep(for: Self.startupGraceTime)
@@ -47,6 +52,34 @@ public final class BluetoothWatcher: NSObject {
         startupGrace = nil
         pending = [:]
         connectedAtStart = []
+        if let onDevicesChanged {
+            var address = BluetoothAudioOutputs.devicesAddress
+            AudioObjectRemovePropertyListenerBlock(BluetoothAudioOutputs.system, &address, .main, onDevicesChanged)
+        }
+        onDevicesChanged = nil
+        outputs = BluetoothAudioOutputs.Tracker()
+    }
+
+    /// Первый снимок выходов — исходный; дальше каждый появившийся Bluetooth-выход идёт в ту же пачку.
+    /// При обычном подключении он приходит вместе с уведомлением IOBluetooth, resolve оставит одно по адресу
+    private func startOutputs() {
+        _ = outputs.update(BluetoothAudioOutputs.current())
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            MainActor.assumeIsolated { self?.outputsChanged() }
+        }
+        var address = BluetoothAudioOutputs.devicesAddress
+        guard AudioObjectAddPropertyListenerBlock(BluetoothAudioOutputs.system, &address, .main, block) == noErr else {
+            log.error("audio device list notifications unavailable")
+            return
+        }
+        onDevicesChanged = block
+    }
+
+    private func outputsChanged() {
+        for connection in outputs.update(BluetoothAudioOutputs.current()) {
+            log.info("bluetooth output appeared \(connection.name, privacy: .public)")
+            enqueue(connection)
+        }
     }
 
     /// IOBluetooth шлёт уведомление с фоновой очереди CoreBluetooth, а не с главного потока (краш 28.09 в проверке
@@ -60,7 +93,10 @@ public final class BluetoothWatcher: NSObject {
     private func connected(address: String?, name: String?) {
         if let address, connectedAtStart.remove(address) != nil { return }
         guard let name else { return }
-        let connection = AirPodsBattery.Connection(name: name, address: address)
+        enqueue(AirPodsBattery.Connection(name: name, address: address))
+    }
+
+    private func enqueue(_ connection: AirPodsBattery.Connection) {
         if pending[connection] == nil { pending[connection] = false }
         guard batch == nil else { return }
         batch = Task { [weak self] in await self?.drain() }
