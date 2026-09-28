@@ -20,13 +20,16 @@ public final class BluetoothWatcher: NSObject {
         registration = nil
     }
 
+    /// Переименованные наушники по имени не узнать: system_profiler читается для любого подключения,
+    /// а наушники ли это, решает AirPodsBattery.info по имени или vendorID и minorType
     @objc private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
-        guard let name = device.name, AirPodsBattery.isHeadphones(name: name) else { return }
-        log.info("headphones connected \(name, privacy: .public)")
+        guard let name = device.name else { return }
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2))
-            let battery = await AirPodsBattery.read(name: name)
-            self?.onConnect(AirPodsInfo(name: name, battery: battery))
+            let found = await AirPodsBattery.read(name: name)
+            guard let self, let info = AirPodsBattery.info(name: name, device: found) else { return }
+            log.info("headphones connected \(name, privacy: .public)")
+            onConnect(info)
         }
     }
 }

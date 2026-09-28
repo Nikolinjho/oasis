@@ -72,5 +72,10 @@ struct ActivityLayoutsTests {
         #expect(AirPodsInfo(name: "AirPods Max", battery: nil).symbol == "airpodsmax")
         #expect(AirPodsInfo(name: "Nikola’s AirPods Pro", battery: nil).symbol == "airpodspro")
         #expect(AirPodsInfo(name: "AirPods 4 (ANC)", battery: nil).symbol == "airpods")
+        // переименованные: модель по productID важнее имени, без модели — обычный глиф
+        #expect(AirPodsInfo(name: "Studio", battery: nil, model: .max).symbol == "airpodsmax")
+        #expect(AirPodsInfo(name: "Studio", battery: nil, model: .pro).symbol == "airpodspro")
+        #expect(AirPodsInfo(name: "Pro Kitchen", battery: nil, model: .airpods).symbol == "airpods")
+        #expect(AirPodsInfo(name: "Kitchen", battery: nil).symbol == "airpods")
     }
 }

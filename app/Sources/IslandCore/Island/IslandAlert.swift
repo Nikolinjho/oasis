@@ -86,16 +86,30 @@ public struct CalendarReminder: Equatable, Sendable {
 
 /// Наушники: имя из Bluetooth и заряд 0…1, если system_profiler его отдал
 public struct AirPodsInfo: Equatable, Sendable {
-    public var name: String
-    public var battery: Double?
-
-    public init(name: String, battery: Double?) {
-        self.name = name
-        self.battery = battery
+    /// Модель по productID из system_profiler: нужна переименованным наушникам, у которых имя модель не выдаёт
+    public enum Model: Equatable, Sendable {
+        case airpods, pro, max
     }
 
-    /// Глиф модели в стиле Symbols (Connectivity по умолчанию)
+    public var name: String
+    public var battery: Double?
+    /// nil — productID неизвестен или его нет: глиф выбирается по имени
+    public var model: Model?
+
+    public init(name: String, battery: Double?, model: Model? = nil) {
+        self.name = name
+        self.battery = battery
+        self.model = model
+    }
+
+    /// Глиф модели в стиле Symbols (Connectivity по умолчанию). Модель по productID важнее имени
     public var symbol: String {
+        switch model {
+        case .max: return "airpodsmax"
+        case .pro: return "airpodspro"
+        case .airpods: return "airpods"
+        case nil: break
+        }
         if name.localizedCaseInsensitiveContains("Max") { return "airpodsmax" }
         if name.localizedCaseInsensitiveContains("Pro") { return "airpodspro" }
         return "airpods"
