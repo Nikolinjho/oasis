@@ -187,6 +187,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bluetooth = watcher
         let monitor = HeadphonesBatteryMonitor()
         monitor.onReading = { [weak self] list in self?.headphonesPolled(list) }
+        monitor.shouldPoll = { [weak self] in
+            guard let self else { return false }
+            return settings.connectivityEnabled && settings.warnHeadphonesLowBattery
+        }
         monitor.start()
         headphonesMonitor = monitor
     }
