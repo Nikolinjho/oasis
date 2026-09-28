@@ -11,6 +11,7 @@ enum DebugCatalog {
             music(store, tracks),
             hud(store),
             calendar(store),
+            battery(store),
             island(store),
             scenarios(store, tracks),
             timing(store),
@@ -84,6 +85,17 @@ enum DebugCatalog {
                 isOn: { !store.isDebugAgendaPinned }
             ) {
                 store.unpinDebugEvents()
+            }),
+        ])
+    }
+
+    private static func battery(_ store: IslandStore) -> DebugSection {
+        DebugSection(title: "Battery", entries: [
+            .action(DebugAction(id: "battery.charging-51", title: "Charging 51%") {
+                store.send(.alertArrived(.charging(level: 0.51)))
+            }),
+            .action(DebugAction(id: "battery.charging-100", title: "Charging 100%") {
+                store.send(.alertArrived(.charging(level: 1)))
             }),
         ])
     }

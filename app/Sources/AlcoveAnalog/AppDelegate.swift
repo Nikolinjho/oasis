@@ -16,6 +16,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var trustTimer: Timer?
     private var fullscreen: FullscreenMonitor?
     private var calendar: EventKitCalendarSource?
+    private var power: PowerSource?
+    private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
@@ -46,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startNowPlaying()
         startPlayerActions()
         startCalendar()
+        startPower()
         startLevels()
         startKeyTap()
     }
@@ -119,6 +122,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         })
         source.start()
         calendar = source
+    }
+
+    private func startPower() {
+        let power = PowerSource()
+        power.onChange = { [weak self] state in
+            guard let self else { return }
+            for alert in PowerNotices.alerts(from: lastPower, to: state) { store.send(.alertArrived(alert)) }
+            lastPower = state
+        }
+        power.start()
+        self.power = power
     }
 
     private func startLevels() {
