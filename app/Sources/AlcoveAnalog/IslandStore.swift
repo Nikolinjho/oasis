@@ -15,6 +15,11 @@ final class IslandStore {
     private(set) var agenda = DayAgenda.empty
     /// Событие окна календаря: его рисуют компакт и peek. Остаётся после конца окна, пока компакт уходит
     private(set) var calendarEvent: CalendarEvent?
+    /// Тяга свайпа: добавка к высоте раскрытого, вниз +, вверх −
+    private(set) var stretch: CGFloat = 0
+    /// Остров тянут вверх: контент в блюре
+    private(set) var dragBlurred = false
+    @ObservationIgnored private var tracker = SwipeTracker()
     /// Отладочная повестка держится, пока источник календаря шлёт реальные события: pinDebugEvents/unpinDebugEvents
     private(set) var isDebugAgendaPinned = false
     /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
@@ -28,6 +33,8 @@ final class IslandStore {
     @ObservationIgnored var onJoin: (URL) -> Void = { _ in }
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}
+    /// Остров закрыт свайпом вверх: окно не досылает hoverEntered, пока курсор не уйдёт с острова
+    @ObservationIgnored var onSwipeClose: () -> Void = {}
     /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной): AppDelegate кормит ею CalendarClock
     @ObservationIgnored var onAgendaChange: (DayAgenda) -> Void = { _ in }
     @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]
@@ -43,16 +50,58 @@ final class IslandStore {
     }
 
     var spec: IslandShapeSpec {
-        IslandGeometry.spec(
+        var spec = IslandGeometry.spec(
             for: model.surface, hasMedia: model.hasMedia, notch: notch,
             calendarIndicatorWidth: IslandView.calendarIndicatorWidth,
             reminderIndicatorWidth: IslandView.reminderIndicatorWidth)
+        if model.surface == .expanded, stretch != 0 {
+            spec.size.height += stretch
+            spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: spec.size.height)
+        }
+        return spec
     }
 
     /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
     func setCalendarLive(_ event: CalendarEvent?) {
         if let event { calendarEvent = event }
         send(.calendarLiveChanged(event != nil))
+    }
+
+    /// Двухпальцевый свайп над раскрытым (ui-inspection 3.7). Тяга идёт за пальцами без анимации
+    func swipe(_ phase: SwipeTracker.Phase, dy: CGFloat) {
+        guard model.surface == .expanded else {
+            tracker = SwipeTracker()
+            stretch = 0
+            dragBlurred = false
+            return
+        }
+        guard let output = tracker.feed(phase, dy: dy) else { return }
+        let timeScale = model.config.timeScale
+        switch output {
+        case let .stretch(value):
+            stretch = value
+            dragBlurred = value < 0
+        case .close:
+            stretch = 0
+            dragBlurred = false
+            // отдача трекпада на закрытии: пользователь чувствует её у Alcove (ui-inspection 3.7).
+            // Момент у Alcove не замерен: даём на пересечении порога, вместе со схлопыванием
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+            onSwipeClose()
+            // закрытие свайпом — то же схлопывание, что клик мимо острова
+            send(.clickedOutside)
+        case .cycle:
+            // высота возвращается к 175 за ~0.2 с одновременно со сменой вида (ui-inspection 3.7).
+            // Замедляется timeScale, как остальные анимации острова
+            withAnimation(.smooth(duration: 0.2 * timeScale)) { stretch = 0 }
+            send(.expandedViewCycled)
+        case .settle:
+            // не дотянул: пружина обратно к 175 за ~0.4 с (ui-inspection 3.7)
+            withAnimation(.smooth(duration: 0.4 * timeScale)) {
+                stretch = 0
+                dragBlurred = false
+            }
+        }
     }
 
     func send(_ event: IslandEvent) {
@@ -62,10 +111,19 @@ final class IslandStore {
 
         var transition: IslandTransition?
         for case let .animate(t) in effects { transition = t }
+        // ушли из раскрытого посреди свайпа (уход курсора, уведомление, HUD): тяга и блюр не должны
+        // пережить схлопывание и достаться следующему раскрытию. Сбрасываются той же пружиной, что и форма
+        let apply = {
+            self.model = next
+            if next.surface != .expanded {
+                self.stretch = 0
+                self.dragBlurred = false
+            }
+        }
         if let spring = transition.flatMap({ IslandMotion.spring(for: $0, timeScale: next.config.timeScale) }) {
-            withAnimation(spring.animation) { model = next }
+            withAnimation(spring.animation, apply)
         } else {
-            model = next
+            apply()
         }
         if transition?.opensByHover == true {
             // .generic, а не .levelChange: levelChange — щелчок шага значения (слайдер, громкость),

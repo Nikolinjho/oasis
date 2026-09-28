@@ -197,6 +197,12 @@ enum DebugCatalog {
             .action(DebugAction(id: "island.close", title: "Close") { store.send(.clickedOutside) }),
             .action(DebugAction(id: "island.cycle", title: "Cycle Expanded View") { store.send(.expandedViewCycled) }),
             .separator,
+            // синтетический свайп двумя пальцами по раскрытому (Task 9): те же фазы, что шлёт монитор scrollWheel.
+            // Шаги по 30 мс, travel — сжатие/растяжение в pt, hold — пауза перед отпусканием для скриншота
+            swipe(store, id: "island.swipe-down", title: "Swipe Down (Cycle View)", travel: 10, hold: 0.8),
+            swipe(store, id: "island.swipe-up-hold", title: "Swipe Up, Release Before Threshold", travel: -15, hold: 1.0),
+            swipe(store, id: "island.swipe-up", title: "Swipe Up (Close)", travel: -30, hold: 0.3),
+            .separator,
             .action(DebugAction(id: "island.morph-hud", title: "Morph Expanded → HUD") {
                 DebugScript.run([
                     (at: 0, run: { store.send(.clicked) }),
@@ -204,6 +210,24 @@ enum DebugCatalog {
                 ])
             }),
         ])
+    }
+
+    /// Свайп над раскрытым без трекпада: открывает остров, если он закрыт, и прогоняет жест через store.swipe
+    private static func swipe(_ store: IslandStore, id: String, title: String, travel: CGFloat, hold: Double) -> DebugEntry {
+        .action(DebugAction(id: id, title: title) {
+            let steps = 10
+            let dy = travel / SwipeTracker.pointsPerDelta / CGFloat(steps)
+            let opens = store.model.surface != .expanded
+            let start = opens ? 1.0 : 0
+            var script: [DebugScript.Step] = []
+            if opens { script.append((at: 0, run: { store.send(.clicked) })) }
+            script.append((at: start, run: { store.swipe(.began, dy: 0) }))
+            for i in 1...steps {
+                script.append((at: start + Double(i) * 0.03, run: { store.swipe(.changed, dy: dy) }))
+            }
+            script.append((at: start + Double(steps) * 0.03 + hold, run: { store.swipe(.ended, dy: 0) }))
+            DebugScript.run(script)
+        })
     }
 
     private static func scenarios(_ store: IslandStore, _ tracks: DemoTrackCursor) -> DebugSection {

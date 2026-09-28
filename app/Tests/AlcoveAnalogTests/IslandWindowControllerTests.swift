@@ -34,3 +34,13 @@ struct IslandWindowControllerTests {
         #expect(!IslandWindowController.shouldReenterHover(surface: .expanded, pointerInside: true))
     }
 }
+
+@MainActor
+struct IslandWindowControllerSwipeCloseTests {
+    @Test("После закрытия свайпом hoverEntered не досылаем, пока курсор не ушёл с острова")
+    func noReentryAfterSwipeClose() {
+        #expect(!IslandWindowController.shouldReenterHover(surface: .idle, pointerInside: true, closedBySwipe: true))
+        #expect(!IslandWindowController.shouldReenterHover(surface: .compact, pointerInside: true, closedBySwipe: true))
+        #expect(IslandWindowController.shouldReenterHover(surface: .compact, pointerInside: true, closedBySwipe: false))
+    }
+}

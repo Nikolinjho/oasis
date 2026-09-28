@@ -17,6 +17,8 @@ final class IslandWindowController {
     private var hoverOpenedFrom: CGRect?
     /// Пока меню под островом открыто, курсор на меню и клики в нём не значат «ушёл с острова»
     private var menuOpen = false
+    /// Остров закрыт свайпом вверх, а курсор так и стоит над ним: не раскрываем снова, пока курсор не уйдёт
+    private var closedBySwipe = false
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "window")
 
     init(store: IslandStore, menu: NSMenu) {
@@ -30,6 +32,7 @@ final class IslandWindowController {
         placeOnNotchScreen()
         installMonitors()
         store.onSurfaceChange = { [weak self] in self?.surfaceChanged() }
+        store.onSwipeClose = { [weak self] in self?.closedBySwipe = true }
     }
 
     private func placeOnNotchScreen() {
@@ -87,6 +90,10 @@ final class IslandWindowController {
         if let rightClick = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown, handler: { [weak self] event in
             MainActor.assumeIsolated { self?.showMenuIfOnIsland(event) ?? false } ? nil : event
         }) { monitors.append(rightClick) }
+        // двухпальцевый свайп над островом: окно получает scrollWheel, пока курсор над формой
+        if let scroll = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.handleScroll(event) ?? false } ? nil : event
+        }) { monitors.append(scroll) }
     }
 
     /// Показывает меню под островом, если правый клик пришёлся на его форму
@@ -95,6 +102,21 @@ final class IslandWindowController {
         let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
         guard IslandGeometry.reachingScreenTop(island).contains(NSEvent.mouseLocation) else { return false }
         popUpUnderIsland(menu)
+        return true
+    }
+
+    /// Жест трекпада над островом. Инерцию не берём: у Alcove её нет. Колесо мыши (без точных дельт) не трогаем
+    private func handleScroll(_ event: NSEvent) -> Bool {
+        guard let panel, event.window === panel, event.hasPreciseScrollingDeltas, event.momentumPhase.isEmpty
+        else { return false }
+        // натуральная прокрутка: пальцы вниз — dy > 0, как в записи жестов. Без неё знак обратный
+        let dy = event.isDirectionInvertedFromDevice ? event.scrollingDeltaY : -event.scrollingDeltaY
+        switch event.phase {
+        case .began: store.swipe(.began, dy: 0)
+        case .changed: store.swipe(.changed, dy: dy)
+        case .ended, .cancelled: store.swipe(.ended, dy: 0)
+        default: return false
+        }
         return true
     }
 
@@ -122,6 +144,7 @@ final class IslandWindowController {
         let inside = IslandGeometry.pointerInside(point, body: body, island: island, openedFrom: hoverOpenedFrom)
         guard inside != pointerInside else { return }
         pointerInside = inside
+        if !inside { closedBySwipe = false }
         hoverOpenedFrom = inside ? body : nil
         store.send(inside ? .hoverEntered : .hoverExited)
     }
@@ -133,7 +156,7 @@ final class IslandWindowController {
     private func surfaceChanged() {
         pointerMoved()
         guard let panel, metrics != nil, !menuOpen,
-              Self.shouldReenterHover(surface: store.model.surface, pointerInside: pointerInside)
+              Self.shouldReenterHover(surface: store.model.surface, pointerInside: pointerInside, closedBySwipe: closedBySwipe)
         else { return }
         hoverOpenedFrom = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
         store.send(.hoverEntered)
@@ -141,9 +164,11 @@ final class IslandWindowController {
 
     /// true, если сейчас стоит досылать hoverEntered: курсор над островом и surface — состояние покоя
     /// (idle/compact/peek/calendar/calendarPeek). Раскрытые им состояния (hover, hoverNudge, expanded)
-    /// в этот список не входят, поэтому повторного hoverEntered из них не будет — зациклиться некому
-    static func shouldReenterHover(surface: Surface, pointerInside: Bool) -> Bool {
-        guard pointerInside else { return false }
+    /// в этот список не входят, поэтому повторного hoverEntered из них не будет — зациклиться некому.
+    /// После закрытия свайпом вверх (closedBySwipe) не досылаем: иначе курсор у верха острова
+    /// раскрывал бы его обратно в тот же момент. Флаг снимается, когда курсор уходит с острова
+    static func shouldReenterHover(surface: Surface, pointerInside: Bool, closedBySwipe: Bool = false) -> Bool {
+        guard pointerInside, !closedBySwipe else { return false }
         switch surface {
         // компакт календаря тоже покой: иначе после уведомления поверх календаря
         // остров остаётся закрытым под курсором
@@ -164,6 +189,7 @@ struct IslandRootView: View {
             nowPlaying: store.nowPlaying,
             agenda: store.agenda,
             calendarEvent: store.calendarEvent,
+            dragBlurred: store.dragBlurred,
             onClick: { store.send(.clicked) },
             onAction: { store.onAction($0) },
             onJoin: { store.onJoin($0) })

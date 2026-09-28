@@ -9,6 +9,8 @@ public struct IslandView: View {
     let nowPlaying: NowPlayingInfo?
     let agenda: DayAgenda
     let calendarEvent: CalendarEvent?
+    /// Остров тянут свайпом вверх: контент в блюре
+    let dragBlurred: Bool
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
     let onJoin: (URL) -> Void
@@ -17,6 +19,7 @@ public struct IslandView: View {
         model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
         agenda: DayAgenda = .empty,
         calendarEvent: CalendarEvent? = nil,
+        dragBlurred: Bool = false,
         onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
         onJoin: @escaping (URL) -> Void = { _ in }
     ) {
@@ -26,6 +29,7 @@ public struct IslandView: View {
         self.nowPlaying = nowPlaying
         self.agenda = agenda
         self.calendarEvent = calendarEvent
+        self.dragBlurred = dragBlurred
         self.onClick = onClick
         self.onAction = onAction
         self.onJoin = onJoin
@@ -43,6 +47,10 @@ public struct IslandView: View {
             content
                 .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
                 .clipShape(IslandShape(spec: spec, shoulder: 0))
+                // тянут вверх: контент уходит в блюр и темнеет с первого движения (ui-inspection 3.7). Сила — оценка
+                .blur(radius: dragBlurred ? 8 : 0)
+                .opacity(dragBlurred ? 0.6 : 1)
+                .animation(.easeOut(duration: 0.1), value: dragBlurred)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .contentShape(IslandShape(spec: spec))
