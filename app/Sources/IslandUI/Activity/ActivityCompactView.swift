@@ -46,6 +46,9 @@ struct ActivityCompactView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(Color(color))
+                // без этого узкий вырез переносит "15m" на две строки вместо нехватки 1-3pt в паддинге
+                .lineLimit(1)
+                .fixedSize()
         }
     }
 }
@@ -94,6 +97,8 @@ struct ActivityLine: View {
                     .font(.system(size: 12, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(IslandPalette.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
     }

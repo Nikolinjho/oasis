@@ -24,6 +24,9 @@ struct ActivityCompactViewTests {
                                              indicator: .ring(progress: 0.35, color: Self.red, track: Self.track)), compact),
             ("activity-text", ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red,
                                              indicator: .text("12s", color: Self.red)), compact),
+            // напоминание за 15 минут шире отсчёта секунд — тот же вырез не должен переносить текст
+            ("activity-text-wide", ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red,
+                                             indicator: .text("15m", color: Self.red)), compact),
             ("activity-peek", ActivityLayout(
                 symbol: "calendar.badge.clock", symbolColor: Self.red,
                 indicator: .ring(progress: 0.02, color: Self.red, track: Self.track),
