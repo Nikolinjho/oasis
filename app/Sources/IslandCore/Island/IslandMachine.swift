@@ -9,6 +9,8 @@ public enum TimerID: Hashable, Sendable {
     case alertHide
     /// Peek календаря на старте события отслужил свой срок
     case calendarPeekEnd
+    /// Музыка на паузе дольше Idle duration
+    case mediaIdle
 }
 
 public enum IslandEvent: Equatable, Sendable {
@@ -29,6 +31,12 @@ public enum IslandEvent: Equatable, Sendable {
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
     case fullscreenChanged(Bool)
+    /// Музыка заиграла или встала на паузу. Смена трека — trackChanged, он сам считает трек играющим
+    case playbackChanged(Bool)
+    /// Приложение-источник музыки на переднем плане (Hide while source app is active)
+    case sourceActiveChanged(Bool)
+    /// Покой мог смениться без события машины (настройки): from — покой до смены
+    case baseChanged(from: Surface)
     case timerFired(TimerID)
 }
 
@@ -59,6 +67,12 @@ public struct IslandModel: Equatable, Sendable {
     public var calendarLive = false
     /// Вид раскрытого. Каждое раскрытие начинается с Duo (ui-inspection 3.7, «Переоткрытие сбрасывает вид на Duo»)
     public var expandedView: ExpandedView = .duo
+    /// Музыка играет. Трек на паузе держит компакт Idle duration (NowPlayingRules.idleDelay)
+    public var isPlaying = false
+    /// Пауза длится дольше Idle duration: компакт музыки не показывается
+    public var mediaIdle = false
+    /// Приложение-источник на переднем плане
+    public var sourceActive = false
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
@@ -68,7 +82,13 @@ public struct IslandModel: Equatable, Sendable {
     public var base: Surface {
         guard config.compactAtRest, !isFullscreen else { return .idle }
         if calendarLive { return .calendar }
-        return hasMedia ? .compact : .idle
+        return showsMedia ? .compact : .idle
+    }
+
+    /// Музыка в покое: трек есть, Now Playing включён, пауза не дольше Idle duration, источник не на переднем плане
+    public var showsMedia: Bool {
+        let rules = config.nowPlaying
+        return hasMedia && rules.isEnabled && !mediaIdle && !(rules.hidesWhileSourceActive && sourceActive)
     }
 
     /// Повтор того же вида заменяет ждущее
@@ -121,6 +141,8 @@ public enum IslandMachine {
         public var alerts = AlertRules()
         /// Display / Sound → Duration: 1, 1.5 или 2 с (ui-inspection 1.6, 1.7)
         public var hudDurations = HUDDurations()
+        /// Now Playing: пауза, Quick Peek, источник на переднем плане
+        public var nowPlaying = NowPlayingRules()
 
         public init(
             hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
@@ -167,6 +189,9 @@ public enum IslandMachine {
         case .hoverExited: model.config.hoverOpensPlayer ? leave(&model) : close(&model)
         case .clickedOutside: close(&model)
         case let .fullscreenChanged(on): fullscreenChanged(&model, on)
+        case let .playbackChanged(playing): playbackChanged(&model, playing)
+        case let .sourceActiveChanged(active): sourceActiveChanged(&model, active)
+        case let .baseChanged(old): baseChanged(&model, from: old)
         case let .timerFired(id): timerFired(&model, id)
         }
     }
@@ -178,22 +203,30 @@ public enum IslandMachine {
 
     private static func trackChanged(_ m: inout IslandModel) -> [IslandEffect] {
         m.hasMedia = true
+        // новый трек — снова активность: пауза до него не в счёт. Если он на паузе, store пришлёт playbackChanged(false)
+        m.isPlaying = true
+        m.mediaIdle = false
         // после сжатия остров вернётся в покой, а покой зависит от музыки
         if let pending = m.pending, isRest(pending) { m.pending = m.base }
+        let rules = m.config.nowPlaying
         switch m.surface {
         case .idle where m.isFullscreen:
             // в полноэкранном музыка только запоминается: компакт появится после выхода
             return []
         case .idle where m.pending == nil && m.config.compactAtRest:
+            // Now Playing выключен или источник на переднем плане: трек только запоминается
+            guard m.showsMedia else { return [] }
             m.surface = .compact
             return [.animate(.compactIn)]
         case .idle where m.pending == nil:
             // без компакта в покое смена трека коротко показывает peek и уходит обратно в форму выреза
+            guard m.showsMedia, rules.quickPeek else { return [] }
             m.surface = .peek
-            return [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek)]
+            return [.animate(.peekOpen), .schedule(.peekEnd, after: rules.peekDuration)]
         case .compact where m.pending == nil:
+            guard rules.quickPeek else { return [] }
             m.surface = .peek
-            return [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek)]
+            return [.animate(.peekOpen), .schedule(.peekEnd, after: rules.peekDuration)]
         default:
             // peek не перезапускаем. При компакте календаря и в остальных состояниях меняется только контент
             return []
@@ -223,11 +256,56 @@ public enum IslandMachine {
 
     private static func mediaCleared(_ m: inout IslandModel) -> [IslandEffect] {
         m.hasMedia = false
+        m.isPlaying = false
+        m.mediaIdle = false
         if let pending = m.pending, isRest(pending) { m.pending = m.base }
         switch m.surface {
         case .compact, .peek:
             m.surface = .idle
             return [.cancel(.peekEnd), .animate(.compactOut)]
+        default:
+            return []
+        }
+    }
+
+    /// Пауза ставит таймер Idle duration, play снимает его. Play после ухода в вырез возвращает компакт,
+    /// play в компакте — peek (When media changes)
+    private static func playbackChanged(_ m: inout IslandModel, _ playing: Bool) -> [IslandEffect] {
+        guard m.hasMedia, m.isPlaying != playing else { return [] }
+        m.isPlaying = playing
+        guard playing else { return [.schedule(.mediaIdle, after: m.config.nowPlaying.idleDelay)] }
+        let old = m.base
+        let wasIdle = m.mediaIdle
+        m.mediaIdle = false
+        if wasIdle { return [.cancel(.mediaIdle)] + baseChanged(&m, from: old) }
+        let rules = m.config.nowPlaying
+        guard m.surface == .compact, m.pending == nil, rules.quickPeek, rules.peeksOnPlayback else { return [.cancel(.mediaIdle)] }
+        m.surface = .peek
+        return [.cancel(.mediaIdle), .animate(.peekOpen), .schedule(.peekEnd, after: rules.peekDuration)]
+    }
+
+    private static func sourceActiveChanged(_ m: inout IslandModel, _ active: Bool) -> [IslandEffect] {
+        guard m.sourceActive != active else { return [] }
+        let old = m.base
+        m.sourceActive = active
+        return baseChanged(&m, from: old)
+    }
+
+    /// Покой сменился не из-за трека и не из-за календаря: пауза дольше Idle duration, источник на переднем плане,
+    /// настройки, свайп по компакту. Остров в прежнем покое переходит в новый, как при смене окна календаря.
+    /// Peek в новом покое «форма выреза» уходит сразу, его таймер снимается
+    private static func baseChanged(_ m: inout IslandModel, from old: Surface) -> [IslandEffect] {
+        if let pending = m.pending, isRest(pending) { m.pending = m.base }
+        guard old != m.base, m.pending == nil else { return [] }
+        switch m.surface {
+        case .peek where m.base == .idle:
+            m.surface = .idle
+            return [.cancel(.peekEnd), .animate(.compactOut)]
+        case .calendarPeek where m.base == .idle:
+            m.surface = .idle
+            return [.cancel(.calendarPeekEnd), .animate(.compactOut)]
+        case _ where m.surface == old:
+            return rest(&m, from: old)
         default:
             return []
         }
@@ -534,6 +612,11 @@ public enum IslandMachine {
             guard m.surface == .calendarPeek else { return [] }
             m.surface = .calendar
             return [.animate(.calendarPeekClose)]
+        case .mediaIdle:
+            guard m.hasMedia, !m.isPlaying, !m.mediaIdle else { return [] }
+            let old = m.base
+            m.mediaIdle = true
+            return baseChanged(&m, from: old)
         }
     }
 

@@ -46,10 +46,15 @@ final class IslandStore {
         model = IslandModel(config: config)
     }
 
-    /// Режим машины. Demo-прогон переключает на .alcove: эталон сверки записан с поведением Alcove
+    /// Режим машины. Demo-прогон переключает на .alcove: эталон сверки записан с поведением Alcove.
+    /// Настройки могут сменить покой (Now Playing выключен): машина переводит остров сама
     var config: IslandMachine.Config {
         get { model.config }
-        set { model.config = newValue }
+        set {
+            let old = model.base
+            model.config = newValue
+            if model.base != old { send(.baseChanged(from: old)) }
+        }
     }
 
     var spec: IslandShapeSpec {
@@ -170,8 +175,10 @@ final class IslandStore {
         case let .newTrack(info):
             nowPlaying = info
             send(.trackChanged)
+            if !info.isPlaying { send(.playbackChanged(false)) }
         case let .updated(info):
             nowPlaying = info
+            if info.isPlaying != model.isPlaying { send(.playbackChanged(info.isPlaying)) }
         case .cleared:
             nowPlaying = nil
             send(.mediaCleared)

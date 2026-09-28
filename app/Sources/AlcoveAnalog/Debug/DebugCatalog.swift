@@ -43,6 +43,11 @@ enum DebugCatalog {
                 guard let info = store.nowPlaying else { return }
                 store.apply(.newTrack(info))
             }),
+            // источник музыки на переднем плане без переключения приложений: для Hide while source app is active
+            .action(DebugAction(id: "music.source-active", title: "Toggle Source App Active",
+                                isOn: { store.model.sourceActive }) {
+                store.send(.sourceActiveChanged(!store.model.sourceActive))
+            }),
             .separator,
             .action(DebugAction(id: "music.clear", title: "Clear Track") { store.apply(.cleared) }),
         ])

@@ -19,6 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyTap: MediaKeyTap?
     private var trustTimer: Timer?
     private var fullscreen: FullscreenMonitor?
+    private var sourceActivity: SourceActivityMonitor?
+    private var frontmostBundleID: String?
     private var calendar: EventKitCalendarSource?
     private lazy var calendarClock = CalendarClock(store: store)
     private var power: PowerSource?
@@ -71,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window = IslandWindowController(store: store, menu: statusItem.menu)
         window?.tuning = settings.notchTuning
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
-            // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
+            // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startSourceActivity, startNowPlaying
             // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
             // громкости/яркости), startKeyTap
             log.info("demo mode after \(delay, privacy: .public) s")
@@ -79,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         startFullscreenMonitor()
+        startSourceActivity()
         startNowPlaying()
         startPlayerActions()
         startCalendar()
@@ -144,6 +147,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fullscreen = monitor
     }
 
+    /// Источник музыки на переднем плане: сверяется при смене приложения и при смене трека
+    private func updateSourceActive() {
+        let active = frontmostBundleID != nil && frontmostBundleID == store.nowPlaying?.bundleID
+        store.send(.sourceActiveChanged(active))
+    }
+
+    private func startSourceActivity() {
+        let monitor = SourceActivityMonitor { [weak self] bundleID in
+            self?.frontmostBundleID = bundleID
+            self?.updateSourceActive()
+        }
+        monitor.start()
+        sourceActivity = monitor
+    }
+
     private func startNowPlaying() {
         // kill -9 и падение не дают выйти штатно: сироты прошлых запусков гасим здесь
         let stale = StaleAdapters.terminate()
@@ -153,8 +171,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         let source = AdapterNowPlayingSource(paths: paths)
-        tasks.append(Task { [store] in
-            for await change in source.changes { store.apply(change) }
+        tasks.append(Task { [weak self, store] in
+            for await change in source.changes {
+                store.apply(change)
+                self?.updateSourceActive()
+            }
         })
         source.start()
         nowPlaying = source

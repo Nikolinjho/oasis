@@ -187,4 +187,20 @@ struct AppSettingsTests {
         #expect(settings.appearance.hud(.brightness) == HUDAppearance(style: .accent, hidesLabel: true, speed: .instant))
         #expect(AppSettings(defaults: defaults).soundHUDStyle == .white)
     }
+
+    @Test("Now Playing: по умолчанию как у Alcove, правила уходят в машину")
+    func nowPlayingRules() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.nowPlayingEnabled && settings.quickPeek && settings.peekOnMediaChange)
+        #expect(!settings.hideWhileSourceActive)
+        #expect(settings.idleDuration == 3 && settings.peekDuration == 2)
+        #expect(settings.machineConfig(from: .user).nowPlaying == NowPlayingRules())
+        settings.idleDuration = 0
+        settings.peekDuration = 5
+        settings.hideWhileSourceActive = true
+        let rules = settings.machineConfig(from: .user).nowPlaying
+        #expect(rules.idleDelay == .zero && rules.peekDuration == .seconds(5) && rules.hidesWhileSourceActive)
+    }
 }

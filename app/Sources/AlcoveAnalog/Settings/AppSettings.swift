@@ -45,6 +45,12 @@ final class AppSettings: ObservableObject {
         static let displayHUDPercentage = "displayHUDPercentage"
         static let displayHUDHideLabel = "displayHUDHideLabel"
         static let displayHUDSpeed = "displayHUDSpeed"
+        static let nowPlayingEnabled = "nowPlayingEnabled"
+        static let idleDuration = "idleDuration"
+        static let quickPeek = "quickPeek"
+        static let peekOnMediaChange = "peekOnMediaChange"
+        static let peekDuration = "peekDuration"
+        static let hideWhileSourceActive = "hideWhileSourceActive"
     }
 
     var onChange: () -> Void = {}
@@ -160,6 +166,16 @@ final class AppSettings: ObservableObject {
     @Published var displayHUDPercentage: Bool { didSet { save(oldValue, displayHUDPercentage, Key.displayHUDPercentage) } }
     @Published var displayHUDHideLabel: Bool { didSet { save(oldValue, displayHUDHideLabel, Key.displayHUDHideLabel) } }
     @Published var displayHUDSpeed: HUDSpeed { didSet { saveRaw(oldValue, displayHUDSpeed, Key.displayHUDSpeed) } }
+    // Now Playing (ui-inspection 1.8)
+    @Published var nowPlayingEnabled: Bool { didSet { save(oldValue, nowPlayingEnabled, Key.nowPlayingEnabled) } }
+    /// Idle duration, 0…10 с, шаг 1
+    @Published var idleDuration: Double { didSet { save(oldValue, idleDuration, Key.idleDuration) } }
+    @Published var quickPeek: Bool { didSet { save(oldValue, quickPeek, Key.quickPeek) } }
+    /// When media changes
+    @Published var peekOnMediaChange: Bool { didSet { save(oldValue, peekOnMediaChange, Key.peekOnMediaChange) } }
+    /// Peek duration, 1…6 с, шаг 1
+    @Published var peekDuration: Double { didSet { save(oldValue, peekDuration, Key.peekDuration) } }
+    @Published var hideWhileSourceActive: Bool { didSet { save(oldValue, hideWhileSourceActive, Key.hideWhileSourceActive) } }
 
     /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
     var notchTuning: NotchTuning {
@@ -221,6 +237,12 @@ final class AppSettings: ObservableObject {
         displayHUDPercentage = Self.read(defaults, Key.displayHUDPercentage, false)
         displayHUDHideLabel = Self.read(defaults, Key.displayHUDHideLabel, false)
         displayHUDSpeed = Self.readRaw(defaults, Key.displayHUDSpeed, HUDSpeed.fast)
+        nowPlayingEnabled = Self.read(defaults, Key.nowPlayingEnabled, true)
+        idleDuration = Self.read(defaults, Key.idleDuration, 3.0)
+        quickPeek = Self.read(defaults, Key.quickPeek, true)
+        peekOnMediaChange = Self.read(defaults, Key.peekOnMediaChange, true)
+        peekDuration = Self.read(defaults, Key.peekDuration, 2.0)
+        hideWhileSourceActive = Self.read(defaults, Key.hideWhileSourceActive, false)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -278,6 +300,14 @@ final class AppSettings: ObservableObject {
         config.alerts = alertRules
         config.hudDurations.volume = .seconds(soundHUDDuration)
         config.hudDurations.brightness = .seconds(displayHUDDuration)
+        var nowPlaying = NowPlayingRules()
+        nowPlaying.isEnabled = nowPlayingEnabled
+        nowPlaying.idleDelay = .seconds(idleDuration)
+        nowPlaying.quickPeek = quickPeek
+        nowPlaying.peeksOnPlayback = peekOnMediaChange
+        nowPlaying.peekDuration = .seconds(peekDuration)
+        nowPlaying.hidesWhileSourceActive = hideWhileSourceActive
+        config.nowPlaying = nowPlaying
         return config
     }
 }
