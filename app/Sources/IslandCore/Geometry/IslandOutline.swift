@@ -45,7 +45,10 @@ public enum IslandOutline {
     }
 
     /// Ширина тёмной области контура на глубине depth от края экрана: тело плюс заполненная часть ушек.
-    /// Так остров меряет capture/tools/track.py: строка пикселей 2 при 2x, её середина на 1.25 pt
+    /// Так остров меряет capture/tools/track.py: строка пикселей 2 при 2x, её середина на 1.25 pt.
+    /// Модель — граница по 50% покрытию пикселя (CGPath.contains), а track.py считает тёмным пиксель
+    /// < 12 из 255 (примерно 70–95% покрытия на антиалиасинге): в записи ширина читается уже,
+    /// обычно на 0.6–1.5 pt — укладывается в tolerance.sizePt = 2 из capture/targets.json
     public static func rowWidth(size: CGSize, bottomRadius: CGFloat, shoulder: CGFloat, depth: CGFloat) -> CGFloat {
         let outline = path(size: size, bottomRadius: bottomRadius, shoulder: shoulder)
         let total = size.width + 2 * shoulder

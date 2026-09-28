@@ -32,8 +32,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
-            // живые источники мешали бы записи: музыка, клавиши и полноэкранный режим не стартуют
-            DebugScript.run(DemoSequence.steps(store: store), after: delay)
+            // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
+            // (адаптер медиа), startPlayerActions, startLevels (CoreAudio HUD громкости/яркости), startKeyTap
+            log.info("demo mode after \(delay, privacy: .public) s")
+            DemoSequence.run(store: store, after: delay)
             return
         }
         startFullscreenMonitor()

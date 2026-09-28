@@ -16,9 +16,14 @@ def evaluate(T, W, targets):
     W = np.asarray(W, dtype=float)
     anchor, tol = targets["anchor"], targets["tolerance"]
 
-    # плечи острова и чёрный вырез делают ширину покоя в записи больше выреза: вычитаем разницу
+    # anchor.fromWidth уже посчитан по rowWidth (тело плюс ушки на строке track.py), так что для
+    # наших записей correction обычно ~0: правит только дрейф самой записи (шум трекера, другой notch
+    # на машине записи), а не системную разницу тела и выреза, как было до вывода целей из геометрии
     baseline = float(np.median(W[T < T[0] + 0.5]))
-    W = W - (baseline - anchor["fromWidth"])
+    correction = baseline - anchor["fromWidth"]
+    if abs(correction) > 1:
+        print(f"warning: baseline на {correction:+.2f} pt от anchor.fromWidth — проверь notch или запись", file=sys.stderr)
+    W = W - correction
 
     moved = np.where(W > anchor["fromWidth"] + 2)[0]
     if len(moved) == 0:
