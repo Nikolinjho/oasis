@@ -24,6 +24,8 @@ final class IslandStore {
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
     /// Звук уведомления: AppDelegate подключает сюда SoundPlayer.play, если в настройках включён Play sounds
     @ObservationIgnored var onSound: (IslandSound) -> Void = { _ in }
+    /// Кнопка Join на карточке события: AppDelegate открывает ссылку
+    @ObservationIgnored var onJoin: (URL) -> Void = { _ in }
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}
     /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной): AppDelegate кормит ею CalendarClock

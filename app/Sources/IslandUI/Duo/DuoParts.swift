@@ -156,6 +156,7 @@ struct DateBadge: View {
 /// Карточка 138×28: полупрозрачный фон и полоска в цвете календаря, название и время тем же цветом
 struct EventCard: View {
     let event: CalendarEvent
+    var onJoin: (() -> Void)? = nil
 
     var body: some View {
         let color = Color(event.color)
@@ -174,6 +175,19 @@ struct EventCard: View {
             }
             .foregroundStyle(color)
             Spacer(minLength: 0)
+            if let onJoin {
+                // у Alcove Join — в контекстном меню, у нас кнопка на карточке (решение 27.09)
+                Button(action: onJoin) {
+                    Image(systemName: "video.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(IslandPalette.background)
+                        .frame(width: 22, height: 18)
+                        .background(Capsule().fill(color))
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 5)
+                .help("Join")
+            }
         }
         // отступы и прозрачность фона не мерили, оценка по кадру duo-event.jpg
         .padding(.vertical, 3)

@@ -11,12 +11,14 @@ public struct IslandView: View {
     let calendarEvent: CalendarEvent?
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
+    let onJoin: (URL) -> Void
 
     public init(
         model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
         agenda: DayAgenda = .empty,
         calendarEvent: CalendarEvent? = nil,
-        onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void
+        onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
+        onJoin: @escaping (URL) -> Void = { _ in }
     ) {
         self.model = model
         self.spec = spec
@@ -26,6 +28,7 @@ public struct IslandView: View {
         self.calendarEvent = calendarEvent
         self.onClick = onClick
         self.onAction = onAction
+        self.onJoin = onJoin
     }
 
     public var body: some View {
@@ -66,7 +69,7 @@ public struct IslandView: View {
                 .transition(.slot)
         case .expanded:
             // раскрытый по умолчанию — Duo, как в Alcove (решение 27.09). Полный плеер — свайпом, P1
-            DuoView(info: nowPlaying, agenda: agenda, onAction: onAction)
+            DuoView(info: nowPlaying, agenda: agenda, onJoin: onJoin, onAction: onAction)
                 .id(ContentID.expanded)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):

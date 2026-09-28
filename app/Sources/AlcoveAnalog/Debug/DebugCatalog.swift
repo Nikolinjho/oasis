@@ -79,6 +79,14 @@ enum DebugCatalog {
                     isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))])
                 store.send(.clicked)
             }),
+            .action(DebugAction(id: "calendar.duo-meet", title: "Duo With Fake Meet Call") {
+                let now = Date()
+                store.pinDebugEvents([CalendarEvent(
+                    id: "fake-meet", title: "Fake Call", start: now.addingTimeInterval(-60), end: now.addingTimeInterval(1740),
+                    isAllDay: false, color: RGB(red: 0.2, green: 0.5, blue: 1),
+                    notes: "Join: https://meet.google.com/abc-defg-hij")])
+                store.send(.clicked)
+            }),
             .action(DebugAction(id: "calendar.duo-empty", title: "Duo Empty Day") {
                 store.pinDebugEvents([])
                 store.send(.clicked)

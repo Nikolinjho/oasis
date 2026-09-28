@@ -165,6 +165,7 @@ struct IslandRootView: View {
             agenda: store.agenda,
             calendarEvent: store.calendarEvent,
             onClick: { store.send(.clicked) },
-            onAction: { store.onAction($0) })
+            onAction: { store.onAction($0) },
+            onJoin: { store.onJoin($0) })
     }
 }

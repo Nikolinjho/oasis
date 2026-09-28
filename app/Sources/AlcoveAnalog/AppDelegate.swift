@@ -36,6 +36,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self, settings.playSounds else { return }
             sounds.play(sound)
         }
+        store.onJoin = { [log] url in
+            log.info("join \(url.host() ?? "", privacy: .public)")
+            NSWorkspace.shared.open(url)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
