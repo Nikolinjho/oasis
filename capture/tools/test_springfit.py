@@ -93,10 +93,12 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(len(result["rows"]), len(TARGETS["segments"]))
 
     def test_idle_offset_is_corrected(self):
-        """Плечи делают покой в записи шире выреза: поправка вычитается"""
+        """anchor.fromWidth уже посчитан по rowWidth (тело плюс ушки): смоделированный сдвиг +6 pt —
+        это дрейф самой записи (шум трекера, другой notch на машине записи), не системная разница
+        тела и выреза. Сверка всё равно вычитает поправку и возвращает данные к нашей геометрии"""
         ts, ws = synthetic_track(TARGETS, extra=6)
         result = evaluate(ts, ws, TARGETS)
-        self.assertAlmostEqual(result["baseline"], 192, delta=0.01)
+        self.assertAlmostEqual(result["baseline"], TARGETS["anchor"]["fromWidth"] + 6, delta=0.01)
         self.assertTrue(all(r["ok"] for r in result["rows"]))
 
     def test_interrupted_segment_checks_against_reference(self):
