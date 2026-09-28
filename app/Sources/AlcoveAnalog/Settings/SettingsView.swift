@@ -112,6 +112,9 @@ struct GeneralPage: View {
                             launchAtLogin = LoginItem.isEnabled
                         }
                     }))
+                RowDivider()
+                ToggleRow(title: "Hide menu bar icon", info: "Right-click the island to open the menu",
+                          isOn: $settings.hideMenuBarIcon)
             }
             SettingsCard(title: "Behaviour") {
                 ToggleRow(title: "Play sounds", isOn: $settings.playSounds)

@@ -16,6 +16,7 @@ final class AppSettings: ObservableObject {
         static let builtInNotchWidth = "builtInNotchWidth"
         static let builtInNotchHeight = "builtInNotchHeight"
         static let playSounds = "playSounds"
+        static let hideMenuBarIcon = "hideMenuBarIcon"
     }
 
     var onChange: () -> Void = {}
@@ -61,6 +62,15 @@ final class AppSettings: ObservableObject {
             onChange()
         }
     }
+    /// General → Hide menu bar icon (ключ Alcove settings.general.hideMenuBarIcon). Меню остаётся по правому
+    /// клику на острове: иконку в menu bar часто закрывает компакт
+    @Published var hideMenuBarIcon: Bool {
+        didSet {
+            guard oldValue != hideMenuBarIcon else { return }
+            defaults.set(hideMenuBarIcon, forKey: Key.hideMenuBarIcon)
+            onChange()
+        }
+    }
 
     /// Последний вырез встроенного экрана: размер виртуального выреза, когда крышка закрыта.
     /// Служебное значение: onChange не зовёт
@@ -88,6 +98,7 @@ final class AppSettings: ObservableObject {
         forceSimulatedNotch = defaults.bool(forKey: Key.forceSimulatedNotch)
         display = DisplayChoice(storageValue: defaults.string(forKey: Key.display))
         playSounds = defaults.object(forKey: Key.playSounds) as? Bool ?? true
+        hideMenuBarIcon = defaults.bool(forKey: Key.hideMenuBarIcon)
     }
 
     func machineConfig(from base: IslandMachine.Config) -> IslandMachine.Config {

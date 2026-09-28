@@ -61,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     dismiss: { [calendarClock] id in calendarClock.dismiss(id) }))
             })
         self.statusItem = statusItem
+        statusItem.setIconHidden(settings.hideMenuBarIcon)
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
             // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
@@ -90,6 +91,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Выбор экрана (DisplayChoice) пока не влияет на окно — это отдельная задача
     private func applySettings() {
         store.config = settings.machineConfig(from: store.config)
+        statusItem?.setIconHidden(settings.hideMenuBarIcon)
+    }
+
+    /// Повторный запуск (open -a, Spotlight) открывает настройки: с Hide menu bar icon при закрытой крышке
+    /// иначе до них не добраться
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        settingsWindow.show()
+        return false
     }
 
     /// alcove-analog://debug/<id>: то же действие, что пункт меню Debug

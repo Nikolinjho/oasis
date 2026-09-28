@@ -93,6 +93,19 @@ struct AppSettingsTests {
         #expect(defaults.object(forKey: AppSettings.Key.builtInNotchHeight) == nil)
     }
 
+    @Test("Hide menu bar icon: по умолчанию выкл, переживает перезапуск, зовёт onChange")
+    func hideMenuBarIcon() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(!settings.hideMenuBarIcon)
+        var calls = 0
+        settings.onChange = { calls += 1 }
+        settings.hideMenuBarIcon = true
+        #expect(calls == 1)
+        #expect(AppSettings(defaults: defaults).hideMenuBarIcon)
+    }
+
     @Test("Hover-настройки попадают в конфиг машины, темп остаётся от базы")
     func machineConfig() {
         let (name, defaults) = Self.freshDefaults()

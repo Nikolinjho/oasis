@@ -63,6 +63,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         item.menu = menu
     }
 
+    /// Hide menu bar icon: NSStatusItem остаётся живым, меню по-прежнему открывается правым кликом по острову
+    func setIconHidden(_ hidden: Bool) {
+        item.isVisible = !hidden
+    }
+
     func menuWillOpen(_ menu: NSMenu) {
         launchAtLogin.state = LoginItem.isEnabled ? .on : .off
         grantAccessibility.isHidden = isTrusted()
