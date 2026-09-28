@@ -56,6 +56,21 @@ def synthetic_track(targets, extra=0.0, fps=60, lead=2.0, override=None):
     return ts, ws
 
 
+def shifted_track(shifts, idle_gap=0.0, override=None, lead=2.0):
+    """Трек из targets, где сегменты из shifts стартуют на заданные секунды позже номинала
+    (задержка шага или таймера), квантованный до 0.5 pt. idle_gap — сколько кадров перед
+    первым движением выпало, как у записи статичного экрана"""
+    shifted = copy.deepcopy(TARGETS)
+    for s in shifted["segments"]:
+        s["start"] += shifts.get(s["name"], 0.0)
+        s["end"] += shifts.get(s["name"], 0.0)
+    ts, ws = synthetic_track(shifted, lead=lead, override=override)
+    ws = np.round(ws * 2) / 2
+    start = lead + TARGETS["anchor"]["demoTime"]
+    keep = ~((ts > start - idle_gap) & (ts < start))
+    return ts[keep], ws[keep]
+
+
 class SpringFitTests(unittest.TestCase):
     def test_recovers_open_spring(self):
         """Подгонка восстанавливает пружину раскрытия 175/16"""
@@ -136,23 +151,49 @@ class CompareTests(unittest.TestCase):
     def test_step_latency_and_idle_gap_pass(self):
         """Шаги demo приходят с задержкой (запись 28.09: HUD и клик на 0.07–0.1 с раньше, чем
         предсказывал общий offset), а перед первым движением запись статичного экрана роняет
-        ~90 мс кадров. Сверка ищет старт каждого сегмента по факту и не режет начало хода"""
-        shifted = copy.deepcopy(TARGETS)
-        for s in shifted["segments"]:
-            if s["name"] in ("сжатие перед HUD", "раскрытие в HUD", "раскрытие плеера"):
-                s["start"] -= 0.09
-                s["end"] -= 0.09
-            if s["name"] in ("сжатие после HUD", "раскрытие в компакт"):
-                s["start"] += 0.12
-                s["end"] += 0.12
-        ts, ws = synthetic_track(shifted)
-        ws = np.round(ws * 2) / 2
-        lead = 2.0
-        keep = ~((ts > lead + TARGETS["anchor"]["demoTime"] - 0.09) & (ts < lead + TARGETS["anchor"]["demoTime"]))
-        result = evaluate(ts[keep], ws[keep], TARGETS)
+        ~90 мс кадров. Сверка ищет старт каждого сегмента по факту и не режет начало хода.
+        Сдвиги в пределах LAG_TOL от медианы — это не ошибка тайминга"""
+        ts, ws = shifted_track({
+            "сжатие перед HUD": -0.09, "раскрытие в HUD": -0.09, "раскрытие плеера": -0.07,
+            "сжатие после HUD": -0.04, "раскрытие в компакт": -0.04,
+        }, idle_gap=0.09)
+        result = evaluate(ts, ws, TARGETS)
         failed = [r["name"] for r in result["rows"] if not r["ok"]]
         self.assertEqual(failed, [], f"провалились: {failed}")
 
+    def test_late_hud_hide_fails(self):
+        """HUD держится на 0.25 с дольше (hudVisible): сжатие после HUD стартует позже остальных
+        сегментов прогона — это ошибка тайминга, хотя пружины верные"""
+        ts, ws = shifted_track({"сжатие после HUD": 0.25, "раскрытие в компакт": 0.25})
+        rows = {r["name"]: r for r in evaluate(ts, ws, TARGETS)["rows"]}
+        self.assertFalse(rows["сжатие после HUD"]["ok"])
+        self.assertEqual(rows["сжатие после HUD"].get("timing"), "старт")
+
+    def test_wrong_grow_timer_fails(self):
+        """Таймер grow 0.43 с вместо 0.33: пауза между стартами сжатия и раскрытия в HUD
+        выходит за 2 кадра"""
+        ts, ws = shifted_track({"раскрытие в HUD": 0.10})
+        row = next(r for r in evaluate(ts, ws, TARGETS)["rows"] if r["name"] == "раскрытие в HUD")
+        self.assertFalse(row["ok"])
+        self.assertAlmostEqual(row["chain"], 0.43, delta=1 / 30)
+
+    def test_lag_does_not_hide_wrong_spring(self):
+        """Негативный контроль: сегмент со сдвигом старта в допуске и чужой пружиной проваливается
+        по пружине, а не проходит из-за того, что окно ищется по факту"""
+        ts, ws = shifted_track({"раскрытие плеера": -0.09},
+                               override={"name": "раскрытие плеера", "stiffness": 250, "damping": 32})
+        row = next(r for r in evaluate(ts, ws, TARGETS)["rows"] if r["name"] == "раскрытие плеера")
+        self.assertFalse(row["ok"])
+        self.assertNotIn("timing", row)
+
+    def test_start_beyond_search_is_not_mid_motion(self):
+        """Старт на 0.35 с раньше номинала (больше SEARCH): окно поиска открывается посреди хода,
+        сверка отходит назад к кадру покоя — x0 не середина движения — и проваливает тайминг"""
+        ts, ws = shifted_track({"схлопывание": -0.35})
+        row = next(r for r in evaluate(ts, ws, TARGETS)["rows"] if r["name"] == "схлопывание")
+        self.assertFalse(row["ok"])
+        self.assertEqual(row.get("timing"), "старт")
+        self.assertAlmostEqual(row["x0"], 366.1, delta=1)
 
 if __name__ == "__main__":
     unittest.main()
