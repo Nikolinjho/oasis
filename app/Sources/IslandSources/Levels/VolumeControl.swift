@@ -3,7 +3,16 @@ import CoreAudio
 import Foundation
 import os
 
-/// Устройство, на котором висят слушатели громкости и mute
+/// Громкость и mute выхода в момент уведомления
+struct VolumeState: Equatable {
+    let volume: Double?
+    let muted: Bool
+
+    /// Уровень для HUD: при mute — 0
+    var level: Double { muted ? 0 : volume ?? 0 }
+}
+
+/// Устройство, на котором висят слушатели громкости и mute, и последнее показанное состояние
 struct ListenedDevice: Equatable {
     struct Switch: Equatable {
         let attach: AudioObjectID
@@ -11,13 +20,23 @@ struct ListenedDevice: Equatable {
     }
 
     private(set) var current = AudioObjectID(kAudioObjectUnknown)
+    private var reported: VolumeState?
 
-    /// nil — устройство то же, делать нечего
-    mutating func switchTo(_ device: AudioObjectID) -> Switch? {
+    /// nil — устройство то же, делать нечего. baseline — состояние нового устройства: оно не событие
+    mutating func switchTo(_ device: AudioObjectID, baseline: VolumeState) -> Switch? {
         guard device != current else { return nil }
         let previous = current
         current = device
+        reported = baseline
         return Switch(attach: device, detach: previous == kAudioObjectUnknown ? nil : previous)
+    }
+
+    /// true — громкость или mute правда изменились, показываем HUD.
+    /// Только что подключённые AirPods шлют 2–4 уведомления о громкости с тем же уровнем (замер 28.09)
+    mutating func report(_ state: VolumeState) -> Bool {
+        guard state != reported else { return false }
+        reported = state
+        return true
     }
 }
 
@@ -27,18 +46,23 @@ public final class VolumeControl: @unchecked Sendable {
     public let changes: AsyncStream<Double>
     private let continuation: AsyncStream<Double>.Continuation
     private let onChange: AudioObjectPropertyListenerBlock
-    private let listened = OSAllocatedUnfairLock(initialState: ListenedDevice())
+    private let listened: OSAllocatedUnfairLock<ListenedDevice>
     private let log = SourceLog.logger("volume")
 
     public init() {
         let (stream, continuation) = AsyncStream.makeStream(of: Double.self, bufferingPolicy: .bufferingNewest(1))
         changes = stream
         self.continuation = continuation
-        onChange = { _, _ in continuation.yield(VolumeControl.currentLevel()) }
+        let listened = OSAllocatedUnfairLock(initialState: ListenedDevice())
+        self.listened = listened
+        onChange = { _, _ in
+            let state = VolumeControl.currentState()
+            if listened.withLock({ $0.report(state) }) { continuation.yield(state.level) }
+        }
 
         // дефолтный выход сменился (наушники, AirPlay, меню плеера): только переподписываемся на новое устройство.
         // HUD при смене не показываем, как и сама macOS (решение 28.09): он вытеснял компакт подключённых AirPods.
-        // Уровень нового устройства придёт с первым изменением громкости от его слушателя
+        // Уровень нового устройства запоминаем как исходный: HUD — только когда он правда сменится
         var defaultAddress = Self.address(kAudioHardwarePropertyDefaultOutputDevice, scope: kAudioObjectPropertyScopeGlobal)
         AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defaultAddress, .main) { [weak self] _, _ in
             self?.attach(to: Self.defaultDevice())
@@ -76,7 +100,8 @@ public final class VolumeControl: @unchecked Sendable {
 
     @discardableResult
     private func attach(to device: AudioObjectID) -> ListenedDevice.Switch? {
-        guard let change = listened.withLock({ $0.switchTo(device) }) else { return nil }
+        let baseline = Self.state(of: device)
+        guard let change = listened.withLock({ $0.switchTo(device, baseline: baseline) }) else { return nil }
         var volumeAddress = Self.volumeAddress
         var muteAddress = Self.muteAddress
         if let previous = change.detach {
@@ -126,8 +151,9 @@ public final class VolumeControl: @unchecked Sendable {
         return value != 0
     }
 
-    static func currentLevel() -> Double {
-        let device = defaultDevice()
-        return isMuted(device) ? 0 : volume(of: device) ?? 0
+    static func state(of device: AudioObjectID) -> VolumeState {
+        VolumeState(volume: volume(of: device), muted: isMuted(device))
     }
+
+    static func currentState() -> VolumeState { state(of: defaultDevice()) }
 }
