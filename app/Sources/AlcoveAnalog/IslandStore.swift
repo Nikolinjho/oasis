@@ -20,7 +20,7 @@ final class IslandStore {
     var notch = CGSize(width: 186, height: 32)
 
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
-    /// Звук уведомления: заглушка до задачи 2, где AppDelegate подключит сюда проигрывание, если звуки включены
+    /// Звук уведомления: AppDelegate подключает сюда SoundPlayer.play, если в настройках включён Play sounds
     @ObservationIgnored var onSound: (IslandSound) -> Void = { _ in }
     /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
     @ObservationIgnored var onSurfaceChange: () -> Void = {}

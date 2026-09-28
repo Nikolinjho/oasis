@@ -35,6 +35,7 @@ struct AppSettingsTests {
         #expect(settings.display == .main)
         #expect(!settings.forceSimulatedNotch)
         #expect(settings.builtInNotch == nil)
+        #expect(settings.playSounds)
     }
 
     @Test("Настройки переживают перезапуск, каждое изменение зовёт onChange")
@@ -49,6 +50,7 @@ struct AppSettingsTests {
         settings.forceSimulatedNotch = true
         settings.display = .named("DELL U2723QE")
         settings.builtInNotch = CGSize(width: 186, height: 32)
+        settings.playSounds = false
 
         let again = AppSettings(defaults: defaults)
         #expect(!again.expandOnHover)
@@ -56,8 +58,9 @@ struct AppSettingsTests {
         #expect(again.forceSimulatedNotch)
         #expect(again.display == .named("DELL U2723QE"))
         #expect(again.builtInNotch == CGSize(width: 186, height: 32))
+        #expect(!again.playSounds)
         // запомненный вырез — служебное значение, настройки он не меняет
-        #expect(calls == 4)
+        #expect(calls == 5)
     }
 
     @Test("Повторная запись того же значения onChange не зовёт")

@@ -100,6 +100,8 @@ struct GeneralPage: View {
                     }))
             }
             SettingsCard(title: "Behaviour") {
+                ToggleRow(title: "Play sounds", isOn: $settings.playSounds)
+                RowDivider()
                 ToggleRow(title: "Expand on hover", info: "Disables certain interactions", isOn: $settings.expandOnHover)
                 if settings.expandOnHover {
                     RowDivider()

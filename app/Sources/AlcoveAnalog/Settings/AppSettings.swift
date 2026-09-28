@@ -15,6 +15,7 @@ final class AppSettings: ObservableObject {
         static let display = "display"
         static let builtInNotchWidth = "builtInNotchWidth"
         static let builtInNotchHeight = "builtInNotchHeight"
+        static let playSounds = "playSounds"
     }
 
     var onChange: () -> Void = {}
@@ -52,6 +53,14 @@ final class AppSettings: ObservableObject {
             onChange()
         }
     }
+    /// Звуки уведомлений: календарь, низкий заряд, энергосбережение. По умолчанию вкл, как у Alcove
+    @Published var playSounds: Bool {
+        didSet {
+            guard oldValue != playSounds else { return }
+            defaults.set(playSounds, forKey: Key.playSounds)
+            onChange()
+        }
+    }
 
     /// Последний вырез встроенного экрана: размер виртуального выреза, когда крышка закрыта.
     /// Служебное значение: onChange не зовёт
@@ -78,6 +87,7 @@ final class AppSettings: ObservableObject {
         hoverDuration = defaults.object(forKey: Key.hoverDuration) as? Double ?? 0
         forceSimulatedNotch = defaults.bool(forKey: Key.forceSimulatedNotch)
         display = DisplayChoice(storageValue: defaults.string(forKey: Key.display))
+        playSounds = defaults.object(forKey: Key.playSounds) as? Bool ?? true
     }
 
     func machineConfig(from base: IslandMachine.Config) -> IslandMachine.Config {

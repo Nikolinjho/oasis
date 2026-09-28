@@ -22,6 +22,16 @@ else
     echo "Нет $ADAPTER: музыки не будет, запусти Scripts/fetch-adapter.sh" >&2
 fi
 
+# звуки Alcove: только для локальной сборки, в git их нет (assets/ в .gitignore)
+# в worktree папки assets нет: по умолчанию берём из основного клона
+SOUNDS="${ALCOVE_ASSETS:-$HOME/alcove-analog/assets}/sounds"
+if [ -d "$SOUNDS" ]; then
+    mkdir -p "$APP/Contents/Resources/Sounds"
+    cp "$SOUNDS/event.caf" "$SOUNDS/low-battery.caf" "$SOUNDS/low-power.caf" "$APP/Contents/Resources/Sounds/"
+else
+    echo "Нет $SOUNDS: уведомления будут без звука" >&2
+fi
+
 if security find-identity -p codesigning | grep -q "$IDENTITY"; then
     SIGN="$IDENTITY"
 else

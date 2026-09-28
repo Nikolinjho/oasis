@@ -7,6 +7,7 @@ import os
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = IslandStore()
     private let settings = AppSettings()
+    private let sounds = SoundPlayer()
     private lazy var settingsWindow = SettingsWindowController(settings: settings)
     private var window: IslandWindowController?
     private var statusItem: StatusItemController?
@@ -26,7 +27,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// При холодном запуске по ссылке (`open -g -a … "alcove-analog://…"`) AppKit доставляет
     /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
     func applicationWillFinishLaunching(_ notification: Notification) {
-        debugSections = DebugCatalog.sections(store: store, settings: settings)
+        debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds)
+        store.onSound = { [weak self] sound in
+            guard let self, settings.playSounds else { return }
+            sounds.play(sound)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

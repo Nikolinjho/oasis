@@ -5,13 +5,16 @@ import IslandSources
 /// Все отладочные действия по разделам. Новая поверхность приходит вместе со своим разделом или пунктом
 @MainActor
 enum DebugCatalog {
-    static func sections(store: IslandStore, settings: AppSettings? = nil) -> [DebugSection] {
+    static func sections(
+        store: IslandStore, settings: AppSettings? = nil, sounds: SoundPlayer = SoundPlayer()
+    ) -> [DebugSection] {
         let tracks = DemoTrackCursor()
         return [
             music(store, tracks),
             hud(store),
             calendar(store),
             battery(store),
+            sound(sounds),
             island(store),
             scenarios(store, tracks),
             timing(store, settings),
@@ -113,6 +116,12 @@ enum DebugCatalog {
                 store.send(.alertArrived(.lowBattery(level: 0.1)))
             }),
         ])
+    }
+
+    private static func sound(_ sounds: SoundPlayer) -> DebugSection {
+        DebugSection(title: "Sounds", entries: IslandSound.allCases.map { sound in
+            .action(DebugAction(id: "sound.\(sound.rawValue)", title: "Play \(sound.rawValue)") { sounds.play(sound) })
+        })
     }
 
     private static func island(_ store: IslandStore) -> DebugSection {
