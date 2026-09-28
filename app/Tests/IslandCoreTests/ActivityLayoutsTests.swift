@@ -44,7 +44,7 @@ struct ActivityLayoutsTests {
 
     @Test("Напоминание: минуты справа и строка «название · in N min»")
     func reminder() {
-        let layout = ActivityLayouts.reminder(CalendarReminder(title: "Созвон", minutes: 15, color: Self.event.color))
+        let layout = ActivityLayouts.reminder(CalendarReminder(eventID: "e", title: "Созвон", minutes: 15, color: Self.event.color))
         #expect(layout.indicator == .text("15m", color: ActivityLayouts.calendarRed))
         #expect(layout.line == .init(bar: Self.event.color, title: "Созвон", trailingSymbol: "clock", trailing: "in 15 min"))
     }
@@ -52,7 +52,7 @@ struct ActivityLayoutsTests {
     @Test("Самый широкий индикатор напоминания — самое раннее напоминание, за 15 минут")
     func reminderWidestIndicator() {
         let earliest = CalendarSchedule.reminderMinutes.max()!
-        let layout = ActivityLayouts.reminder(CalendarReminder(title: "Созвон", minutes: earliest, color: Self.event.color))
+        let layout = ActivityLayouts.reminder(CalendarReminder(eventID: "e", title: "Созвон", minutes: earliest, color: Self.event.color))
         #expect(layout.indicator == ActivityLayouts.reminderWidestIndicator)
     }
 }

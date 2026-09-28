@@ -72,7 +72,7 @@ struct AlertViewTests {
     @Test("Снимок напоминания за 15 минут")
     func reminderSnapshot() throws {
         let notch = CGSize(width: 186, height: 32)
-        let alert = IslandAlert.calendarReminder(CalendarReminder(title: "Fake Call", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+        let alert = IslandAlert.calendarReminder(CalendarReminder(eventID: "fake-remind", title: "Fake Call", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
         let size = IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: IslandView.reminderIndicatorWidth)
         let view = ZStack(alignment: .top) {
             IslandShape(spec: IslandShapeSpec(size: size, bottomRadius: IslandGeometry.bottomRadius(forHeight: size.height)), shoulder: 0)

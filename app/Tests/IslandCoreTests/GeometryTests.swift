@@ -246,7 +246,7 @@ struct GeometryTests {
         #expect(!IslandGeometry.pointerInside(above, body: idle.body, island: idle.island, openedFrom: nil))
     }
 
-    static let reminder = IslandAlert.calendarReminder(CalendarReminder(title: "Созвон", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+    static let reminder = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
 
     @Test("Напоминание: 270×73.5 на обычном вырезе, ушко — оценка по высоте, как у peek календаря")
     func reminderSize() {

@@ -14,15 +14,17 @@ public enum CalendarSchedule {
     /// Отметку старше этого (Mac спал, таймер опоздал) уже не показываем
     public static let staleAfter: TimeInterval = 60
 
-    /// Событие окна календаря: самое раннее из тех, что начнутся в ближайшую минуту или уже идут
+    /// Событие окна календаря: из тех, что начнутся в ближайшую минуту или уже идут, — начавшееся позже всех.
+    /// Событие внутри идущего забирает окно со своей минуты до начала, после его конца окно возвращается
+    /// к идущему. События по началу (DayAgenda.make), завтрашние после сегодняшних
     public static func liveEvent(in agenda: DayAgenda, at now: Date) -> CalendarEvent? {
-        agenda.today.first { $0.start.addingTimeInterval(-liveLead) <= now && now < $0.end }
+        events(agenda).last { $0.start.addingTimeInterval(-liveLead) <= now && now < $0.end }
     }
 
     public static func crossings(in agenda: DayAgenda, from previous: Date, to now: Date) -> [CalendarTick] {
         guard now > previous else { return [] }
         var ticks: [CalendarTick] = []
-        for event in agenda.today {
+        for event in events(agenda) {
             for minutes in reminderMinutes where crossed(reminderMark(event, minutes), previous, now) {
                 ticks.append(.reminder(event, minutes: minutes))
             }
@@ -33,13 +35,18 @@ public enum CalendarSchedule {
 
     /// Ближайшая граница после now: по ней часы просыпаются
     public static func nextBoundary(in agenda: DayAgenda, after now: Date) -> Date? {
-        agenda.today
+        events(agenda)
             .flatMap { event in
                 reminderMinutes.map { reminderMark(event, $0) }
                     + [event.start.addingTimeInterval(-liveLead), event.start, event.end]
             }
             .filter { $0 > now }
             .min()
+    }
+
+    /// Сегодня и завтра: у события в начале суток (00:05) напоминание и окно наступают ещё накануне
+    private static func events(_ agenda: DayAgenda) -> [CalendarEvent] {
+        agenda.today + agenda.tomorrow
     }
 
     static func reminderMark(_ event: CalendarEvent, _ minutes: Int) -> Date {

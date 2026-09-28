@@ -41,4 +41,25 @@ struct CalendarScheduleTests {
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(10)) == Self.at(1800))
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(1800)) == nil)
     }
+
+    @Test("Пересекающиеся события: окно переходит к начавшемуся позже, после его конца — обратно")
+    func overlappingLiveEvent() {
+        let long = CalendarEvent(
+            id: "long", title: "Длинное", start: Self.start, end: Self.at(3600), isAllDay: false, color: Self.event.color)
+        let inner = CalendarEvent(
+            id: "inner", title: "Внутри", start: Self.at(1800), end: Self.at(2700), isAllDay: false, color: Self.event.color)
+        let agenda = DayAgenda.make(events: [inner, long], now: Self.at(-100))
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1739)) == long)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1740)) == inner)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2000)) == inner)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2700)) == long)
+    }
+
+    @Test("Событие завтра в начале суток: напоминание, граница и окно работают ещё до полуночи")
+    func tomorrowEvent() {
+        let agenda = DayAgenda(today: [], tomorrow: [Self.event])
+        #expect(CalendarSchedule.crossings(in: agenda, from: Self.at(-901), to: Self.at(-899)) == [.reminder(Self.event, minutes: 15)])
+        #expect(CalendarSchedule.nextBoundary(in: agenda, after: Self.at(-2000)) == Self.at(-900))
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(-30)) == Self.event)
+    }
 }

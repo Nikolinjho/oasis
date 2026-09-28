@@ -10,10 +10,12 @@ public enum IslandAlert: Equatable, Sendable {
     /// Напоминание о событии за minutes минут (решение 27.09: за 15 и за 5)
     case calendarReminder(CalendarReminder)
 
-    /// Вид: повтор того же вида в очереди заменяет ждущее, а поверх показанного обновляет его
+    /// Вид: повтор того же вида в очереди заменяет ждущее, а поверх показанного обновляет его.
+    /// Напоминания одного вида — только об одном событии: «за 5» заменяет «за 15» того же события,
+    /// а напоминания разных событий (T−5 одного совпало с T−15 другого) показываются по очереди
     public enum Kind: Hashable, Sendable {
         case charging, lowBattery, lowPower
-        case calendarReminder
+        case calendarReminder(eventID: String)
     }
 
     public var kind: Kind {
@@ -21,7 +23,7 @@ public enum IslandAlert: Equatable, Sendable {
         case .charging: .charging
         case .lowBattery: .lowBattery
         case .lowPower: .lowPower
-        case .calendarReminder: .calendarReminder
+        case let .calendarReminder(reminder): .calendarReminder(eventID: reminder.eventID)
         }
     }
 
@@ -62,13 +64,16 @@ public enum IslandSound: String, Sendable, CaseIterable {
     case lowPower = "low-power"
 }
 
-/// Что показывает напоминание: название, сколько минут до начала, цвет календаря
+/// Что показывает напоминание: название, сколько минут до начала, цвет календаря.
+/// eventID — CalendarEvent.id: по нему напоминания одного события заменяют друг друга (Kind)
 public struct CalendarReminder: Equatable, Sendable {
+    public var eventID: String
     public var title: String
     public var minutes: Int
     public var color: RGB
 
-    public init(title: String, minutes: Int, color: RGB) {
+    public init(eventID: String, title: String, minutes: Int, color: RGB) {
+        self.eventID = eventID
         self.title = title
         self.minutes = minutes
         self.color = color

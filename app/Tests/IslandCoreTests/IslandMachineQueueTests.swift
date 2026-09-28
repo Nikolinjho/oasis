@@ -123,10 +123,35 @@ struct IslandMachineQueueTests {
 
     @Test("Напоминание календаря: приоритет 2, держится 4.2 с, звук события")
     func reminderAlert() {
-        let reminder = IslandAlert.calendarReminder(CalendarReminder(title: "Созвон", minutes: 5, color: RGB(red: 0.2, green: 0.5, blue: 1)))
-        #expect(reminder.kind == .calendarReminder)
+        let reminder = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "Созвон", minutes: 5, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+        #expect(reminder.kind == .calendarReminder(eventID: "call"))
         #expect(reminder.priority == 2)
         #expect(reminder.duration == .milliseconds(4200))
         #expect(reminder.sound == .event)
+    }
+
+    static func reminder(_ eventID: String, minutes: Int) -> IslandAlert {
+        .calendarReminder(CalendarReminder(eventID: eventID, title: eventID, minutes: minutes, color: RGB(red: 0.2, green: 0.5, blue: 1)))
+    }
+
+    @Test("Напоминания разных событий в один тик показываются по очереди, а не заменяют друг друга")
+    func remindersOfDifferentEventsQueue() {
+        var m = Self.model(.idle)
+        _ = IslandMachine.reduce(&m, .alertArrived(Self.reminder("first", minutes: 5)))
+        #expect(IslandMachine.reduce(&m, .alertArrived(Self.reminder("second", minutes: 15))).isEmpty)
+        #expect(m.surface == .alert(Self.reminder("first", minutes: 5)))
+        #expect(m.alertQueue == [Self.reminder("second", minutes: 15)])
+        // в очереди тоже: напоминание третьего события не вытесняет второе
+        _ = IslandMachine.reduce(&m, .alertArrived(Self.reminder("third", minutes: 15)))
+        #expect(m.alertQueue == [Self.reminder("second", minutes: 15), Self.reminder("third", minutes: 15)])
+    }
+
+    @Test("Напоминание того же события обновляет показанное: за 5 минут вместо за 15")
+    func reminderOfSameEventUpdates() {
+        var m = Self.model(.alert(Self.reminder("call", minutes: 15)))
+        let next = Self.reminder("call", minutes: 5)
+        let fx = IslandMachine.reduce(&m, .alertArrived(next))
+        #expect(m.surface == .alert(next))
+        #expect(fx == [.animate(.alertUpdate), .schedule(.alertHide, after: next.duration)])
     }
 }
