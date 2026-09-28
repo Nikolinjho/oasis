@@ -3,6 +3,8 @@ import IslandCore
 import Testing
 @testable import AlcoveAnalog
 
+// Тесты действий, которые внутри вызывают DebugScript.run (серии, сценарии, demo.run), сюда не кладём:
+// у DebugScript.current общий на процесс слот, для них место в сериализованной суите DebugScriptTests
 @MainActor
 struct DebugCatalogTests {
     static func actions(_ store: IslandStore) -> [DebugAction] {

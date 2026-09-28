@@ -21,9 +21,11 @@ struct DebugScriptTests {
     func cancelledDemoRunRestoresConfig() async throws {
         let store = IslandStore(config: .user)
         DemoSequence.run(store: store)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(store.config == .alcove)
         // любое отладочное действие или ссылка отменяет текущий DebugScript.run — не только другой demo
         DebugScript.run([])
-        try await Task.sleep(for: .milliseconds(200))
+        try await Task.sleep(for: .milliseconds(50))
         #expect(store.config == .user)
     }
 
@@ -31,9 +33,13 @@ struct DebugScriptTests {
     func doubleStartedDemoRunRestoresConfig() async throws {
         let store = IslandStore(config: .user)
         DemoSequence.run(store: store)
+        try await Task.sleep(for: .milliseconds(50))
         DemoSequence.run(store: store)
+        try await Task.sleep(for: .milliseconds(50))
+        // отменённый первый прогон не должен откатить раньше времени: второй ещё владеет конфигом
+        #expect(store.config == .alcove)
         DebugScript.run([])
-        try await Task.sleep(for: .milliseconds(200))
+        try await Task.sleep(for: .milliseconds(50))
         #expect(store.config == .user)
     }
 }
