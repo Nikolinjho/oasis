@@ -14,6 +14,7 @@ enum DebugCatalog {
             hud(store),
             calendar(store),
             battery(store),
+            connectivity(store),
             sound(sounds),
             island(store),
             scenarios(store, tracks),
@@ -137,6 +138,30 @@ enum DebugCatalog {
                 store.send(.alertArrived(.charging(level: 0.8)))
                 store.send(.alertArrived(.lowPower(level: 0.4)))
                 store.send(.alertArrived(.lowBattery(level: 0.1)))
+            }),
+        ])
+    }
+
+    private static func connectivity(_ store: IslandStore) -> DebugSection {
+        DebugSection(title: "Connectivity", entries: [
+            .action(DebugAction(id: "airpods.connected", title: "Fake AirPods Pro 100%") {
+                store.send(.alertArrived(.airpods(AirPodsInfo(name: "Fake AirPods Pro", battery: 1))))
+            }),
+            .action(DebugAction(id: "airpods.low", title: "Fake AirPods 15%") {
+                store.send(.alertArrived(.airpods(AirPodsInfo(name: "Fake AirPods", battery: 0.15))))
+            }),
+            .separator,
+            // как на записи Alcove: календарь → сжатие → AirPods на 5 с → обратно календарь
+            .action(DebugAction(id: "scenario.calendar-airpods", title: "Calendar → AirPods → Calendar") {
+                let start = Date().addingTimeInterval(50)
+                DebugScript.run([
+                    (at: 0, run: {
+                        store.setCalendarLive(CalendarEvent(
+                            id: "fake-live", title: "Fake Event", start: start, end: start.addingTimeInterval(300),
+                            isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)))
+                    }),
+                    (at: 1.5, run: { store.send(.alertArrived(.airpods(AirPodsInfo(name: "Fake AirPods Pro", battery: 1)))) }),
+                ])
             }),
         ])
     }

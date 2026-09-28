@@ -37,7 +37,7 @@ struct ActivityCompactView: View {
         switch layout.indicator {
         case let .ring(progress, color, track):
             ActivityRing(progress: progress, color: Color(color), track: Color(track))
-                .frame(width: 16, height: 16)
+                .frame(width: ActivityLayout.ringWidth, height: ActivityLayout.ringWidth)
         case let .text(text, color):
             Text(text)
                 .font(.system(size: ActivityLayout.indicatorFontSize, weight: .semibold))
@@ -56,7 +56,7 @@ struct ActivityCompactView: View {
     nonisolated static func indicatorWidth(_ indicator: ActivityLayout.Indicator) -> CGFloat {
         switch indicator {
         case .ring:
-            return 16
+            return ActivityLayout.ringWidth
         case let .text(text, _):
             let font = NSFont.monospacedDigitSystemFont(ofSize: ActivityLayout.indicatorFontSize, weight: .semibold)
             let size = (text as NSString).size(withAttributes: [.font: font])

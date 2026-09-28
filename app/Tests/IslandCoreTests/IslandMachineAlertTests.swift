@@ -145,4 +145,25 @@ struct IslandMachineAlertTests {
         #expect(m.surface == .idle)
         #expect(fx == [.animate(.alertOut)])
     }
+    @Test("AirPods: приоритет 1, 5 с, без звука")
+    func airpodsAlert() {
+        let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
+        #expect(airpods.kind == .airpods)
+        #expect(airpods.priority == 1)
+        #expect(airpods.duration == .seconds(5))
+        #expect(airpods.sound == nil)
+    }
+
+    @Test("AirPods поверх компакта календаря: сжатие, 5 с без звука, затем сжатие обратно в календарь")
+    func airpodsOverCalendar() {
+        let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
+        var m = Self.model(.calendar)
+        m.calendarLive = true
+        #expect(IslandMachine.reduce(&m, .alertArrived(airpods)) == [.cancel(.peekEnd), .animate(.shrink), Self.startGrow])
+        #expect(m.pending == .alert(airpods))
+        #expect(IslandMachine.reduce(&m, .timerFired(.grow)) == [.animate(.alertGrow), Self.hideAlert])
+        #expect(m.surface == .alert(airpods))
+        #expect(IslandMachine.reduce(&m, .timerFired(.alertHide)) == [.cancel(.peekEnd), .animate(.alertShrink), Self.startGrow])
+        #expect(m.pending == .calendar)
+    }
 }

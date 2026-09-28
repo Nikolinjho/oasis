@@ -46,6 +46,8 @@ public struct ActivityLayout: Equatable, Sendable {
     public static let compactPadding: CGFloat = 8
     /// Ширина иконки слева — совпадает с .frame(width:) иконки в ActivityCompactView
     public static let iconWidth: CGFloat = 18
+    /// Диаметр кольца индикатора — совпадает с .frame кольца в ActivityCompactView
+    public static let ringWidth: CGFloat = 16
     /// Кегль текстового индикатора (полужирный, моноширинные цифры). Оценка по высоте цифр в
     /// cal-countdown.jpg (~8.5 pt высоты у кегля 12), замер ±1 pt
     public static let indicatorFontSize: CGFloat = 12

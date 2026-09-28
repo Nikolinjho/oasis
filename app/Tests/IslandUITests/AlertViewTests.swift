@@ -88,4 +88,33 @@ struct AlertViewTests {
         #expect(IslandView.reminderIndicatorWidth == ActivityCompactView.indicatorWidth(.text("15m", color: ActivityLayouts.calendarRed)))
         #expect(IslandView.reminderIndicatorWidth > IslandView.calendarIndicatorWidth)
     }
+
+    @MainActor
+    @Test("Снимки AirPods: полное и почти пустое кольцо")
+    func airpodsSnapshots() throws {
+        let notch = CGSize(width: 186, height: 32)
+        let cases: [(String, IslandAlert)] = [
+            ("alert-airpods-full", .airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))),
+            ("alert-airpods-low", .airpods(AirPodsInfo(name: "AirPods", battery: 0.15))),
+        ]
+        for (name, alert) in cases {
+            let size = IslandGeometry.size(for: alert, notch: notch, reminderIndicatorWidth: IslandView.reminderIndicatorWidth)
+            let view = ZStack(alignment: .top) {
+                IslandShape(spec: IslandShapeSpec(size: size, bottomRadius: 10.5), shoulder: 0)
+                    .fill(IslandPalette.background)
+                AlertView(alert: alert, notchWidth: notch.width)
+            }
+            try Snapshot.write(view, size: size, name: name)
+        }
+    }
+
+    @Test("Кольцо AirPods умещается в правом крыле при любом вырезе", arguments: [186, 240, 300] as [CGFloat])
+    func airpodsRingFitsWing(notchWidth: CGFloat) {
+        let alert = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
+        let width = IslandGeometry.size(for: alert, notch: CGSize(width: notchWidth, height: 32), reminderIndicatorWidth: IslandView.reminderIndicatorWidth).width
+        let wing = (width - notchWidth) / 2
+        let ring = ActivityCompactView.indicatorWidth(ActivityLayouts.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1)).indicator)
+        #expect(ring + ActivityLayout.compactPadding <= wing)
+        #expect(ActivityLayout.iconWidth + ActivityLayout.compactPadding <= wing)
+    }
 }

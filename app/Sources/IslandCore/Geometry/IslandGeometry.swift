@@ -43,6 +43,15 @@ public enum IslandGeometry {
     public static let calendarCompact = CGSize(width: 254, height: 32)
     /// Peek календаря на старте: по строке y=3 280, тело ~270, высота 73.5 после пика 75.5 (ui-inspection 3.5)
     public static let calendarPeek = CGSize(width: 270, height: 73.5)
+    /// Компакт AirPods: той же ширины, что календарный (ui-inspection 3.6), и по строке y=3 оба 259
+    /// до и после сжатия между ними — значит, тело то же, что у calendarCompact. Это пол: см. airpodsSize
+    public static let airpodsCompact = calendarCompact
+
+    /// Ширина компакта AirPods: замер — пол, но не уже, чем нужно кольцу по обе стороны выреза.
+    /// Тот же подход, что calendarSize: на широком вырезе глиф и кольцо не уходят под него
+    public static func airpodsSize(notch: CGSize) -> CGSize {
+        calendarSize(airpodsCompact, notch: notch, indicatorWidth: ActivityLayout.ringWidth)
+    }
 
     /// Ширина компакта и peek календаря: замер — пол, но не уже, чем нужно индикатору по обе стороны выреза
     /// (ActivityLayout.width). Жёсткая ширина без пола уводит длинный индикатор под широкий вырез
@@ -73,6 +82,7 @@ public enum IslandGeometry {
         case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPower, height: charging.height)
         // напоминание не снималось: размер peek календаря (ui-inspection 3.5), тот же вид строки
         case .calendarReminder: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
+        case .airpods: airpodsSize(notch: notch)
         }
     }
 

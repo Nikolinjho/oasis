@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var calendar: EventKitCalendarSource?
     private lazy var calendarClock = CalendarClock(store: store)
     private var power: PowerSource?
+    private var bluetooth: BluetoothWatcher?
     private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
@@ -49,7 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
             // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
-            // (адаптер медиа), startPlayerActions, startCalendar, startPower, startLevels (CoreAudio HUD
+            // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
             // громкости/яркости), startKeyTap
             log.info("demo mode after \(delay, privacy: .public) s")
             DemoSequence.run(store: store, after: delay)
@@ -60,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startPlayerActions()
         startCalendar()
         startPower()
+        startBluetooth()
         startLevels()
         startKeyTap()
     }
@@ -67,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         nowPlaying?.stop()
         power?.stop()
+        bluetooth?.stop()
     }
 
     /// Настройки меняются на лету из окна настроек и меню: машина подхватывает их сразу.
@@ -145,6 +148,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         power.start()
         self.power = power
+    }
+
+    private func startBluetooth() {
+        let watcher = BluetoothWatcher()
+        watcher.onConnect = { [store] info in store.send(.alertArrived(.airpods(info))) }
+        watcher.start()
+        bluetooth = watcher
     }
 
     private func startLevels() {

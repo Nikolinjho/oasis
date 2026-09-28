@@ -267,4 +267,21 @@ struct GeometryTests {
         #expect(spec.size.width == 308)
         #expect(IslandGeometry.size(for: Self.reminder, notch: wide, reminderIndicatorWidth: 26).width == 308)
     }
+
+    @Test("AirPods: компакт 254×32 как у календаря, ушко как у уведомлений")
+    func airpodsSize() {
+        let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
+        let spec = IslandGeometry.spec(
+            for: .alert(airpods), hasMedia: false, notch: Self.mbp16.notchSize,
+            calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
+        #expect(spec.size == CGSize(width: 254, height: 32))
+        #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
+    }
+
+    @Test("AirPods на широком вырезе: кольцо и глиф не уходят под вырез")
+    func airpodsWidthFloor() {
+        let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
+        // 240 + 2 × (8 + 18): кольцо 16 уже иконки 18, крыло по иконке
+        #expect(IslandGeometry.size(for: airpods, notch: CGSize(width: 240, height: 32), reminderIndicatorWidth: 0).width == 292)
+    }
 }

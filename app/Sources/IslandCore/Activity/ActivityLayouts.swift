@@ -49,4 +49,19 @@ public enum ActivityLayouts {
         if minutes < 60 { return "\(minutes)m" }
         return minutes % 60 == 0 ? "\(minutes / 60)h" : "\(minutes / 60)h \(minutes % 60)m"
     }
+
+    /// Зелёное кольцо заряда AirPods (ui-inspection 3.6). Точного цвета нет: системный зелёный, оценка
+    public static let connectivityGreen = RGB(red: 48 / 255, green: 209 / 255, blue: 88 / 255)
+    /// Тёмно-зелёный трек кольца. Замера нет, оценка
+    public static let connectivityTrack = RGB(red: 0.08, green: 0.25, blue: 0.1)
+    /// Тёплый белый текста острова (IslandPalette.foreground)
+    public static let glyphWhite = RGB(red: 1, green: 250 / 255, blue: 244 / 255)
+
+    /// Компакт AirPods: белый глиф модели слева, кольцо заряда справа, текста нет (ui-inspection 3.6).
+    /// Без заряда — пустое кольцо
+    public static func airpods(_ info: AirPodsInfo) -> ActivityLayout {
+        ActivityLayout(
+            symbol: info.symbol, symbolColor: glyphWhite,
+            indicator: .ring(progress: info.battery ?? 0, color: connectivityGreen, track: connectivityTrack))
+    }
 }

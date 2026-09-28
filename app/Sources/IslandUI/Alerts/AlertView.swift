@@ -18,6 +18,8 @@ struct AlertView: View {
             BatteryAlertView(label: "Low Power Mode", level: level, showsPercent: false, fill: IslandPalette.lowPower, notchWidth: notchWidth)
         case let .calendarReminder(reminder):
             ActivityCompactView(layout: ActivityLayouts.reminder(reminder), notchWidth: notchWidth)
+        case let .airpods(info):
+            ActivityCompactView(layout: ActivityLayouts.airpods(info), notchWidth: notchWidth)
         }
     }
 }

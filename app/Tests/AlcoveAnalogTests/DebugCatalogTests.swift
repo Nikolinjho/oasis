@@ -124,4 +124,18 @@ struct DebugCatalogTests {
         #expect(!store.config.expandsOnHover)
         #expect(toggle.isOn?() == false)
     }
+
+    @Test("airpods.connected и airpods.low показывают уведомление AirPods с полным и почти пустым кольцом")
+    func airpodsActions() throws {
+        for (id, battery) in [("airpods.connected", 1.0), ("airpods.low", 0.15)] {
+            let store = IslandStore(config: .alcove)
+            let action = try #require(Self.actions(store).first { $0.id == id })
+            action.run()
+            guard case let .alert(.airpods(info)) = store.model.surface else {
+                Issue.record("\(id): \(store.model.surface)")
+                continue
+            }
+            #expect(info.battery == battery)
+        }
+    }
 }

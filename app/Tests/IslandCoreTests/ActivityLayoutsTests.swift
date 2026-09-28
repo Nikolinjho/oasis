@@ -55,4 +55,22 @@ struct ActivityLayoutsTests {
         let layout = ActivityLayouts.reminder(CalendarReminder(eventID: "e", title: "Созвон", minutes: earliest, color: Self.event.color))
         #expect(layout.indicator == ActivityLayouts.reminderWidestIndicator)
     }
+
+    @Test("AirPods: глиф модели белым и зелёное кольцо заряда, без заряда — пустое")
+    func airpods() {
+        let pro = ActivityLayouts.airpods(AirPodsInfo(name: "AirPods Pro", battery: 0.82))
+        #expect(pro.symbol == "airpodspro")
+        #expect(pro.symbolColor == ActivityLayouts.glyphWhite)
+        #expect(pro.indicator == .ring(progress: 0.82, color: ActivityLayouts.connectivityGreen, track: ActivityLayouts.connectivityTrack))
+        #expect(pro.line == nil)
+        #expect(ActivityLayouts.airpods(AirPodsInfo(name: "AirPods Max", battery: nil)).indicator
+            == .ring(progress: 0, color: ActivityLayouts.connectivityGreen, track: ActivityLayouts.connectivityTrack))
+    }
+
+    @Test("Глиф по имени: Max, Pro, остальные AirPods — обычный")
+    func airpodsSymbol() {
+        #expect(AirPodsInfo(name: "AirPods Max", battery: nil).symbol == "airpodsmax")
+        #expect(AirPodsInfo(name: "Nikola’s AirPods Pro", battery: nil).symbol == "airpodspro")
+        #expect(AirPodsInfo(name: "AirPods 4 (ANC)", battery: nil).symbol == "airpods")
+    }
 }
