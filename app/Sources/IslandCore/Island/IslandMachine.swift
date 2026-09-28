@@ -15,6 +15,8 @@ public enum TimerID: Hashable, Sendable {
 
 public enum IslandEvent: Equatable, Sendable {
     case trackChanged
+    /// Новый трек пришёл уже на паузе: запуск, приложение открыто на паузе, смена трека на паузе
+    case pausedTrackChanged
     case mediaCleared
     case hudChanged(HUDKind, level: Double)
     case alertArrived(IslandAlert)
@@ -176,6 +178,7 @@ public enum IslandMachine {
     public static func reduce(_ model: inout IslandModel, _ event: IslandEvent) -> [IslandEffect] {
         switch event {
         case .trackChanged: trackChanged(&model)
+        case .pausedTrackChanged: pausedTrackChanged(&model)
         case .mediaCleared: mediaCleared(&model)
         case let .hudChanged(kind, level): hudChanged(&model, .hud(kind, level: level))
         case let .alertArrived(alert): alertArrived(&model, alert)
@@ -231,6 +234,16 @@ public enum IslandMachine {
             // peek не перезапускаем. При компакте календаря и в остальных состояниях меняется только контент
             return []
         }
+    }
+
+    /// Трек на паузе. Музыка на экране (компакт, Idle duration ещё идёт) — как смена трека, затем пауза.
+    /// Музыки не было или пауза уже увела её в вырез — трек только запоминается, компакт появится по play
+    private static func pausedTrackChanged(_ m: inout IslandModel) -> [IslandEffect] {
+        guard !m.hasMedia || m.mediaIdle else { return trackChanged(&m) + playbackChanged(&m, false) }
+        m.hasMedia = true
+        m.isPlaying = false
+        m.mediaIdle = true
+        return []
     }
 
     /// В полноэкранном компакты и peek прячутся, открытый остров и HUD не трогаем:

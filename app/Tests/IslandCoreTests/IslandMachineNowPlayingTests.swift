@@ -45,6 +45,24 @@ struct IslandMachineNowPlayingTests {
         #expect(m.surface == .compact)
     }
 
+    @Test("Трек на паузе без музыки на экране: только запоминается, компакт появляется по play")
+    func pausedTrackFromIdle() {
+        var m = Self.model(.idle, playing: false)
+        m.hasMedia = false
+        #expect(IslandMachine.reduce(&m, .pausedTrackChanged).isEmpty)
+        #expect(m.surface == .idle)
+        #expect(m.mediaIdle)
+        #expect(IslandMachine.reduce(&m, .playbackChanged(true)) == [.cancel(.mediaIdle), .animate(.compactIn)])
+        #expect(m.surface == .compact)
+    }
+
+    @Test("Трек на паузе при компакте: как смена трека, затем таймер Idle duration")
+    func pausedTrackFromCompact() {
+        var m = Self.model()
+        #expect(IslandMachine.reduce(&m, .pausedTrackChanged)
+            == [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek), .schedule(.mediaIdle, after: .seconds(3))])
+    }
+
     @Test("Таймер паузы после возобновления ничего не делает")
     func staleIdleTimer() {
         var m = Self.model(playing: true)

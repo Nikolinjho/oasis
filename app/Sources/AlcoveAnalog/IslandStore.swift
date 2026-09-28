@@ -174,8 +174,7 @@ final class IslandStore {
         switch change {
         case let .newTrack(info):
             nowPlaying = info
-            send(.trackChanged)
-            if !info.isPlaying { send(.playbackChanged(false)) }
+            send(info.isPlaying ? .trackChanged : .pausedTrackChanged)
         case let .updated(info):
             nowPlaying = info
             if info.isPlaying != model.isPlaying { send(.playbackChanged(info.isPlaying)) }
