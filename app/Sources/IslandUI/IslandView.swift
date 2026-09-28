@@ -8,12 +8,14 @@ public struct IslandView: View {
     let notchWidth: CGFloat
     let nowPlaying: NowPlayingInfo?
     let agenda: DayAgenda
+    let calendarEvent: CalendarEvent?
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
 
     public init(
         model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
         agenda: DayAgenda = .empty,
+        calendarEvent: CalendarEvent? = nil,
         onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void
     ) {
         self.model = model
@@ -21,6 +23,7 @@ public struct IslandView: View {
         self.notchWidth = notchWidth
         self.nowPlaying = nowPlaying
         self.agenda = agenda
+        self.calendarEvent = calendarEvent
         self.onClick = onClick
         self.onAction = onAction
     }
@@ -48,12 +51,18 @@ public struct IslandView: View {
         switch model.surface {
         // отклик на hover в той же ветке: вью музыки не пересоздаётся и не играет переход
         case .compact, .peek, .hoverNudge(from: .compact), .hoverNudge(from: .peek):
-            MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: musicSurface == .peek)
+            MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: liveSurface == .peek)
                 // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
                 // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку.
                 // В отклике рамка исходного состояния: форма расширяется вокруг контента, он не сдвигается
-                .frame(width: musicSize.width, height: musicSize.height, alignment: .top)
+                .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
                 .id(ContentID.music)
+                .transition(.slot)
+        case .calendar, .calendarPeek, .hoverNudge(from: .calendar), .hoverNudge(from: .calendarPeek):
+            CalendarLiveView(event: calendarEvent, showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth)
+                // как у музыки: рамка итогового размера, контент открывается маской формы
+                .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
+                .id(ContentID.calendar)
                 .transition(.slot)
         case .expanded:
             // раскрытый по умолчанию — Duo, как в Alcove (решение 27.09). Полный плеер — свайпом, P1
@@ -77,19 +86,28 @@ public struct IslandView: View {
         }
     }
 
-    /// Состояние, по которому раскладывается музыка: для отклика — то, из которого он открылся
-    private var musicSurface: Surface {
+    /// Ширина самого широкого индикатора компакта календаря: по ней считается фиксированная ширина
+    /// компакта и peek (IslandGeometry.calendarSize). Store берёт её же, чтобы форма и рамка контента совпали
+    public nonisolated static let calendarIndicatorWidth =
+        ActivityCompactView.indicatorWidth(ActivityLayouts.calendarWidestIndicator)
+
+    /// Состояние, по которому раскладывается живая активность (музыка, календарь): для отклика — то,
+    /// из которого он открылся
+    private var liveSurface: Surface {
         if case let .hoverNudge(from) = model.surface { return from }
         return model.surface
     }
 
-    private var musicSize: CGSize {
+    private var liveSize: CGSize {
         let notch = CGSize(width: notchWidth, height: spec.size.height)
-        return IslandGeometry.spec(for: musicSurface, hasMedia: model.hasMedia, notch: notch).size
+        return IslandGeometry.spec(
+            for: liveSurface, hasMedia: model.hasMedia, notch: notch, calendarIndicatorWidth: Self.calendarIndicatorWidth
+        ).size
     }
 
     private enum ContentID: Hashable {
         case music, expanded
+        case calendar
         case hud(HUDKind)
         case alert
     }

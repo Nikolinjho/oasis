@@ -1,0 +1,44 @@
+import Foundation
+import Testing
+@testable import IslandCore
+
+struct ActivityLayoutsTests {
+    static let start = Date(timeIntervalSince1970: 1_800_000_000)
+    static let event = CalendarEvent(
+        id: "e", title: "тест для alcove", start: start, end: start.addingTimeInterval(1500), isAllDay: false,
+        color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+
+    @Test("До начала — секунды красным, округление вверх")
+    func countdown() {
+        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-11.2), showsLine: false)
+        #expect(layout.indicator == .text("12s", color: ActivityLayouts.calendarRed))
+        #expect(layout.symbol == "calendar.badge.clock")
+        #expect(layout.line == nil)
+    }
+
+    @Test("Самый широкий индикатор — отсчёт в момент открытия окна, за минуту до начала")
+    func widestIndicator() {
+        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
+        #expect(layout.indicator == ActivityLayouts.calendarWidestIndicator)
+    }
+
+    @Test("Во время события — кольцо хода события")
+    func progress() {
+        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(750), showsLine: false)
+        #expect(layout.indicator == .ring(progress: 0.5, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
+    }
+
+    @Test("Peek на старте: полоска цвета календаря, название, песочные часы и время до конца")
+    func peekLine() {
+        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: true)
+        #expect(layout.line == .init(bar: Self.event.color, title: "тест для alcove", trailingSymbol: "hourglass", trailing: "25m"))
+    }
+
+    @Test("Время до конца: секунды, минуты, часы с минутами")
+    func remaining() {
+        #expect(ActivityLayouts.remaining(59) == "59s")
+        #expect(ActivityLayouts.remaining(12 * 60) == "12m")
+        #expect(ActivityLayouts.remaining(65 * 60) == "1h 5m")
+        #expect(ActivityLayouts.remaining(120 * 60) == "2h")
+    }
+}

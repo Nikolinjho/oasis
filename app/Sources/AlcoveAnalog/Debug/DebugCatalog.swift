@@ -89,6 +89,21 @@ enum DebugCatalog {
             ) {
                 store.unpinDebugEvents()
             }),
+            .separator,
+            .action(DebugAction(id: "calendar.live", title: "Live: Fake Event in 45 s") {
+                let start = Date().addingTimeInterval(45)
+                store.setCalendarLive(CalendarEvent(
+                    id: "fake-live", title: "Fake Event", start: start, end: start.addingTimeInterval(300),
+                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)))
+            }),
+            .action(DebugAction(id: "calendar.start", title: "Event Starts Now") {
+                let now = Date()
+                store.setCalendarLive(CalendarEvent(
+                    id: "fake-start", title: "Fake Event", start: now, end: now.addingTimeInterval(300),
+                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)))
+                store.send(.calendarStarted)
+            }),
+            .action(DebugAction(id: "calendar.live-off", title: "Live Off") { store.setCalendarLive(nil) }),
         ])
     }
 

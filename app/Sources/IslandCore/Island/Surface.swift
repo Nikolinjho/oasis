@@ -12,7 +12,7 @@ public enum Surface: Equatable, Sendable {
     /// Промежуточное состояние при наведении (режим Alcove): мини-остров 190×73 без контента
     case hover
     /// Отклик на наведение (режим пользователя): форма from чуть шире, контент тот же,
-    /// по таймеру hoverOpen раскрывается в плеер. from — idle, compact или peek
+    /// по таймеру hoverOpen раскрывается в плеер. from — idle, compact, peek, calendar или calendarPeek
     indirect case hoverNudge(from: Surface)
     /// Раскрытый: по умолчанию Duo (плеер + повестка), полный плеер — свайпом (см. IslandView)
     case expanded
@@ -21,4 +21,8 @@ public enum Surface: Equatable, Sendable {
     case hud(HUDKind, level: Double)
     /// Уведомление: Charging, в P1 — батарея, AirPods, напоминания календаря
     case alert(IslandAlert)
+    /// Компакт календаря: от минуты до начала события до его конца (решение 27.09). Второй вид покоя
+    case calendar
+    /// Компакт календаря и строка с названием: старт события, 4.2 с
+    case calendarPeek
 }

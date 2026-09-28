@@ -47,6 +47,26 @@ struct GeometryTests {
         #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
     }
 
+    @Test("Календарь: компакт 254×32 и peek 270×73.5 на обычном вырезе, ушко компакта как у музыки")
+    func calendarSizes() {
+        let notch = Self.mbp16.notchSize
+        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: notch, calendarIndicatorWidth: 22)
+        #expect(compact.size == CGSize(width: 254, height: 32))
+        #expect(compact.shoulder == IslandGeometry.Shoulder.compact)
+        let peek = IslandGeometry.spec(for: .calendarPeek, hasMedia: false, notch: notch, calendarIndicatorWidth: 22)
+        #expect(peek.size == CGSize(width: 270, height: 73.5))
+    }
+
+    @Test("Календарь на широком вырезе не уже, чем нужно индикатору по обе стороны")
+    func calendarWidthFloor() {
+        let wide = CGSize(width: 240, height: 32)
+        // 240 + 2 × (8 + 22): индикатор шире иконки 18
+        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: wide, calendarIndicatorWidth: 22)
+        #expect(compact.size.width == 300)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: .calendar), hasMedia: false, notch: wide, calendarIndicatorWidth: 22)
+        #expect(nudge.size.width == 300 * IslandGeometry.hoverNudgeWidthScale)
+    }
+
     @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
     func radiusFromVideo() {
         #expect(abs(IslandGeometry.bottomRadius(forHeight: 32) - 10.5) < 1e-9)

@@ -63,6 +63,12 @@ struct IslandMotionTests {
             #expect(spring.settlingTime() < 0.7, "\(transition)")
         }
     }
+
+    @Test("Пружина peek календаря: перелёт ~4.8%, как пик 75.5 при цели 73.5 из 32")
+    func calendarPeekSpring() throws {
+        let spring = try #require(IslandMotion.spring(for: .calendarPeekOpen))
+        #expect(abs(spring.overshoot - 2 / 41.5) < 0.005)
+    }
 }
 
 struct TimeScaleTests {

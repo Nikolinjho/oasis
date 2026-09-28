@@ -13,6 +13,8 @@ final class IslandStore {
     private(set) var nowPlaying: NowPlayingInfo?
     /// События сегодня и завтра: Duo и календарь
     private(set) var agenda = DayAgenda.empty
+    /// Событие окна календаря: его рисуют компакт и peek. Остаётся после конца окна, пока компакт уходит
+    private(set) var calendarEvent: CalendarEvent?
     /// Отладочная повестка держится, пока источник календаря шлёт реальные события: pinDebugEvents/unpinDebugEvents
     private(set) var isDebugAgendaPinned = false
     /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
@@ -37,7 +39,15 @@ final class IslandStore {
     }
 
     var spec: IslandShapeSpec {
-        IslandGeometry.spec(for: model.surface, hasMedia: model.hasMedia, notch: notch)
+        IslandGeometry.spec(
+            for: model.surface, hasMedia: model.hasMedia, notch: notch,
+            calendarIndicatorWidth: IslandView.calendarIndicatorWidth)
+    }
+
+    /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
+    func setCalendarLive(_ event: CalendarEvent?) {
+        if let event { calendarEvent = event }
+        send(.calendarLiveChanged(event != nil))
     }
 
     func send(_ event: IslandEvent) {

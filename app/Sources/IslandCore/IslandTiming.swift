@@ -10,6 +10,8 @@ public enum IslandTiming {
     public static let alertVisible: Duration = .seconds(5)
     /// Сжатие перед сменой активности
     public static let shrink: Duration = .milliseconds(330)
+    /// Peek календаря держится 4.2 с: Peek duration 4 с, замер ui-inspection 3.5
+    public static let calendarPeek: Duration = .milliseconds(4200)
     /// Отклик на hover перед раскрытием в плеер. Обзорное видео Alcove, 30 fps: форма подрастает
     /// 4 кадра (≈ 130 мс) после касания курсором, на 5-м начинается раскрытие
     public static let hoverNudge: Duration = .milliseconds(130)

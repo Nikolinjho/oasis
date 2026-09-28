@@ -16,6 +16,8 @@ struct IslandWindowControllerTests {
         #expect(IslandWindowController.shouldReenterHover(surface: .idle, pointerInside: true))
         #expect(IslandWindowController.shouldReenterHover(surface: .compact, pointerInside: true))
         #expect(IslandWindowController.shouldReenterHover(surface: .peek, pointerInside: true))
+        #expect(IslandWindowController.shouldReenterHover(surface: .calendar, pointerInside: true))
+        #expect(IslandWindowController.shouldReenterHover(surface: .calendarPeek, pointerInside: true))
     }
 
     @Test("Курсор на острове, но surface не покой (alert/HUD/shrink) — не наше дело, машина сама разберётся")

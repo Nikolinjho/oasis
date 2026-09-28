@@ -15,6 +15,8 @@ public enum IslandTransition: Equatable, Sendable {
 
     /// Уведомление: вход из покоя, раскрытие после сжатия, сжатие перед возвратом в компакт, уход в покой, новое содержимое
     case alertIn, alertGrow, alertShrink, alertOut, alertUpdate
+    /// Peek календаря на старте события и его уход
+    case calendarPeekOpen, calendarPeekClose
 
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
@@ -60,6 +62,11 @@ public enum IslandMotion {
         case .alertOut: .smooth(duration: 0.45)
         // новое содержимое того же размера
         case .alertUpdate: nil
+        // выведено из замера ui-inspection 3.5: 32 → пик 75.5 за ~0.25 с → 73.5. Перелёт 2/41.5 = 4.8% даёт ζ ≈ 0.69,
+        // пик за 0.25 с — ωd = π / 0.25, отсюда k = 305, c = 24.3
+        case .calendarPeekOpen: SpringSpec(stiffness: 305, damping: 24.3)
+        // там же: 73.5 → 32 за ~0.4 с монотонно
+        case .calendarPeekClose: .smooth(duration: 0.4)
         // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)

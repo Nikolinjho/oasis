@@ -7,6 +7,8 @@ public enum TimerID: Hashable, Sendable {
     case hoverLeave
     /// Уведомление отслужило свой срок
     case alertHide
+    /// Peek календаря на старте события отслужил свой срок
+    case calendarPeekEnd
 }
 
 public enum IslandEvent: Equatable, Sendable {
@@ -14,6 +16,10 @@ public enum IslandEvent: Equatable, Sendable {
     case mediaCleared
     case hudChanged(HUDKind, level: Double)
     case alertArrived(IslandAlert)
+    /// Открылось или закрылось окно календаря: от минуты до начала события до его конца
+    case calendarLiveChanged(Bool)
+    /// Событие началось: peek с названием поверх компакта календаря и звук
+    case calendarStarted
     case hoverEntered, hoverExited
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
@@ -35,12 +41,25 @@ public struct IslandModel: Equatable, Sendable {
     public var hasMedia = false
     /// Куда остров раскроется, когда закончится сжатие
     public var pending: Surface?
-    /// На экране с вырезом полноэкранное приложение: музыка в покое не показывается
+    /// На экране с вырезом полноэкранное приложение: живые активности (музыка, календарь) в покое не показываются
     public var isFullscreen = false
     /// Курсор ушёл из раскрытого (режим пользователя): ждём таймер hoverLeave, возврат его отменяет
     public var leaving = false
     /// Уведомления ждут конца HUD или текущего уведомления: по приоритету, при равном — по приходу
     public var alertQueue: [IslandAlert] = []
+    /// Открыто окно календаря (T−1 мин … конец события): компакт календаря вытесняет музыку (решение 27.09)
+    public var calendarLive = false
+
+    public init(config: IslandMachine.Config = .user) {
+        self.config = config
+    }
+
+    /// Состояние покоя. Календарь важнее музыки. В полноэкранном и без compactAtRest — форма выреза
+    public var base: Surface {
+        guard config.compactAtRest, !isFullscreen else { return .idle }
+        if calendarLive { return .calendar }
+        return hasMedia ? .compact : .idle
+    }
 
     /// Повтор того же вида заменяет ждущее
     mutating func enqueue(_ alert: IslandAlert) {
@@ -52,17 +71,10 @@ public struct IslandModel: Equatable, Sendable {
     mutating func dequeueAlert() -> IslandAlert? {
         alertQueue.isEmpty ? nil : alertQueue.removeFirst()
     }
-
-    public init(config: IslandMachine.Config = .user) {
-        self.config = config
-    }
-
-    /// Состояние покоя: компакт при музыке только в режиме compactAtRest и не в полноэкранном, иначе форма выреза
-    public var base: Surface { hasMedia && config.compactAtRest && !isFullscreen ? .compact : .idle }
 }
 
 /// Чистая машина состояний острова: приоритеты и хореография смены активностей.
-/// Приоритет: HUD > уведомления > раскрытый (Duo/плеер) > hover и отклик на него > peek > компакт > покой
+/// Приоритет: HUD > уведомления > раскрытый (Duo/плеер) > hover и отклик на него > peek > компакт календаря > компакт музыки > покой
 public enum IslandMachine {
     /// Поведение, которое отличает наш режим от Alcove. Эталон сверки записан
     /// в режиме Alcove, поэтому оба поведения — настройка, а не замена
@@ -70,7 +82,8 @@ public enum IslandMachine {
         /// Hover сразу раскрывает expanded (по умолчанию — Duo, полный плеер по свайпу). Выключено:
         /// hover даёт мини-состояние, раскрытие — по клику
         public var hoverOpensPlayer: Bool
-        /// При музыке остров стоит в компакте. Выключено: компакт только на время peek, в покое форма выреза
+        /// При живой активности (музыка, окно календаря) остров стоит в компакте. Выключено: компакт
+        /// только на время peek, в покое форма выреза
         public var compactAtRest: Bool
 
         /// Во сколько раз анимации острова медленнее замеров Alcove: пружины (IslandMotion) и таймеры,
@@ -105,7 +118,7 @@ public enum IslandMachine {
             return config
         }
 
-        /// Режим пользователя: hover раскрывает плеер, при музыке в покое компакт, как у Alcove.
+        /// Режим пользователя: hover раскрывает остров, при живой активности в покое компакт, как у Alcove.
         /// Покой в форме выреза пробовали и отказались: остаётся настройкой compactAtRest = false.
         /// Анимации на 18% медленнее Alcove: по живой проверке замеренные казались слишком быстрыми
         public static let user = Config(hoverOpensPlayer: true, compactAtRest: true, timeScale: 1.18)
@@ -119,6 +132,8 @@ public enum IslandMachine {
         case .mediaCleared: mediaCleared(&model)
         case let .hudChanged(kind, level): hudChanged(&model, .hud(kind, level: level))
         case let .alertArrived(alert): alertArrived(&model, alert)
+        case let .calendarLiveChanged(live): calendarLiveChanged(&model, live)
+        case .calendarStarted: calendarStarted(&model)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
@@ -129,10 +144,15 @@ public enum IslandMachine {
         }
     }
 
+    /// Покой: форма выреза, компакт музыки или календаря. После сжатия к покою цель пересчитывается по base
+    private static func isRest(_ surface: Surface) -> Bool {
+        surface == .idle || surface == .compact || surface == .calendar
+    }
+
     private static func trackChanged(_ m: inout IslandModel) -> [IslandEffect] {
         m.hasMedia = true
         // после сжатия остров вернётся в покой, а покой зависит от музыки
-        if m.pending == .idle || m.pending == .compact { m.pending = m.base }
+        if let pending = m.pending, isRest(pending) { m.pending = m.base }
         switch m.surface {
         case .idle where m.isFullscreen:
             // в полноэкранном музыка только запоминается: компакт появится после выхода
@@ -148,23 +168,26 @@ public enum IslandMachine {
             m.surface = .peek
             return [.animate(.peekOpen), .schedule(.peekEnd, after: IslandTiming.quickPeek)]
         default:
-            // peek не перезапускаем, в остальных состояниях меняется только контент
+            // peek не перезапускаем. При компакте календаря и в остальных состояниях меняется только контент
             return []
         }
     }
 
-    /// В полноэкранном компакт и peek музыки прячутся, открытый плеер и HUD не трогаем:
+    /// В полноэкранном компакты и peek прячутся, открытый остров и HUD не трогаем:
     /// они закроются в покой, который теперь форма выреза
     private static func fullscreenChanged(_ m: inout IslandModel, _ on: Bool) -> [IslandEffect] {
         guard m.isFullscreen != on else { return [] }
         m.isFullscreen = on
-        if m.pending == .idle || m.pending == .compact { m.pending = m.base }
+        if let pending = m.pending, isRest(pending) { m.pending = m.base }
         switch m.surface {
         case .compact where on, .peek where on:
             m.surface = .idle
             return [.cancel(.peekEnd), .animate(.compactOut)]
-        case .idle where !on && m.pending == nil && m.base == .compact:
-            m.surface = .compact
+        case .calendar where on, .calendarPeek where on:
+            m.surface = .idle
+            return [.cancel(.calendarPeekEnd), .animate(.compactOut)]
+        case .idle where !on && m.pending == nil && m.base != .idle:
+            m.surface = m.base
             return [.animate(.compactIn)]
         default:
             return []
@@ -173,7 +196,7 @@ public enum IslandMachine {
 
     private static func mediaCleared(_ m: inout IslandModel) -> [IslandEffect] {
         m.hasMedia = false
-        if m.pending == .compact { m.pending = m.base }
+        if let pending = m.pending, isRest(pending) { m.pending = m.base }
         switch m.surface {
         case .compact, .peek:
             m.surface = .idle
@@ -207,11 +230,11 @@ public enum IslandMachine {
             m.surface = hud
             return [.animate(.hudIn), .schedule(.hudHide, after: IslandTiming.hudVisible)]
         // HUD важнее уведомления: уведомление уходит через сжатие и не возвращается
-        case .compact, .peek, .alert:
+        case .compact, .peek, .alert, .calendar, .calendarPeek:
             return shrink(&m, then: hud)
         case .hover, .expanded:
             // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
-            // После HUD плеер не возвращается: hudHide уводит в покой
+            // После HUD раскрытый не возвращается: hudHide уводит в покой
             m.surface = hud
             return [.animate(.hudMorph), .schedule(.hudHide, after: IslandTiming.hudVisible)]
         case .shrink:
@@ -255,7 +278,7 @@ public enum IslandMachine {
         case .alert, .hud:
             m.enqueue(alert)
             return []
-        case .compact, .peek:
+        case .compact, .peek, .calendar, .calendarPeek:
             return shrink(&m, then: .alert(alert))
         case .hover, .expanded:
             m.surface = .alert(alert)
@@ -271,10 +294,54 @@ public enum IslandMachine {
         [.schedule(.alertHide, after: alert.duration)] + (alert.sound.map { [IslandEffect.play($0)] } ?? [])
     }
 
+    /// Окно календаря открылось или закрылось. Остров в покое переходит в новый покой: из формы выреза —
+    /// раскрытием, из компакта музыки — через сжатие. Раскрытый, HUD и уведомления вернутся в новый покой сами
+    private static func calendarLiveChanged(_ m: inout IslandModel, _ live: Bool) -> [IslandEffect] {
+        guard m.calendarLive != live else { return [] }
+        let old = m.base
+        m.calendarLive = live
+        if let pending = m.pending, isRest(pending) { m.pending = m.base }
+        guard old != m.base, m.pending == nil else { return [] }
+        switch m.surface {
+        case .calendarPeek where !live:
+            // событие кончилось во время peek: сразу в новый покой
+            return [.cancel(.calendarPeekEnd)] + rest(&m, from: .calendar)
+        case _ where m.surface == old:
+            return rest(&m, from: old)
+        case .peek where live:
+            // peek музыки прерывается: календарь важнее
+            return shrink(&m, then: .calendar)
+        default:
+            return []
+        }
+    }
+
+    /// Переход между двумя покоями: из формы выреза и в неё — напрямую, между компактами — через сжатие
+    private static func rest(_ m: inout IslandModel, from old: Surface) -> [IslandEffect] {
+        let new = m.base
+        switch (old, new) {
+        case (.idle, _):
+            m.surface = new
+            return [.animate(.compactIn)]
+        case (_, .idle):
+            m.surface = .idle
+            return [.animate(.compactOut)]
+        default:
+            return shrink(&m, then: new)
+        }
+    }
+
+    /// Звук на старте события играет всегда (Play sound on calendar event), peek — только из компакта календаря
+    private static func calendarStarted(_ m: inout IslandModel) -> [IslandEffect] {
+        guard m.surface == .calendar, m.pending == nil else { return [.play(.event)] }
+        m.surface = .calendarPeek
+        return [.animate(.calendarPeekOpen), .schedule(.calendarPeekEnd, after: IslandTiming.calendarPeek), .play(.event)]
+    }
+
     private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {
         guard m.pending == nil else { return [] }
         switch m.surface {
-        case .idle, .compact, .peek: break
+        case .idle, .compact, .peek, .calendar, .calendarPeek: break
         case .hover where target == .expanded: break
         case .hoverNudge where target == .expanded:
             // клик во время отклика раскрывает сразу, не дожидаясь таймера
@@ -286,8 +353,8 @@ public enum IslandMachine {
         return [.cancel(.peekEnd), .animate(transition)]
     }
 
-    /// Hover в режиме пользователя: из покоя, компакта и peek плеер сразу, а при ненулевой hoverDelay —
-    /// сначала отклик и плеер по таймеру hoverOpen. Возврат курсора, пока раскрытый ждёт схлопывания, отменяет его
+    /// Hover в режиме пользователя: из покоя, компактов и peek раскрытие сразу, а при ненулевой hoverDelay —
+    /// сначала отклик и раскрытие по таймеру hoverOpen. Возврат курсора, пока раскрытый ждёт схлопывания, отменяет его
     private static func nudge(_ m: inout IslandModel) -> [IslandEffect] {
         if m.leaving {
             m.leaving = false
@@ -295,7 +362,7 @@ public enum IslandMachine {
         }
         guard m.pending == nil else { return [] }
         switch m.surface {
-        case .idle, .compact, .peek:
+        case .idle, .compact, .peek, .calendar, .calendarPeek:
             if m.config.expandsOnHover, m.config.hoverDelay == .zero {
                 m.surface = .expanded
                 return [.cancel(.peekEnd), .animate(.hoverExpand)]
@@ -327,12 +394,13 @@ public enum IslandMachine {
         }
     }
 
-    /// Переход из отклика обратно в покой. Покой мог смениться за время отклика (трек, полноэкранный)
+    /// Переход из отклика обратно в покой. Покой мог смениться за время отклика (трек, календарь, полноэкранный)
     private static func settle(from: Surface, to base: Surface) -> IslandTransition {
         switch (from, base) {
         case _ where from == base: .hoverNudgeBack
         case (.peek, .compact): .peekClose
-        case (_, .compact): .compactIn
+        case (.calendarPeek, .calendar): .calendarPeekClose
+        case (_, .compact), (_, .calendar): .compactIn
         default: .compactOut
         }
     }
@@ -351,6 +419,8 @@ public enum IslandMachine {
         switch id {
         case .peekEnd:
             guard m.surface == .peek else { return [] }
+            // за время peek открылось окно календаря: смена активности через сжатие
+            if m.base == .calendar { return shrink(&m, then: .calendar) }
             m.surface = m.base
             // peek → покой берёт пружину ухода компакта: это тот же уход живой активности в вырез,
             // и у него есть замер (261 → 186). peekClose — сжатие peek в компакт, его подгонка
@@ -359,7 +429,7 @@ public enum IslandMachine {
         case .hudHide:
             guard case .hud = m.surface, m.pending == nil else { return [] }
             if let alert = m.dequeueAlert() { return shrink(&m, then: .alert(alert)) }
-            if m.base == .compact { return shrink(&m, then: .compact) }
+            if m.base != .idle { return shrink(&m, then: m.base) }
             m.surface = .idle
             return [.animate(.hudOut)]
         case .grow:
@@ -384,9 +454,13 @@ public enum IslandMachine {
         case .alertHide:
             guard case .alert = m.surface, m.pending == nil else { return [] }
             if let next = m.dequeueAlert() { return shrink(&m, then: .alert(next)) }
-            if m.base == .compact { return shrink(&m, then: .compact) }
+            if m.base != .idle { return shrink(&m, then: m.base) }
             m.surface = .idle
             return [.animate(.alertOut)]
+        case .calendarPeekEnd:
+            guard m.surface == .calendarPeek else { return [] }
+            m.surface = .calendar
+            return [.animate(.calendarPeekClose)]
         }
     }
 
@@ -409,6 +483,8 @@ public enum IslandMachine {
         case .alert: .alertShrink
         // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged, alertArrived)
         case .compact, .peek, .hoverNudge: .shrink
+        // замера нет: компакт календаря той же высоты 32, что компакт музыки, peek — как peek музыки
+        case .calendar, .calendarPeek: .shrink
         // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт
         case .idle, .hover, .expanded, .shrink: .shrink
         }
