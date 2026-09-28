@@ -1,6 +1,27 @@
 import IslandCore
 import SwiftUI
 
+/// Форматтеры даты и времени Duo, по одному общему инстансу на формат вместо создания в каждом вызове.
+/// Locale всегда en_US_POSIX: день недели капсом и время в 12-часовом формате как в самом Alcove,
+/// а не локаль системы пользователя. calendar/timeZone выставляются на месте перед каждым форматированием —
+/// у тестов и live-острова разные календари, а DateFormatter один на процесс.
+/// DateFormatter — Sendable, static let без nonisolated(unsafe) достаточно
+private enum DuoFormatters {
+    static let weekday: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+
+    static let time: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
+}
+
 /// Раскладка Duo по AX-фреймам нативного Alcove (ui-inspection 3.3): тело x 691.5…1036.5,
 /// координаты здесь — от левого верхнего угла тела 345×175
 enum DuoLayout {
@@ -121,11 +142,9 @@ struct DateBadge: View {
     }
 
     nonisolated static func weekday(_ date: Date, calendar: Calendar = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let formatter = DuoFormatters.weekday
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "EEE"
         return formatter.string(from: date).uppercased()
     }
 
@@ -164,10 +183,9 @@ struct EventCard: View {
     }
 
     nonisolated static func timeRange(_ event: CalendarEvent, calendar: Calendar = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let formatter = DuoFormatters.time
+        formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "h:mm a"
         return "\(formatter.string(from: event.start)) – \(formatter.string(from: event.end))"
     }
 }

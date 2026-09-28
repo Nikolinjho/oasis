@@ -14,8 +14,8 @@ public enum IslandPalette {
     public static let pressedActive = Color(red: 40 / 255, green: 40 / 255, blue: 42 / 255)
     /// Duo: подложка Play под курсором ~36×36, осмотр 26.09 (ui-inspection 3.3)
     public static let duoHover = Color(red: 25 / 255, green: 25 / 255, blue: 26 / 255)
-    /// Разделитель колонок Duo, 1 pt. Цвет не мерили, оценка по кадру island-expanded-duo.png
-    public static let divider = Color(white: 0.2)
+    /// Разделитель колонок Duo, 1 pt. Цвет не мерили, оценка по кадру island-expanded-duo.png, ≈ #1A1A1A
+    public static let divider = Color(white: 26 / 255)
     /// День недели над датой. Не мерили: акцент Alcove #E96260, по кадру похож
     public static let dateAccent = Color(red: 233 / 255, green: 98 / 255, blue: 96 / 255)
     /// Вторая строка пустого дня темнее первой. Оценка по кадру

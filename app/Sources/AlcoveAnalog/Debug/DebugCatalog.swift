@@ -78,7 +78,11 @@ enum DebugCatalog {
                 store.pinDebugEvents([])
                 store.send(.clicked)
             }),
-            .action(DebugAction(id: "calendar.real", title: "Use Real Calendar") {
+            // галочка показывает, что реальный календарь сейчас активен: полезно после duo-event/duo-empty
+            .action(DebugAction(
+                id: "calendar.real", title: "Use Real Calendar",
+                isOn: { !store.isDebugAgendaPinned }
+            ) {
                 store.unpinDebugEvents()
             }),
         ])
