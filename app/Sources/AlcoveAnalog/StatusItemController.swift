@@ -28,7 +28,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let grantAccessibility = ClosureMenuItem("Grant Accessibility…") { Permissions.openAccessibilitySettings() }
     private let isTrusted: () -> Bool
 
-    init(debugItem: NSMenuItem, isTrusted: @escaping () -> Bool) {
+    init(debugItem: NSMenuItem, isTrusted: @escaping () -> Bool, openSettings: @escaping () -> Void) {
         self.isTrusted = isTrusted
         super.init()
         item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
@@ -36,6 +36,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         item.autosaveName = "AlcoveAnalogStatus"
 
         menu.delegate = self
+        menu.addItem(ClosureMenuItem("Settings…", key: ",") { openSettings() })
         menu.addItem(launchAtLogin)
         menu.addItem(grantAccessibility)
         menu.addItem(.separator())

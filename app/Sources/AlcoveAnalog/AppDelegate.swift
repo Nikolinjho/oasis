@@ -7,6 +7,7 @@ import os
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = IslandStore()
     private let settings = AppSettings()
+    private lazy var settingsWindow = SettingsWindowController(settings: settings)
     private var window: IslandWindowController?
     private var statusItem: StatusItemController?
     private var nowPlaying: AdapterNowPlayingSource?
@@ -34,7 +35,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
             debugItem: DebugMenu.item(sections: debugSections),
-            isTrusted: { Permissions.isAccessibilityTrusted })
+            isTrusted: { Permissions.isAccessibilityTrusted },
+            openSettings: { [weak self] in self?.settingsWindow.show() })
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
