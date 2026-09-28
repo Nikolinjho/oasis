@@ -39,11 +39,26 @@ public struct ActivityLayout: Equatable, Sendable {
         self.line = line
     }
 
+    /// Паддинг компакта активности с каждой стороны выреза. Оценка по кадрам
+    /// capture/analysis/ui-inspection/calendar-airpods/cal-snap-230346.png и cal-countdown.jpg
+    /// (тело ~254 pt, иконка от края ~8 pt), замер ±1 pt. Общая константа для view, width и тестов,
+    /// чтобы паддинг не разъехался по местам
+    public static let compactPadding: CGFloat = 8
+    /// Ширина иконки слева — совпадает с .frame(width:) иконки в ActivityCompactView
+    public static let iconWidth: CGFloat = 18
+    /// Кегль текстового индикатора (полужирный, моноширинные цифры). Оценка по высоте цифр в
+    /// cal-countdown.jpg (~8.5 pt высоты у кегля 12), замер ±1 pt
+    public static let indicatorFontSize: CGFloat = 12
+
     /// Ширина компакта под данный индикатор: крылья вокруг выреза симметричны, чтобы вырез остался
-    /// по центру. Каждое крыло — паддинг 12 pt (как у MusicLiveView) плюс большая из иконки (18 pt)
-    /// и индикатора; иначе индикатор шире иконки вылезает под вырез. indicatorWidth меряет вызывающая
-    /// сторона (текст своим шрифтом, кольцо — фиксированные 16)
+    /// по центру. Каждое крыло — паддинг compactPadding плюс большая из иконки (iconWidth) и индикатора;
+    /// иначе индикатор шире иконки вылезает под вырез. indicatorWidth меряет вызывающая сторона
+    /// (ActivityCompactView.indicatorWidth в IslandUI, кольцо — фиксированные 16).
+    ///
+    /// Alcove держит фиксированную ширину компакта (~254 pt на кадрах), это значение — только нижняя
+    /// граница под длинные индикаторы вроде "15m"/"59m". Вызывающая сторона (Task 4) должна брать
+    /// max(измеренная фиксированная ширина, width(...)), а не одно только width(...)
     public static func width(notchWidth: CGFloat, indicatorWidth: CGFloat) -> CGFloat {
-        notchWidth + 2 * (12 + max(18, indicatorWidth))
+        notchWidth + 2 * (compactPadding + max(iconWidth, indicatorWidth))
     }
 }

@@ -15,15 +15,6 @@ struct ActivityCompactViewTests {
         #expect(ActivityRing.clamped(1.7) == 1)
     }
 
-    /// Ширина текста тем же шрифтом, что рисует индикатор (13pt semibold, monospacedDigit) —
-    /// вход для ActivityLayout.width, а не хардкод
-    @MainActor
-    static func measuredWidth(_ text: String) -> CGFloat {
-        NSHostingView(rootView: Text(text)
-            .font(.system(size: 13, weight: .semibold))
-            .monospacedDigit()).fittingSize.width
-    }
-
     @MainActor
     static func render(_ view: some View, size: CGSize) throws -> NSBitmapImageRep {
         let renderer = ImageRenderer(content: view.frame(width: size.width, height: size.height))
@@ -33,7 +24,8 @@ struct ActivityCompactViewTests {
     }
 
     /// Крайние закрашенные (не чёрные) пиксели по строке в точках — тем же способом, которым в ревью
-    /// нашли перенос под вырез по снимку. Возвращает кластеры слева направо: иконка первая, индикатор последний
+    /// нашли перенос под вырез по снимку. Возвращает все кластеры слева направо: буквы и цифры внутри
+    /// одного индикатора не обязаны слипаться в один кластер (зазор между глифами тоже почти чёрный)
     static func coloredClusters(_ bitmap: NSBitmapImageRep, rowPoint: CGFloat, scale: Int) -> [(left: CGFloat, right: CGFloat)] {
         let y = Int(rowPoint) * scale
         var clusters: [(left: CGFloat, right: CGFloat)] = []
@@ -51,22 +43,34 @@ struct ActivityCompactViewTests {
         return clusters
     }
 
+    /// Левый и правый край индикатора среди кластеров. Индикатор всегда правее середины компакта
+    /// (иконка гарантированно левее), поэтому берём крайний левый и крайний правый пиксель среди
+    /// кластеров правой половины — а не clusters.last, который ловит только последнюю букву/дугу
+    /// и не видит, если первая цифра уехала под вырез
+    static func indicatorEdges(_ clusters: [(left: CGFloat, right: CGFloat)], width: CGFloat) -> (left: CGFloat, right: CGFloat)? {
+        let onTheRight = clusters.filter { $0.left > width / 2 }
+        guard let left = onTheRight.map(\.left).min(), let right = onTheRight.map(\.right).max() else { return nil }
+        return (left, right)
+    }
+
     @MainActor
     @Test("Снимки: кольцо, текст и строка peek")
     func snapshots() throws {
         let peek = CGSize(width: 270, height: 73.5)
-        let ringWidth = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: 16)
+        let ringWidth = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: ActivityCompactView.indicatorWidth(.ring(progress: 0, color: Self.red, track: Self.track)))
+        let textWidth = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: ActivityCompactView.indicatorWidth(.text("12s", color: Self.red)))
+        let wideWidth = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: ActivityCompactView.indicatorWidth(.text("15m", color: Self.red)))
         let cases: [(String, ActivityLayout, CGSize)] = [
             ("activity-ring", ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red,
                                              indicator: .ring(progress: 0.35, color: Self.red, track: Self.track)),
              CGSize(width: ringWidth, height: 32)),
             ("activity-text", ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red,
                                              indicator: .text("12s", color: Self.red)),
-             CGSize(width: ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: Self.measuredWidth("12s")), height: 32)),
+             CGSize(width: textWidth, height: 32)),
             // напоминание за 15 минут шире отсчёта секунд — тот же вырез не должен переносить или обрезать текст
             ("activity-text-wide", ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red,
                                              indicator: .text("15m", color: Self.red)),
-             CGSize(width: ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: Self.measuredWidth("15m")), height: 32)),
+             CGSize(width: wideWidth, height: 32)),
             // ширина peek — про строку Line снизу (bar+title+иконка+время), формат которой ещё не в контракте
             // (Task 4/5); 270 уже больше минимума под кольцо (ringWidth), так что вырез не пострадает
             ("activity-peek", ActivityLayout(
@@ -88,24 +92,24 @@ struct ActivityCompactViewTests {
 
     /// Регрессия на перенос/наезд индикатора под вырез (найдено в ревью Task 3): при ширине компакта,
     /// посчитанной ActivityLayout.width под естественную ширину индикатора, индикатор должен начинаться
-    /// не раньше правого края выреза и заканчиваться не ближе 12 pt до правого края формы
+    /// не раньше правого края выреза и заканчиваться не ближе паддинга до правого края формы
     @MainActor
     @Test("Индикатор умещается в своё крыло по ActivityLayout.width", arguments: ["12s", "15m", "59m"])
     func indicatorFitsWing(_ text: String) throws {
-        let indicatorWidth = Self.measuredWidth(text)
+        let indicatorWidth = ActivityCompactView.indicatorWidth(.text(text, color: Self.red))
         let width = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: indicatorWidth)
         let layout = ActivityLayout(symbol: "calendar.badge.clock", symbolColor: Self.red, indicator: .text(text, color: Self.red))
         let bitmap = try Self.render(ActivityCompactView(layout: layout, notchWidth: Self.notchWidth), size: CGSize(width: width, height: 32))
         let clusters = Self.coloredClusters(bitmap, rowPoint: 16, scale: 2)
-        let indicator = try #require(clusters.last)
+        let indicator = try #require(Self.indicatorEdges(clusters, width: width))
         let notchRight = (width + Self.notchWidth) / 2
         // допуск на антиалиасинг глифа, оценка
         #expect(indicator.left >= notchRight - 1)
-        #expect(width - indicator.right >= 12 - 1.5)
+        #expect(width - indicator.right >= ActivityLayout.compactPadding - 1.5)
     }
 
     /// Тот же контракт для кольца: ширина индикатора фиксирована (16 pt) и меньше иконки (18), поэтому
-    /// крыло берёт максимум — 12+18=30, как у иконки, и кольцо не должно уходить ни в вырез, ни за паддинг
+    /// крыло берёт максимум иконки, и кольцо не должно уходить ни в вырез, ни за паддинг
     @MainActor
     @Test("Кольцо умещается в своё крыло по ActivityLayout.width")
     func ringFitsWing() throws {
@@ -114,19 +118,22 @@ struct ActivityCompactViewTests {
                                      indicator: .ring(progress: 0.35, color: Self.red, track: Self.track))
         let bitmap = try Self.render(ActivityCompactView(layout: layout, notchWidth: Self.notchWidth), size: CGSize(width: width, height: 32))
         let clusters = Self.coloredClusters(bitmap, rowPoint: 16, scale: 2)
-        let ring = try #require(clusters.last)
+        let ring = try #require(Self.indicatorEdges(clusters, width: width))
         let notchRight = (width + Self.notchWidth) / 2
         #expect(ring.left >= notchRight - 1)
-        #expect(width - ring.right >= 12 - 1.5)
+        #expect(width - ring.right >= ActivityLayout.compactPadding - 1.5)
     }
 
-    /// Реальный компакт календаря — 250 pt (ui-inspection 3.5, замер ~250). Этим шрифтом даже короткое "12s"
-    /// (измерено 24 pt) требует 258 pt по контракту — 250 уже не хватает. Значит компакт календаря нельзя
-    /// рисовать в хардкод 250: ширину острова под него должен считать ActivityLayout.width (Task 4)
+    /// Продакшн-метрику ActivityCompactView.indicatorWidth (без построения SwiftUI-дерева) сверяем
+    /// с фактической шириной того же текста при рендере — иначе она может незаметно разойтись с тем,
+    /// что реально рисует .text в индикаторе
     @MainActor
-    @Test("При реальной ширине компакта 250pt контракт требует ActivityLayout.width, не хардкод")
-    func realCompactWidthNeedsContractWidth() {
-        let needed = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: Self.measuredWidth("12s"))
-        #expect(needed > 250)
+    @Test("indicatorWidth совпадает с шириной текста при рендере", arguments: ["12s", "15m", "59m"])
+    func indicatorWidthMatchesRendering(_ text: String) {
+        let measured = ActivityCompactView.indicatorWidth(.text(text, color: Self.red))
+        let rendered = NSHostingView(rootView: Text(text)
+            .font(.system(size: ActivityLayout.indicatorFontSize, weight: .semibold))
+            .monospacedDigit()).fittingSize.width
+        #expect(abs(measured - rendered) <= 1)
     }
 }

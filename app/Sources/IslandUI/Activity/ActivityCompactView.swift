@@ -1,9 +1,11 @@
+import AppKit
 import IslandCore
 import SwiftUI
 
 /// Компакт активности 32 pt: иконка 18×15 слева, кольцо 16 pt или текст по ширине справа, вырез между ними.
 /// Ширину острова под индикатор считает ActivityLayout.width — здесь просто рисуем в отведённое место.
-/// С line снизу добавляется строка peek (высота формы 73.5). Отступы как у компакта музыки, отдельно не мерили
+/// С line снизу добавляется строка peek (высота формы 73.5). Паддинг и кегль индикатора — общие константы
+/// ActivityLayout (compactPadding, indicatorFontSize), чтобы контракт и рисование не разъехались
 struct ActivityCompactView: View {
     let layout: ActivityLayout
     let notchWidth: CGFloat
@@ -14,11 +16,11 @@ struct ActivityCompactView: View {
                 Image(systemName: layout.symbol)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(layout.symbolColor))
-                    .frame(width: 18, height: 15)
+                    .frame(width: ActivityLayout.iconWidth, height: 15)
                 Spacer(minLength: notchWidth)
                 indicator
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, ActivityLayout.compactPadding)
             .frame(height: 32)
 
             if let line = layout.line {
@@ -38,13 +40,27 @@ struct ActivityCompactView: View {
                 .frame(width: 16, height: 16)
         case let .text(text, color):
             Text(text)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: ActivityLayout.indicatorFontSize, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(Color(color))
                 // держит натуральную ширину текста: без этого перенос на две строки при нехватке места.
                 // Само место под текст должно быть посчитано заранее через ActivityLayout.width
                 .lineLimit(1)
                 .fixedSize()
+        }
+    }
+
+    /// Ширина индикатора без построения SwiftUI-дерева — нужна вызывающей стороне (Task 4/5/7) заранее,
+    /// чтобы посчитать ActivityLayout.width. Кольцо — фиксированные 16 pt, текст — метрика того же шрифта,
+    /// что рисует .text выше (indicatorFontSize, полужирный, моноширинные цифры), с округлением вверх
+    nonisolated static func indicatorWidth(_ indicator: ActivityLayout.Indicator) -> CGFloat {
+        switch indicator {
+        case .ring:
+            return 16
+        case let .text(text, _):
+            let font = NSFont.monospacedDigitSystemFont(ofSize: ActivityLayout.indicatorFontSize, weight: .semibold)
+            let size = (text as NSString).size(withAttributes: [.font: font])
+            return size.width.rounded(.up)
         }
     }
 }
