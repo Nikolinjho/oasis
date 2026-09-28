@@ -3,17 +3,28 @@ import Testing
 @testable import IslandCore
 
 struct GeometryTests {
-    /// MacBook Pro 16": экран 1728×1117 pt, вырез 186×32
+    /// MacBook Pro 16": экран 1728×1117 pt, вырез по API 185×32 (лог window 28.09).
+    /// Раньше фикстура была 186 — ширина по строке 1 pt, где уже начинаются ушки
     static let mbp16 = NotchMetrics(
         screenFrame: CGRect(x: 0, y: 0, width: 1728, height: 1117),
-        auxiliaryTopLeft: CGRect(x: 0, y: 1085, width: 771, height: 32),
-        auxiliaryTopRight: CGRect(x: 957, y: 1085, width: 771, height: 32),
+        auxiliaryTopLeft: CGRect(x: 0, y: 1085, width: 771.5, height: 32),
+        auxiliaryTopRight: CGRect(x: 956.5, y: 1085, width: 771.5, height: 32),
         safeAreaTop: 32)!
 
     @Test("Вырез — промежуток между auxiliary-областями")
     func notchFromAuxiliaryAreas() {
-        #expect(Self.mbp16.notchSize == CGSize(width: 186, height: 32))
-        #expect(Self.mbp16.notchRect == CGRect(x: 771, y: 1085, width: 186, height: 32))
+        #expect(Self.mbp16.notchSize == CGSize(width: 185, height: 32))
+        #expect(Self.mbp16.notchRect == CGRect(x: 771.5, y: 1085, width: 185, height: 32))
+    }
+
+    @Test("Подгонка выреза: сдвиг в pt к размеру по API, вырез остаётся по центру экрана")
+    func tuning() {
+        let tuned = Self.mbp16.tuned(by: NotchTuning(width: -2, height: 1))
+        #expect(tuned.notchSize == CGSize(width: 183, height: 33))
+        #expect(tuned.notchRect == CGRect(x: 772.5, y: 1084, width: 183, height: 33))
+        #expect(Self.mbp16.tuned(by: NotchTuning()) == Self.mbp16)
+        // сдвиг не даёт вырезу схлопнуться в ноль
+        #expect(Self.mbp16.tuned(by: NotchTuning(width: -500, height: -500)).notchSize == CGSize(width: 1, height: 1))
     }
 
     @Test("Без auxiliary-областей выреза нет")

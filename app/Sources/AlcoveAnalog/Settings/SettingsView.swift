@@ -125,6 +125,13 @@ struct GeneralPage: View {
                     SliderRow(title: "Hover duration", value: $settings.hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
                 }
             }
+            SettingsCard(title: "Tuning") {
+                SliderRow(title: "Notch width", value: $settings.notchWidthOffset, range: -2...2, step: 1,
+                          format: .integer("pt"))
+                RowDivider()
+                SliderRow(title: "Notch height", value: $settings.notchHeightOffset, range: -2...2, step: 1,
+                          format: .integer("pt"))
+            }
         }
         // launchAtLogin меняют и снаружи (пункт меню, System Settings): подхватываем при появлении
         // страницы и при возврате окна в фокус, а не только из своего тумблера

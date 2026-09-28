@@ -20,6 +20,10 @@ final class IslandWindowController {
     /// Остров закрыт свайпом вверх, а курсор так и стоит над ним: не раскрываем снова, пока курсор не уйдёт
     private var closedBySwipe = false
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "window")
+    /// General → Tuning: смена сразу переставляет остров
+    var tuning = NotchTuning() {
+        didSet { if tuning != oldValue { placeOnNotchScreen() } }
+    }
 
     init(store: IslandStore, menu: NSMenu) {
         self.store = store
@@ -37,7 +41,7 @@ final class IslandWindowController {
 
     private func placeOnNotchScreen() {
         let screen = NSScreen.screens.first { $0.safeAreaInsets.top > 0 && $0.auxiliaryTopLeftArea != nil }
-        guard let screen, let metrics = NotchMetrics(
+        guard let screen, let measured = NotchMetrics(
             screenFrame: screen.frame,
             auxiliaryTopLeft: screen.auxiliaryTopLeftArea,
             auxiliaryTopRight: screen.auxiliaryTopRightArea,
@@ -50,8 +54,9 @@ final class IslandWindowController {
             hoverOpenedFrom = nil
             return
         }
+        let metrics = measured.tuned(by: tuning)
         self.metrics = metrics
-        log.info("notch \(metrics.notchSize.width, privacy: .public)x\(metrics.notchSize.height, privacy: .public)")
+        log.info("notch \(metrics.notchSize.width, privacy: .public)x\(metrics.notchSize.height, privacy: .public) (api \(measured.notchSize.width, privacy: .public)x\(measured.notchSize.height, privacy: .public))")
         store.notch = metrics.notchSize
         let frame = IslandGeometry.windowFrame(for: metrics)
         let panel = self.panel ?? makePanel(frame: frame)

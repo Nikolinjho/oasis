@@ -24,7 +24,8 @@ final class IslandStore {
     private(set) var isDebugAgendaPinned = false
     /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
     @ObservationIgnored private var lastRealEvents: [CalendarEvent] = []
-    var notch = CGSize(width: 186, height: 32)
+    /// Вырез этой машины по API до первой расстановки окна (лог window 28.09)
+    var notch = CGSize(width: 185, height: 32)
 
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
     /// Звук уведомления: AppDelegate подключает сюда SoundPlayer.play, если в настройках включён Play sounds

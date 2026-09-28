@@ -17,6 +17,8 @@ final class AppSettings: ObservableObject {
         static let builtInNotchHeight = "builtInNotchHeight"
         static let playSounds = "playSounds"
         static let hideMenuBarIcon = "hideMenuBarIcon"
+        static let notchWidthOffset = "notchWidthOffset"
+        static let notchHeightOffset = "notchHeightOffset"
     }
 
     var onChange: () -> Void = {}
@@ -72,6 +74,28 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// General → Tuning → Notch width, pt, −2…2
+    @Published var notchWidthOffset: Double {
+        didSet {
+            guard oldValue != notchWidthOffset else { return }
+            defaults.set(notchWidthOffset, forKey: Key.notchWidthOffset)
+            onChange()
+        }
+    }
+    /// General → Tuning → Notch height, pt, −2…2
+    @Published var notchHeightOffset: Double {
+        didSet {
+            guard oldValue != notchHeightOffset else { return }
+            defaults.set(notchHeightOffset, forKey: Key.notchHeightOffset)
+            onChange()
+        }
+    }
+
+    /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
+    var notchTuning: NotchTuning {
+        NotchTuning(width: min(max(notchWidthOffset, -2), 2), height: min(max(notchHeightOffset, -2), 2))
+    }
+
     /// Последний вырез встроенного экрана: размер виртуального выреза, когда крышка закрыта.
     /// Служебное значение: onChange не зовёт
     var builtInNotch: CGSize? {
@@ -99,6 +123,8 @@ final class AppSettings: ObservableObject {
         display = DisplayChoice(storageValue: defaults.string(forKey: Key.display))
         playSounds = defaults.object(forKey: Key.playSounds) as? Bool ?? true
         hideMenuBarIcon = defaults.bool(forKey: Key.hideMenuBarIcon)
+        notchWidthOffset = defaults.double(forKey: Key.notchWidthOffset)
+        notchHeightOffset = defaults.double(forKey: Key.notchHeightOffset)
     }
 
     func machineConfig(from base: IslandMachine.Config) -> IslandMachine.Config {

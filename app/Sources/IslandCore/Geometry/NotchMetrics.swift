@@ -28,3 +28,26 @@ public struct NotchMetrics: Equatable, Sendable {
             height: notchSize.height)
     }
 }
+
+/// General → Tuning (Notch width / Notch height у Alcove, −2…2, ui-inspection 1.2): сдвиг в pt к размеру
+/// выреза по API. У Alcove на этой машине −2: 185 → тело в покое 183 (ui-inspection 3.1)
+public struct NotchTuning: Equatable, Sendable {
+    public var width: CGFloat
+    public var height: CGFloat
+
+    public init(width: CGFloat = 0, height: CGFloat = 0) {
+        self.width = width
+        self.height = height
+    }
+}
+
+extension NotchMetrics {
+    /// Вырез со сдвигом. Экран тот же, поэтому notchRect остаётся по центру и у верхнего края
+    public func tuned(by tuning: NotchTuning) -> NotchMetrics {
+        NotchMetrics(
+            notchSize: CGSize(
+                width: max(1, notchSize.width + tuning.width),
+                height: max(1, notchSize.height + tuning.height)),
+            screenFrame: screenFrame)
+    }
+}

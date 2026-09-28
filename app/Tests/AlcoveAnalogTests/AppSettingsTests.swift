@@ -106,6 +106,19 @@ struct AppSettingsTests {
         #expect(AppSettings(defaults: defaults).hideMenuBarIcon)
     }
 
+    @Test("Подгонка выреза: по умолчанию 0, зажата в −2…2, переживает перезапуск")
+    func notchTuning() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.notchTuning == NotchTuning())
+        settings.notchWidthOffset = -2
+        settings.notchHeightOffset = 5
+        #expect(settings.notchTuning == NotchTuning(width: -2, height: 2))
+        let again = AppSettings(defaults: defaults)
+        #expect(again.notchWidthOffset == -2)
+    }
+
     @Test("Hover-настройки попадают в конфиг машины, темп остаётся от базы")
     func machineConfig() {
         let (name, defaults) = Self.freshDefaults()

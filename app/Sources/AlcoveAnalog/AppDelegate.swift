@@ -63,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.statusItem = statusItem
         statusItem.setIconHidden(settings.hideMenuBarIcon)
         window = IslandWindowController(store: store, menu: statusItem.menu)
+        window?.tuning = settings.notchTuning
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
             // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startNowPlaying
             // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
@@ -92,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applySettings() {
         store.config = settings.machineConfig(from: store.config)
         statusItem?.setIconHidden(settings.hideMenuBarIcon)
+        window?.tuning = settings.notchTuning
     }
 
     /// Повторный запуск (open -a, Spotlight) открывает настройки: с Hide menu bar icon при закрытой крышке
