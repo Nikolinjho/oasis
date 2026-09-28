@@ -1,5 +1,6 @@
 import Foundation
 import IslandCore
+import os
 
 /// Заряд и модель Bluetooth-наушников из system_profiler: публичного API для AirPods нет
 public enum AirPodsBattery {
@@ -25,11 +26,6 @@ public enum AirPodsBattery {
     public static func info(name: String, device: Device?) -> AirPodsInfo? {
         guard isHeadphones(name: name, device: device) else { return nil }
         return AirPodsInfo(name: name, battery: device?.battery, model: device?.model)
-    }
-
-    /// Вывод `system_profiler SPBluetoothDataType -json` → заряд 0…1 подключённого устройства по имени
-    public static func parse(json: Data, name: String) -> Double? {
-        device(json: json, name: name)?.battery
     }
 
     /// Подключённое устройство по имени. Ключи сверены с живым выводом macOS 26: device_connected /
@@ -70,29 +66,77 @@ public enum AirPodsBattery {
         }
     }
 
-    /// «82%» → 0.82
+    /// «82%», «85 %» → 0.82, 0.85. Вне 0…100 зажимается
     static func percent(_ value: Any?) -> Double? {
-        guard let text = value as? String, let number = Double(text.replacingOccurrences(of: "%", with: "")) else { return nil }
-        return number / 100
+        guard let text = value as? String,
+              let number = Double(text.replacingOccurrences(of: "%", with: "").trimmingCharacters(in: .whitespaces))
+        else { return nil }
+        return min(max(number / 100, 0), 1)
     }
 
-    /// system_profiler работает 1–2 с: вне главного потока
-    public static func read(name: String) async -> Device? {
-        await Task.detached {
+    /// Разбор пачки подключений по одному выводу system_profiler. names — имя → уже был повтор.
+    /// Наушники без заряда (system_profiler ещё не успел его узнать) и все имена при сбое чтения (json nil)
+    /// идут на один повтор в следующем окне; после повтора наушники показываются как есть, без заряда
+    static func resolve(_ names: [String: Bool], json: Data?) -> (show: [AirPodsInfo], retry: [String]) {
+        var show: [AirPodsInfo] = []
+        var retry: [String] = []
+        for (name, retried) in names.sorted(by: { $0.key < $1.key }) {
+            let info = info(name: name, device: json.flatMap { device(json: $0, name: name) })
+            if !retried, info?.battery == nil, info != nil || json == nil {
+                retry.append(name)
+            } else if let info {
+                show.append(info)
+            }
+        }
+        return (show, retry)
+    }
+
+    /// Вывод `system_profiler SPBluetoothDataType -json`, nil при сбое или таймауте
+    static func readProfile() async -> Data? {
+        await output(of: URL(fileURLWithPath: "/usr/sbin/system_profiler"), arguments: ["SPBluetoothDataType", "-json"], timeout: 5)
+    }
+
+    /// stdout процесса без блокировки пула задач: конец — terminationHandler, pipe читается на своей очереди
+    /// (иначе полный буфер pipe держит процесс). Не уложился в timeout — terminate и nil. Ненулевой код — nil
+    static func output(of executable: URL, arguments: [String], timeout: TimeInterval) async -> Data? {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
-            process.arguments = ["SPBluetoothDataType", "-json"]
+            process.executableURL = executable
+            process.arguments = arguments
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = FileHandle.nullDevice
+            let timedOut = OSAllocatedUnfairLock(initialState: false)
+            let output = OSAllocatedUnfairLock(initialState: Data())
+            let reading = DispatchGroup()
+            process.terminationHandler = { process in
+                let status = process.terminationStatus
+                reading.notify(queue: .global()) {
+                    let failed = timedOut.withLock { $0 } || status != 0
+                    continuation.resume(returning: failed ? nil : output.withLock { $0 })
+                }
+            }
+            // enter до run: быстрый процесс может закончиться раньше, чем стартует чтение,
+            // и notify без него отдал бы пустые данные
+            reading.enter()
             do {
                 try process.run()
             } catch {
-                return nil
+                reading.leave()
+                continuation.resume(returning: nil)
+                return
             }
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            process.waitUntilExit()
-            return device(json: data, name: name)
-        }.value
+            // читать только после запуска: иначе при сбое run() чтение ждало бы EOF вечно
+            DispatchQueue.global().async {
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                output.withLock { $0 = data }
+                reading.leave()
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+                guard process.isRunning else { return }
+                timedOut.withLock { $0 = true }
+                process.terminate()
+            }
+        }
     }
 }

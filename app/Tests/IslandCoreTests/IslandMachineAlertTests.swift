@@ -145,6 +145,7 @@ struct IslandMachineAlertTests {
         #expect(m.surface == .idle)
         #expect(fx == [.animate(.alertOut)])
     }
+
     @Test("AirPods: приоритет 1, 5 с, без звука")
     func airpodsAlert() {
         let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))

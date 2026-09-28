@@ -12,10 +12,11 @@ struct AirPodsBatteryTests {
     @Test("Заряд подключённых: меньший из наушников, иначе Main, без данных — nil")
     func battery() throws {
         let data = try Self.fixture()
-        #expect(AirPodsBattery.parse(json: data, name: "AirPods Pro") == 0.82)
-        #expect(AirPodsBattery.parse(json: data, name: "AirPods Max") == 0.64)
-        #expect(AirPodsBattery.parse(json: data, name: "MX Master 3") == nil)
-        #expect(AirPodsBattery.parse(json: data, name: "AirPods 4") == nil)
+        #expect(AirPodsBattery.device(json: data, name: "AirPods Pro")?.battery == 0.82)
+        #expect(AirPodsBattery.device(json: data, name: "AirPods Max")?.battery == 0.64)
+        #expect(AirPodsBattery.device(json: data, name: "MX Master 3")?.battery == nil)
+        // не подключены — устройства нет вовсе
+        #expect(AirPodsBattery.device(json: data, name: "AirPods 4") == nil)
     }
 
     @Test("Наушники по имени: AirPods всех моделей и Beats")
@@ -58,5 +59,51 @@ struct AirPodsBatteryTests {
         #expect(AirPodsBattery.info(name: "Studio", device: studio) == AirPodsInfo(name: "Studio", battery: 0.4, model: .pro))
         #expect(AirPodsBattery.info(name: "WH-1000XM5", device: AirPodsBattery.device(json: data, name: "WH-1000XM5")) == nil)
         #expect(AirPodsBattery.info(name: "AirPods Max", device: nil) == AirPodsInfo(name: "AirPods Max", battery: nil))
+    }
+
+    @Test("Процент: пробелы не мешают, значение зажато в 0…1")
+    func percent() {
+        #expect(AirPodsBattery.percent("85 %") == 0.85)
+        #expect(AirPodsBattery.percent(" 82%") == 0.82)
+        #expect(AirPodsBattery.percent("120%") == 1)
+        #expect(AirPodsBattery.percent("-5%") == 0)
+        #expect(AirPodsBattery.percent("n/a") == nil)
+        #expect(AirPodsBattery.percent(nil) == nil)
+    }
+
+    @Test("Пачка подключений: одно чтение на всех, без заряда — один повтор, не наушники отбрасываются")
+    func resolveBatch() throws {
+        let data = try Self.fixture()
+        let first = AirPodsBattery.resolve(["AirPods Pro": false, "Kitchen": false, "MX Master 3": false, "Fresh AirPods": false], json: data)
+        #expect(Set(first.show.map(\.name)) == ["AirPods Pro", "Kitchen"])
+        // «Fresh AirPods» ещё не попали в system_profiler: заряда нет, ждём ещё одно окно
+        #expect(first.retry == ["Fresh AirPods"])
+        let second = AirPodsBattery.resolve(["Fresh AirPods": true], json: data)
+        #expect(second.show == [AirPodsInfo(name: "Fresh AirPods", battery: nil)])
+        #expect(second.retry.isEmpty)
+        // system_profiler не ответил: то же правило, что без заряда
+        let failed = AirPodsBattery.resolve(["AirPods Pro": false], json: nil)
+        #expect(failed.show.isEmpty)
+        #expect(failed.retry == ["AirPods Pro"])
+    }
+
+    @Test("Вывод процесса целиком")
+    func output() async {
+        let data = await AirPodsBattery.output(of: URL(fileURLWithPath: "/bin/echo"), arguments: ["hi"], timeout: 5)
+        #expect(data.map { String(decoding: $0, as: UTF8.self) } == "hi\n")
+    }
+
+    @Test("Завис процесс: по таймауту он завершается, результат nil")
+    func outputTimeout() async {
+        let start = ContinuousClock.now
+        let data = await AirPodsBattery.output(of: URL(fileURLWithPath: "/bin/sleep"), arguments: ["10"], timeout: 0.3)
+        #expect(data == nil)
+        #expect(ContinuousClock.now - start < .seconds(3))
+    }
+
+    @Test("Не запустился процесс — nil, без зависания")
+    func outputMissingExecutable() async {
+        let data = await AirPodsBattery.output(of: URL(fileURLWithPath: "/nonexistent/tool"), arguments: [], timeout: 5)
+        #expect(data == nil)
     }
 }

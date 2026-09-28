@@ -8,28 +8,73 @@ import IslandCore
 public final class BluetoothWatcher: NSObject {
     public var onConnect: (AirPodsInfo) -> Void = { _ in }
     private var registration: IOBluetoothUserNotification?
+    /// Адреса устройств, подключённых до start(): регистрация сразу присылает по ним connected,
+    /// а это не новое подключение — первое такое уведомление пропускаем
+    private var connectedAtStart: Set<String> = []
+    /// Ждущие чтения имена → уже был повтор (AirPodsBattery.resolve)
+    private var pending: [String: Bool] = [:]
+    /// Окно пачки: после выхода из сна переподключаются сразу несколько устройств, а system_profiler
+    /// запускается один раз на окно и разбирается для всех имён
+    private var batch: Task<Void, Never>?
+    private var startupGrace: Task<Void, Never>?
     private let log = SourceLog.logger("bluetooth")
 
+    /// Окно пачки и задержка уведомления: ~2 с, как у Alcove (ui-inspection 3.6)
+    static let window: Duration = .seconds(2)
+    /// Сколько ждать уведомлений по уже подключённым устройствам после регистрации. Замера нет, оценка:
+    /// IOBluetooth присылает их сразу, но не обязательно синхронно внутри register
+    static let startupGraceTime: Duration = .seconds(5)
+
     public func start() {
+        guard registration == nil else { return }
+        let devices = IOBluetoothDevice.pairedDevices()?.compactMap { $0 as? IOBluetoothDevice } ?? []
+        connectedAtStart = Set(devices.filter { $0.isConnected() }.compactMap(\.addressString))
         registration = IOBluetoothDevice.register(forConnectNotifications: self, selector: #selector(connected(_:device:)))
         if registration == nil { log.error("bluetooth connect notifications unavailable") }
+        // не пришло уведомление по подключённому до старта — адрес не должен глушить его следующее подключение
+        startupGrace = Task { [weak self] in
+            try? await Task.sleep(for: Self.startupGraceTime)
+            if !Task.isCancelled { self?.connectedAtStart = [] }
+        }
     }
 
     public func stop() {
         registration?.unregister()
         registration = nil
+        batch?.cancel()
+        batch = nil
+        startupGrace?.cancel()
+        startupGrace = nil
+        pending = [:]
+        connectedAtStart = []
     }
 
-    /// Переименованные наушники по имени не узнать: system_profiler читается для любого подключения,
-    /// а наушники ли это, решает AirPodsBattery.info по имени или vendorID и minorType
+    /// IOBluetooth доставляет уведомление на run loop потока, где шла регистрация, — главный (start() на MainActor)
     @objc private func connected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        if let address = device.addressString, connectedAtStart.remove(address) != nil { return }
         guard let name = device.name else { return }
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(2))
-            let found = await AirPodsBattery.read(name: name)
-            guard let self, let info = AirPodsBattery.info(name: name, device: found) else { return }
-            log.info("headphones connected \(name, privacy: .public)")
-            onConnect(info)
+        if pending[name] == nil { pending[name] = false }
+        guard batch == nil else { return }
+        batch = Task { [weak self] in await self?.drain() }
+    }
+
+    /// Окно за окном, пока есть ждущие имена: повтор без заряда тоже ждёт следующего окна.
+    /// После отмены (stop) ничего не трогает: batch к этому времени уже чужой или nil
+    private func drain() async {
+        while !pending.isEmpty {
+            try? await Task.sleep(for: Self.window)
+            if Task.isCancelled { return }
+            let names = pending
+            pending = [:]
+            let json = await AirPodsBattery.readProfile()
+            if Task.isCancelled { return }
+            let result = AirPodsBattery.resolve(names, json: json)
+            for name in result.retry where pending[name] == nil { pending[name] = true }
+            for info in result.show {
+                log.info("headphones connected \(info.name, privacy: .public)")
+                onConnect(info)
+            }
         }
+        batch = nil
     }
 }
