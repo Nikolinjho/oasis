@@ -1,7 +1,7 @@
 import Testing
 @testable import IslandCore
 
-/// Отзыв уведомления (Dismiss Event): ждущие в очереди уходят, показанное дослуживает свой срок
+/// Отзыв уведомления (Dismiss Event): ждущие в очереди и то, к которому идёт сжатие, уходят, показанное дослуживает свой срок
 struct IslandMachineRetractTests {
     static let color = RGB(red: 0.2, green: 0.5, blue: 1)
     static func reminder(_ id: String, _ minutes: Int) -> IslandAlert {
@@ -33,12 +33,33 @@ struct IslandMachineRetractTests {
         #expect(m.alertQueue == [Self.low])
     }
 
-    @Test("Напоминание, к которому уже идёт сжатие, тоже дослуживает: оно фактически показывается")
-    func keepsPending() {
+    @Test("Сжатие шло к напоминанию отклонённого события: вместо него покой, после grow ни напоминания, ни звука")
+    func pendingGoesToRest() {
         var m = Self.model(.shrink)
+        m.hasMedia = true
         m.pending = .alert(Self.reminder("a", 15))
         #expect(IslandMachine.reduce(&m, .alertRetracted(.calendarReminder(eventID: "a"))).isEmpty)
-        #expect(m.pending == .alert(Self.reminder("a", 15)))
+        #expect(m.pending == .compact)
+        let fx = IslandMachine.reduce(&m, .timerFired(.grow))
+        #expect(fx == [.animate(.grow)])
+        #expect(m.surface == .compact)
+    }
+
+    @Test("Сжатие шло к напоминанию отклонённого события, в очереди есть другое: сжатие идёт к следующему")
+    func pendingGoesToNextQueued() {
+        var m = Self.model(.shrink, queue: [Self.low])
+        m.pending = .alert(Self.reminder("a", 15))
+        _ = IslandMachine.reduce(&m, .alertRetracted(.calendarReminder(eventID: "a")))
+        #expect(m.pending == .alert(Self.low))
+        #expect(m.alertQueue.isEmpty)
+    }
+
+    @Test("Сжатие к напоминанию другого события отзыв не трогает")
+    func pendingOfOtherEventStays() {
+        var m = Self.model(.shrink)
+        m.pending = .alert(Self.reminder("b", 5))
+        _ = IslandMachine.reduce(&m, .alertRetracted(.calendarReminder(eventID: "a")))
+        #expect(m.pending == .alert(Self.reminder("b", 5)))
     }
 
     @Test("Без ждущих этого вида ничего не меняется")
