@@ -20,6 +20,8 @@ public enum IslandEvent: Equatable, Sendable {
     case calendarLiveChanged(Bool)
     /// Событие началось: peek с названием поверх компакта календаря и звук
     case calendarStarted
+    /// Свайп вниз по раскрытому: следующий вид
+    case expandedViewCycled
     case hoverEntered, hoverExited
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
@@ -49,6 +51,8 @@ public struct IslandModel: Equatable, Sendable {
     public var alertQueue: [IslandAlert] = []
     /// Открыто окно календаря (T−1 мин … конец события): компакт календаря вытесняет музыку (решение 27.09)
     public var calendarLive = false
+    /// Вид раскрытого. Каждое раскрытие начинается с Duo (ui-inspection 3.7, «Переоткрытие сбрасывает вид на Duo»)
+    public var expandedView: ExpandedView = .duo
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
@@ -134,6 +138,7 @@ public enum IslandMachine {
         case let .alertArrived(alert): alertArrived(&model, alert)
         case let .calendarLiveChanged(live): calendarLiveChanged(&model, live)
         case .calendarStarted: calendarStarted(&model)
+        case .expandedViewCycled: expandedViewCycled(&model)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
@@ -342,6 +347,13 @@ public enum IslandMachine {
         return [.animate(.calendarPeekOpen), .schedule(.calendarPeekEnd, after: IslandTiming.calendarPeek), .play(.event)]
     }
 
+    /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент
+    private static func expandedViewCycled(_ m: inout IslandModel) -> [IslandEffect] {
+        guard m.surface == .expanded else { return [] }
+        m.expandedView = m.expandedView.next
+        return [.animate(.viewSwap)]
+    }
+
     private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {
         guard m.pending == nil else { return [] }
         switch m.surface {
@@ -349,11 +361,13 @@ public enum IslandMachine {
         case .hover where target == .expanded: break
         case .hoverNudge where target == .expanded:
             // клик во время отклика раскрывает сразу, не дожидаясь таймера
+            if target == .expanded { m.expandedView = .duo }
             m.surface = target
             return [.cancel(.hoverOpen), .animate(transition)]
         default: return []
         }
         let cancels = peekCancels(from: m.surface)
+        if target == .expanded { m.expandedView = .duo }
         m.surface = target
         return cancels + [.animate(transition)]
     }
@@ -370,6 +384,7 @@ public enum IslandMachine {
         case .idle, .compact, .peek, .calendar, .calendarPeek:
             let cancels = peekCancels(from: m.surface)
             if m.config.expandsOnHover, m.config.hoverDelay == .zero {
+                m.expandedView = .duo
                 m.surface = .expanded
                 return cancels + [.animate(.hoverExpand)]
             }
@@ -450,6 +465,7 @@ public enum IslandMachine {
         case .hoverOpen:
             // настройку могли выключить, пока таймер уже стоял в очереди: не раскрываем задним числом
             guard m.config.expandsOnHover, case .hoverNudge = m.surface, m.pending == nil else { return [] }
+            m.expandedView = .duo
             m.surface = .expanded
             return [.animate(.hoverExpand)]
         case .hoverLeave:

@@ -186,6 +186,7 @@ enum DebugCatalog {
             .action(DebugAction(id: "island.leave", title: "Leave") { store.send(.hoverExited) }),
             .action(DebugAction(id: "island.open", title: "Open") { store.send(.clicked) }),
             .action(DebugAction(id: "island.close", title: "Close") { store.send(.clickedOutside) }),
+            .action(DebugAction(id: "island.cycle", title: "Cycle Expanded View") { store.send(.expandedViewCycled) }),
             .separator,
             .action(DebugAction(id: "island.morph-hud", title: "Morph Expanded → HUD") {
                 DebugScript.run([

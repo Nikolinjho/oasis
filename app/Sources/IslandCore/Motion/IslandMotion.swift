@@ -17,6 +17,8 @@ public enum IslandTransition: Equatable, Sendable {
     case alertIn, alertGrow, alertShrink, alertOut, alertUpdate
     /// Peek календаря на старте события и его уход
     case calendarPeekOpen, calendarPeekClose
+    /// Смена вида раскрытого: форма та же, контент через блюр
+    case viewSwap
 
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
@@ -67,6 +69,9 @@ public enum IslandMotion {
         case .calendarPeekOpen: SpringSpec(stiffness: 305, damping: 24.3)
         // там же: 73.5 → 32 за ~0.4 с монотонно
         case .calendarPeekClose: .smooth(duration: 0.4)
+        // ui-inspection 3.7: старый вид гаснет в блюр ~0.1 с, новый проявляется ~0.13 с, всего ~0.23 с.
+        // Форма не меняется: пружина задаёт только общий такт для переходов контента
+        case .viewSwap: .smooth(duration: 0.23)
         // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)
