@@ -24,10 +24,4 @@ struct ListenedDeviceTests {
         _ = listened.switchTo(91)
         #expect(listened.switchTo(91) == nil)
     }
-
-    @Test("Смена выхода — событие громкости, первое подключение — нет")
-    func emitsOnlyOnChange() {
-        #expect(ListenedDevice.Switch(attach: 105, detach: 91).isDeviceChange)
-        #expect(!ListenedDevice.Switch(attach: 91, detach: nil).isDeviceChange)
-    }
 }

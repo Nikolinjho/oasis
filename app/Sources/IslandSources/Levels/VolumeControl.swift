@@ -8,9 +8,6 @@ struct ListenedDevice: Equatable {
     struct Switch: Equatable {
         let attach: AudioObjectID
         let detach: AudioObjectID?
-
-        /// Сменился дефолтный выход, а не первое подключение: громкость теперь другая, шлём событие
-        var isDeviceChange: Bool { detach != nil }
     }
 
     private(set) var current = AudioObjectID(kAudioObjectUnknown)
@@ -39,12 +36,12 @@ public final class VolumeControl: @unchecked Sendable {
         self.continuation = continuation
         onChange = { _, _ in continuation.yield(VolumeControl.currentLevel()) }
 
-        // дефолтный выход сменился (наушники, AirPlay, меню плеера): переподписываемся на новое устройство
-        // и шлём его уровень, иначе HUD до первого изменения громкости показывал бы старое
+        // дефолтный выход сменился (наушники, AirPlay, меню плеера): только переподписываемся на новое устройство.
+        // HUD при смене не показываем, как и сама macOS (решение 28.09): он вытеснял компакт подключённых AirPods.
+        // Уровень нового устройства придёт с первым изменением громкости от его слушателя
         var defaultAddress = Self.address(kAudioHardwarePropertyDefaultOutputDevice, scope: kAudioObjectPropertyScopeGlobal)
         AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defaultAddress, .main) { [weak self] _, _ in
-            guard let self, self.attach(to: Self.defaultDevice())?.isDeviceChange == true else { return }
-            continuation.yield(Self.currentLevel())
+            self?.attach(to: Self.defaultDevice())
         }
         attach(to: Self.defaultDevice())
     }
