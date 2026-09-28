@@ -20,6 +20,8 @@
     <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>Alcove Analog needs your permission to add the playing Apple Music track to Favorites.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Alcove Analog shows your next event next to the player and reminds you before calls.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

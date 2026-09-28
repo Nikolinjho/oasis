@@ -11,6 +11,8 @@ import SwiftUI
 final class IslandStore {
     private(set) var model: IslandModel
     private(set) var nowPlaying: NowPlayingInfo?
+    /// События сегодня и завтра: Duo и календарь
+    private(set) var agenda = DayAgenda.empty
     var notch = CGSize(width: 186, height: 32)
 
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
@@ -83,5 +85,10 @@ final class IslandStore {
             nowPlaying = nil
             send(.mediaCleared)
         }
+    }
+
+    /// События из календаря или отладки. Agenda считается от текущего времени
+    func apply(events: [CalendarEvent], now: Date = Date()) {
+        agenda = DayAgenda.make(events: events, now: now)
     }
 }

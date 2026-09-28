@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyTap: MediaKeyTap?
     private var trustTimer: Timer?
     private var fullscreen: FullscreenMonitor?
+    private var calendar: EventKitCalendarSource?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
@@ -44,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startFullscreenMonitor()
         startNowPlaying()
         startPlayerActions()
+        startCalendar()
         startLevels()
         startKeyTap()
     }
@@ -108,6 +110,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             log.debug("player action \(String(describing: action), privacy: .public)")
             router.perform(action, nowPlaying: store.nowPlaying)
         }
+    }
+
+    private func startCalendar() {
+        let source = EventKitCalendarSource()
+        tasks.append(Task { [store] in
+            for await events in source.changes { store.apply(events: events) }
+        })
+        source.start()
+        calendar = source
     }
 
     private func startLevels() {
