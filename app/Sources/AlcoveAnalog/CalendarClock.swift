@@ -12,6 +12,8 @@ final class CalendarClock {
     private var lastTick: Date
     /// Событие окна, отправленное в store: целиком, чтобы правка названия или конца внутри окна дошла до store
     private var live: CalendarEvent?
+    /// Dismiss Event: id отклонённых событий. Их нет ни в окне, ни в напоминаниях, ни в границах таймера, ни в меню
+    private var dismissed: Set<String> = []
     private var timer: Task<Void, Never>?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
 
@@ -36,18 +38,21 @@ final class CalendarClock {
 
     func update(agenda: DayAgenda, now: Date = Date()) {
         self.agenda = agenda
+        // отклонённые, которых уже нет в agenda, забываются. Завтрашние тоже в счёт: в полночь событие
+        // переезжает из tomorrow в today с тем же id и должно остаться отклонённым
+        dismissed.formIntersection((agenda.today + agenda.tomorrow).map(\.id))
         tick(now: now)
     }
 
     func tick(now: Date = Date()) {
         // окно раньше отметок: проснулись после начала — сначала компакт календаря, и только поверх него
         // calendarStarted откроет peek старта. В обратном порядке из формы выреза был бы только звук
-        let live = CalendarSchedule.liveEvent(in: agenda, at: now)
+        let live = CalendarSchedule.liveEvent(in: visible, at: now)
         if live != self.live {
             self.live = live
             store.setCalendarLive(live)
         }
-        for tick in CalendarSchedule.crossings(in: agenda, from: lastTick, to: now) {
+        for tick in CalendarSchedule.crossings(in: visible, from: lastTick, to: now) {
             switch tick {
             case let .reminder(event, minutes):
                 store.send(.alertArrived(.calendarReminder(CalendarReminder(
@@ -60,10 +65,28 @@ final class CalendarClock {
         schedule(after: now)
     }
 
+    /// Dismiss Event: событие уходит из компакта, напоминаний и меню, пока оно есть в agenda
+    func dismiss(_ id: String, now: Date = Date()) {
+        dismissed.insert(id)
+        tick(now: now)
+    }
+
+    /// Пункты события для меню menu bar
+    func menuModel(now: Date = Date()) -> CalendarMenuModel? {
+        CalendarMenuModel.make(agenda: agenda, now: now, dismissed: dismissed)
+    }
+
+    /// События без отклонённых: по ним считаются напоминания, старт, окно календаря и граница таймера
+    private var visible: DayAgenda {
+        DayAgenda(
+            today: agenda.today.filter { !dismissed.contains($0.id) },
+            tomorrow: agenda.tomorrow.filter { !dismissed.contains($0.id) })
+    }
+
     /// До ближайшей границы, но не дольше 5 минут: agenda могла устареть, а часы — уйти после сна
     private func schedule(after now: Date) {
         timer?.cancel()
-        let next = CalendarSchedule.nextBoundary(in: agenda, after: now) ?? now.addingTimeInterval(300)
+        let next = CalendarSchedule.nextBoundary(in: visible, after: now) ?? now.addingTimeInterval(300)
         let delay = min(max(next.timeIntervalSince(now), 0.05), 300)
         timer = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))

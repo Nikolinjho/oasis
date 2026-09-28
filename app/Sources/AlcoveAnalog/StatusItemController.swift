@@ -36,9 +36,16 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
     private let grantAccessibility = ClosureMenuItem("Grant Accessibility…") { Permissions.openAccessibilitySettings() }
     private let isTrusted: () -> Bool
+    private let calendarItems: () -> [NSMenuItem]
+    /// Пункты события, вставленные при прошлом открытии: снимаются перед пересборкой
+    private var shownCalendarItems: [NSMenuItem] = []
 
-    init(debugItem: NSMenuItem, isTrusted: @escaping () -> Bool, openSettings: @escaping () -> Void) {
+    init(
+        debugItem: NSMenuItem, isTrusted: @escaping () -> Bool, openSettings: @escaping () -> Void,
+        calendarItems: @escaping () -> [NSMenuItem] = { [] }
+    ) {
         self.isTrusted = isTrusted
+        self.calendarItems = calendarItems
         super.init()
         item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
         // позиция после перетаскивания с Cmd сохраняется между запусками
@@ -59,5 +66,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         launchAtLogin.state = LoginItem.isEnabled ? .on : .off
         grantAccessibility.isHidden = isTrusted()
+        rebuildCalendarItems()
+    }
+
+    /// Пункты события вверху меню, как у Alcove. Пересобираются при каждом открытии: правый клик по острову
+    /// открывает это же меню, поэтому пункты есть и там
+    private func rebuildCalendarItems() {
+        for item in shownCalendarItems { menu.removeItem(item) }
+        let items = calendarItems()
+        shownCalendarItems = items.isEmpty ? [] : items + [.separator()]
+        for (index, item) in shownCalendarItems.enumerated() { menu.insertItem(item, at: index) }
     }
 }

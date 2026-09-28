@@ -32,6 +32,15 @@ else
     echo "Нет $SOUNDS: уведомления будут без звука" >&2
 fi
 
+# иконка Meet для пункта Join в меню: из бандла Alcove (assets/images), в git её нет
+IMAGES="${ALCOVE_ASSETS:-$HOME/alcove-analog/assets}/images"
+if [ -f "$IMAGES/GoogleMeetAppIcon18x18.png" ]; then
+    mkdir -p "$APP/Contents/Resources/Icons"
+    cp "$IMAGES/GoogleMeetAppIcon18x18.png" "$APP/Contents/Resources/Icons/google-meet.png"
+else
+    echo "Нет $IMAGES/GoogleMeetAppIcon18x18.png: у Join будет SF Symbol video.fill" >&2
+fi
+
 if security find-identity -p codesigning | grep -q "$IDENTITY"; then
     SIGN="$IDENTITY"
 else

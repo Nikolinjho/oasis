@@ -121,6 +121,15 @@ enum DebugCatalog {
                     id: "fake-remind", title: "Fake Call", start: start, end: start.addingTimeInterval(1800),
                     isAllDay: false, color: RGB(red: 0.2, green: 0.5, blue: 1))])
             }),
+            .action(DebugAction(id: "calendar.menu-event", title: "Meet Call in 8 min (menu items)") {
+                // как на скрине меню Alcove: событие через 8 минут, в меню Join, Open in Calendar, Dismiss Event.
+                // Закреплённая повестка: часы получат её через onAgendaChange (Task 5), снимает calendar.real
+                let start = Date().addingTimeInterval(8 * 60)
+                store.pinDebugEvents([CalendarEvent(
+                    id: "fake-menu@\(start.timeIntervalSince1970)", title: "Fake Call", start: start,
+                    end: start.addingTimeInterval(1800), isAllDay: false, color: RGB(red: 0.2, green: 0.5, blue: 1),
+                    notes: "Join: https://meet.google.com/abc-defg-hij")])
+            }),
         ])
     }
 

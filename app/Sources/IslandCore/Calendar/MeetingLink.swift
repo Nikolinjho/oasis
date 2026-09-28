@@ -2,10 +2,8 @@ import Foundation
 
 /// Ссылка на созвон в событии календаря: Google Meet, Zoom, Яндекс Телемост, Microsoft Teams (решение 27.09)
 public enum MeetingLink {
-    static let hosts = [
-        "meet.google.com", "zoom.us", "zoom.com", "zoomgov.com", "telemost.yandex.ru", "telemost.360.yandex.ru",
-        "teams.microsoft.com", "teams.live.com", "teams.cloud.microsoft",
-    ]
+    /// Хосты всех сервисов: список один, в MeetingService, чтобы найденная ссылка всегда давала имя для Join
+    static let hosts = MeetingService.allCases.flatMap(\.hosts)
 
     /// Ищет по порядку в поле URL, месте и заметках. Первая ссылка на созвон выигрывает
     public static func find(in event: CalendarEvent) -> URL? {
@@ -25,7 +23,7 @@ public enum MeetingLink {
                 let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
                 let host = url.host()?.lowercased()
             else { continue }
-            if hosts.contains(where: { host == $0 || host.hasSuffix("." + $0) }) { return url }
+            if hosts.contains(where: { MeetingService.host(host, matches: $0) }) { return url }
         }
         return nil
     }

@@ -104,3 +104,83 @@ struct CalendarClockTests {
         _ = clock
     }
 }
+
+@MainActor
+struct CalendarClockDismissTests {
+    static let start = CalendarClockTests.start
+    static func at(_ offset: TimeInterval) -> Date { CalendarClockTests.at(offset) }
+    static func event(_ id: String, startsAt offset: TimeInterval) -> CalendarEvent {
+        CalendarEvent(
+            id: id, title: id, start: at(offset), end: at(offset + 1800), isAllDay: false,
+            color: CalendarClockTests.event.color)
+    }
+
+    @Test("Отклонённое событие не шлёт напоминаний и старта, следующее — шлёт")
+    func dismissedHasNoReminders() {
+        let first = Self.event("first", startsAt: 0)
+        let second = Self.event("second", startsAt: 1200)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(-600))
+        clock.update(agenda: DayAgenda(today: [first, second], tomorrow: []), now: Self.at(-600))
+        clock.dismiss("first", now: Self.at(-600))
+
+        // T−5 отклонённого: тишина
+        clock.tick(now: Self.at(-299))
+        #expect(store.model.surface == .idle)
+        // старт отклонённого: ни компакта, ни peek, ни пунктов меню
+        clock.tick(now: Self.at(1))
+        #expect(store.model.surface == .idle)
+        #expect(!store.model.calendarLive)
+        #expect(clock.menuModel(now: Self.at(1)) == nil)
+
+        // T−15 следующего приходит, пункты меню — по нему
+        clock.tick(now: Self.at(301))
+        let reminder = CalendarReminder(eventID: "second", title: "second", minutes: 15, color: second.color)
+        #expect(store.model.surface == .alert(.calendarReminder(reminder)))
+        #expect(clock.menuModel(now: Self.at(301))?.event.id == "second")
+    }
+
+    @Test("Отклонённое идущее событие отдаёт окно следующему")
+    func dismissLiveKeepsNext() {
+        let first = Self.event("first", startsAt: 0)
+        let second = Self.event("second", startsAt: 600)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(10))
+        clock.update(agenda: DayAgenda(today: [first, second], tomorrow: []), now: Self.at(10))
+        #expect(store.calendarEvent == first)
+        clock.dismiss("first", now: Self.at(10))
+        #expect(!store.model.calendarLive)
+        clock.tick(now: Self.at(550))
+        #expect(store.calendarEvent == second)
+    }
+
+    @Test("Отклонённое завтрашнее событие тоже отклонено: напоминание накануне не приходит")
+    func dismissTomorrow() {
+        let night = Self.event("night", startsAt: 600)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(-60))
+        clock.update(agenda: DayAgenda(today: [], tomorrow: [night]), now: Self.at(-60))
+        #expect(clock.menuModel(now: Self.at(-60))?.event.id == "night")
+        clock.dismiss("night", now: Self.at(-60))
+        clock.tick(now: Self.at(301))
+        #expect(store.model.surface == .idle)
+        #expect(clock.menuModel(now: Self.at(301)) == nil)
+    }
+
+    @Test("Отклонение переживает обновление agenda и забывается, когда события в agenda нет")
+    func dismissedSurvivesUpdates() {
+        let first = Self.event("first", startsAt: 300)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(0))
+        clock.update(agenda: DayAgenda(today: [first], tomorrow: []), now: Self.at(0))
+        clock.dismiss("first", now: Self.at(0))
+        // полночь: событие переехало из завтра в сегодня — всё ещё отклонено
+        clock.update(agenda: DayAgenda(today: [], tomorrow: [first]), now: Self.at(1))
+        clock.update(agenda: DayAgenda(today: [first], tomorrow: []), now: Self.at(2))
+        #expect(clock.menuModel(now: Self.at(2)) == nil)
+        // событие пропало из agenda и вернулось: отклонение забыто
+        clock.update(agenda: .empty, now: Self.at(3))
+        clock.update(agenda: DayAgenda(today: [first], tomorrow: []), now: Self.at(4))
+        #expect(clock.menuModel(now: Self.at(4))?.event.id == "first")
+    }
+}

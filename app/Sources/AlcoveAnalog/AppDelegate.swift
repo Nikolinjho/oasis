@@ -49,7 +49,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let statusItem = StatusItemController(
             debugItem: DebugMenu.item(sections: debugSections),
             isTrusted: { Permissions.isAccessibilityTrusted },
-            openSettings: { [weak self] in self?.settingsWindow.show() })
+            openSettings: { [weak self] in self?.settingsWindow.show() },
+            // часы читаются только при открытии меню: lazy calendarClock создаётся при первом обращении
+            calendarItems: { [weak self] in
+                guard let self else { return [] }
+                return CalendarMenuSection.items(for: calendarClock.menuModel(), actions: .init(
+                    join: { [store] url in store.onJoin(url) },
+                    open: { CalendarMenuSection.open($0) },
+                    dismiss: { [calendarClock] id in calendarClock.dismiss(id) }))
+            })
         self.statusItem = statusItem
         window = IslandWindowController(store: store, menu: statusItem.menu)
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
