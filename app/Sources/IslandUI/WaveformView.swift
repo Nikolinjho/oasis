@@ -4,7 +4,7 @@ import SwiftUI
 /// Цвет волны из обложки или нейтральный, если обложки нет
 func accentColor(_ info: NowPlayingInfo?) -> Color {
     guard let accent = info?.accent else { return IslandPalette.secondary }
-    return Color(red: accent.red, green: accent.green, blue: accent.blue)
+    return Color(accent)
 }
 
 /// Эквалайзер: 4 полоски 2 pt с зазором 1.5, у каждой свой период пульса (motion.md, «Справа: эквалайзер»)

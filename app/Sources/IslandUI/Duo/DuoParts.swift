@@ -158,7 +158,7 @@ struct EventCard: View {
     let event: CalendarEvent
 
     var body: some View {
-        let color = Color(red: event.color.red, green: event.color.green, blue: event.color.blue)
+        let color = Color(event.color)
         HStack(spacing: 5) {
             Capsule()
                 .fill(color)

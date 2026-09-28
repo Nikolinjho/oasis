@@ -1,3 +1,5 @@
+import CoreGraphics
+
 /// Как выглядит компактная активность: иконка слева от выреза, индикатор справа, строка peek снизу.
 /// Календарь, AirPods и свои модули описывают себя этим значением, рисует их ActivityCompactView.
 /// Паттерн снят с календаря и AirPods Alcove (ui-inspection 3.5, 3.6)
@@ -35,5 +37,13 @@ public struct ActivityLayout: Equatable, Sendable {
         self.symbolColor = symbolColor
         self.indicator = indicator
         self.line = line
+    }
+
+    /// Ширина компакта под данный индикатор: крылья вокруг выреза симметричны, чтобы вырез остался
+    /// по центру. Каждое крыло — паддинг 12 pt (как у MusicLiveView) плюс большая из иконки (18 pt)
+    /// и индикатора; иначе индикатор шире иконки вылезает под вырез. indicatorWidth меряет вызывающая
+    /// сторона (текст своим шрифтом, кольцо — фиксированные 16)
+    public static func width(notchWidth: CGFloat, indicatorWidth: CGFloat) -> CGFloat {
+        notchWidth + 2 * (12 + max(18, indicatorWidth))
     }
 }

@@ -1,13 +1,8 @@
 import IslandCore
 import SwiftUI
 
-extension Color {
-    init(_ rgb: RGB) {
-        self.init(red: rgb.red, green: rgb.green, blue: rgb.blue)
-    }
-}
-
-/// Компакт активности 32 pt: иконка 18×15 слева, индикатор ~18 pt справа, вырез между ними.
+/// Компакт активности 32 pt: иконка 18×15 слева, кольцо 16 pt или текст по ширине справа, вырез между ними.
+/// Ширину острова под индикатор считает ActivityLayout.width — здесь просто рисуем в отведённое место.
 /// С line снизу добавляется строка peek (высота формы 73.5). Отступы как у компакта музыки, отдельно не мерили
 struct ActivityCompactView: View {
     let layout: ActivityLayout
@@ -46,7 +41,8 @@ struct ActivityCompactView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(Color(color))
-                // без этого узкий вырез переносит "15m" на две строки вместо нехватки 1-3pt в паддинге
+                // держит натуральную ширину текста: без этого перенос на две строки при нехватке места.
+                // Само место под текст должно быть посчитано заранее через ActivityLayout.width
                 .lineLimit(1)
                 .fixedSize()
         }
