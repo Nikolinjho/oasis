@@ -20,8 +20,9 @@ struct AlertView: View {
     }
 }
 
-/// Уведомление батареи 350×32: подпись слева, процент и батарейка справа (Charging — rec2/states-sheet.png,
-/// Low Battery и Low Power не снимались: тот же паттерн). Шрифт и отступы как у HUD, отдельно не мерили
+/// Уведомление батареи высотой 32: подпись слева, процент и батарейка справа (Charging — rec2/states-sheet.png,
+/// Low Battery и Low Power не снимались: тот же паттерн, но своя ширина под подпись — IslandGeometry.size(for:)).
+/// Шрифт и отступы как у HUD, отдельно не мерили
 struct BatteryAlertView: View {
     let label: String
     let level: Double
@@ -34,6 +35,10 @@ struct BatteryAlertView: View {
             Text(label)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(IslandPalette.foreground)
+                // без этого длинная подпись (Low Battery, Low Power Mode) переносится на вторую строку
+                // или уезжает вправо под вырез — она должна целиком остаться в левом крыле
+                .lineLimit(1)
+                .fixedSize()
             Spacer(minLength: notchWidth)
             HStack(spacing: 6) {
                 if showsPercent {
