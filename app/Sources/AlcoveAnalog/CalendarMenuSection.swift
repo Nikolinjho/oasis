@@ -28,7 +28,9 @@ enum CalendarMenuSection {
         return items
     }
 
-    /// Open in Calendar: событие в Calendar.app, не открылось — сам Calendar.app
+    /// Open in Calendar: событие в Calendar.app по ссылке ical://ekevent/. NSWorkspace.open вернёт true, как только
+    /// схему ical примет Calendar.app, даже если события он не найдёт: запасной запуск Calendar.app срабатывает,
+    /// только когда обработчика схемы нет или ссылка не собралась
     static func open(_ model: CalendarMenuModel) {
         if let url = model.calendarURL, NSWorkspace.shared.open(url) { return }
         if let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.iCal") {
@@ -64,7 +66,9 @@ enum CalendarMenuSection {
     /// SF Symbol, нарисованный в квадрат 18×18 цветом labelColor. Шаблонный символ (и как есть, и копией с новым size)
     /// в этом меню не рисовался: живая проверка 28.09, у Dismiss Event не было иконки. Картинка с drawing handler
     /// перерисовывается под светлую и тёмную тему
-    static func symbol(_ name: String) -> NSImage {
+    /// nonisolated: drawing handler NSImage может вызываться не на главном потоке, а унаследованная изоляция
+    /// MainActor в Swift 6 уронила бы процесс проверкой изоляции
+    nonisolated static func symbol(_ name: String) -> NSImage {
         let side: CGFloat = 18
         let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
             // 14 pt — замера нет, оценка: крестик у Alcove чуть меньше иконок приложений

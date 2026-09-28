@@ -67,5 +67,8 @@ struct CalendarMenuModelTests {
     func calendarURL() {
         let model = Self.model([Self.event("ABC-1:DEF-2@1790530200.0", startsIn: 5)])
         #expect(model?.calendarURL?.absoluteString == "ical://ekevent/ABC-1:DEF-2?method=show&options=more")
+        // Exchange и CalDAV: в id бывают «/», «+» и пробел. «/» кодируется, иначе id распадётся на сегменты пути
+        let exchange = Self.model([Self.event("AAMk/B+C D:E@1790530200.0", startsIn: 5)])
+        #expect(exchange?.calendarURL?.absoluteString == "ical://ekevent/AAMk%2FB+C%20D:E?method=show&options=more")
     }
 }

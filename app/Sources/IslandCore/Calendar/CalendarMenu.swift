@@ -71,8 +71,10 @@ public struct CalendarMenuModel: Equatable, Sendable {
     public var calendarURL: URL? {
         let identifier = event.id.lastIndex(of: "@").map { String(event.id[..<$0]) } ?? event.id
         // двоеточие между UUID календаря и события оставляем как есть: так ссылку ical://ekevent/ собирают
-        // и другие клиенты, а urlPathAllowed кодирует его в %3A (тест calendarURL)
-        let allowed = CharacterSet.urlPathAllowed.union(CharacterSet(charactersIn: ":"))
+        // и другие клиенты, а urlPathAllowed кодирует его в %3A (тест calendarURL). «/» кодируем: id Exchange
+        // и CalDAV бывают с «/», и без кодирования id распался бы на сегменты пути
+        var allowed = CharacterSet.urlPathAllowed.union(CharacterSet(charactersIn: ":"))
+        allowed.remove(charactersIn: "/")
         guard let encoded = identifier.addingPercentEncoding(withAllowedCharacters: allowed) else { return nil }
         return URL(string: "ical://ekevent/\(encoded)?method=show&options=more")
     }

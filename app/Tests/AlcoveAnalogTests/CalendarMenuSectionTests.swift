@@ -65,6 +65,24 @@ struct CalendarMenuSectionTests {
         }
     }
 
+    @Test("Символ рисуется и вне главного потока: drawing handler не требует MainActor")
+    func symbolOffMain() async {
+        let inked = await Task.detached { () -> Int in
+            let image = CalendarMenuSection.symbol("xmark.circle.fill")
+            let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil, pixelsWide: 18, pixelsHigh: 18, bitsPerSample: 8, samplesPerPixel: 4,
+                hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+            image.draw(in: NSRect(x: 0, y: 0, width: 18, height: 18))
+            NSGraphicsContext.restoreGraphicsState()
+            var count = 0
+            for x in 0..<18 { for y in 0..<18 where (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.1 { count += 1 } }
+            return count
+        }.value
+        #expect(inked > 20)
+    }
+
     @Test("Иконка сервиса без приложения и без картинки в бандле — video.fill 18×18")
     func fallbackServiceIcon() {
         // тестовый бинарь не лежит в .app: Icons/google-meet.png нет, у Telemost своего приложения нет
