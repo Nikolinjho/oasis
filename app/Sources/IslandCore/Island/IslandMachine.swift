@@ -179,9 +179,9 @@ public enum IslandMachine {
             m.leaving = false
             return [.cancel(.hoverLeave)] + hudChanged(&m, hud)
         }
-        if let pending = m.pending {
-            // идёт сжатие: HUD покажется, когда оно закончится. Уведомление, к которому шло сжатие, ждёт HUD
-            if case let .alert(alert) = pending { m.queuedAlert = alert }
+        if m.pending != nil {
+            // идёт сжатие: HUD покажется, когда оно закончится. Активные действия вытесняют другие: если сжатие
+            // шло к уведомлению, оно просто пропадает, не уходя в очередь (решение — HUD важнее уведомления всегда)
             m.pending = hud
             return []
         }
@@ -385,7 +385,7 @@ public enum IslandMachine {
         case .hud: .shrinkFromWide
         // замер записи №2 (capture/analysis/README.md): Charging → сжатие 335/37
         case .alert: .alertShrink
-        // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged)
+        // hoverNudge разворачивается в исходный компакт или peek до сжатия (hudChanged, alertArrived)
         case .compact, .peek, .hoverNudge: .shrink
         // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт
         case .idle, .hover, .expanded, .shrink: .shrink

@@ -87,12 +87,62 @@ struct IslandMachineAlertTests {
         #expect(fx == [.animate(.alertUpdate), Self.hideAlert])
     }
 
-    @Test("HUD во время сжатия к уведомлению: HUD раскрывается первым, уведомление ждёт")
-    func hudDuringShrinkQueuesAlert() {
+    @Test("HUD во время сжатия к уведомлению: HUD раскрывается первым, уведомление отбрасывается (активные действия вытесняют)")
+    func hudDuringShrinkDropsAlert() {
         var m = Self.model(.shrink, media: true)
         m.pending = .alert(Self.charging)
         #expect(IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5)).isEmpty)
         #expect(m.pending == Self.hud)
-        #expect(m.queuedAlert == Self.charging)
+        #expect(m.queuedAlert == nil)
+    }
+
+    @Test("Уведомление во время отклика на hover: раскрытие отменяется, дальше — как из исходного состояния")
+    func duringHoverNudge() {
+        var m = Self.model(.hoverNudge(from: .idle))
+        let fx = IslandMachine.reduce(&m, .alertArrived(Self.charging))
+        #expect(fx == [.cancel(.hoverOpen), .animate(.alertIn), Self.hideAlert])
+        #expect(m.surface == .alert(Self.charging))
+    }
+
+    @Test("Уведомление, пока курсор ушёл из раскрытого и ждёт схлопывания: таймер отменяется, дальше — морф")
+    func duringLeaving() {
+        var m = Self.model(.hover, media: true)
+        m.leaving = true
+        let fx = IslandMachine.reduce(&m, .alertArrived(Self.charging))
+        #expect(fx == [.cancel(.hoverLeave), .animate(.hudMorph), Self.hideAlert])
+        #expect(m.surface == .alert(Self.charging))
+    }
+
+    @Test("HUD вытесняет уведомление A; когда потом B сжимается к новому уведомлению, устаревший alertHide от A не мешает: guard требует .alert, а сжатие уже .shrink")
+    func staleAlertHideAfterHUDReplacesAlert() {
+        var m = Self.model(.alert(Self.charging), media: true)
+        _ = IslandMachine.reduce(&m, .hudChanged(.volume, level: 0.5))
+        #expect(m.surface == .shrink)
+        _ = IslandMachine.reduce(&m, .timerFired(.grow))
+        #expect(m.surface == Self.hud)
+        _ = IslandMachine.reduce(&m, .timerFired(.hudHide))
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .compact)
+        _ = IslandMachine.reduce(&m, .timerFired(.grow))
+        #expect(m.surface == .compact)
+        let full = IslandAlert.charging(level: 1)
+        _ = IslandMachine.reduce(&m, .alertArrived(full))
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .alert(full))
+        // устаревший таймер конца уведомления A: сжатие уже идёт к B, guard требует .alert
+        let fx = IslandMachine.reduce(&m, .timerFired(.alertHide))
+        #expect(fx.isEmpty)
+        #expect(m.surface == .shrink)
+        #expect(m.pending == .alert(full))
+    }
+
+    @Test("Музыка кончилась во время уведомления: alertHide уводит в покой, а не в компакт")
+    func mediaClearedDuringAlert() {
+        var m = Self.model(.alert(Self.charging), media: true)
+        _ = IslandMachine.reduce(&m, .mediaCleared)
+        #expect(m.hasMedia == false)
+        let fx = IslandMachine.reduce(&m, .timerFired(.alertHide))
+        #expect(m.surface == .idle)
+        #expect(fx == [.animate(.alertOut)])
     }
 }

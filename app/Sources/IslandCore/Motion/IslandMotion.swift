@@ -51,9 +51,6 @@ public enum IslandMotion {
         case .hudMorph: SpringSpec(stiffness: 200, damping: 17.5)
         // новый уровень HUD меняет только полоску, размер тот же
         case .hudUpdate: nil
-        // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
-        // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
-        // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)
         // замер записи №2 (capture/analysis/README.md): раскрытие в Charging 195 → 357, ζ 0.92.
         // Вход из покоя не мерили: та же пружина, путь почти тот же
         case .alertIn, .alertGrow: SpringSpec(stiffness: 125, damping: 20.5)
@@ -63,6 +60,9 @@ public enum IslandMotion {
         case .alertOut: .smooth(duration: 0.45)
         // новое содержимое того же размера
         case .alertUpdate: nil
+        // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
+        // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
+        // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)
         case .shrink: SpringSpec(stiffness: 345, damping: 30.5)
         case .shrinkFromWide: SpringSpec(stiffness: 360, damping: 38)
         case .grow: .spring(duration: 0.45, bounce: 0.1)
