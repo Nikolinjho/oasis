@@ -11,6 +11,9 @@ struct HUDView: View {
     var deviceSymbol: String? = nil
 
     var body: some View {
+        // Оба крыла зашиты в вырез напрямую, а не через Spacer(minLength:): иначе запас слева
+        // (короткая подпись) утекал направо и «100%» заезжал под камеру (ревью задачи 6, 28.09)
+        let wing = Self.wingWidth(notchWidth: notchWidth)
         HStack(spacing: 0) {
             HStack(spacing: 6) {
                 Image(systemName: Self.iconSymbol(kind, level, appearance, deviceSymbol: deviceSymbol))
@@ -20,10 +23,12 @@ struct HUDView: View {
                 if !appearance.hidesLabel {
                     Text(kind == .volume ? "Sound" : "Display")
                         .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
                 }
             }
             .foregroundStyle(IslandPalette.foreground)
-            Spacer(minLength: notchWidth)
+            .frame(width: wing, alignment: .leading)
+            Color.clear.frame(width: notchWidth)
             HStack(spacing: 6) {
                 if appearance.showsPercentage {
                     Text(Self.percent(level))
@@ -32,11 +37,13 @@ struct HUDView: View {
                         .foregroundStyle(IslandPalette.foreground)
                 }
                 LevelBar(level: level, style: appearance.style, speed: appearance.speed)
-                    .frame(width: Self.barWidth(appearance), height: 5)
+                    .frame(width: Self.barWidth(appearance, wing: wing), height: 5)
             }
+            .frame(width: wing, alignment: .trailing)
         }
         // Шрифт 13, отступ иконки 6, ширина иконки 18, паддинг 14, полоска 64×5:
-        // не мерили, подогнано по capture/analysis/states/t69.4.png
+        // не мерили, подогнано по capture/analysis/states/t69.4.png. Итоговая ширина 367 не зависит
+        // от текущей (анимирующейся) формы: контент маскируется формой острова, как и раньше
         .padding(.horizontal, 14)
         .frame(height: 32)
     }
@@ -59,10 +66,15 @@ struct HUDView: View {
         return deviceSymbol
     }
 
-    /// С процентом полоска уже: крыло 367 − 185 = по 91, минус отступ 14 — 77 pt на «100%» (~30), зазор 6 и полоску.
-    /// Замера нет, оценка
-    nonisolated static func barWidth(_ appearance: HUDAppearance) -> CGFloat {
-        appearance.showsPercentage ? 40 : 64
+    /// Крыло от края паддинга до выреза: половина (367 − вырез) минус паддинг 14. На notchWidth 185 — 77 pt
+    nonisolated static func wingWidth(notchWidth: CGFloat) -> CGFloat {
+        max(0, (IslandGeometry.hud.width - notchWidth) / 2 - 14)
+    }
+
+    /// С процентом полоска уже, чтобы «100%» + зазор 6 + полоска не выходили за крыло.
+    /// 36 — замер NSFont 12pt semibold monospacedDigit «100%» ≈ 35.6 pt, округлено вверх
+    nonisolated static func barWidth(_ appearance: HUDAppearance, wing: CGFloat) -> CGFloat {
+        appearance.showsPercentage ? max(16, min(40, wing - 36 - 6)) : min(64, wing)
     }
 
     nonisolated static func percent(_ level: Double) -> String {

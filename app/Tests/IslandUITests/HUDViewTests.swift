@@ -40,10 +40,27 @@ struct HUDViewTests {
         #expect(HUDView.iconSymbol(.brightness, 0.8, device, deviceSymbol: "airpodspro") == "sun.max.fill")
     }
 
-    @Test("Полоска уже, когда рядом процент")
+    @Test("Полоска уже, когда рядом процент — по крылу выреза 185 и широкого 211")
     func barWidth() {
-        #expect(HUDView.barWidth(HUDAppearance(style: .white)) == 64)
-        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true)) == 40)
+        let narrow = HUDView.wingWidth(notchWidth: 185)
+        #expect(narrow == 77)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white), wing: narrow) == 64)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: narrow) == 35)
+
+        let wide = HUDView.wingWidth(notchWidth: 211)
+        #expect(wide == 64)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white), wing: wide) == 64)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: wide) == 22)
+
         #expect(HUDView.percent(0.456) == "46%")
+    }
+
+    @Test("Процент с полоской не выходит за крыло: «100%» (36) + зазор 6 + полоска ≤ крыла")
+    func percentGroupFitsWing() {
+        for notchWidth: CGFloat in [185, 187] {
+            let wing = HUDView.wingWidth(notchWidth: notchWidth)
+            let bar = HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: wing)
+            #expect(36 + 6 + bar <= wing)
+        }
     }
 }

@@ -172,6 +172,18 @@ struct IslandMachineTests {
             == [.animate(.hudIn), .schedule(.hudHide, after: .seconds(1))])
     }
 
+    @Test("Настроенная длительность доживает до раскрытия после сжатия из компакта (timerFired(.grow))")
+    func configuredHUDDurationAfterShrink() {
+        var config = IslandMachine.Config.alcove
+        config.hudDurations.brightness = .seconds(1)
+        var m = Self.model(.compact, media: true)
+        m.config = config
+        #expect(IslandMachine.reduce(&m, .hudChanged(.brightness, level: 0.5)) == Self.shrinkEffects)
+        #expect(m.pending == .hud(.brightness, level: 0.5))
+        let fx = IslandMachine.reduce(&m, .timerFired(.grow))
+        #expect(fx == [.animate(.grow), .schedule(.hudHide, after: .seconds(1))])
+    }
+
     // MARK: - HUD при раскрытом острове
 
     @Test("HUD при раскрытом плеере: прямой морф в HUD без сжатия, после него компакт через сжатие")
