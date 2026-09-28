@@ -1,11 +1,24 @@
 import AppKit
 import SwiftUI
 
-/// ⌘W закрывает окно: приложение — accessory без app-меню, «File → Close» биндить неоткуда,
-/// поэтому cmd+w перехватываем сами
+/// Чистая проверка «это ⌘W», без окна и responder chain — можно проверить юнит-тестом на синтетическом NSEvent.
+/// deviceIndependentFlagsMask отсекает мусорные биты (numeric pad, function) вместо простого .contains(.command):
+/// иначе Shift-⌘W тоже прошёл бы как закрытие
+enum SettingsShortcut {
+    static func isClose(_ event: NSEvent) -> Bool {
+        event.type == .keyDown
+            && event.charactersIgnoringModifiers?.lowercased() == "w"
+            && event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command
+    }
+}
+
+/// LSUIElement-приложение без mainMenu: NSApplication ищет ⌘-эквиваленты через NSApp.mainMenu
+/// раньше, чем через performKeyEquivalent окна, и без меню часть путей его не находит.
+/// override — первый (дешёвый) слой перехвата, локальный монитор в контроллере — второй, независимый
+/// от того, дошло ли дело до performKeyEquivalent вообще
 private final class SettingsWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.charactersIgnoringModifiers == "w", event.modifierFlags.contains(.command) {
+        if SettingsShortcut.isClose(event) {
             close()
             return true
         }
@@ -18,6 +31,7 @@ private final class SettingsWindow: NSWindow {
 final class SettingsWindowController {
     private let settings: AppSettings
     private var window: NSWindow?
+    private var closeShortcutMonitor: Any?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -39,6 +53,17 @@ final class SettingsWindowController {
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: SettingsView(settings: settings))
         window.center()
+        installCloseShortcut(on: window)
         return window
+    }
+
+    /// Локальный монитор видит keyDown до того, как NSApplication решает, что это «key equivalent»:
+    /// не зависит от mainMenu и от того, срабатывает ли performKeyEquivalent окна
+    private func installCloseShortcut(on window: NSWindow) {
+        closeShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak window] event in
+            guard let window, event.window === window, SettingsShortcut.isClose(event) else { return event }
+            window.close()
+            return nil
+        }
     }
 }

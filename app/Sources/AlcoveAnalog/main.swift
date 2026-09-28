@@ -4,6 +4,7 @@ let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
 app.setActivationPolicy(.accessory)
+app.mainMenu = MainMenu.build()
 
 // pkill и kill по умолчанию шлют SIGTERM: без обработчика процесс умирает сразу,
 // applicationWillTerminate не вызывается, и адаптер остаётся сиротой. Переводим сигнал в штатный выход
