@@ -11,10 +11,10 @@ public final class BluetoothWatcher: NSObject {
     /// Адреса устройств, подключённых до start(): регистрация сразу присылает по ним connected,
     /// а это не новое подключение — первое такое уведомление пропускаем
     private var connectedAtStart: Set<String> = []
-    /// Ждущие чтения имена → уже был повтор (AirPodsBattery.resolve)
-    private var pending: [String: Bool] = [:]
+    /// Ждущие чтения подключения (имя и адрес) → уже был повтор (AirPodsBattery.resolve)
+    private var pending: [AirPodsBattery.Connection: Bool] = [:]
     /// Окно пачки: после выхода из сна переподключаются сразу несколько устройств, а system_profiler
-    /// запускается один раз на окно и разбирается для всех имён
+    /// запускается один раз на окно и разбирается для всех подключений
     private var batch: Task<Void, Never>?
     private var startupGrace: Task<Void, Never>?
     private let log = SourceLog.logger("bluetooth")
@@ -60,23 +60,24 @@ public final class BluetoothWatcher: NSObject {
     private func connected(address: String?, name: String?) {
         if let address, connectedAtStart.remove(address) != nil { return }
         guard let name else { return }
-        if pending[name] == nil { pending[name] = false }
+        let connection = AirPodsBattery.Connection(name: name, address: address)
+        if pending[connection] == nil { pending[connection] = false }
         guard batch == nil else { return }
         batch = Task { [weak self] in await self?.drain() }
     }
 
-    /// Окно за окном, пока есть ждущие имена: повтор без заряда тоже ждёт следующего окна.
+    /// Окно за окном, пока есть ждущие подключения: повтор без заряда тоже ждёт следующего окна.
     /// После отмены (stop) ничего не трогает: batch к этому времени уже чужой или nil
     private func drain() async {
         while !pending.isEmpty {
             try? await Task.sleep(for: Self.window)
             if Task.isCancelled { return }
-            let names = pending
+            let connections = pending
             pending = [:]
             let json = await AirPodsBattery.readProfile()
             if Task.isCancelled { return }
-            let result = AirPodsBattery.resolve(names, json: json)
-            for name in result.retry where pending[name] == nil { pending[name] = true }
+            let result = AirPodsBattery.resolve(connections, json: json)
+            for connection in result.retry where pending[connection] == nil { pending[connection] = true }
             for info in result.show {
                 log.info("headphones connected \(info.name, privacy: .public)")
                 onConnect(info)

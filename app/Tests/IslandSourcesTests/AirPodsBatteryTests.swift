@@ -73,18 +73,56 @@ struct AirPodsBatteryTests {
 
     @Test("Пачка подключений: одно чтение на всех, без заряда — один повтор, не наушники отбрасываются")
     func resolveBatch() throws {
+        typealias Connection = AirPodsBattery.Connection
         let data = try Self.fixture()
-        let first = AirPodsBattery.resolve(["AirPods Pro": false, "Kitchen": false, "MX Master 3": false, "Fresh AirPods": false], json: data)
+        let first = AirPodsBattery.resolve([
+            Connection(name: "AirPods Pro", address: nil): false,
+            Connection(name: "Kitchen", address: nil): false,
+            Connection(name: "MX Master 3", address: nil): false,
+            Connection(name: "Fresh AirPods", address: "aa-bb-cc-dd-ee-99"): false,
+        ], json: data)
         #expect(Set(first.show.map(\.name)) == ["AirPods Pro", "Kitchen"])
         // «Fresh AirPods» ещё не попали в system_profiler: заряда нет, ждём ещё одно окно
-        #expect(first.retry == ["Fresh AirPods"])
-        let second = AirPodsBattery.resolve(["Fresh AirPods": true], json: data)
+        #expect(first.retry == [Connection(name: "Fresh AirPods", address: "aa-bb-cc-dd-ee-99")])
+        let second = AirPodsBattery.resolve([Connection(name: "Fresh AirPods", address: "aa-bb-cc-dd-ee-99"): true], json: data)
         #expect(second.show == [AirPodsInfo(name: "Fresh AirPods", battery: nil)])
         #expect(second.retry.isEmpty)
         // system_profiler не ответил: то же правило, что без заряда
-        let failed = AirPodsBattery.resolve(["AirPods Pro": false], json: nil)
+        let failed = AirPodsBattery.resolve([Connection(name: "AirPods Pro", address: nil): false], json: nil)
         #expect(failed.show.isEmpty)
-        #expect(failed.retry == ["AirPods Pro"])
+        #expect(failed.retry == [Connection(name: "AirPods Pro", address: nil)])
+    }
+
+    @Test("Переименованные в system_profiler наушники находятся по адресу, имя в сведениях — от IOBluetooth")
+    func lookupByAddress() throws {
+        let data = try Self.fixture()
+        // IOBluetooth: «AirPods 4 (ANC)», адрес строчными через дефис; system_profiler: «Den», адрес через двоеточие
+        let den = try #require(AirPodsBattery.device(json: data, name: "AirPods 4 (ANC)", address: "aa-bb-cc-dd-ee-09"))
+        #expect(den.battery == 0.75)
+        #expect(!den.isAppleHeadphones)
+        let result = AirPodsBattery.resolve(
+            [AirPodsBattery.Connection(name: "AirPods 4 (ANC)", address: "aa-bb-cc-dd-ee-09"): false], json: data)
+        #expect(result.show == [AirPodsInfo(name: "AirPods 4 (ANC)", battery: 0.75)])
+        #expect(result.retry.isEmpty)
+        // адрес не нашёлся — поиск по имени, как раньше
+        #expect(AirPodsBattery.device(json: data, name: "Kitchen", address: "aa-bb-cc-dd-ee-99")?.battery == 0.6)
+        #expect(AirPodsBattery.device(json: data, name: "Kitchen", address: nil)?.battery == 0.6)
+        #expect(AirPodsBattery.device(json: data, name: "Nobody", address: "aa-bb-cc-dd-ee-99") == nil)
+    }
+
+    @Test("Дубли одной записи в system_profiler сливаются: недостающие поля берутся из любой")
+    func mergeDuplicates() throws {
+        let data = try Self.fixture()
+        // первая запись «Office» — только левый наушник, вторая — правый, vendorID, minorType и productID
+        for device in [
+            AirPodsBattery.device(json: data, name: "Office", address: nil),
+            AirPodsBattery.device(json: data, name: "Something Else", address: "AA-BB-CC-DD-EE-0A"),
+        ] {
+            let office = try #require(device)
+            #expect(office.battery == 0.3)
+            #expect(office.isAppleHeadphones)
+            #expect(office.model == .pro)
+        }
     }
 
     @Test("Вывод процесса целиком")

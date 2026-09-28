@@ -28,24 +28,50 @@ public enum AirPodsBattery {
         return AirPodsInfo(name: name, battery: device?.battery, model: device?.model)
     }
 
-    /// Подключённое устройство по имени. Ключи сверены с живым выводом macOS 26: device_connected /
-    /// device_not_connected, заряд device_batteryLevelLeft/Right/Case строками «82%», device_vendorID «0x004C»,
-    /// device_minorType «Headphones», device_productID «0x2014». Без подключённых device_connected нет вовсе
-    public static func device(json: Data, name: String) -> Device? {
+    /// Подключение из IOBluetooth: имя для уведомления и адрес для поиска в system_profiler
+    public struct Connection: Hashable, Sendable {
+        public var name: String
+        public var address: String?
+
+        public init(name: String, address: String?) {
+            self.name = name
+            self.address = address
+        }
+    }
+
+    /// Подключённое устройство по адресу, а если по нему ничего нет — по имени. Имя в system_profiler бывает
+    /// своим (пользователь переименовал наушники: IOBluetooth «AirPods 4 (ANC)», system_profiler «Den»),
+    /// адрес — нет. Одно устройство может прийти несколькими записями, первая неполной: записи сливаются,
+    /// недостающее поле берётся из любой. Ключи сверены с живым выводом macOS 26: device_connected /
+    /// device_not_connected, device_address «AA:BB:CC:DD:EE:09», заряд device_batteryLevelLeft/Right/Case строками «82%»
+    /// или «100 %» (неразрывный пробел), device_vendorID «0x004C», device_minorType «Headphones»,
+    /// device_productID «0x2014». Без подключённых device_connected нет вовсе
+    public static func device(json: Data, name: String, address: String? = nil) -> Device? {
         guard let root = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
               let controllers = root["SPBluetoothDataType"] as? [[String: Any]] else { return nil }
-        for controller in controllers {
-            for entry in controller["device_connected"] as? [[String: Any]] ?? [] {
-                guard let device = entry[name] as? [String: Any] else { continue }
-                let vendor = (device["device_vendorID"] as? String)?.lowercased()
-                let minor = device["device_minorType"] as? String
-                return Device(
-                    battery: battery(device),
-                    isAppleHeadphones: vendor == "0x004c" && minor == "Headphones",
-                    model: model(productID: device["device_productID"] as? String))
-            }
+        let entries = controllers
+            .flatMap { $0["device_connected"] as? [[String: Any]] ?? [] }
+            .flatMap { $0.compactMap { key, value in (value as? [String: Any]).map { (key, $0) } } }
+        let wanted = address.map { normalized(address: $0) }
+        var matches = wanted.map { wanted in
+            entries.filter { ($0.1["device_address"] as? String).map { normalized(address: $0) } == wanted }
+        } ?? []
+        if matches.isEmpty { matches = entries.filter { $0.0 == name } }
+        guard !matches.isEmpty else { return nil }
+        let device = matches.reduce(into: [String: Any]()) { merged, match in
+            merged.merge(match.1) { current, _ in current }
         }
-        return nil
+        let vendor = (device["device_vendorID"] as? String)?.lowercased()
+        let minor = device["device_minorType"] as? String
+        return Device(
+            battery: battery(device),
+            isAppleHeadphones: vendor == "0x004c" && minor == "Headphones",
+            model: model(productID: device["device_productID"] as? String))
+    }
+
+    /// «aa-bb-cc-dd-ee-09» (IOBluetooth) и «AA:BB:CC:DD:EE:09» (system_profiler) → «aabbccddee09»
+    static func normalized(address: String) -> String {
+        address.lowercased().filter { $0 != "-" && $0 != ":" }
     }
 
     /// Меньший из наушников, иначе Main (у Max один аккумулятор)
@@ -74,16 +100,18 @@ public enum AirPodsBattery {
         return min(max(number / 100, 0), 1)
     }
 
-    /// Разбор пачки подключений по одному выводу system_profiler. names — имя → уже был повтор.
-    /// Наушники без заряда (system_profiler ещё не успел его узнать) и все имена при сбое чтения (json nil)
+    /// Разбор пачки подключений по одному выводу system_profiler. connections — подключение → уже был повтор.
+    /// Наушники без заряда (system_profiler ещё не успел его узнать) и все подключения при сбое чтения (json nil)
     /// идут на один повтор в следующем окне; после повтора наушники показываются как есть, без заряда
-    static func resolve(_ names: [String: Bool], json: Data?) -> (show: [AirPodsInfo], retry: [String]) {
+    static func resolve(_ connections: [Connection: Bool], json: Data?) -> (show: [AirPodsInfo], retry: [Connection]) {
         var show: [AirPodsInfo] = []
-        var retry: [String] = []
-        for (name, retried) in names.sorted(by: { $0.key < $1.key }) {
-            let info = info(name: name, device: json.flatMap { device(json: $0, name: name) })
+        var retry: [Connection] = []
+        let sorted = connections.sorted { ($0.key.name, $0.key.address ?? "") < ($1.key.name, $1.key.address ?? "") }
+        for (connection, retried) in sorted {
+            let device = json.flatMap { device(json: $0, name: connection.name, address: connection.address) }
+            let info = info(name: connection.name, device: device)
             if !retried, info?.battery == nil, info != nil || json == nil {
-                retry.append(name)
+                retry.append(connection)
             } else if let info {
                 show.append(info)
             }

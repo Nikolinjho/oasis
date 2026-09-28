@@ -65,6 +65,29 @@
             "device_productID": "0x029C",
             "device_vendorID": "0x004C"
           }
+        },
+        {
+          "Den": {
+            "device_address": "AA:BB:CC:DD:EE:09",
+            "device_batteryLevelCase": "100 %",
+            "device_batteryLevelLeft": "90 %",
+            "device_batteryLevelRight": "75 %"
+          }
+        },
+        {
+          "Office": {
+            "device_address": "AA:BB:CC:DD:EE:0A",
+            "device_batteryLevelLeft": "50 %"
+          }
+        },
+        {
+          "Office": {
+            "device_address": "AA:BB:CC:DD:EE:0A",
+            "device_batteryLevelRight": "30 %",
+            "device_minorType": "Headphones",
+            "device_productID": "0x2014",
+            "device_vendorID": "0x004C"
+          }
         }
       ],
       "device_not_connected": [
