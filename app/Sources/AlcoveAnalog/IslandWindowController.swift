@@ -136,6 +136,7 @@ struct IslandRootView: View {
             spec: store.spec,
             notchWidth: store.notch.width,
             nowPlaying: store.nowPlaying,
+            agenda: store.agenda,
             onClick: { store.send(.clicked) },
             onAction: { store.onAction($0) })
     }

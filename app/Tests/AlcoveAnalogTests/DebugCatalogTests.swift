@@ -69,6 +69,27 @@ struct DebugCatalogTests {
         #expect(user.isOn?() == false)
     }
 
+    @Test("Duo With Fake Event и Duo Empty Day закрепляют повестку, Use Real Calendar её снимает")
+    func calendarActionsPinAndUnpin() throws {
+        let store = IslandStore()
+        let actions = Self.actions(store)
+        let duoEvent = try #require(actions.first { $0.id == "calendar.duo-event" })
+        let duoEmpty = try #require(actions.first { $0.id == "calendar.duo-empty" })
+        let real = try #require(actions.first { $0.id == "calendar.real" })
+
+        duoEvent.run()
+        #expect(store.isDebugAgendaPinned)
+        #expect(store.agenda.today.map(\.title) == ["Fake Event"])
+        #expect(store.model.surface == .expanded)
+
+        duoEmpty.run()
+        #expect(store.isDebugAgendaPinned)
+        #expect(store.agenda == .empty)
+
+        real.run()
+        #expect(!store.isDebugAgendaPinned)
+    }
+
     @Test("Debug-переключатель Expand on Hover отражает и меняет конфиг машины")
     func expandOnHoverToggle() throws {
         let store = IslandStore(config: .user)

@@ -10,6 +10,7 @@ enum DebugCatalog {
         return [
             music(store, tracks),
             hud(store),
+            calendar(store),
             island(store),
             scenarios(store, tracks),
             timing(store),
@@ -60,6 +61,26 @@ enum DebugCatalog {
             level(.brightness, "Display", 0), level(.brightness, "Display", 50), level(.brightness, "Display", 100),
             .separator,
             .action(series),
+        ])
+    }
+
+    private static func calendar(_ store: IslandStore) -> DebugSection {
+        DebugSection(title: "Calendar", entries: [
+            .action(DebugAction(id: "calendar.duo-event", title: "Duo With Fake Event") {
+                let now = Date()
+                store.pinDebugEvents([CalendarEvent(
+                    id: "fake-event", title: "Fake Event",
+                    start: now.addingTimeInterval(-300), end: now.addingTimeInterval(1500),
+                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))])
+                store.send(.clicked)
+            }),
+            .action(DebugAction(id: "calendar.duo-empty", title: "Duo Empty Day") {
+                store.pinDebugEvents([])
+                store.send(.clicked)
+            }),
+            .action(DebugAction(id: "calendar.real", title: "Use Real Calendar") {
+                store.unpinDebugEvents()
+            }),
         ])
     }
 

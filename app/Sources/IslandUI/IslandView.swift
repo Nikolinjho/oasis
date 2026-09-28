@@ -7,17 +7,20 @@ public struct IslandView: View {
     let spec: IslandShapeSpec
     let notchWidth: CGFloat
     let nowPlaying: NowPlayingInfo?
+    let agenda: DayAgenda
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
 
     public init(
         model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
+        agenda: DayAgenda = .empty,
         onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void
     ) {
         self.model = model
         self.spec = spec
         self.notchWidth = notchWidth
         self.nowPlaying = nowPlaying
+        self.agenda = agenda
         self.onClick = onClick
         self.onAction = onAction
     }
@@ -53,8 +56,9 @@ public struct IslandView: View {
                 .id(ContentID.music)
                 .transition(.slot)
         case .expanded:
-            PlayerView(info: nowPlaying, onAction: onAction)
-                .id(ContentID.player)
+            // раскрытый по умолчанию — Duo, как в Alcove (решение 27.09). Полный плеер — свайпом, P1
+            DuoView(info: nowPlaying, agenda: agenda, onAction: onAction)
+                .id(ContentID.expanded)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))
         case let .hud(kind, level):
             HUDView(kind: kind, level: level, notchWidth: notchWidth)
@@ -79,7 +83,7 @@ public struct IslandView: View {
     }
 
     private enum ContentID: Hashable {
-        case music, player
+        case music, expanded
         case hud(HUDKind)
     }
 }

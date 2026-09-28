@@ -13,6 +13,10 @@ final class IslandStore {
     private(set) var nowPlaying: NowPlayingInfo?
     /// События сегодня и завтра: Duo и календарь
     private(set) var agenda = DayAgenda.empty
+    /// Отладочная повестка держится, пока источник календаря шлёт реальные события: pinDebugEvents/unpinDebugEvents
+    private(set) var isDebugAgendaPinned = false
+    /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
+    @ObservationIgnored private var lastRealEvents: [CalendarEvent] = []
     var notch = CGSize(width: 186, height: 32)
 
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
@@ -87,8 +91,25 @@ final class IslandStore {
         }
     }
 
-    /// События из календаря или отладки. Agenda считается от текущего времени
+    /// События с живого источника календаря. Agenda считается от текущего времени, но пока держится
+    /// отладочная повестка (calendar.duo-event/calendar.duo-empty), сюда не пишем: реальные события
+    /// запоминаются и лягут в agenda по unpinDebugEvents
     func apply(events: [CalendarEvent], now: Date = Date()) {
+        lastRealEvents = events
+        guard !isDebugAgendaPinned else { return }
         agenda = DayAgenda.make(events: events, now: now)
+    }
+
+    /// Отладочная повестка вместо реальной: держится до unpinDebugEvents, реальные события не пропадают,
+    /// просто не показываются, пока источник продолжает слать apply(events:)
+    func pinDebugEvents(_ events: [CalendarEvent], now: Date = Date()) {
+        isDebugAgendaPinned = true
+        agenda = DayAgenda.make(events: events, now: now)
+    }
+
+    /// Возврат к реальному календарю: agenda пересобирается из последних событий живого источника
+    func unpinDebugEvents(now: Date = Date()) {
+        isDebugAgendaPinned = false
+        agenda = DayAgenda.make(events: lastRealEvents, now: now)
     }
 }
