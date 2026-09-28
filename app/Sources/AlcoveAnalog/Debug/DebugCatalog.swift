@@ -167,6 +167,9 @@ enum DebugCatalog {
             .action(DebugAction(id: "airpods.low", title: "Fake AirPods 15%") {
                 store.send(.alertArrived(.airpods(AirPodsInfo(name: "Fake AirPods", battery: 0.15))))
             }),
+            .action(DebugAction(id: "airpods.low-warning", title: "Fake AirPods Low Battery Warning 15%") {
+                store.send(.alertArrived(.airpods(AirPodsInfo(name: "Fake AirPods Pro", battery: 0.15, model: .pro, isLowBattery: true))))
+            }),
             .separator,
             // как на записи Alcove: календарь → сжатие → AirPods на 5 с → обратно календарь
             .action(DebugAction(id: "scenario.calendar-airpods", title: "Calendar → AirPods → Calendar") {

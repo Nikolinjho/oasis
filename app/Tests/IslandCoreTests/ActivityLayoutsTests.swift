@@ -67,6 +67,14 @@ struct ActivityLayoutsTests {
             == .ring(progress: 0, color: ActivityLayouts.connectivityGreen, track: ActivityLayouts.connectivityTrack))
     }
 
+    @Test("Низкий заряд наушников — красное кольцо, обычный — зелёное")
+    func lowBatteryRing() {
+        let low = ActivityLayouts.airpods(AirPodsInfo(name: "AirPods Pro", battery: 0.15, isLowBattery: true))
+        let ok = ActivityLayouts.airpods(AirPodsInfo(name: "AirPods Pro", battery: 0.8))
+        #expect(low.indicator == .ring(progress: 0.15, color: ActivityLayouts.lowBatteryRed, track: ActivityLayouts.calendarTrack))
+        #expect(ok.indicator == .ring(progress: 0.8, color: ActivityLayouts.connectivityGreen, track: ActivityLayouts.connectivityTrack))
+    }
+
     @Test("Глиф по имени: Max, Pro, остальные AirPods — обычный")
     func airpodsSymbol() {
         #expect(AirPodsInfo(name: "AirPods Max", battery: nil).symbol == "airpodsmax")

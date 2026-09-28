@@ -70,8 +70,27 @@ public enum AirPodsBattery {
     }
 
     /// «aa-bb-cc-dd-ee-09» (IOBluetooth) и «AA:BB:CC:DD:EE:09» (system_profiler) → «aabbccddee09»
-    static func normalized(address: String) -> String {
+    public static func normalized(address: String) -> String {
         address.lowercased().filter { $0 != "-" && $0 != ":" }
+    }
+
+    /// Все подключённые наушники из вывода system_profiler: для опроса заряда (Connectivity → Warn on low battery).
+    /// Записи одного адреса сливаются, как в device(json:name:address:)
+    public static func connectedHeadphones(json: Data) -> [AirPodsInfo] {
+        guard let root = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
+              let controllers = root["SPBluetoothDataType"] as? [[String: Any]] else { return [] }
+        let entries = controllers
+            .flatMap { $0["device_connected"] as? [[String: Any]] ?? [] }
+            .flatMap { $0.compactMap { key, value in (value as? [String: Any]).map { (key, $0) } } }
+        var seen: Set<String> = []
+        return entries.compactMap { name, fields in
+            guard let address = fields["device_address"] as? String,
+                  seen.insert(normalized(address: address)).inserted,
+                  let found = device(json: json, name: name, address: address),
+                  var info = info(name: name, device: found) else { return nil }
+            info.address = address
+            return info
+        }
     }
 
     /// Меньший из наушников, иначе Main (у Max один аккумулятор)
@@ -113,7 +132,11 @@ public enum AirPodsBattery {
         for (connection, retried) in sorted {
             if let address = connection.address, !seen.insert(normalized(address: address)).inserted { continue }
             let device = json.flatMap { device(json: $0, name: connection.name, address: connection.address) }
-            let info = info(name: connection.name, device: device)
+            let info = info(name: connection.name, device: device).map { info in
+                var info = info
+                info.address = connection.address
+                return info
+            }
             if !retried, info?.battery == nil, info != nil || json == nil {
                 retry.append(connection)
             } else if let info {

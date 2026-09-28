@@ -57,11 +57,15 @@ public enum ActivityLayouts {
     /// Тёплый белый текста острова (IslandPalette.foreground)
     public static let glyphWhite = RGB(red: 1, green: 250 / 255, blue: 244 / 255)
 
+    /// Кольцо низкого заряда наушников. У Alcove не снимали: красный Low Battery (IslandPalette.lowBattery), оценка
+    public static let lowBatteryRed = RGB(red: 1, green: 69 / 255, blue: 58 / 255)
+
     /// Компакт AirPods: белый глиф модели слева, кольцо заряда справа, текста нет (ui-inspection 3.6).
-    /// Без заряда — пустое кольцо
+    /// Без заряда — пустое кольцо. Низкий заряд — красное кольцо на тёмно-красном треке календаря
     public static func airpods(_ info: AirPodsInfo) -> ActivityLayout {
-        ActivityLayout(
-            symbol: info.symbol, symbolColor: glyphWhite,
-            indicator: .ring(progress: info.battery ?? 0, color: connectivityGreen, track: connectivityTrack))
+        let ring: ActivityLayout.Indicator = info.isLowBattery
+            ? .ring(progress: info.battery ?? 0, color: lowBatteryRed, track: calendarTrack)
+            : .ring(progress: info.battery ?? 0, color: connectivityGreen, track: connectivityTrack)
+        return ActivityLayout(symbol: info.symbol, symbolColor: glyphWhite, indicator: ring)
     }
 }

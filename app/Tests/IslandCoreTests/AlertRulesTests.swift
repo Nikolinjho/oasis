@@ -33,4 +33,15 @@ struct AlertRulesTests {
         #expect(rules.sound(for: .lowBattery(level: 0.1)) == nil)
         #expect(rules.sound(for: .lowPower(level: 0.4)) == .lowPower)
     }
+
+    @Test("Низкий заряд наушников звучит low-battery, Play sound on low battery Connectivity его гасит")
+    func headphonesSound() {
+        let low = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 0.15, isLowBattery: true))
+        #expect(low.sound == .lowBattery)
+        #expect(Self.airpods.sound == nil)
+        var rules = AlertRules()
+        #expect(rules.sound(for: low) == .lowBattery)
+        rules.headphonesLowBatterySound = false
+        #expect(rules.sound(for: low) == nil)
+    }
 }

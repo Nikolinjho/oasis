@@ -27,6 +27,11 @@ final class AppSettings: ObservableObject {
         static let lowBatterySound = "lowBatterySound"
         static let hideBatteryLabel = "hideBatteryLabel"
         static let hideBatteryPercentage = "hideBatteryPercentage"
+        static let connectivityEnabled = "connectivityEnabled"
+        static let connectivityDuration = "connectivityDuration"
+        static let warnHeadphonesLowBattery = "warnHeadphonesLowBattery"
+        static let headphonesLowBatteryThreshold = "headphonesLowBatteryThreshold"
+        static let headphonesLowBatterySound = "headphonesLowBatterySound"
     }
 
     var onChange: () -> Void = {}
@@ -111,6 +116,21 @@ final class AppSettings: ObservableObject {
     @Published var hideBatteryLabel: Bool { didSet { save(oldValue, hideBatteryLabel, Key.hideBatteryLabel) } }
     @Published var hideBatteryPercentage: Bool { didSet { save(oldValue, hideBatteryPercentage, Key.hideBatteryPercentage) } }
 
+    // Connectivity (ui-inspection 1.4)
+    @Published var connectivityEnabled: Bool { didSet { save(oldValue, connectivityEnabled, Key.connectivityEnabled) } }
+    /// 2.5…6 с, шаг 0.5
+    @Published var connectivityDuration: Double { didSet { save(oldValue, connectivityDuration, Key.connectivityDuration) } }
+    @Published var warnHeadphonesLowBattery: Bool {
+        didSet { save(oldValue, warnHeadphonesLowBattery, Key.warnHeadphonesLowBattery) }
+    }
+    /// 0.1, 0.2 или 0.3, по умолчанию 0.2 (у Battery 0.1)
+    @Published var headphonesLowBatteryThreshold: Double {
+        didSet { save(oldValue, headphonesLowBatteryThreshold, Key.headphonesLowBatteryThreshold) }
+    }
+    @Published var headphonesLowBatterySound: Bool {
+        didSet { save(oldValue, headphonesLowBatterySound, Key.headphonesLowBatterySound) }
+    }
+
     /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
     var notchTuning: NotchTuning {
         NotchTuning(width: min(max(notchWidthOffset, -2), 2), height: min(max(notchHeightOffset, -2), 2))
@@ -153,6 +173,11 @@ final class AppSettings: ObservableObject {
         lowBatterySound = Self.read(defaults, Key.lowBatterySound, true)
         hideBatteryLabel = Self.read(defaults, Key.hideBatteryLabel, false)
         hideBatteryPercentage = Self.read(defaults, Key.hideBatteryPercentage, false)
+        connectivityEnabled = Self.read(defaults, Key.connectivityEnabled, true)
+        connectivityDuration = Self.read(defaults, Key.connectivityDuration, 5.0)
+        warnHeadphonesLowBattery = Self.read(defaults, Key.warnHeadphonesLowBattery, true)
+        headphonesLowBatteryThreshold = Self.read(defaults, Key.headphonesLowBatteryThreshold, 0.2)
+        headphonesLowBatterySound = Self.read(defaults, Key.headphonesLowBatterySound, true)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -175,6 +200,8 @@ final class AppSettings: ObservableObject {
         var rules = AlertRules()
         rules.batteryDuration = .seconds(batteryDuration)
         rules.lowBatterySound = lowBatterySound
+        rules.connectivityDuration = .seconds(connectivityDuration)
+        rules.headphonesLowBatterySound = headphonesLowBatterySound
         return rules
     }
 

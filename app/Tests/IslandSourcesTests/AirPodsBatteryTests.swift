@@ -19,6 +19,17 @@ struct AirPodsBatteryTests {
         #expect(AirPodsBattery.device(json: data, name: "AirPods 4") == nil)
     }
 
+    @Test("Все подключённые наушники с адресом и зарядом: мышь и колонки без признаков наушников отбрасываются")
+    func connectedHeadphones() throws {
+        let list = AirPodsBattery.connectedHeadphones(json: try Self.fixture())
+        let byName = Dictionary(list.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        #expect(byName["AirPods Pro"]?.battery == 0.82)
+        #expect(byName["AirPods Pro"]?.address == "AA:BB:CC:DD:EE:01")
+        #expect(byName["AirPods Max"]?.battery == 0.64)
+        #expect(byName["MX Master 3"] == nil)
+        #expect(AirPodsBattery.connectedHeadphones(json: Data("{}".utf8)).isEmpty)
+    }
+
     @Test("Наушники по имени: AirPods всех моделей и Beats")
     func headphones() {
         for name in ["AirPods Pro", "AirPods Max", "Nikita’s AirPods 4 (ANC)", "Beats Studio Pro"] {
@@ -85,7 +96,7 @@ struct AirPodsBatteryTests {
         // «Fresh AirPods» ещё не попали в system_profiler: заряда нет, ждём ещё одно окно
         #expect(first.retry == [Connection(name: "Fresh AirPods", address: "aa-bb-cc-dd-ee-99")])
         let second = AirPodsBattery.resolve([Connection(name: "Fresh AirPods", address: "aa-bb-cc-dd-ee-99"): true], json: data)
-        #expect(second.show == [AirPodsInfo(name: "Fresh AirPods", battery: nil)])
+        #expect(second.show == [AirPodsInfo(name: "Fresh AirPods", battery: nil, address: "aa-bb-cc-dd-ee-99")])
         #expect(second.retry.isEmpty)
         // system_profiler не ответил: то же правило, что без заряда
         let failed = AirPodsBattery.resolve([Connection(name: "AirPods Pro", address: nil): false], json: nil)
@@ -102,7 +113,7 @@ struct AirPodsBatteryTests {
         #expect(!den.isAppleHeadphones)
         let result = AirPodsBattery.resolve(
             [AirPodsBattery.Connection(name: "AirPods 4 (ANC)", address: "aa-bb-cc-dd-ee-09"): false], json: data)
-        #expect(result.show == [AirPodsInfo(name: "AirPods 4 (ANC)", battery: 0.75)])
+        #expect(result.show == [AirPodsInfo(name: "AirPods 4 (ANC)", battery: 0.75, address: "aa-bb-cc-dd-ee-09")])
         #expect(result.retry.isEmpty)
         // адрес не нашёлся — поиск по имени, как раньше
         #expect(AirPodsBattery.device(json: data, name: "Kitchen", address: "aa-bb-cc-dd-ee-99")?.battery == 0.6)

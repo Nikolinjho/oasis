@@ -153,4 +153,19 @@ struct AppSettingsTests {
         #expect(settings.appearance.battery == BatteryAlertStyle(hidesLabel: true))
         #expect(AppSettings(defaults: defaults).lowBatteryThreshold == 0.3)
     }
+
+    @Test("Connectivity: по умолчанию как у Alcove, порог 20%, длительность и звук уходят в правила")
+    func connectivity() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.connectivityEnabled && settings.warnHeadphonesLowBattery && settings.headphonesLowBatterySound)
+        #expect(settings.connectivityDuration == 5)
+        #expect(settings.headphonesLowBatteryThreshold == 0.2)
+        settings.connectivityDuration = 2.5
+        settings.headphonesLowBatterySound = false
+        let rules = settings.machineConfig(from: .user).alerts
+        #expect(rules.connectivityDuration == .milliseconds(2500))
+        #expect(!rules.headphonesLowBatterySound)
+    }
 }

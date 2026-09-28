@@ -52,7 +52,9 @@ public enum IslandAlert: Equatable, Sendable {
     /// Звуки Alcove по умолчанию: Play sound on low battery вкл (ui-inspection 1.3), low power — low-power.caf из бандла
     public var sound: IslandSound? {
         switch self {
-        case .charging, .airpods: nil
+        case .charging: nil
+        // Connectivity → Play sound on low battery: звук тот же, что у батареи Mac. Предположение, у Alcove не снимали
+        case let .airpods(info): info.isLowBattery ? .lowBattery : nil
         case .lowBattery: .lowBattery
         case .lowPower: .lowPower
         // допущение плана P1: звук события и на напоминаниях, не только на старте
@@ -95,11 +97,17 @@ public struct AirPodsInfo: Equatable, Sendable {
     public var battery: Double?
     /// nil — productID неизвестен или его нет: глиф выбирается по имени
     public var model: Model?
+    /// Bluetooth-адрес: по нему опрос заряда узнаёт наушники и глиф устройства вывода — их модель
+    public var address: String?
+    /// Заряд ниже порога Connectivity → Low battery threshold: красное кольцо и звук low-battery
+    public var isLowBattery: Bool
 
-    public init(name: String, battery: Double?, model: Model? = nil) {
+    public init(name: String, battery: Double?, model: Model? = nil, address: String? = nil, isLowBattery: Bool = false) {
         self.name = name
         self.battery = battery
         self.model = model
+        self.address = address
+        self.isLowBattery = isLowBattery
     }
 
     /// Глиф модели в стиле Symbols (Connectivity по умолчанию). Модель по productID важнее имени

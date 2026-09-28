@@ -23,6 +23,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var calendarClock = CalendarClock(store: store)
     private var power: PowerSource?
     private var bluetooth: BluetoothWatcher?
+    private var headphonesMonitor: HeadphonesBatteryMonitor?
+    private var headphonesBattery = HeadphonesBatteryTracker()
     private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
@@ -87,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nowPlaying?.stop()
         power?.stop()
         bluetooth?.stop()
+        headphonesMonitor?.stop()
     }
 
     /// Настройки меняются на лету из окна настроек и меню: машина подхватывает их сразу.
@@ -179,9 +182,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startBluetooth() {
         let watcher = BluetoothWatcher()
-        watcher.onConnect = { [store] info in store.send(.alertArrived(.airpods(info))) }
+        watcher.onConnect = { [weak self] info in self?.headphonesConnected(info) }
         watcher.start()
         bluetooth = watcher
+        let monitor = HeadphonesBatteryMonitor()
+        monitor.onReading = { [weak self] list in self?.headphonesPolled(list) }
+        monitor.start()
+        headphonesMonitor = monitor
+    }
+
+    /// Connectivity выключен — уведомлений нет. Заряд уже ниже порога — сразу красное кольцо и звук
+    private func headphonesConnected(_ info: AirPodsInfo) {
+        var info = info
+        if let address = info.address {
+            let low = headphonesBattery.connected(
+                address: address, level: info.battery, threshold: settings.headphonesLowBatteryThreshold)
+            info.isLowBattery = low && settings.warnHeadphonesLowBattery
+        }
+        guard settings.connectivityEnabled else { return }
+        store.send(.alertArrived(.airpods(info)))
+    }
+
+    private func headphonesPolled(_ list: [AirPodsInfo]) {
+        for var info in list {
+            guard let address = info.address, let level = info.battery,
+                  headphonesBattery.update(address: address, level: level, threshold: settings.headphonesLowBatteryThreshold),
+                  settings.connectivityEnabled, settings.warnHeadphonesLowBattery else { continue }
+            info.isLowBattery = true
+            store.send(.alertArrived(.airpods(info)))
+        }
     }
 
     private func startLevels() {
