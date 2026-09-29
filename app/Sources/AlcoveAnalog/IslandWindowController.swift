@@ -113,16 +113,24 @@ final class IslandWindowController {
     }
 
     /// Жест трекпада над островом: раскрытый листает и закрывается, покой убирает и возвращает активность.
-    /// Остальное — не наше: скролл уходит дальше как обычно
+    /// .began/.ended/.cancelled доходят до store всегда, даже когда сейчас surface не наша (HUD или
+    /// уведомление увели её посреди жеста): store запирает владельца жеста на .began и снимает его
+    /// на .ended/.cancelled (IslandStore.swipeOwner) — не долети сюда эти фазы, владелец жеста
+    /// застрял бы до следующего жеста. .changed и съедение события (true) — только когда surface наша,
+    /// остальное — не наше: скролл уходит дальше как обычно (review Task 15)
     private func handleScroll(_ event: NSEvent) -> Bool {
-        let surface = store.model.surface
-        let ours = surface == .expanded || (store.swipeToDismiss && IslandStore.isRestSwipeSurface(surface))
-        guard ours, let panel, event.window === panel,
+        guard let panel, event.window === panel,
               let input = Self.swipeInput(
                 phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
                 deltaX: event.scrollingDeltaX, deltaY: event.scrollingDeltaY,
                 inverted: event.isDirectionInvertedFromDevice, natural: naturalMovement)
         else { return false }
+        let surface = store.model.surface
+        let ours = surface == .expanded || (store.swipeToDismiss && IslandStore.isRestSwipeSurface(surface))
+        guard ours else {
+            if input.phase != .changed { store.swipe(input.phase, dx: input.dx, dy: input.dy) }
+            return false
+        }
         store.swipe(input.phase, dx: input.dx, dy: input.dy)
         return true
     }

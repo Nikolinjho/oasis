@@ -121,6 +121,14 @@ final class IslandStore {
     /// Блюр анимируется здесь, через withAnimation, а не .animation во вью: так он не перебивает
     /// пружину перехода машины (HUD или уведомление посреди жеста), а едет в её транзакции
     private func swipeExpanded(_ phase: SwipeTracker.Phase, dx: CGFloat, dy: CGFloat) {
+        // surface могла уйти из .expanded не через сам жест (HUD, уведомление, полноэкранный —
+        // owner заперт на .expanded до .ended/.cancelled и продолжает сюда попадать): тяга и блюр
+        // не должны зависнуть ненулевыми и исказить высоту следующего раскрытия (review Task 15)
+        guard model.surface == .expanded else {
+            stretch = 0
+            dragBlurred = false
+            return
+        }
         guard let output = tracker.feed(phase, dx: dx, dy: dy) else { return }
         let timeScale = model.config.timeScale
         switch output {
@@ -163,12 +171,17 @@ final class IslandStore {
         guard let output = restTracker.feed(phase, dx: dx, dy: dy) else { return }
         switch output {
         case .close:
-            let wasDismissed = model.dismissed
-            send(.activityDismissed)
-            guard model.dismissed != wasDismissed else { return }
+            // send зовёт onSurfaceChange синхронно, а тот в окне — surfaceChanged(), который может
+            // тут же (тем же кадром) послать hoverEntered обратно, пока курсор ещё над вырезом:
+            // onSwipeClose должен успеть выставить closedBySwipe ДО send, иначе она приходит поздно
+            // и свайп сам себя отменяет (review Task 15). Пробуем реакцию машины на копии модели, не трогая
+            // реальную и не вызывая колбэков, чтобы решить, было ли что убирать, раньше настоящего send
+            var probe = model
+            _ = IslandMachine.reduce(&probe, .activityDismissed)
+            guard probe.dismissed != model.dismissed else { return }
             NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
-            // курсор остаётся над вырезом: без флага окно тут же раскрыло бы остров снова
             onSwipeClose()
+            send(.activityDismissed)
         case .cycle:
             let wasDismissed = model.dismissed
             send(.activityRestored)

@@ -192,4 +192,60 @@ struct IslandStoreSwipeTests {
         settings.swipeToDismiss = false
         #expect(!store.model.dismissed)
     }
+
+    @Test("onSwipeClose срабатывает раньше onSurfaceChange: окно успевает выставить closedBySwipe до синхронного hoverEntered")
+    func closeFiresBeforeSurfaceChange() {
+        let store = Self.compactStore()
+        var closedBeforeSurfaceChange = false
+        var surfaceChangedCalls = 0
+        store.onSwipeClose = { closedBeforeSurfaceChange = true }
+        store.onSurfaceChange = {
+            surfaceChangedCalls += 1
+            // send зовёт onSurfaceChange синхронно: к этому моменту onSwipeClose уже должен был отработать,
+            // иначе окно успело бы послать hoverEntered раньше и отменить dismiss тем же кадром (review Task 15)
+            #expect(closedBeforeSurfaceChange)
+        }
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(store.model.dismissed)
+        #expect(surfaceChangedCalls == 1)
+        #expect(closedBeforeSurfaceChange)
+    }
+
+    @Test("Новый .began пересчитывает владельца жеста и трекеры заново, даже если у предыдущего жеста не было .ended")
+    func beganAlwaysResetsOwnerAndTrackers() {
+        let store = Self.compactStore()
+        // первый жест недотянут до порога и не получил .ended (например, handleScroll не переслал его,
+        // потому что HUD увёл surface из наших посреди жеста)
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(5))
+        #expect(!store.model.dismissed)
+
+        // новый жест — свежий .began обязан заново решить владельца и трекеры, а не унаследовать состояние
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(store.model.dismissed)
+    }
+
+    @Test("Surface ушла из раскрытого не через сам жест (HUD посреди свайпа): тяга не зависает и не искажает следующее раскрытие")
+    func expandedLeftMidGestureByOtherEventResetsStretch() {
+        let store = Self.expanded()
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-10))
+        #expect(store.stretch == -10)
+        #expect(store.dragBlurred)
+
+        // HUD пришёл не через свайп: surface уходит из .expanded независимо от жеста
+        store.send(.hudChanged(.volume, level: 0.5))
+        #expect(store.model.surface != .expanded)
+        #expect(store.stretch == 0)
+
+        // тот же физический жест продолжается: раскрытый трекер ещё не .fired и без фикса вернул бы новый .stretch
+        store.swipe(.changed, dy: Self.delta(-5))
+        #expect(store.stretch == 0)
+        #expect(!store.dragBlurred)
+
+        store.swipe(.ended, dy: 0)
+        #expect(store.stretch == 0)
+    }
 }
