@@ -122,6 +122,8 @@ cd app
 open build/AlcoveAnalog.app
 ```
 
+Рабочая копия — одна, в `~/Applications`: `./Scripts/install.sh` собирает release, гасит нативный Alcove и запущенные копии, кладёт бандл в `~/Applications/AlcoveAnalog.app` и запускает его. Launch at Login включать из этой копии. Сборки в `build/` и worktree — только для отладки: у всех один bundle id, и с несколькими копиями разрешения и ссылки `alcove-analog://` путаются.
+
 Отладочные состояния без железа: меню Debug у иконки в menu bar или ссылка
 `open -g -a "$PWD/build/AlcoveAnalog.app" "alcove-analog://debug/<id>"` (id — в `Sources/AlcoveAnalog/Debug/DebugCatalog.swift`).
 
