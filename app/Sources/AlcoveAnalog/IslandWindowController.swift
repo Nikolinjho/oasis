@@ -19,6 +19,12 @@ final class IslandWindowController {
     private var menuOpen = false
     /// Остров закрыт свайпом вверх, а курсор так и стоит над ним: не раскрываем снова, пока курсор не уйдёт
     private var closedBySwipe = false
+    /// Левая кнопка мыши зажата
+    private var leftButtonDown = false
+    /// mouseDown пришёлся на форму острова (панель приняла событие, а не пропустила его сквозь себя):
+    /// тянущийся слайдер (прогресс, громкость) не должен схлопнуть остров, если курсор ушёл за его
+    /// пределы — реальный hover пересчитывается по отпусканию кнопки (задача 4, репродукция живой проверки)
+    private var dragStartedInside = false
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "window")
     /// General → Tuning: смена сразу переставляет остров
     var tuning = NotchTuning() {
@@ -93,6 +99,16 @@ final class IslandWindowController {
                 self.store.send(.clickedOutside)
             }
         }) { monitors.append(outside) }
+        // начало и конец жеста мышью: пока кнопка зажата и жест начался над островом, pointerMoved
+        // не закрывает его при уходе курсора за пределы формы (задача 4) — только на отпускании
+        if let mouseDown = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.leftMouseDown(event) }
+            return event
+        }) { monitors.append(mouseDown) }
+        if let mouseUp = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.leftMouseUp() }
+            return event
+        }) { monitors.append(mouseUp) }
         // правый клик по острову открывает меню приложения: иконку в menu bar закрывает компакт
         if let rightClick = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown, handler: { [weak self] event in
             MainActor.assumeIsolated { self?.showMenuIfOnIsland(event) ?? false } ? nil : event
@@ -184,10 +200,35 @@ final class IslandWindowController {
         let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
         let inside = IslandGeometry.pointerInside(point, body: body, island: island, openedFrom: hoverOpenedFrom)
         guard inside != pointerInside else { return }
+        guard inside || Self.shouldSendHoverExit(pointerInside: inside, buttonDown: leftButtonDown, dragStartedInside: dragStartedInside)
+        else { return }
         pointerInside = inside
         closedBySwipe = Self.keepsClosedBySwipe(closedBySwipe, surface: store.model.surface, pointerInside: inside)
         hoverOpenedFrom = inside ? body : nil
         store.send(inside ? .hoverEntered : .hoverExited)
+    }
+
+    /// mouseDown над формой острова: панель приняла событие сама (иначе оно ушло бы сквозь неё, см.
+    /// ignoresMouseEvents в pointerMoved), значит жест (клик, начало тяги слайдера) начался над островом
+    private func leftMouseDown(_ event: NSEvent) {
+        guard event.window === panel else { return }
+        leftButtonDown = true
+        dragStartedInside = true
+    }
+
+    /// Отпускание кнопки: если тяга слайдера всё это время держала остров открытым за пределами формы,
+    /// только теперь пересчитываем реальный hover и, если курсор снаружи, закрываем (задача 4)
+    private func leftMouseUp() {
+        leftButtonDown = false
+        dragStartedInside = false
+        pointerMoved()
+    }
+
+    /// Решает, слать ли hoverExited при уходе курсора с острова. Пока кнопка мыши зажата и жест начался
+    /// над островом (тянут прогресс или громкость), уход курсора за пределы формы не должен закрыть
+    /// остров и оборвать жест — настоящий hover пересчитывается по отпусканию (задача 4, leftMouseUp)
+    static func shouldSendHoverExit(pointerInside: Bool, buttonDown: Bool, dragStartedInside: Bool) -> Bool {
+        !pointerInside && !(buttonDown && dragStartedInside)
     }
 
     /// Смена surface (store.onSurfaceChange): пересчитывает hit-testing и, если курсор всё это время

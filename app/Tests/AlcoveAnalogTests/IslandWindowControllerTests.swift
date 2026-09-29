@@ -37,6 +37,29 @@ struct IslandWindowControllerTests {
 }
 
 @MainActor
+struct IslandWindowControllerDragTests {
+    typealias W = IslandWindowController
+
+    @Test("Курсор внутри — hoverExited не нужен независимо от кнопки и старта жеста")
+    func insideNeverExits() {
+        #expect(!W.shouldSendHoverExit(pointerInside: true, buttonDown: false, dragStartedInside: false))
+        #expect(!W.shouldSendHoverExit(pointerInside: true, buttonDown: true, dragStartedInside: true))
+    }
+
+    @Test("Курсор снаружи, кнопка отпущена — обычный уход, hoverExited шлём")
+    func outsideWithoutButtonExits() {
+        #expect(W.shouldSendHoverExit(pointerInside: false, buttonDown: false, dragStartedInside: false))
+        // кнопка зажата, но жест начался не над островом — тянут что-то другое, это не наш случай
+        #expect(W.shouldSendHoverExit(pointerInside: false, buttonDown: true, dragStartedInside: false))
+    }
+
+    @Test("Тянут слайдер (кнопка зажата, жест начался над островом) — курсор снаружи не закрывает остров")
+    func draggingFromIslandSuppressesExit() {
+        #expect(!W.shouldSendHoverExit(pointerInside: false, buttonDown: true, dragStartedInside: true))
+    }
+}
+
+@MainActor
 struct IslandWindowControllerSwipeCloseTests {
     @Test("После закрытия свайпом hoverEntered не досылаем, пока курсор не ушёл с острова")
     func noReentryAfterSwipeClose() {
