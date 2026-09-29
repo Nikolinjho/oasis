@@ -23,7 +23,7 @@ public enum IslandEvent: Equatable, Sendable {
     /// Уведомление этого вида больше не нужно (Dismiss Event): ждущие в очереди уходят. Показанное уходит сразу,
     /// как по alertHide, а сжатие к нему идёт к следующему из очереди или в покой
     case alertRetracted(IslandAlert.Kind)
-    /// Открылось или закрылось окно календаря: от минуты до начала события до его конца
+    /// Открылось или закрылось окно календаря: от liveLead (15 минут) до начала события до его конца
     case calendarLiveChanged(Bool)
     /// Событие началось: peek с названием поверх компакта календаря и звук
     case calendarStarted
@@ -255,9 +255,12 @@ public enum IslandMachine {
             // в полноэкранном музыка только запоминается: компакт появится после выхода
             return []
         case .idle where m.pending == nil && m.config.compactAtRest:
-            // Now Playing выключен или источник на переднем плане: трек только запоминается
-            guard m.showsMedia else { return [] }
-            m.surface = .compact
+            // Now Playing выключен, источник на переднем плане или обеих активностей не осталось: трек
+            // только запоминается. Идём в base, а не сразу в .compact — если островом свайпом убрали
+            // активность во время открытого окна календаря (dismissed), новый трек его снял выше,
+            // и base мог остаться .calendar: компакт без бейджа календаря потерял бы окно на весь его остаток
+            guard m.base != .idle else { return [] }
+            m.surface = m.base
             return [.animate(.compactIn)]
         case .idle where m.pending == nil:
             // без компакта в покое смена трека коротко показывает peek и уходит обратно в форму выреза

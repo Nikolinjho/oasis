@@ -248,4 +248,26 @@ struct IslandStoreSwipeTests {
         store.swipe(.ended, dy: 0)
         #expect(store.stretch == 0)
     }
+
+    @Test("Радиус на старте тяги плеера со строкой громкости считается без её высоты (review финала P2, п.2)")
+    func volumeRowStretchRadiusIgnoresRowHeight() {
+        let store = Self.expanded()
+        store.send(.expandedViewCycled) // duo → player: строка громкости живёт только в нём
+        #expect(store.model.expandedView == .player)
+        store.send(.volumeRowToggled)
+        #expect(store.model.volumeRowShown)
+        // в покое (stretch == 0) геометрия сама уже держит радиус по высоте без строки громкости (175, не 207) —
+        // сверяем это как опору перед тягой
+        #expect(store.spec.size.height == 207)
+        #expect(abs(store.spec.bottomRadius - IslandGeometry.bottomRadius(forHeight: 175)) < 1e-9)
+
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(10))
+        #expect(store.stretch > 0)
+        #expect(store.spec.size.height == 207 + store.stretch)
+        // без фикса радиус считался бы от полной высоты (207 + stretch), а не от 175 + stretch,
+        // как в покое — угол скакнул бы на старте свайпа
+        #expect(abs(store.spec.bottomRadius - IslandGeometry.bottomRadius(forHeight: 175 + store.stretch)) < 1e-9)
+        #expect(abs(store.spec.bottomRadius - IslandGeometry.bottomRadius(forHeight: 207 + store.stretch)) > 0.5)
+    }
 }

@@ -7,6 +7,7 @@ struct CalendarLiveView: View {
     var music: NowPlayingInfo? = nil
     let showsLine: Bool
     let notchWidth: CGFloat
+    var appearance = IslandAppearance.default
 
     var body: some View {
         // тики от начала события: смена «12s» → «11s» и шаг кольца совпадают с секундами события
@@ -14,7 +15,7 @@ struct CalendarLiveView: View {
             if let event {
                 ActivityCompactView(
                     layout: ActivityLayouts.calendar(event: event, now: context.date, showsLine: showsLine, withMusic: music != nil),
-                    notchWidth: notchWidth, artwork: music)
+                    notchWidth: notchWidth, artwork: music, artworkFlip: appearance.artworkFlip)
             }
         }
     }

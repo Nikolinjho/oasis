@@ -10,6 +10,9 @@ struct ActivityCompactView: View {
     let layout: ActivityLayout
     let notchWidth: CGFloat
     var artwork: NowPlayingInfo? = nil
+    /// Disable artwork flip и масштаб паузы обложки — те же настройки, что у компакта музыки
+    /// (MusicLiveView), сюда добираются с бейджем календаря поверх обложки
+    var artworkFlip = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,7 +44,10 @@ struct ActivityCompactView: View {
     @ViewBuilder
     private var icon: some View {
         if layout.showsArtwork {
-            ArtworkFlip(info: artwork, side: 16, radius: 4)
+            ArtworkFlip(info: artwork, side: 16, radius: 4, flips: artworkFlip)
+                // пауза — тот же масштаб 0.83, что у компакта музыки (MusicLiveView, PausedArtwork.look):
+                // без него обложка под бейджем календаря не уменьшается на паузе, хотя рядом в компакте музыки — да
+                .scaleEffect(PausedArtwork.look(isPlaying: artwork?.isPlaying ?? false).scale)
                 .overlay(alignment: .bottomTrailing) {
                     Image(systemName: layout.symbol)
                         .font(.system(size: 6, weight: .bold))

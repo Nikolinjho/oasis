@@ -110,7 +110,7 @@ struct GeometryTests {
 
     @Test("Окно прижато к верху экрана по центру выреза")
     func windowFrame() {
-        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 867, width: 480, height: 250))
+        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 861, width: 480, height: 256))
     }
 
     @Test("Строка громкости: плеер 345×207, углы как у 175 (Alcove 1.7.9, 28.09)")
@@ -122,6 +122,10 @@ struct GeometryTests {
         #expect(abs(spec.bottomRadius - 35) < 1e-9)
         let shadow = IslandGeometry.Shadow.self
         #expect(IslandGeometry.windowSize.height >= spec.size.height + shadow.y + shadow.reach)
+        // тот же плеер, растянутый свайпом вниз до потолка (SwipeTracker.stretchCeiling): окно должно
+        // вмещать и это — самое высокое состояние острова (item 3 финального ревью P2)
+        let stretched = spec.size.height + SwipeTracker.stretchCeiling
+        #expect(IslandGeometry.windowSize.height >= stretched + shadow.y + shadow.reach)
     }
 
     @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками и тенью")

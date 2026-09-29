@@ -131,4 +131,46 @@ struct IslandMachineDismissTests {
         _ = IslandMachine.reduce(&m, .calendarLiveChanged(false))
         #expect(m.dismissed)
     }
+
+    /// Свайп-дисмисс во время окна календаря с музыкой уводит остров в вырез. Новый трек снимает dismissed
+    /// (review финала P2, п.1): раньше ветка .idle шла прямиком в .compact, теряя бейдж календаря на весь
+    /// остаток окна, хотя base уже вернулся в .calendar
+    static func dismissedDuringCalendarWithMusic() -> IslandModel {
+        var m = Self.compact()
+        m.calendarLive = true
+        m.surface = .calendar
+        _ = IslandMachine.reduce(&m, .activityDismissed)
+        return m
+    }
+
+    @Test("Новый трек после дисмисса на окне календаря возвращает calendar, а не голый компакт музыки")
+    func trackChangedAfterDismissDuringCalendarRestoresCalendar() {
+        var m = Self.dismissedDuringCalendarWithMusic()
+        #expect(m.surface == .idle && m.dismissed)
+        #expect(IslandMachine.reduce(&m, .trackChanged) == [.animate(.compactIn)])
+        #expect(m.surface == .calendar)
+        #expect(!m.dismissed)
+    }
+
+    @Test("То же самое при выключенном Now Playing: showsMedia == false не должен держать остров в вырезе")
+    func trackChangedAfterDismissDuringCalendarWithNowPlayingOffRestoresCalendar() {
+        var m = Self.dismissedDuringCalendarWithMusic()
+        m.config.nowPlaying.isEnabled = false
+        #expect(m.surface == .idle && m.dismissed && !m.showsMedia)
+        #expect(IslandMachine.reduce(&m, .trackChanged) == [.animate(.compactIn)])
+        #expect(m.surface == .calendar)
+        #expect(!m.dismissed)
+    }
+
+    @Test("Тот же сценарий через pausedTrackChanged (новый трек пришёл уже на паузе)")
+    func pausedTrackChangedAfterDismissDuringCalendarRestoresCalendar() {
+        // hasMedia && !mediaIdle: pausedTrackChanged форвардит в trackChanged + playbackChanged(false)
+        // (иначе, без активной музыки на экране, это была бы просто пометка «трек пришёл на паузе»)
+        var m = Self.dismissedDuringCalendarWithMusic()
+        #expect(m.surface == .idle && m.dismissed)
+        let effects = IslandMachine.reduce(&m, .pausedTrackChanged)
+        #expect(effects.contains(.animate(.compactIn)))
+        #expect(m.surface == .calendar)
+        #expect(!m.dismissed)
+    }
 }

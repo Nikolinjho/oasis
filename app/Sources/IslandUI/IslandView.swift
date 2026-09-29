@@ -78,7 +78,7 @@ public struct IslandView: View {
                 .transition(.slot)
         case .calendar, .calendarPeek, .hoverNudge(from: .calendar), .hoverNudge(from: .calendarPeek):
             CalendarLiveView(event: calendarEvent, music: model.showsMedia ? nowPlaying : nil,
-                             showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth)
+                             showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth, appearance: appearance)
                 // как у музыки: рамка итогового размера, контент открывается маской формы
                 .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
                 .id(ContentID.calendar)

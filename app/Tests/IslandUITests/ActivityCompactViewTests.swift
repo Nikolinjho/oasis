@@ -136,4 +136,34 @@ struct ActivityCompactViewTests {
             .monospacedDigit()).fittingSize.width
         #expect(abs(measured - rendered) <= 1)
     }
+
+    /// Обложка под бейджем календаря (showsArtwork) должна вести себя как в компакте музыки (MusicLiveView):
+    /// на паузе уменьшаться масштабом PausedArtwork.look (review финала P2, п.4). Раньше ActivityCompactView
+    /// всегда рисовал ArtworkFlip без флагов, обложка не реагировала на паузу
+    @MainActor
+    @Test("Обложка с бейджем календаря уменьшается на паузе, как в компакте музыки")
+    func artworkShrinksOnPauseLikeMusicCompact() throws {
+        let width = ActivityLayout.width(notchWidth: Self.notchWidth, indicatorWidth: 16)
+        let layout = ActivityLayout(
+            symbol: "music.note", symbolColor: Self.red,
+            indicator: .ring(progress: 0.3, color: Self.red, track: Self.track), showsArtwork: true)
+        // без картинки ArtworkView рисует сплошную плашку-заглушку — её и меряем как прямоугольник
+        func iconClusterWidth(isPlaying: Bool) throws -> CGFloat {
+            let artwork = NowPlayingInfo(title: "трек", isPlaying: isPlaying)
+            let bitmap = try Self.render(
+                ActivityCompactView(layout: layout, notchWidth: Self.notchWidth, artwork: artwork),
+                size: CGSize(width: width, height: 32))
+            // строка чуть выше центра иконки: ниже неё, у нижнего края, сидит бейдж календаря —
+            // его позиция не зависит от паузы (overlay считает от макетной, а не отрисованной рамки)
+            // и исказил бы измерение ширины именно обложки
+            let clusters = Self.coloredClusters(bitmap, rowPoint: 13, scale: 2)
+            let icon = try #require(clusters.first { $0.left < 40 })
+            return icon.right - icon.left
+        }
+        let playing = try iconClusterWidth(isPlaying: true)
+        let paused = try iconClusterWidth(isPlaying: false)
+        #expect(paused < playing)
+        // масштаб паузы 0.83 — тот же PausedArtwork.look, что у компакта музыки (MusicLiveView)
+        #expect(abs(paused / playing - PausedArtwork.look(isPlaying: false).scale) < 0.15)
+    }
 }
