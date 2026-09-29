@@ -47,7 +47,7 @@ struct CalendarDayView: View {
                 Text("TMRW")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(IslandPalette.secondary)
-                    .frame(width: DuoLayout.eventSize.width, alignment: .trailing)
+                    .frame(width: DuoLayout.eventWidth, alignment: .trailing)
                 ForEach(agenda.tomorrow.prefix(Self.shown)) { event in
                     EventCard(event: event)
                 }
@@ -55,7 +55,7 @@ struct CalendarDayView: View {
                     Text(more)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(IslandPalette.secondary)
-                        .frame(width: DuoLayout.eventSize.width, alignment: .leading)
+                        .frame(width: DuoLayout.eventWidth, alignment: .leading)
                 }
             }
             .offset(x: DuoLayout.eventOrigin.x, y: 18)

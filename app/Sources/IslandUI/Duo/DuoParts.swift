@@ -43,8 +43,26 @@ enum DuoLayout {
     static let dateFrame = CGRect(x: 286.5, y: 18, width: 40, height: 50)
     static let dateWidth: CGFloat = 70
     static let eventOrigin = CGPoint(x: 188.5, y: 72)
-    static let eventSize = CGSize(width: 138, height: 28)
     static let emptyOrigin = CGPoint(x: 188.5, y: 92)
+
+    /// Карточка события: 138 в ширину, 28 без места и 40 с местом, между карточками 4 (AX Alcove 1.7.9, 29.09)
+    static let eventWidth: CGFloat = 138
+    static let eventSpacing: CGFloat = 4
+    /// Низ колонки событий — низ разделителя. Сколько карточек влезает у Alcove, не проверяли: оценка
+    static let eventColumnBottom: CGFloat = dividerBottom
+
+    /// Сколько карточек стопки помещается целиком от eventOrigin.y до eventColumnBottom
+    static func fitting(_ events: [CalendarEvent]) -> [CalendarEvent] {
+        var used: CGFloat = 0
+        var result: [CalendarEvent] = []
+        for event in events {
+            let height = EventCard.height(for: event) + (result.isEmpty ? 0 : eventSpacing)
+            guard used + height <= eventColumnBottom - eventOrigin.y else { break }
+            used += height
+            result.append(event)
+        }
+        return result
+    }
 }
 
 /// Название бегущей строкой и артист под ним
@@ -159,7 +177,8 @@ struct DateBadge: View {
     }
 }
 
-/// Карточка 138×28: полупрозрачный фон и полоска в цвете календаря, название и время тем же цветом
+/// Карточка события: полупрозрачный фон и полоска в цвете календаря, название и время тем же цветом.
+/// 138×28 без места (название + время), 138×40 с местом (название + 📍место + время, Alcove 1.7.9, 29.09)
 struct EventCard: View {
     let event: CalendarEvent
     var onJoin: (() -> Void)? = nil
@@ -174,6 +193,18 @@ struct EventCard: View {
                 Text(event.title)
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                if let location = Self.location(event) {
+                    // булавка и место, как на кадре duo-event-location.jpg; кегль — как у времени, оценка
+                    Label {
+                        Text(location).lineLimit(1).truncationMode(.tail)
+                    } icon: {
+                        Image(systemName: "mappin").font(.system(size: 8, weight: .semibold))
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .font(.system(size: 10, weight: .medium))
+                    .opacity(0.8)
+                }
                 Text(Self.timeRange(event))
                     .font(.system(size: 10, weight: .medium))
                     .opacity(0.8)
@@ -198,7 +229,7 @@ struct EventCard: View {
         // отступы и прозрачность фона не мерили, оценка по кадру duo-event.jpg
         .padding(.vertical, 3)
         .padding(.leading, 4)
-        .frame(width: DuoLayout.eventSize.width, height: DuoLayout.eventSize.height)
+        .frame(width: DuoLayout.eventWidth, height: Self.height(for: event))
         .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.15)))
     }
 
@@ -207,6 +238,18 @@ struct EventCard: View {
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
         return "\(formatter.string(from: event.start)) – \(formatter.string(from: event.end))"
+    }
+
+    /// Место без пробельных строк: пустое место у EventKit — не место
+    nonisolated static func location(_ event: CalendarEvent) -> String? {
+        guard let location = event.location?.trimmingCharacters(in: .whitespacesAndNewlines), !location.isEmpty else {
+            return nil
+        }
+        return location
+    }
+
+    nonisolated static func height(for event: CalendarEvent) -> CGFloat {
+        location(event) == nil ? 28 : 40
     }
 }
 

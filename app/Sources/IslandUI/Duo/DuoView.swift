@@ -49,12 +49,17 @@ struct DuoView: View {
             DateBadge(date: now)
                 .frame(width: DuoLayout.dateWidth, height: DuoLayout.dateFrame.height, alignment: .topTrailing)
                 .offset(x: DuoLayout.dateFrame.maxX - DuoLayout.dateWidth, y: DuoLayout.dateFrame.minY)
-            if let event = agenda.current(at: now, live: liveEvent) {
-                EventCard(event: event, onJoin: MeetingLink.find(in: event).map { url in { onJoin(url) } })
-                    .offset(x: DuoLayout.eventOrigin.x, y: DuoLayout.eventOrigin.y)
-            } else {
+            let events = DuoLayout.fitting(agenda.upcoming(at: now, live: liveEvent))
+            if events.isEmpty {
                 EmptyDay()
                     .offset(x: DuoLayout.emptyOrigin.x, y: DuoLayout.emptyOrigin.y)
+            } else {
+                VStack(alignment: .leading, spacing: DuoLayout.eventSpacing) {
+                    ForEach(events) { event in
+                        EventCard(event: event, onJoin: MeetingLink.find(in: event).map { url in { onJoin(url) } })
+                    }
+                }
+                .offset(x: DuoLayout.eventOrigin.x, y: DuoLayout.eventOrigin.y)
             }
         }
         .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)

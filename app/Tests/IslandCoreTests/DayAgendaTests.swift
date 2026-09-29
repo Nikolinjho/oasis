@@ -63,4 +63,22 @@ struct DayAgendaTests {
         // событие окна уже кончилось (store ещё не узнал): прежнее правило
         #expect(agenda.current(at: Self.at(26, 23, 25), live: inner)?.id == "long")
     }
+
+    @Test("События Duo стопкой: текущее, за ним следующие сегодня по началу (Alcove 1.7.9, 29.09)")
+    func upcoming() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        func event(_ id: String, _ start: TimeInterval, _ end: TimeInterval) -> CalendarEvent {
+            CalendarEvent(
+                id: id, title: id, start: now.addingTimeInterval(start), end: now.addingTimeInterval(end),
+                isAllDay: false, color: RGB(red: 1, green: 0, blue: 0))
+        }
+        let done = event("done", -3600, -1800)
+        let seo = event("seo", 3600, 7200)
+        let book = event("book", 7200, 8400)
+        let agenda = DayAgenda(today: [done, seo, book], tomorrow: [])
+        #expect(agenda.upcoming(at: now).map(\.id) == ["seo", "book"])
+        #expect(DayAgenda.empty.upcoming(at: now).isEmpty)
+        // окно календаря у второго события: оно первое, первое по времени уже не показываем
+        #expect(agenda.upcoming(at: now, live: book).map(\.id) == ["book"])
+    }
 }
