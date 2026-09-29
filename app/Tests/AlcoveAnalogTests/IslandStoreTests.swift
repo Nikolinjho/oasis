@@ -84,4 +84,43 @@ struct IslandStoreTests {
         // пол по «60s» на этом notch его не превышает
         #expect(store.spec.size == CGSize(width: 256, height: 32))
     }
+
+    @Test("apply(.updated) без текущего трека ведёт себя как новый трек: компакт возвращается")
+    func updatedWithoutCurrentTrackActsLikeNewTrack() {
+        let store = IslandStore()
+        store.apply(.newTrack(NowPlayingInfo(title: "T", isPlaying: true)))
+        #expect(store.model.surface == .compact)
+
+        // отладочный music.clear очищает store, но парсер адаптера этого не знает и продолжает
+        // слать .updated по тому же треку (репродукция живой проверки)
+        store.apply(.cleared)
+        #expect(store.model.surface == .idle)
+        #expect(!store.model.hasMedia)
+
+        store.apply(.updated(NowPlayingInfo(title: "T", isPlaying: true)))
+        #expect(store.nowPlaying?.title == "T")
+        #expect(store.model.hasMedia)
+        #expect(store.model.surface == .compact)
+    }
+
+    @Test("apply(.updated) без текущего трека на паузе — как pausedTrackChanged, а не молчаливое обновление")
+    func updatedWithoutCurrentTrackRespectsPause() {
+        let store = IslandStore()
+        store.apply(.updated(NowPlayingInfo(title: "T", isPlaying: false)))
+        #expect(store.nowPlaying?.title == "T")
+        #expect(store.model.hasMedia)
+        #expect(!store.model.isPlaying)
+    }
+
+    @Test("apply(.updated) с текущим треком по-прежнему просто обновляет данные, не переигрывая newTrack")
+    func updatedWithCurrentTrackStaysUpdate() {
+        let store = IslandStore()
+        store.apply(.newTrack(NowPlayingInfo(title: "T", isPlaying: true)))
+        #expect(store.model.surface == .compact)
+
+        store.apply(.updated(NowPlayingInfo(title: "T2", isPlaying: true)))
+        #expect(store.nowPlaying?.title == "T2")
+        // тот же трек продолжает играть: surface не переигрывает вход заново
+        #expect(store.model.surface == .compact)
+    }
 }

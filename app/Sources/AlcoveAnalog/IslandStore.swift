@@ -252,8 +252,17 @@ final class IslandStore {
             nowPlaying = info
             send(info.isPlaying ? .trackChanged : .pausedTrackChanged)
         case let .updated(info):
+            // Без текущего трека (например, после отладочного music.clear, пока парсер адаптера ещё
+            // держит трек и продолжает слать .updated) — как новый трек, а не молчаливое обновление:
+            // иначе playbackChanged уйдёт в машину с hasMedia == false и ничего не сделает, и компакт
+            // не вернётся, пока источник не пришлёт следующий по-настоящему новый трек
+            let hadMedia = nowPlaying != nil && model.hasMedia
             nowPlaying = info
-            if info.isPlaying != model.isPlaying { send(.playbackChanged(info.isPlaying)) }
+            if !hadMedia {
+                send(info.isPlaying ? .trackChanged : .pausedTrackChanged)
+            } else if info.isPlaying != model.isPlaying {
+                send(.playbackChanged(info.isPlaying))
+            }
         case .cleared:
             nowPlaying = nil
             send(.mediaCleared)
