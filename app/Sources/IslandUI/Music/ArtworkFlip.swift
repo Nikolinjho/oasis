@@ -7,6 +7,8 @@ struct ArtworkFlip: View {
     let info: NowPlayingInfo?
     let side: CGFloat
     let radius: CGFloat
+    /// false — Disable artwork flip: новая обложка сразу, без поворота
+    var flips = true
 
     /// Уходящий трек до ребра. После ребра рисуется живой info, поэтому поздняя обложка не теряется
     @State private var outgoing: NowPlayingInfo?
@@ -29,6 +31,8 @@ struct ArtworkFlip: View {
     private func flip(from old: NowPlayingInfo?) {
         // первый трек появляется без переворота
         guard let old else { return }
+        // Disable artwork flip: новая обложка сразу, без поворота
+        guard flips else { return }
         flipTask?.cancel()
         // переворот ещё не дошёл до ребра: на экране по-прежнему прежний outgoing
         if outgoing == nil { outgoing = old }

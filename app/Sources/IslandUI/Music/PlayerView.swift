@@ -4,12 +4,13 @@ import SwiftUI
 /// Раскрытый плеер 345×175: верхние 32 pt — полоса menu bar под вырезом, контент ниже
 struct PlayerView: View {
     let info: NowPlayingInfo?
+    var appearance = IslandAppearance.default
     let onAction: (PlayerAction) -> Void
 
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 12) {
-                ArtworkFlip(info: info, side: 56, radius: 12)
+                ArtworkFlip(info: info, side: 56, radius: 12, flips: appearance.artworkFlip)
                     .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 VStack(alignment: .leading, spacing: 2) {
                     MarqueeText(text: info?.title ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
@@ -22,9 +23,9 @@ struct PlayerView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                WaveformView(isPlaying: info?.isPlaying ?? false, color: IslandUI.accentColor(info), maxHeight: 16)
+                WaveformView(isPlaying: info?.isPlaying ?? false, fill: waveformFill(info, appearance.waveform), maxHeight: 16)
             }
-            ProgressRow(info: info)
+            ProgressRow(info: info, fill: progressFill(info, appearance.waveform))
             // центры кнопок через 63 pt, крайние на ~73% ширины плеера, как на кадрах Alcove
             HStack(spacing: 15) {
                 // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку и не рвёт replace-переход
@@ -67,6 +68,7 @@ struct PausedArtwork: ViewModifier {
 
 struct ProgressRow: View {
     let info: NowPlayingInfo?
+    var fill: AnyShapeStyle = AnyShapeStyle(IslandPalette.foreground)
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
@@ -78,7 +80,7 @@ struct ProgressRow: View {
                     ZStack(alignment: .leading) {
                         Capsule().fill(IslandPalette.foreground.opacity(0.2))
                         Capsule()
-                            .fill(IslandPalette.foreground)
+                            .fill(fill)
                             .frame(width: duration > 0 ? proxy.size.width * position / duration : 0)
                     }
                 }

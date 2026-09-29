@@ -46,11 +46,13 @@ public struct NowPlayingInfo: Equatable, Sendable {
     public var artwork: Data?
     /// Цвет волны из обложки, считается в IslandSources
     public var accent: RGB?
+    /// Цвет низа обложки для волны Gradient (motion.md: «вертикальный градиент из двух цветов обложки»)
+    public var accentBottom: RGB?
 
     public init(
         bundleID: String? = nil, title: String, artist: String? = nil, album: String? = nil,
         isPlaying: Bool, duration: TimeInterval? = nil, elapsed: TimeInterval? = nil,
-        elapsedAt: Date = Date(), artwork: Data? = nil, accent: RGB? = nil
+        elapsedAt: Date = Date(), artwork: Data? = nil, accent: RGB? = nil, accentBottom: RGB? = nil
     ) {
         self.bundleID = bundleID
         self.title = title
@@ -62,6 +64,7 @@ public struct NowPlayingInfo: Equatable, Sendable {
         self.elapsedAt = elapsedAt
         self.artwork = artwork
         self.accent = accent
+        self.accentBottom = accentBottom
     }
 
     /// По нему решаем, сменился ли трек (переворот обложки, peek)

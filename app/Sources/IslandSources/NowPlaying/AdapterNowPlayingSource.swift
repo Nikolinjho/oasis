@@ -24,7 +24,7 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         var parser = NowPlayingParser()
         var buffer = LineBuffer()
         var backoff = Backoff()
-        var accents: [String: RGB] = [:]
+        var accents: [String: (RGB, RGB?)] = [:]
         var stopped = false
         /// Номер запуска: колбэки старого процесса сверяют его и не трогают новый
         var generation = 0
@@ -135,15 +135,18 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         }
     }
 
-    /// Цвет считаем один раз на трек: адаптер присылает обложку в каждой строке
+    /// Цвета считаем один раз на трек: адаптер присылает обложку в каждой строке
     private func fillAccent(_ info: NowPlayingInfo) -> NowPlayingInfo {
         var info = info
         let key = info.trackKey
         if let cached = state.withLockUnchecked({ $0.accents[key] }) {
-            info.accent = cached
+            info.accent = cached.0
+            info.accentBottom = cached.1
         } else if let artwork = info.artwork, let color = ArtworkColor.accent(of: artwork) {
-            state.withLockUnchecked { $0.accents[key] = color }
+            let bottom = ArtworkColor.gradient(of: artwork)?.bottom
+            state.withLockUnchecked { $0.accents[key] = (color, bottom) }
             info.accent = color
+            info.accentBottom = bottom
         }
         return info
     }

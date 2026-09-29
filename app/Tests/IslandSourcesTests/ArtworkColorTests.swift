@@ -37,4 +37,28 @@ struct ArtworkColorTests {
     func garbage() {
         #expect(ArtworkColor.accent(of: Data("not an image".utf8)) == nil)
     }
+
+    static func splitPNG() -> Data {
+        let context = CGContext(
+            data: nil, width: 4, height: 4, bitsPerComponent: 8, bytesPerRow: 16,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        // CGContext рисует снизу вверх: нижняя половина синяя, верхняя красная
+        context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 4, height: 2))
+        context.setFillColor(CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 2, width: 4, height: 2))
+        let data = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!, nil)
+        CGImageDestinationFinalize(destination)
+        return data as Data
+    }
+
+    @Test("Gradient: верх и низ обложки дают свои цвета")
+    func gradient() throws {
+        let colors = try #require(ArtworkColor.gradient(of: Self.splitPNG()))
+        #expect(colors.top.red > colors.top.blue)
+        #expect(colors.bottom.blue > colors.bottom.red)
+    }
 }

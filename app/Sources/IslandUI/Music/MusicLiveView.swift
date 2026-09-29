@@ -6,17 +6,20 @@ struct MusicLiveView: View {
     let info: NowPlayingInfo?
     let notchWidth: CGFloat
     let showsTitle: Bool
+    var appearance = IslandAppearance.default
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 // радиус 4: замера нет, оценка
-                ArtworkFlip(info: info, side: 16, radius: 4)
+                ArtworkFlip(info: info, side: 16, radius: 4, flips: appearance.artworkFlip)
                     .scaleEffect(isPlaying ? 1 : 0.85)
                     .opacity(isPlaying ? 1 : 0.6)
                     .animation(.easeOut(duration: 0.5), value: isPlaying)
                 Spacer(minLength: notchWidth)
-                WaveformView(isPlaying: isPlaying, color: IslandUI.accentColor(info))
+                if appearance.compactWaveform {
+                    WaveformView(isPlaying: isPlaying, fill: waveformFill(info, appearance.waveform))
+                }
             }
             .padding(.horizontal, 12)
             .frame(height: 32)

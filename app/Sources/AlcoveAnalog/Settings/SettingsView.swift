@@ -36,6 +36,7 @@ struct SettingsView: View {
         case .connectivity: ConnectivityPage(settings: settings, playSound: playSound)
         case .display: HUDPage(settings: settings, kind: .brightness)
         case .sound: HUDPage(settings: settings, kind: .volume)
+        case .nowPlaying: NowPlayingPage(settings: settings)
         default: EmptyView()
         }
     }

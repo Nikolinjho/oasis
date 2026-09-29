@@ -203,4 +203,24 @@ struct AppSettingsTests {
         let rules = settings.machineConfig(from: .user).nowPlaying
         #expect(rules.idleDelay == .zero && rules.peekDuration == .seconds(5) && rules.hidesWhileSourceActive)
     }
+
+    @Test("Вид Now Playing и источник: по умолчанию Colored, переворот и волна включены, Automatic · System")
+    func nowPlayingLook() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.waveformStyle == .colored)
+        #expect(settings.appearance.compactWaveform && settings.appearance.artworkFlip && !settings.appearance.hidesTitleExtras)
+        #expect(settings.automaticMediaSource && settings.effectiveMediaSource == .system)
+        settings.waveformStyle = .gradient
+        settings.disableCompactWaveform = true
+        settings.disableArtworkFlip = true
+        settings.hideTitleExtras = true
+        settings.automaticMediaSource = false
+        settings.mediaSource = .yandexMusic
+        #expect(settings.appearance.waveform == .gradient)
+        #expect(!settings.appearance.compactWaveform && !settings.appearance.artworkFlip && settings.appearance.hidesTitleExtras)
+        // Яндекс Музыки пока нет: выбранный недоступный источник читается как System
+        #expect(settings.effectiveMediaSource == .system)
+    }
 }

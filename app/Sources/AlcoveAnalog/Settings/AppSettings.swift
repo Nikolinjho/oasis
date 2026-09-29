@@ -51,6 +51,12 @@ final class AppSettings: ObservableObject {
         static let peekOnMediaChange = "peekOnMediaChange"
         static let peekDuration = "peekDuration"
         static let hideWhileSourceActive = "hideWhileSourceActive"
+        static let waveformStyle = "waveformStyle"
+        static let disableCompactWaveform = "disableCompactWaveform"
+        static let disableArtworkFlip = "disableArtworkFlip"
+        static let hideTitleExtras = "hideTitleExtras"
+        static let automaticMediaSource = "automaticMediaSource"
+        static let mediaSource = "mediaSource"
     }
 
     var onChange: () -> Void = {}
@@ -176,6 +182,18 @@ final class AppSettings: ObservableObject {
     /// Peek duration, 1…6 с, шаг 1
     @Published var peekDuration: Double { didSet { save(oldValue, peekDuration, Key.peekDuration) } }
     @Published var hideWhileSourceActive: Bool { didSet { save(oldValue, hideWhileSourceActive, Key.hideWhileSourceActive) } }
+    @Published var waveformStyle: WaveformStyle { didSet { saveRaw(oldValue, waveformStyle, Key.waveformStyle) } }
+    @Published var disableCompactWaveform: Bool { didSet { save(oldValue, disableCompactWaveform, Key.disableCompactWaveform) } }
+    @Published var disableArtworkFlip: Bool { didSet { save(oldValue, disableArtworkFlip, Key.disableArtworkFlip) } }
+    @Published var hideTitleExtras: Bool { didSet { save(oldValue, hideTitleExtras, Key.hideTitleExtras) } }
+    /// Source → Automatic (automaticMusicApp = 1 у Alcove, ui-inspection 6)
+    @Published var automaticMediaSource: Bool { didSet { save(oldValue, automaticMediaSource, Key.automaticMediaSource) } }
+    @Published var mediaSource: MediaSourceChoice { didSet { saveRaw(oldValue, mediaSource, Key.mediaSource) } }
+
+    /// Источник, который реально запускается: Automatic и недоступные пока источники — System
+    var effectiveMediaSource: MediaSourceChoice {
+        automaticMediaSource || !mediaSource.isAvailable ? .system : mediaSource
+    }
 
     /// Сдвиг выреза для окна острова. Значения из UserDefaults могли прийти руками: зажимаем в −2…2
     var notchTuning: NotchTuning {
@@ -243,6 +261,12 @@ final class AppSettings: ObservableObject {
         peekOnMediaChange = Self.read(defaults, Key.peekOnMediaChange, true)
         peekDuration = Self.read(defaults, Key.peekDuration, 2.0)
         hideWhileSourceActive = Self.read(defaults, Key.hideWhileSourceActive, false)
+        waveformStyle = Self.readRaw(defaults, Key.waveformStyle, WaveformStyle.colored)
+        disableCompactWaveform = Self.read(defaults, Key.disableCompactWaveform, false)
+        disableArtworkFlip = Self.read(defaults, Key.disableArtworkFlip, false)
+        hideTitleExtras = Self.read(defaults, Key.hideTitleExtras, false)
+        automaticMediaSource = Self.read(defaults, Key.automaticMediaSource, true)
+        mediaSource = Self.readRaw(defaults, Key.mediaSource, MediaSourceChoice.system)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -292,6 +316,10 @@ final class AppSettings: ObservableObject {
         appearance.brightnessHUD = HUDAppearance(
             style: displayHUDStyle, showsPercentage: displayHUDPercentage, hidesLabel: displayHUDHideLabel,
             speed: displayHUDSpeed)
+        appearance.waveform = waveformStyle
+        appearance.compactWaveform = !disableCompactWaveform
+        appearance.artworkFlip = !disableArtworkFlip
+        appearance.hidesTitleExtras = hideTitleExtras
         return appearance
     }
 

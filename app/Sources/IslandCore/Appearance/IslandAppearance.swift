@@ -54,6 +54,11 @@ public struct HUDAppearance: Equatable, Sendable {
     }
 }
 
+/// Now Playing → цвет волны (ui-inspection 1.8). Artwork в строках Alcove есть, в окне настроек — нет: не делаем
+public enum WaveformStyle: String, CaseIterable, Sendable {
+    case monochrome, colored, gradient
+}
+
 /// Как остров рисует свои поверхности: настройки страниц, которые меняют вид, а не поведение.
 /// Поведение живёт в IslandMachine.Config. Store держит значение и отдаёт его в IslandView и геометрию
 public struct IslandAppearance: Equatable, Sendable {
@@ -64,6 +69,14 @@ public struct IslandAppearance: Equatable, Sendable {
     public var brightnessHUD = HUDAppearance(style: .accent)
     /// Текущий выход: глиф для Show device в HUD громкости (VolumeControl.outputs)
     public var output = OutputDeviceKind.speakers
+    /// Now Playing: по умолчанию Colored (progressStyle = color у Alcove)
+    public var waveform = WaveformStyle.colored
+    /// false — Disable compact waveform
+    public var compactWaveform = true
+    /// false — Disable artwork flip
+    public var artworkFlip = true
+    /// Hide media title extras
+    public var hidesTitleExtras = false
 
     public init() {}
 

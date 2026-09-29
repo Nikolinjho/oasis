@@ -6,6 +6,7 @@ import SwiftUI
 struct DuoView: View {
     let info: NowPlayingInfo?
     let agenda: DayAgenda
+    var appearance = IslandAppearance.default
     /// Событие открытого окна календаря: карточка и Join — о нём, как компакт и меню (DayAgenda.current)
     var liveEvent: CalendarEvent? = nil
     var now: Date? = nil
@@ -22,7 +23,7 @@ struct DuoView: View {
 
     private func content(_ now: Date) -> some View {
         ZStack(alignment: .topLeading) {
-            ArtworkFlip(info: info, side: DuoLayout.artworkSide, radius: 6)
+            ArtworkFlip(info: info, side: DuoLayout.artworkSide, radius: 6, flips: appearance.artworkFlip)
                 .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 .offset(x: DuoLayout.artworkX, y: DuoLayout.artworkCenterY - DuoLayout.artworkSide / 2)
             DuoTitle(info: info)
