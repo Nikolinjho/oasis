@@ -16,10 +16,12 @@ struct ActivityLayoutsTests {
         #expect(layout.line == nil)
     }
 
-    @Test("Самый широкий индикатор — минуты в момент открытия окна при музыке, «15m»")
+    @Test("Самый широкий индикатор без музыки — «60s» на границе последней минуты; с музыкой на T−15 — «15m»")
     func widestIndicator() {
-        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false, withMusic: true)
-        #expect(layout.indicator == ActivityLayouts.calendarWidestIndicator)
+        let noMusic = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
+        #expect(noMusic.indicator == ActivityLayouts.calendarWidestIndicator)
+        let withMusic = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false, withMusic: true)
+        #expect(withMusic.indicator == .text("15m", color: ActivityLayouts.calendarRed))
     }
 
     @Test("С музыкой: обложка с бейджем, минуты вверх до начала, в последнюю минуту секунды (Alcove 1.7.9, 29.09)")

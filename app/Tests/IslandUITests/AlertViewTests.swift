@@ -86,9 +86,7 @@ struct AlertViewTests {
     @Test("Пол ширины напоминания меряется по «15m», самому широкому индикатору напоминания")
     func reminderIndicatorWidth() {
         #expect(IslandView.reminderIndicatorWidth == ActivityCompactView.indicatorWidth(.text("15m", color: ActivityLayouts.calendarRed)))
-        // пол компакта календаря без музыки (calendarWidestIndicator) с Alcove 1.7.9 тоже мерят по «15m» —
-        // запас по безопасности, хотя без музыки текст сам никогда не шире «60s» — поэтому полы совпадают
-        #expect(IslandView.reminderIndicatorWidth == IslandView.calendarIndicatorWidth)
+        #expect(IslandView.reminderIndicatorWidth > IslandView.calendarIndicatorWidth)
     }
 
     @MainActor

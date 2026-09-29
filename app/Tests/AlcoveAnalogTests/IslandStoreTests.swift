@@ -79,8 +79,7 @@ struct IslandStoreTests {
         store.send(.mediaCleared)
         #expect(store.model.surface == .calendar)
         #expect(!store.model.showsMedia)
-        // без музыки — прежний пол по «15m» (27 pt на этой системе, см. AlertViewTests.reminderIndicatorWidth):
-        // notch 185 + 2 × (8 паддинга + 27 индикатора) = 255, шире тела календаря (254)
-        #expect(store.spec.size == CGSize(width: 255, height: 32))
+        // без музыки — тело календаря (254, замер 1.7.7): пол по «60s» на этом notch его не превышает
+        #expect(store.spec.size == CGSize(width: 254, height: 32))
     }
 }

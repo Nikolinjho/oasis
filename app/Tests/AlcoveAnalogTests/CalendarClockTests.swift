@@ -74,6 +74,21 @@ struct CalendarClockTests {
         #expect(store.calendarEvent == inner)
     }
 
+    @Test("События подряд без разрыва: окно переходит к следующему точно в момент его начала (Alcove — не проверено, оценка)")
+    func adjacentEventsHandoffAtStart() {
+        let a = CalendarEvent(id: "a", title: "A", start: Self.start, end: Self.at(1800), isAllDay: false, color: Self.event.color)
+        let b = CalendarEvent(id: "b", title: "B", start: Self.at(1800), end: Self.at(2400), isAllDay: false, color: Self.event.color)
+        let store = IslandStore(config: .alcove)
+        let clock = CalendarClock(store: store, start: Self.at(10))
+        clock.update(agenda: DayAgenda.make(events: [a, b], now: Self.at(10)), now: Self.at(10))
+        #expect(store.calendarEvent == a)
+        clock.tick(now: Self.at(1799))
+        #expect(store.calendarEvent == a)
+        clock.tick(now: Self.at(1800))
+        #expect(store.model.surface == .calendarPeek)
+        #expect(store.calendarEvent == b)
+    }
+
     @Test("Правка события внутри окна (название, конец) доходит до store")
     func editedLiveEventReachesStore() {
         let store = IslandStore(config: .alcove)

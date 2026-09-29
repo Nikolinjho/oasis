@@ -23,12 +23,15 @@ public enum CalendarSchedule {
     /// События по началу (DayAgenda.make), завтрашние после сегодняшних
     public static func liveEvent(in agenda: DayAgenda, at now: Date) -> CalendarEvent? {
         let list = events(agenda)
-        if let started = list.last(where: { $0.start <= now && now < $0.end }) {
-            return started
+        let started: CalendarEvent? = list.last { (event: CalendarEvent) -> Bool in
+            event.start <= now && now < event.end
         }
-        return list
-            .filter { now < $0.start && $0.start.addingTimeInterval(-liveLead) <= now }
-            .min { $0.start < $1.start }
+        if let started { return started }
+        let upcoming: [CalendarEvent] = list.filter { (event: CalendarEvent) -> Bool in
+            let windowOpensAt: Date = event.start.addingTimeInterval(-liveLead)
+            return now < event.start && windowOpensAt <= now
+        }
+        return upcoming.min { (a: CalendarEvent, b: CalendarEvent) -> Bool in a.start < b.start }
     }
 
     public static func crossings(in agenda: DayAgenda, from previous: Date, to now: Date) -> [CalendarTick] {
