@@ -44,4 +44,8 @@ final class PlayerActions: PlayerActionPerforming {
     func setRepeat(_ mode: Int) {
         source?.setRepeat(mode)
     }
+
+    func seek(to position: TimeInterval) {
+        source?.seek(to: position)
+    }
 }

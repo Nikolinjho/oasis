@@ -58,6 +58,7 @@ final class AppSettings: ObservableObject {
         static let automaticMediaSource = "automaticMediaSource"
         static let mediaSource = "mediaSource"
         static let playerControl = "playerControl"
+        static let showRemainingTime = "showRemainingTime"
     }
 
     var onChange: () -> Void = {}
@@ -192,6 +193,8 @@ final class AppSettings: ObservableObject {
     @Published var mediaSource: MediaSourceChoice { didSet { saveRaw(oldValue, mediaSource, Key.mediaSource) } }
     /// Now Playing → доп. кнопка плеера. По умолчанию Shuffle: controlChoice = shuffle у Alcove
     @Published var playerControl: PlayerExtraControl { didSet { saveRaw(oldValue, playerControl, Key.playerControl) } }
+    /// Клик по времени плеера переключает её. showRemainingTime = 1 у Alcove по умолчанию
+    @Published var showRemainingTime: Bool { didSet { save(oldValue, showRemainingTime, Key.showRemainingTime) } }
 
     /// Источник, который реально запускается: Automatic и недоступные пока источники — System
     var effectiveMediaSource: MediaSourceChoice {
@@ -271,6 +274,7 @@ final class AppSettings: ObservableObject {
         automaticMediaSource = Self.read(defaults, Key.automaticMediaSource, true)
         mediaSource = Self.readRaw(defaults, Key.mediaSource, MediaSourceChoice.system)
         playerControl = Self.readRaw(defaults, Key.playerControl, PlayerExtraControl.shuffle)
+        showRemainingTime = Self.read(defaults, Key.showRemainingTime, true)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -325,6 +329,7 @@ final class AppSettings: ObservableObject {
         appearance.artworkFlip = !disableArtworkFlip
         appearance.hidesTitleExtras = hideTitleExtras
         appearance.playerControl = playerControl
+        appearance.showsRemainingTime = showRemainingTime
         return appearance
     }
 

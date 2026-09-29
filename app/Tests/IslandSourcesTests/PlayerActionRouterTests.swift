@@ -1,3 +1,4 @@
+import Foundation
 import IslandCore
 import Testing
 @testable import IslandSources
@@ -12,6 +13,7 @@ final class FakePerformer: PlayerActionPerforming {
         case volume(Double)
         case shuffle(Int)
         case repeatMode(Int)
+        case seek(TimeInterval)
     }
 
     private(set) var calls: [Call] = []
@@ -22,6 +24,7 @@ final class FakePerformer: PlayerActionPerforming {
     func setVolume(_ level: Double) { calls.append(.volume(level)) }
     func setShuffle(_ mode: Int) { calls.append(.shuffle(mode)) }
     func setRepeat(_ mode: Int) { calls.append(.repeatMode(mode)) }
+    func seek(to position: TimeInterval) { calls.append(.seek(position)) }
 }
 
 @MainActor
@@ -100,5 +103,12 @@ struct PlayerActionRouterTests {
             router.perform(.cycleRepeat, nowPlaying: info)
         }
         #expect(fake.calls == [.repeatMode(3), .repeatMode(3), .repeatMode(2), .repeatMode(1)])
+    }
+
+    @Test("Перемотка уходит исполнителю позицией в секундах")
+    func seek() {
+        let fake = FakePerformer()
+        PlayerActionRouter(performer: fake).perform(.seek(42), nowPlaying: nil)
+        #expect(fake.calls == [.seek(42)])
     }
 }

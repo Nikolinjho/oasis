@@ -203,12 +203,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startPlayerActions() {
         let performer = PlayerActions(source: nowPlaying) { [weak self] level in self?.setVolumeFromRow(level) }
         let router = PlayerActionRouter(performer: performer)
-        store.onAction = { [weak store, log] action in
+        store.onAction = { [weak self, weak store, log] action in
             guard let store else { return }
             log.debug("player action \(String(describing: action), privacy: .public)")
             // строка громкости — состояние острова: в машину, а не в систему
             if action == .toggleVolumeRow {
                 store.send(.volumeRowToggled)
+                return
+            }
+            // выбор вида времени — настройка приложения: вид обновится через applySettings → applyAppearance,
+            // как у остальных полей appearance (settings.onChange)
+            if action == .toggleTimeDisplay {
+                self?.settings.showRemainingTime.toggle()
                 return
             }
             router.perform(action, nowPlaying: store.nowPlaying)

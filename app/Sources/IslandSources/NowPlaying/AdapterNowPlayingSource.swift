@@ -9,6 +9,7 @@ public protocol NowPlayingSource: AnyObject, Sendable {
     func send(_ command: MediaCommand)
     func setShuffle(_ mode: Int)
     func setRepeat(_ mode: Int)
+    func seek(to position: TimeInterval)
 }
 
 /// «Сейчас играет» через mediaremote-adapter: с macOS 15.4 MediaRemote отдаёт данные только процессам Apple,
@@ -68,6 +69,11 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
 
     public func setRepeat(_ mode: Int) {
         run(["repeat", String(mode)])
+    }
+
+    /// seek адаптера принимает микросекунды
+    public func seek(to position: TimeInterval) {
+        run(["seek", String(Int((max(position, 0) * 1_000_000).rounded()))])
     }
 
     /// Разовая команда адаптера: отдельный perl, поток stream не трогаем

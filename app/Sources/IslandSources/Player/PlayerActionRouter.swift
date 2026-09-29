@@ -1,3 +1,4 @@
+import Foundation
 import IslandCore
 import os
 
@@ -10,6 +11,7 @@ public protocol PlayerActionPerforming: AnyObject {
     func setVolume(_ level: Double)
     func setShuffle(_ mode: Int)
     func setRepeat(_ mode: Int)
+    func seek(to position: TimeInterval)
 }
 
 /// Решает, кому и с чем отдать действие кнопки плеера
@@ -49,6 +51,11 @@ public struct PlayerActionRouter {
             performer.setShuffle(nowPlaying?.isShuffling == true ? 1 : 3)
         case .cycleRepeat:
             performer.setRepeat(NowPlayingInfo.nextRepeatMode(after: nowPlaying?.repeatMode))
+        case .toggleTimeDisplay:
+            // настройка приложения, её перехватывает AppDelegate
+            log.info("time display toggle reached the router")
+        case let .seek(position):
+            performer.seek(to: position)
         }
     }
 }

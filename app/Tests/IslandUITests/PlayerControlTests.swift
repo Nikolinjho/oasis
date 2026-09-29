@@ -59,6 +59,20 @@ struct PlayerControlTests {
         // точка под иконкой (рисуется отдельно от showsBackground) у него не появится
         #expect(!output.isActive)
     }
+
+    @Test("Время справа: остаток или полная длительность (Alcove 1.7.9, 28.09)")
+    func trailingTime() {
+        #expect(ProgressRow.trailing(position: 61, duration: 263, remaining: true) == "-3:22")
+        #expect(ProgressRow.trailing(position: 61, duration: 263, remaining: false) == "4:23")
+    }
+
+    @Test("Перемотка: позиция по точке клика, за краями зажата")
+    func seekPosition() {
+        #expect(ProgressRow.seekPosition(at: 60, width: 240, duration: 200) == 50)
+        #expect(ProgressRow.seekPosition(at: -5, width: 240, duration: 200) == 0)
+        #expect(ProgressRow.seekPosition(at: 999, width: 240, duration: 200) == 200)
+        #expect(ProgressRow.seekPosition(at: 10, width: 0, duration: 200) == 0)
+    }
 }
 
 struct VolumeRowTests {

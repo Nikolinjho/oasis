@@ -32,7 +32,9 @@ struct PlayerView: View {
                 Spacer(minLength: 8)
                 WaveformView(isPlaying: info?.isPlaying ?? false, fill: waveformFill(info, appearance.waveform), maxHeight: 16)
             }
-            ProgressRow(info: info, fill: progressFill(info, appearance.waveform))
+            ProgressRow(
+                info: info, fill: progressFill(info, appearance.waveform),
+                showsRemaining: appearance.showsRemainingTime, onAction: onAction)
             // центры кнопок через 63 pt, крайние на ~73% ширины плеера, как на кадрах Alcove
             HStack(spacing: 15) {
                 // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку и не рвёт replace-переход
@@ -132,11 +134,15 @@ struct PausedArtwork: ViewModifier {
 struct ProgressRow: View {
     let info: NowPlayingInfo?
     var fill: AnyShapeStyle = AnyShapeStyle(IslandPalette.foreground)
+    var showsRemaining = true
+    var onAction: (PlayerAction) -> Void = { _ in }
+    /// Пока тянут полоску — позиция пальца в долях 0…1, после отпускания снова берём позицию из info
+    @State private var dragFraction: Double?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
-            let position = info?.position(at: context.date) ?? 0
             let duration = info?.duration ?? 0
+            let position = dragFraction.map { $0 * duration } ?? info?.position(at: context.date) ?? 0
             HStack(spacing: 8) {
                 Text(Self.format(position)).monospacedDigit()
                 GeometryReader { proxy in
@@ -144,11 +150,28 @@ struct ProgressRow: View {
                         Capsule().fill(IslandPalette.foreground.opacity(0.2))
                         Capsule()
                             .fill(fill)
-                            .frame(width: duration > 0 ? proxy.size.width * position / duration : 0)
+                            .frame(width: duration > 0 ? proxy.size.width * min(position / duration, 1) : 0)
                     }
+                    .frame(height: 4)
+                    .frame(maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard duration > 0 else { return }
+                            dragFraction = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration) / duration
+                        }
+                        .onEnded { value in
+                            dragFraction = nil
+                            guard duration > 0 else { return }
+                            onAction(.seek(Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration)))
+                        })
                 }
-                .frame(height: 4)
-                Text(Self.remaining(position: position, duration: duration)).monospacedDigit()
+                .frame(height: 14)
+                Text(Self.trailing(position: position, duration: duration, remaining: showsRemaining))
+                    .monospacedDigit()
+                    .contentShape(Rectangle())
+                    // Alcove 1.7.9, 28.09: клик по времени справа переключает остаток и полную длительность
+                    .onTapGesture { onAction(.toggleTimeDisplay) }
             }
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(IslandPalette.secondary)
@@ -165,6 +188,17 @@ struct ProgressRow: View {
     /// Считается от уже округлённой позиции, чтобы сумма двух подписей всегда давала длительность
     nonisolated static func remaining(position: TimeInterval, duration: TimeInterval) -> String {
         "-" + format(duration - max(0, position).rounded(.down))
+    }
+
+    /// Справа от прогресса: «-m:ss» до конца или «m:ss» длительность (showRemainingTime у Alcove)
+    nonisolated static func trailing(position: TimeInterval, duration: TimeInterval, remaining: Bool) -> String {
+        remaining ? Self.remaining(position: position, duration: duration) : format(duration)
+    }
+
+    /// Точка клика/перетаскивания по полоске в позицию трека: за краями зажата в 0…duration
+    nonisolated static func seekPosition(at x: CGFloat, width: CGFloat, duration: TimeInterval) -> TimeInterval {
+        guard width > 0 else { return 0 }
+        return duration * Double(min(max(x / width, 0), 1))
     }
 }
 

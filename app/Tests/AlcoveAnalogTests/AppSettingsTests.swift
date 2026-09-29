@@ -233,4 +233,14 @@ struct AppSettingsTests {
         settings.playerControl = .repeat
         #expect(settings.appearance.playerControl == .repeat)
     }
+
+    @Test("Время справа от прогресса: по умолчанию остаток, как showRemainingTime = 1 у Alcove")
+    func remainingTime() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.showRemainingTime && settings.appearance.showsRemainingTime)
+        settings.showRemainingTime = false
+        #expect(!settings.appearance.showsRemainingTime)
+    }
 }

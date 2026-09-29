@@ -36,6 +36,10 @@ public enum PlayerAction: Equatable, Sendable {
     case toggleShuffle
     /// Доп. кнопка Repeat: следующий режим по кругу
     case cycleRepeat
+    /// Клик по времени справа от прогресса: остаток ↔ длительность (Alcove 1.7.9, 28.09)
+    case toggleTimeDisplay
+    /// Клик или перетаскивание по прогрессу: позиция в секундах
+    case seek(TimeInterval)
 }
 
 public struct NowPlayingInfo: Equatable, Sendable {

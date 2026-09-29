@@ -79,6 +79,8 @@ public struct IslandAppearance: Equatable, Sendable {
     public var hidesTitleExtras = false
     /// Now Playing → доп. кнопка плеера
     public var playerControl = PlayerExtraControl.shuffle
+    /// Справа от прогресса: «-m:ss» до конца или длительность целиком (showRemainingTime = 1 у Alcove по умолчанию)
+    public var showsRemainingTime = true
 
     public init() {}
 
