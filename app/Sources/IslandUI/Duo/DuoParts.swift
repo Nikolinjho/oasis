@@ -74,16 +74,18 @@ struct DuoControl: Equatable {
     let action: PlayerAction
     /// Play крупнее перемоток. Размеры по пропорциям кадра, замера нет
     let size: CGFloat
+    var isEnabled = true
 
     var highlightsOnHover: Bool { action == .media(.togglePlayPause) }
 
     static func row(_ info: NowPlayingInfo?) -> [DuoControl] {
-        [
-            DuoControl(symbol: "backward.fill", action: .media(.previousTrack), size: 18),
+        let canSkip = info?.canSkip ?? true
+        return [
+            DuoControl(symbol: "backward.fill", action: .media(.previousTrack), size: 18, isEnabled: canSkip),
             DuoControl(
                 symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
                 action: .media(.togglePlayPause), size: 24),
-            DuoControl(symbol: "forward.fill", action: .media(.nextTrack), size: 18),
+            DuoControl(symbol: "forward.fill", action: .media(.nextTrack), size: 18, isEnabled: canSkip),
         ]
     }
 }
@@ -97,13 +99,14 @@ struct DuoControlButton: View {
         Button(action: action) {
             Image(systemName: control.symbol)
                 .font(.system(size: control.size, weight: .semibold))
-                .foregroundStyle(IslandPalette.foreground)
+                .foregroundStyle(control.isEnabled ? IslandPalette.foreground : IslandPalette.tertiary)
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: DuoLayout.controlSize.width, height: DuoLayout.controlSize.height)
                 .contentShape(Rectangle())
         }
         .buttonStyle(DuoControlStyle(isHovered: isHovered && control.highlightsOnHover))
         .onHover { isHovered = $0 }
+        .disabled(!control.isEnabled)
     }
 }
 

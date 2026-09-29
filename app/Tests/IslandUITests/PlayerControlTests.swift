@@ -3,27 +3,49 @@ import Testing
 @testable import IslandUI
 
 struct PlayerControlTests {
-    @Test("Левая кнопка: звезда у Apple Music, ссылка у остальных")
-    func leadingControl() {
-        let music = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
-        let spotify = NowPlayingInfo(bundleID: "com.spotify.client", title: "A", isPlaying: true)
-        #expect(PlayerControl.leading(music) == PlayerControl(symbol: "star.fill", action: .favorite, isSide: true))
-        #expect(PlayerControl.leading(spotify) == PlayerControl(symbol: "link", action: .openSource, isSide: true))
-        #expect(PlayerControl.leading(nil).action == .openSource)
+    static func music(_ extra: (inout NowPlayingInfo) -> Void = { _ in }) -> NowPlayingInfo {
+        var info = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
+        extra(&info)
+        return info
     }
 
-    @Test("Пять кнопок и их действия")
+    @Test("Пять мест: доп. кнопка, ⏪, ⏸, ⏩, вывод с глифом устройства (Alcove 1.7.9, 28.09)")
     func controls() {
-        let playing = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
-        #expect(PlayerControl.row(playing).map(\.action) == [
-            .favorite, .media(.previousTrack), .media(.togglePlayPause), .media(.nextTrack), .toggleVolumeRow,
+        let row = PlayerControl.row(Self.music(), extra: .shuffle, outputSymbol: "headphones")
+        #expect(row.count == 5)
+        #expect(row[0]?.action == .toggleShuffle)
+        #expect(row.dropFirst().map { $0?.action } == [
+            .media(.previousTrack), .media(.togglePlayPause), .media(.nextTrack), .toggleVolumeRow,
         ])
-        #expect(PlayerControl.row(playing).map(\.isSide) == [true, false, false, false, true])
-        #expect(PlayerControl.row(playing)[2].symbol == "pause.fill")
-        var paused = playing
-        paused.isPlaying = false
-        #expect(PlayerControl.row(paused)[2].symbol == "play.fill")
-        #expect(PlayerControl.row(nil).map(\.action).first == .openSource)
+        #expect(row[2]?.symbol == "pause.fill")
+        #expect(row[4]?.symbol == "headphones")
+        #expect(row.compactMap { $0 }.allSatisfy { $0.isEnabled })
+    }
+
+    @Test("Браузер: слот доп. кнопки пуст, ⏪⏩ тусклые, в Duo тоже")
+    func browser() {
+        var web = NowPlayingInfo(bundleID: "com.google.Chrome", title: "Video", isPlaying: true)
+        web.isBrowser = true
+        web.canSkip = false
+        let row = PlayerControl.row(web, extra: .shuffle, outputSymbol: "laptopcomputer")
+        #expect(row[0] == nil)
+        #expect(row.dropFirst().map { $0?.isEnabled } == [false, true, false, true])
+        #expect(DuoControl.row(web).map(\.isEnabled) == [false, true, false])
+    }
+
+    @Test("Доп. кнопка по выбору: Shuffle и Repeat со своим состоянием, Favorite только у Music, Copy — нет")
+    func extraChoice() {
+        let shuffling = PlayerControl.extra(Self.music { $0.shuffleMode = 3 }, choice: .shuffle)
+        #expect(shuffling?.symbol == "shuffle" && shuffling?.isActive == true)
+        #expect(PlayerControl.extra(Self.music { $0.shuffleMode = 1 }, choice: .shuffle)?.isActive == false)
+        let one = PlayerControl.extra(Self.music { $0.repeatMode = 2 }, choice: .repeat)
+        #expect(one?.symbol == "repeat.1" && one?.action == .cycleRepeat && one?.isActive == true)
+        #expect(PlayerControl.extra(Self.music(), choice: .repeat)?.symbol == "repeat")
+        #expect(PlayerControl.extra(Self.music(), choice: .favorite)?.action == .favorite)
+        let other = NowPlayingInfo(bundleID: "ru.yandex.desktop.music", title: "A", isPlaying: true)
+        #expect(PlayerControl.extra(other, choice: .favorite) == nil)
+        #expect(PlayerControl.extra(Self.music(), choice: .copy) == nil)
+        #expect(PlayerControl.extra(nil, choice: .shuffle) == nil)
     }
 }
 

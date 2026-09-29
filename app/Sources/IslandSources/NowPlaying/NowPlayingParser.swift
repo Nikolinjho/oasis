@@ -32,6 +32,9 @@ public struct NowPlayingParser: Sendable {
         /// Момент, к которому относится elapsedTimeMicros
         let timestampEpochMicros: Double?
         let artworkData: String?
+        let prohibitsSkip: Bool?
+        let shuffleMode: Int?
+        let repeatMode: Int?
     }
 
     /// ignoringClear: пустой payload не сбрасывает текущий трек. Для первой строки перезапущенного адаптера:
@@ -61,7 +64,11 @@ public struct NowPlayingParser: Sendable {
             duration: payload.durationMicros.map { $0 / 1_000_000 },
             elapsed: elapsed?.value,
             elapsedAt: elapsed?.at ?? now,
-            artwork: payload.artworkData.flatMap { Data(base64Encoded: $0) })
+            artwork: payload.artworkData.flatMap { Data(base64Encoded: $0) },
+            canSkip: !(payload.prohibitsSkip ?? BrowserSources.contains(payload.bundleIdentifier)),
+            isBrowser: BrowserSources.contains(payload.bundleIdentifier),
+            shuffleMode: payload.shuffleMode,
+            repeatMode: payload.repeatMode)
         let isNewTrack = current?.trackKey != info.trackKey
         current = info
         return isNewTrack ? .newTrack(info) : .updated(info)

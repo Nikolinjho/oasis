@@ -77,6 +77,23 @@ struct NowPlayingParserTests {
         guard case .updated? = parser.consume(Self.lines[1], now: Self.now) else { Issue.record("ожидали updated"); return }
     }
 
+    @Test("Переключение треков и браузер: prohibitsSkip из адаптера, без ключа — по списку браузеров")
+    func canSkip() {
+        func info(_ bundle: String, _ extra: String = "") -> NowPlayingInfo? {
+            var parser = NowPlayingParser()
+            let line = #"{"type":"data","payload":{"bundleIdentifier":"\#(bundle)","title":"T","playing":true\#(extra)}}"#
+            guard case let .newTrack(info) = parser.consume(line) else { return nil }
+            return info
+        }
+        #expect(info("com.apple.Music")?.canSkip == true)
+        #expect(info("com.apple.Music")?.isBrowser == false)
+        #expect(info("com.google.Chrome")?.canSkip == false)
+        #expect(info("com.google.Chrome")?.isBrowser == true)
+        #expect(info("com.apple.Music", #","prohibitsSkip":true"#)?.canSkip == false)
+        let modes = info("com.apple.Music", #","shuffleMode":3,"repeatMode":2"#)
+        #expect(modes?.shuffleMode == 3 && modes?.repeatMode == 2)
+    }
+
     @Test("Мусор и чужие типы строк игнорируются")
     func garbage() {
         var parser = NowPlayingParser()

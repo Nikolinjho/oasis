@@ -57,6 +57,7 @@ final class AppSettings: ObservableObject {
         static let hideTitleExtras = "hideTitleExtras"
         static let automaticMediaSource = "automaticMediaSource"
         static let mediaSource = "mediaSource"
+        static let playerControl = "playerControl"
     }
 
     var onChange: () -> Void = {}
@@ -189,6 +190,8 @@ final class AppSettings: ObservableObject {
     /// Source → Automatic (automaticMusicApp = 1 у Alcove, ui-inspection 6)
     @Published var automaticMediaSource: Bool { didSet { save(oldValue, automaticMediaSource, Key.automaticMediaSource) } }
     @Published var mediaSource: MediaSourceChoice { didSet { saveRaw(oldValue, mediaSource, Key.mediaSource) } }
+    /// Now Playing → доп. кнопка плеера. По умолчанию Shuffle: controlChoice = shuffle у Alcove
+    @Published var playerControl: PlayerExtraControl { didSet { saveRaw(oldValue, playerControl, Key.playerControl) } }
 
     /// Источник, который реально запускается: Automatic и недоступные пока источники — System
     var effectiveMediaSource: MediaSourceChoice {
@@ -267,6 +270,7 @@ final class AppSettings: ObservableObject {
         hideTitleExtras = Self.read(defaults, Key.hideTitleExtras, false)
         automaticMediaSource = Self.read(defaults, Key.automaticMediaSource, true)
         mediaSource = Self.readRaw(defaults, Key.mediaSource, MediaSourceChoice.system)
+        playerControl = Self.readRaw(defaults, Key.playerControl, PlayerExtraControl.shuffle)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -320,6 +324,7 @@ final class AppSettings: ObservableObject {
         appearance.compactWaveform = !disableCompactWaveform
         appearance.artworkFlip = !disableArtworkFlip
         appearance.hidesTitleExtras = hideTitleExtras
+        appearance.playerControl = playerControl
         return appearance
     }
 

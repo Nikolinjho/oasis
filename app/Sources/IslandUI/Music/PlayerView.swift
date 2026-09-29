@@ -14,6 +14,9 @@ struct PlayerView: View {
             HStack(spacing: 12) {
                 ArtworkFlip(info: info, side: 56, radius: 12, flips: appearance.artworkFlip)
                     .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
+                    // Alcove 1.7.9: клик по обложке или названию выводит источник вперёд, остров не закрывается
+                    .contentShape(Rectangle())
+                    .onTapGesture { onAction(.openSource) }
                 VStack(alignment: .leading, spacing: 2) {
                     MarqueeText(text: appearance.title(for: info) ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
                         .font(.system(size: 14, weight: .semibold))
@@ -24,6 +27,8 @@ struct PlayerView: View {
                         .foregroundStyle(IslandPalette.secondary)
                         .lineLimit(1)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { onAction(.openSource) }
                 Spacer(minLength: 8)
                 WaveformView(isPlaying: info?.isPlaying ?? false, fill: waveformFill(info, appearance.waveform), maxHeight: 16)
             }
@@ -31,9 +36,14 @@ struct PlayerView: View {
             // центры кнопок через 63 pt, крайние на ~73% ширины плеера, как на кадрах Alcove
             HStack(spacing: 15) {
                 // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку и не рвёт replace-переход
-                ForEach(Array(PlayerControl.row(info).enumerated()), id: \.offset) { _, control in
-                    PlayerButton(control: control, isActive: control.action == .toggleVolumeRow && showsVolumeRow) {
-                        onAction(control.action)
+                ForEach(Array(PlayerControl.row(info, extra: appearance.playerControl, outputSymbol: appearance.output.symbol)
+                    .enumerated()), id: \.offset) { _, control in
+                    if let control {
+                        PlayerButton(control: control, isActive: control.isActive
+                            || (control.action == .toggleVolumeRow && showsVolumeRow)) { onAction(control.action) }
+                    } else {
+                        // пустой слот держит место: остальные кнопки не сдвигаются
+                        Color.clear.frame(width: 48, height: 40)
                     }
                 }
             }
@@ -163,23 +173,42 @@ struct PlayerControl: Equatable {
     let symbol: String
     let action: PlayerAction
     let isSide: Bool
+    var isEnabled = true
+    /// Shuffle или Repeat включён: подложка и точка под иконкой (Alcove 1.7.9, Shuffle у Music, 28.09)
+    var isActive = false
 
-    /// ⭐ «в избранное» есть только у Apple Music, у остальных источников 🔗 открыть приложение
-    static func leading(_ info: NowPlayingInfo?) -> PlayerControl {
-        info?.bundleID == "com.apple.Music"
-            ? PlayerControl(symbol: "star.fill", action: .favorite, isSide: true)
-            : PlayerControl(symbol: "link", action: .openSource, isSide: true)
+    /// Доп. кнопка слева. nil — слот пустой: браузер, Copy (ссылки нет) и Favorite не у Music (AppleScript бьёт в Music)
+    static func extra(_ info: NowPlayingInfo?, choice: PlayerExtraControl) -> PlayerControl? {
+        guard let info, !info.isBrowser else { return nil }
+        switch choice {
+        case .shuffle:
+            return PlayerControl(symbol: "shuffle", action: .toggleShuffle, isSide: true, isActive: info.isShuffling)
+        case .repeat:
+            return PlayerControl(
+                symbol: info.repeatMode == 2 ? "repeat.1" : "repeat", action: .cycleRepeat, isSide: true,
+                isActive: info.isRepeating)
+        case .favorite:
+            return info.bundleID == NowPlayingInfo.musicBundleID
+                ? PlayerControl(symbol: "star.fill", action: .favorite, isSide: true) : nil
+        case .copy:
+            return nil
+        }
     }
 
-    static func row(_ info: NowPlayingInfo?) -> [PlayerControl] {
-        [
-            leading(info),
-            PlayerControl(symbol: "backward.fill", action: .media(.previousTrack), isSide: false),
+    /// Пять мест: слот пустой у браузера, но ⏪ ⏸ ⏩ и вывод не сдвигаются (у Alcove те же x, 28.09)
+    static func row(
+        _ info: NowPlayingInfo?, extra choice: PlayerExtraControl = .shuffle,
+        outputSymbol: String = OutputDeviceKind.speakers.symbol
+    ) -> [PlayerControl?] {
+        let canSkip = info?.canSkip ?? true
+        return [
+            extra(info, choice: choice),
+            PlayerControl(symbol: "backward.fill", action: .media(.previousTrack), isSide: false, isEnabled: canSkip),
             PlayerControl(
                 symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
                 action: .media(.togglePlayPause), isSide: false),
-            PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false),
-            PlayerControl(symbol: "laptopcomputer", action: .toggleVolumeRow, isSide: true),
+            PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false, isEnabled: canSkip),
+            PlayerControl(symbol: outputSymbol, action: .toggleVolumeRow, isSide: true),
         ]
     }
 
@@ -203,15 +232,28 @@ struct PlayerButton: View {
         Button(action: action) {
             Image(systemName: control.symbol)
                 .font(.system(size: control.size, weight: .semibold))
-                .foregroundStyle(control.isSide ? IslandPalette.secondary : IslandPalette.foreground)
+                .foregroundStyle(color)
                 .contentTransition(.symbolEffect(.replace))
                 // замера нет, оценка по кадрам паузы: ⏸ → ▶ за ~0.4 с
                 .animation(.easeInOut(duration: 0.4), value: control.symbol)
                 .frame(width: 48, height: 40)
                 .contentShape(Rectangle())
+                .overlay(alignment: .bottom) {
+                    if isActive, control.isSide {
+                        // точка под иконкой активного Shuffle: размер и отступ — оценка по кадру 28.09
+                        Circle().fill(IslandPalette.secondary).frame(width: 3, height: 3).offset(y: 7)
+                    }
+                }
         }
-        .buttonStyle(HoverBackgroundStyle(isHovered: isHovered || isActive))
+        .buttonStyle(HoverBackgroundStyle(isHovered: (isHovered || isActive) && control.isEnabled))
         .onHover { isHovered = $0 }
+        .disabled(!control.isEnabled)
+    }
+
+    /// Тусклая — неактивные ⏪⏩ у браузера (Alcove 1.7.9, 28.09)
+    private var color: Color {
+        guard control.isEnabled else { return IslandPalette.tertiary }
+        return control.isSide ? IslandPalette.secondary : IslandPalette.foreground
     }
 }
 

@@ -25,6 +25,13 @@ struct NowPlayingPage: View {
                     ToggleRow(title: "Hide while source app is active", isOn: $settings.hideWhileSourceActive)
                     RowDivider()
                     ToggleRow(title: "Hide media title extras", isOn: $settings.hideTitleExtras)
+                    RowDivider()
+                    TileRow(tiles: PlayerExtraControl.allCases.map { control in
+                        Tile(value: control, title: control.isAvailable ? control.title : "\(control.title) · Soon",
+                             preview: AnyView(Image(systemName: Self.symbol(control))
+                                .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)),
+                             isEnabled: control.isAvailable)
+                    }, selection: $settings.playerControl)
                 }
             }
             if settings.nowPlayingEnabled {
@@ -58,6 +65,16 @@ struct NowPlayingPage: View {
         case .monochrome: "Monochrome"
         case .colored: "Colored"
         case .gradient: "Gradient"
+        }
+    }
+
+    /// Иконки плиток доп. кнопки как у Alcove: сердце (AX «Love»), shuffle, repeat.1, ссылка
+    private static func symbol(_ control: PlayerExtraControl) -> String {
+        switch control {
+        case .favorite: "heart.fill"
+        case .shuffle: "shuffle"
+        case .repeat: "repeat.1"
+        case .copy: "link"
         }
     }
 }

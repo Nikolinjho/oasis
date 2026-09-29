@@ -24,14 +24,18 @@ public enum MediaCommand: Int, Sendable {
 /// Действие кнопки раскрытого плеера. Медиакоманды уходят в адаптер, остальное исполняет приложение
 public enum PlayerAction: Equatable, Sendable {
     case media(MediaCommand)
-    /// Левая кнопка у Apple Music: ⭐ «в избранное»
+    /// Доп. кнопка у Apple Music, выбор Favorite: ⭐ «в избранное»
     case favorite
-    /// Левая кнопка у остальных источников: 🔗 открыть приложение, откуда играет звук
+    /// Клик по обложке или названию: вывести источник на передний план (Alcove 1.7.9, 28.09)
     case openSource
     /// Кнопка вывода справа: показать или спрятать строку громкости (Alcove 1.7.9: меню устройств нет)
     case toggleVolumeRow
     /// Строка громкости: уровень 0…1 текущего выхода
     case setVolume(Double)
+    /// Доп. кнопка Shuffle: включить или выключить перемешивание
+    case toggleShuffle
+    /// Доп. кнопка Repeat: следующий режим по кругу
+    case cycleRepeat
 }
 
 public struct NowPlayingInfo: Equatable, Sendable {
@@ -51,11 +55,35 @@ public struct NowPlayingInfo: Equatable, Sendable {
     /// Цвет низа обложки для волны и прогресса Gradient: горизонтальный переход слева направо между
     /// accent и accentBottom (поправка 29.09 по Alcove 1.7.9, кадр style-gradient.jpg)
     public var accentBottom: RGB?
+    /// Источник умеет переключать треки: иначе ⏪⏩ тусклые (у Alcove у браузера, 28.09)
+    public var canSkip: Bool
+    /// Источник — браузер: у Alcove нет слота доп. кнопки (28.09)
+    public var isBrowser: Bool
+    /// Коды MediaRemote из адаптера: 1 — выкл, 2 — альбомы, 3 — треки. Коды — по MRMediaRemote, проверить в Task 17
+    public var shuffleMode: Int?
+    /// 1 — выкл, 2 — один трек, 3 — все (пример адаптера: «repeat 3 — playlist»)
+    public var repeatMode: Int?
+
+    /// Favorite работает через AppleScript к Music: у других источников кнопки нет
+    public static let musicBundleID = "com.apple.Music"
+
+    public var isShuffling: Bool { (shuffleMode ?? 1) > 1 }
+    public var isRepeating: Bool { (repeatMode ?? 1) > 1 }
+
+    /// Repeat по кругу, как в Music: выкл → все → один → выкл
+    public static func nextRepeatMode(after mode: Int?) -> Int {
+        switch mode {
+        case 3: 2
+        case 2: 1
+        default: 3
+        }
+    }
 
     public init(
         bundleID: String? = nil, title: String, artist: String? = nil, album: String? = nil,
         isPlaying: Bool, duration: TimeInterval? = nil, elapsed: TimeInterval? = nil,
-        elapsedAt: Date = Date(), artwork: Data? = nil, accent: RGB? = nil, accentBottom: RGB? = nil
+        elapsedAt: Date = Date(), artwork: Data? = nil, accent: RGB? = nil, accentBottom: RGB? = nil,
+        canSkip: Bool = true, isBrowser: Bool = false, shuffleMode: Int? = nil, repeatMode: Int? = nil
     ) {
         self.bundleID = bundleID
         self.title = title
@@ -68,6 +96,10 @@ public struct NowPlayingInfo: Equatable, Sendable {
         self.artwork = artwork
         self.accent = accent
         self.accentBottom = accentBottom
+        self.canSkip = canSkip
+        self.isBrowser = isBrowser
+        self.shuffleMode = shuffleMode
+        self.repeatMode = repeatMode
     }
 
     /// По нему решаем, сменился ли трек (переворот обложки, peek)

@@ -25,9 +25,14 @@ struct DuoView: View {
         ZStack(alignment: .topLeading) {
             ArtworkFlip(info: info, side: DuoLayout.artworkSide, radius: 6, flips: appearance.artworkFlip)
                 .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
+                // Alcove 1.7.9: клик по обложке или названию выводит источник вперёд, остров не закрывается
+                .contentShape(Rectangle())
+                .onTapGesture { onAction(.openSource) }
                 .offset(x: DuoLayout.artworkX, y: DuoLayout.artworkCenterY - DuoLayout.artworkSide / 2)
             DuoTitle(info: info, title: appearance.title(for: info))
                 .frame(width: DuoLayout.titleSize.width, height: DuoLayout.titleSize.height, alignment: .topLeading)
+                .contentShape(Rectangle())
+                .onTapGesture { onAction(.openSource) }
                 .offset(x: DuoLayout.titleOrigin.x, y: DuoLayout.titleOrigin.y)
             // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку
             ForEach(Array(DuoControl.row(info).enumerated()), id: \.offset) { index, control in

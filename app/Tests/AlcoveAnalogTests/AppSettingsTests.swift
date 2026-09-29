@@ -223,4 +223,14 @@ struct AppSettingsTests {
         // Яндекс Музыки пока нет: выбранный недоступный источник читается как System
         #expect(settings.effectiveMediaSource == .system)
     }
+
+    @Test("Доп. кнопка плеера: по умолчанию Shuffle, как controlChoice у Alcove")
+    func playerControl() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.playerControl == .shuffle)
+        settings.playerControl = .repeat
+        #expect(settings.appearance.playerControl == .repeat)
+    }
 }

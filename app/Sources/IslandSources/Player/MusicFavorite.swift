@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import IslandCore
 import os
 
 /// «В избранное» текущему треку Apple Music через AppleScript.
@@ -13,7 +14,7 @@ public final class MusicFavorite: Sendable {
 
     static let script = """
         with timeout of 5 seconds
-            tell application id "\(PlayerActionRouter.musicBundleID)" to set favorited of current track to true
+            tell application id "\(NowPlayingInfo.musicBundleID)" to set favorited of current track to true
         end timeout
         """
 
@@ -24,7 +25,7 @@ public final class MusicFavorite: Sendable {
     /// Асинхронно: osascript ждёт ответа Music и, в первый раз, решения пользователя в запросе Apple Events
     public func favoriteCurrentTrack() {
         // не запускаем Music ради избранного, если его уже закрыли
-        guard !NSRunningApplication.runningApplications(withBundleIdentifier: PlayerActionRouter.musicBundleID).isEmpty else {
+        guard !NSRunningApplication.runningApplications(withBundleIdentifier: NowPlayingInfo.musicBundleID).isEmpty else {
             log.info("favorite skipped: Music is not running")
             return
         }

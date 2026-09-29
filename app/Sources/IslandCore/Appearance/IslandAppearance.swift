@@ -77,6 +77,8 @@ public struct IslandAppearance: Equatable, Sendable {
     public var artworkFlip = true
     /// Hide media title extras
     public var hidesTitleExtras = false
+    /// Now Playing → доп. кнопка плеера
+    public var playerControl = PlayerExtraControl.shuffle
 
     public init() {}
 

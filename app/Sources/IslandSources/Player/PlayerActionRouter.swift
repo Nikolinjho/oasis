@@ -8,13 +8,13 @@ public protocol PlayerActionPerforming: AnyObject {
     func favoriteInMusic()
     func activateApp(bundleID: String)
     func setVolume(_ level: Double)
+    func setShuffle(_ mode: Int)
+    func setRepeat(_ mode: Int)
 }
 
 /// Решает, кому и с чем отдать действие кнопки плеера
 @MainActor
 public struct PlayerActionRouter {
-    public nonisolated static let musicBundleID = "com.apple.Music"
-
     private let performer: any PlayerActionPerforming
     private let log = SourceLog.logger("player")
 
@@ -28,7 +28,7 @@ public struct PlayerActionRouter {
             performer.send(command)
         case .favorite:
             // AppleScript бьёт в Music: при другом источнике отметили бы чужой трек или запустили Music
-            guard nowPlaying?.bundleID == Self.musicBundleID else {
+            guard nowPlaying?.bundleID == NowPlayingInfo.musicBundleID else {
                 log.info("favorite skipped: source is \(nowPlaying?.bundleID ?? "none", privacy: .public)")
                 return
             }
@@ -44,6 +44,11 @@ public struct PlayerActionRouter {
             log.info("toggle volume row reached the router")
         case let .setVolume(level):
             performer.setVolume(level)
+        case .toggleShuffle:
+            // 3 — перемешивать треки, 1 — выкл (MRMediaRemote)
+            performer.setShuffle(nowPlaying?.isShuffling == true ? 1 : 3)
+        case .cycleRepeat:
+            performer.setRepeat(NowPlayingInfo.nextRepeatMode(after: nowPlaying?.repeatMode))
         }
     }
 }

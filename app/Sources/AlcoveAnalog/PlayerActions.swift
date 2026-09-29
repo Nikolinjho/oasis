@@ -36,4 +36,12 @@ final class PlayerActions: PlayerActionPerforming {
     func setVolume(_ level: Double) {
         setVolumeLevel(level)
     }
+
+    func setShuffle(_ mode: Int) {
+        source?.setShuffle(mode)
+    }
+
+    func setRepeat(_ mode: Int) {
+        source?.setRepeat(mode)
+    }
 }

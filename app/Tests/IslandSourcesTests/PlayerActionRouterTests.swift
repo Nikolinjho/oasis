@@ -10,6 +10,8 @@ final class FakePerformer: PlayerActionPerforming {
         case favorite
         case activate(String)
         case volume(Double)
+        case shuffle(Int)
+        case repeatMode(Int)
     }
 
     private(set) var calls: [Call] = []
@@ -18,6 +20,8 @@ final class FakePerformer: PlayerActionPerforming {
     func favoriteInMusic() { calls.append(.favorite) }
     func activateApp(bundleID: String) { calls.append(.activate(bundleID)) }
     func setVolume(_ level: Double) { calls.append(.volume(level)) }
+    func setShuffle(_ mode: Int) { calls.append(.shuffle(mode)) }
+    func setRepeat(_ mode: Int) { calls.append(.repeatMode(mode)) }
 }
 
 @MainActor
@@ -73,5 +77,28 @@ struct PlayerActionRouterTests {
         let fake = FakePerformer()
         PlayerActionRouter(performer: fake).perform(.setVolume(0.4), nowPlaying: nil)
         #expect(fake.calls == [.volume(0.4)])
+    }
+
+    @Test("Shuffle переключается от текущего режима: выкл → треки, вкл → выкл")
+    func shuffle() {
+        let fake = FakePerformer()
+        let router = PlayerActionRouter(performer: fake)
+        var info = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
+        router.perform(.toggleShuffle, nowPlaying: info)
+        info.shuffleMode = 3
+        router.perform(.toggleShuffle, nowPlaying: info)
+        #expect(fake.calls == [.shuffle(3), .shuffle(1)])
+    }
+
+    @Test("Repeat по кругу, как в Music: выкл → все → один → выкл")
+    func repeatCycle() {
+        let fake = FakePerformer()
+        let router = PlayerActionRouter(performer: fake)
+        for mode in [nil, 1, 3, 2] as [Int?] {
+            var info = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
+            info.repeatMode = mode
+            router.perform(.cycleRepeat, nowPlaying: info)
+        }
+        #expect(fake.calls == [.repeatMode(3), .repeatMode(3), .repeatMode(2), .repeatMode(1)])
     }
 }
