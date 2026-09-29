@@ -29,6 +29,10 @@ public enum IslandEvent: Equatable, Sendable {
     case calendarStarted
     /// Свайп вниз по раскрытому: следующий вид
     case expandedViewCycled
+    /// Свайп вверх по компакту: активность уходит в форму выреза до смены активности или свайпа вниз
+    case activityDismissed
+    /// Свайп вниз по форме выреза: убранная активность возвращается
+    case activityRestored
     /// Клик по кнопке вывода в раскрытом плеере: строка громкости под кнопками (Alcove 1.7.9, 28.09)
     case volumeRowToggled
     case hoverEntered, hoverExited
@@ -82,14 +86,17 @@ public struct IslandModel: Equatable, Sendable {
     public var mediaIdle = false
     /// Приложение-источник на переднем плане
     public var sourceActive = false
+    /// Активность убрана свайпом (Swipe to dismiss activity): покой — форма выреза. Снимается новой активностью
+    public var dismissed = false
 
     public init(config: IslandMachine.Config = .user) {
         self.config = config
     }
 
-    /// Состояние покоя. Календарь важнее музыки. В полноэкранном и без compactAtRest — форма выреза
+    /// Состояние покоя. Календарь важнее музыки. В полноэкранном, без compactAtRest и убранной свайпом
+    /// активности — форма выреза
     public var base: Surface {
-        guard config.compactAtRest, !isFullscreen else { return .idle }
+        guard config.compactAtRest, !isFullscreen, !dismissed else { return .idle }
         if calendarLive { return .calendar }
         return showsMedia ? .compact : .idle
     }
@@ -203,6 +210,8 @@ public enum IslandMachine {
         case let .calendarLiveChanged(live): calendarLiveChanged(&model, live)
         case .calendarStarted: calendarStarted(&model)
         case .expandedViewCycled: expandedViewCycled(&model)
+        case .activityDismissed: activityDismissed(&model)
+        case .activityRestored: activityRestored(&model)
         case .volumeRowToggled: volumeRowToggled(&model)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
@@ -223,6 +232,8 @@ public enum IslandMachine {
     }
 
     private static func trackChanged(_ m: inout IslandModel) -> [IslandEffect] {
+        // новый трек — активность, которую свайпом уже не удержать в вырезе
+        m.dismissed = false
         m.hasMedia = true
         // новый трек — снова активность: пауза до него не в счёт. Если он на паузе, store пришлёт playbackChanged(false)
         m.isPlaying = true
@@ -394,6 +405,8 @@ public enum IslandMachine {
     /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
     /// Во время HUD и уведомления другого вида ждёт в очереди. Тот же вид обновляет показанное и продлевает его
     private static func alertArrived(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
+        // уведомление — активность, которую свайпом уже не удержать в вырезе
+        m.dismissed = false
         // новое уведомление вида, вытесненного HUD, — новый показ со звуком
         m.heardAlerts.remove(alert.kind)
         if case let .hoverNudge(from) = m.surface {
@@ -466,6 +479,8 @@ public enum IslandMachine {
     private static func calendarLiveChanged(_ m: inout IslandModel, _ live: Bool) -> [IslandEffect] {
         guard m.calendarLive != live else { return [] }
         let old = m.base
+        // окно календаря открылось — убранная свайпом активность возвращается
+        if live { m.dismissed = false }
         m.calendarLive = live
         if let pending = m.pending, isRest(pending) { m.pending = m.base }
         guard old != m.base, m.pending == nil else { return [] }
@@ -516,6 +531,31 @@ public enum IslandMachine {
         m.expandedView = m.expandedView.next
         m.lastExpandedView = m.expandedView
         return [.animate(.viewSwap)]
+    }
+
+    /// Свайп вверх по компакту, peek или компакту календаря: активность уходит в форму выреза.
+    /// Отклик разворачивается в исходную поверхность первым, как HUD и уведомления
+    private static func activityDismissed(_ m: inout IslandModel) -> [IslandEffect] {
+        if case let .hoverNudge(from) = m.surface {
+            m.surface = from
+            return [.cancel(.hoverOpen)] + activityDismissed(&m)
+        }
+        guard !m.dismissed, m.pending == nil, m.base != .idle else { return [] }
+        switch m.surface {
+        case .compact, .peek, .calendar, .calendarPeek: break
+        default: return []
+        }
+        let old = m.base
+        m.dismissed = true
+        return baseChanged(&m, from: old)
+    }
+
+    /// Свайп вниз по форме выреза: убранная активность возвращается
+    private static func activityRestored(_ m: inout IslandModel) -> [IslandEffect] {
+        guard m.dismissed else { return [] }
+        let old = m.base
+        m.dismissed = false
+        return baseChanged(&m, from: old)
     }
 
     /// Строка громкости: форма растёт или сжимается на 32 pt, контент тот же

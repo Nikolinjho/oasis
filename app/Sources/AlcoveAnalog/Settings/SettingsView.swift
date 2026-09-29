@@ -147,6 +147,12 @@ struct GeneralPage: View {
                     ToggleRow(title: "Force enable activity", isOn: $settings.forceEnableActivity)
                 }
             }
+            SettingsCard(title: "Gestures") {
+                ToggleRow(title: "Natural movement", isOn: $settings.naturalMovement)
+                RowDivider()
+                ToggleRow(title: "Swipe to dismiss activity", info: "Swipe vertically to toggle activity",
+                          isOn: $settings.swipeToDismiss)
+            }
             SettingsCard(title: "Tuning") {
                 SliderRow(title: "Notch width", value: $settings.notchWidthOffset, range: -2...2, step: 1,
                           format: .integer("pt"))

@@ -93,4 +93,17 @@ struct IslandWindowControllerSwipeInputTests {
     func horizontalPassesThrough() {
         #expect(Self.input(.changed, dx: 7, dy: 0) == SwipeInput(phase: .changed, dx: 7, dy: 0))
     }
+
+    @Test("Natural movement выкл: жест как прокрутка контента, знак от системной натуральной прокрутки")
+    func naturalMovement() {
+        let natural = IslandWindowController.swipeInput(
+            phase: .changed, momentumPhase: [], precise: true, deltaX: 0, deltaY: 5, inverted: true, natural: true)
+        let content = IslandWindowController.swipeInput(
+            phase: .changed, momentumPhase: [], precise: true, deltaX: 0, deltaY: 5, inverted: true, natural: false)
+        #expect(natural?.dy == 5)
+        #expect(content?.dy == -5)
+        let plain = IslandWindowController.swipeInput(
+            phase: .changed, momentumPhase: [], precise: true, deltaX: 0, deltaY: 5, inverted: false, natural: false)
+        #expect(plain?.dy == -5)
+    }
 }

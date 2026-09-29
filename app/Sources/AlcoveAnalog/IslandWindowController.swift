@@ -24,6 +24,8 @@ final class IslandWindowController {
     var tuning = NotchTuning() {
         didSet { if tuning != oldValue { placeOnNotchScreen() } }
     }
+    /// General → Gestures → Natural movement: источник знака dy у свайпа (swipeInput)
+    var naturalMovement = true
 
     init(store: IslandStore, menu: NSMenu) {
         self.store = store
@@ -110,13 +112,16 @@ final class IslandWindowController {
         return true
     }
 
-    /// Жест трекпада над островом. Не раскрытый — событие не наше: скролл уходит дальше как обычно
+    /// Жест трекпада над островом: раскрытый листает и закрывается, покой убирает и возвращает активность.
+    /// Остальное — не наше: скролл уходит дальше как обычно
     private func handleScroll(_ event: NSEvent) -> Bool {
-        guard store.model.surface == .expanded, let panel, event.window === panel,
+        let surface = store.model.surface
+        let ours = surface == .expanded || (store.swipeToDismiss && IslandStore.isRestSwipeSurface(surface))
+        guard ours, let panel, event.window === panel,
               let input = Self.swipeInput(
                 phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
                 deltaX: event.scrollingDeltaX, deltaY: event.scrollingDeltaY,
-                inverted: event.isDirectionInvertedFromDevice)
+                inverted: event.isDirectionInvertedFromDevice, natural: naturalMovement)
         else { return false }
         store.swipe(input.phase, dx: input.dx, dy: input.dy)
         return true
@@ -124,13 +129,17 @@ final class IslandWindowController {
 
     /// Разбор события scrollWheel для SwipeTracker. Инерцию не берём: у Alcove её нет. Колесо мыши
     /// (без точных дельт) не трогаем. Натуральная прокрутка: пальцы вниз — dy > 0, как в записи жестов,
-    /// без неё знак обратный. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь) решает трекер
+    /// без неё знак обратный. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь) решает трекер.
+    /// Natural movement (General → Gestures) выключен: жест читается как прокрутка контента —
+    /// с натуральной прокруткой системы (inverted) знак обратный тому, что даёт natural: true
     static func swipeInput(
         phase: NSEvent.Phase, momentumPhase: NSEvent.Phase, precise: Bool,
-        deltaX: CGFloat, deltaY: CGFloat, inverted: Bool
+        deltaX: CGFloat, deltaY: CGFloat, inverted: Bool, natural: Bool = true
     ) -> SwipeInput? {
         guard precise, momentumPhase.isEmpty else { return nil }
-        let sign: CGFloat = inverted ? 1 : -1
+        // Natural movement вкл: знак от устройства, пальцы вниз — dy > 0 при любой системной прокрутке.
+        // Выкл: как прокрутка контента — с натуральной прокруткой направление обратное
+        let sign: CGFloat = natural && inverted ? 1 : -1
         let trackerPhase: SwipeTracker.Phase
         switch phase {
         case .began: trackerPhase = .began

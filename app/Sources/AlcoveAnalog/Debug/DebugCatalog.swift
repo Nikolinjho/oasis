@@ -217,6 +217,10 @@ enum DebugCatalog {
             .action(DebugAction(id: "island.cycle", title: "Cycle Expanded View") { store.send(.expandedViewCycled) }),
             .action(DebugAction(id: "island.volume-row", title: "Toggle Volume Row") { store.send(.volumeRowToggled) }),
             .separator,
+            // синтетических жестов трекпада нет (ui-inspection 5): те же события, что шлёт свайп по компакту
+            .action(DebugAction(id: "island.dismiss-activity", title: "Dismiss Activity") { store.send(.activityDismissed) }),
+            .action(DebugAction(id: "island.restore-activity", title: "Restore Activity") { store.send(.activityRestored) }),
+            .separator,
             // General → Idle Activity без окна настроек (Task 17): через settings, если оно есть — как
             // settings.expand-on-hover в timing(), иначе окно настроек откатило бы переключение обратно
             .action(DebugAction(id: "island.cycle-idle-activity", title: "Cycle Idle Activity (None → Playing → Calendar → Duo)") {

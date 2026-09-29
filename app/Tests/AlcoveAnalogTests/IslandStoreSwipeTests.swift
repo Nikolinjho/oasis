@@ -14,6 +14,13 @@ struct IslandStoreSwipeTests {
 
     static func delta(_ travel: CGFloat) -> CGFloat { travel / SwipeTracker.pointsPerDelta }
 
+    /// Store с компактом музыки под курсором: Expand on hover выключен, hover даёт только отклик
+    static func compactStore() -> IslandStore {
+        let store = IslandStore(config: IslandMachine.Config.user.applying(expandOnHover: false, hoverDuration: 0))
+        store.apply(.newTrack(NowPlayingInfo(title: "T", isPlaying: true)))
+        return store
+    }
+
     @Test("Свайп вниз тянет форму и на пороге 21 pt сразу листает вид, тяга сбрасывается, отпускание ничего не делает")
     func downCyclesView() {
         let store = Self.expanded()
@@ -107,5 +114,29 @@ struct IslandStoreSwipeTests {
         #expect(store.model.expandedView == .duo)
         #expect(store.stretch == 0)
         #expect(store.model.surface == .expanded)
+    }
+
+    @Test("Свайп вверх по компакту на 21 pt убирает активность и держит остров закрытым под курсором")
+    func compactDismiss() {
+        let store = Self.compactStore()
+        var closed = false
+        store.onSwipeClose = { closed = true }
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(store.model.dismissed)
+        #expect(closed)
+        store.swipe(.ended, dy: 0)
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(22))
+        #expect(!store.model.dismissed)
+    }
+
+    @Test("Swipe to dismiss activity выключен: свайп по компакту ничего не делает")
+    func compactDismissOff() {
+        let store = Self.compactStore()
+        store.swipeToDismiss = false
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(!store.model.dismissed)
     }
 }

@@ -75,6 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.setIconHidden(settings.hideMenuBarIcon)
         window = IslandWindowController(store: store, menu: statusItem.menu)
         window?.tuning = settings.notchTuning
+        store.swipeToDismiss = settings.swipeToDismiss
+        window?.naturalMovement = settings.naturalMovement
         if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
             // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startSourceActivity, startNowPlaying
             // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
@@ -108,6 +110,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyAppearance()
         statusItem?.setIconHidden(settings.hideMenuBarIcon)
         window?.tuning = settings.notchTuning
+        store.swipeToDismiss = settings.swipeToDismiss
+        window?.naturalMovement = settings.naturalMovement
     }
 
     /// Вид острова: настройки плюс текущее устройство вывода

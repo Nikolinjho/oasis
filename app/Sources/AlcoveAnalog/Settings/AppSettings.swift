@@ -62,6 +62,8 @@ final class AppSettings: ObservableObject {
         static let idleActivity = "idleActivity"
         static let mostRecentActivity = "mostRecentActivity"
         static let forceEnableActivity = "forceEnableActivity"
+        static let swipeToDismiss = "swipeToDismiss"
+        static let naturalMovement = "naturalMovement"
     }
 
     var onChange: () -> Void = {}
@@ -204,6 +206,10 @@ final class AppSettings: ObservableObject {
     @Published var mostRecentActivity: Bool { didSet { save(oldValue, mostRecentActivity, Key.mostRecentActivity) } }
     @Published var forceEnableActivity: Bool { didSet { save(oldValue, forceEnableActivity, Key.forceEnableActivity) } }
 
+    // General → Gestures (ui-inspection 1.2)
+    @Published var swipeToDismiss: Bool { didSet { save(oldValue, swipeToDismiss, Key.swipeToDismiss) } }
+    @Published var naturalMovement: Bool { didSet { save(oldValue, naturalMovement, Key.naturalMovement) } }
+
     /// Источник, который реально запускается: Automatic и недоступные пока источники — System
     var effectiveMediaSource: MediaSourceChoice {
         automaticMediaSource || !mediaSource.isAvailable ? .system : mediaSource
@@ -286,6 +292,8 @@ final class AppSettings: ObservableObject {
         idleActivity = Self.readRaw(defaults, Key.idleActivity, IdleActivity.duo)
         mostRecentActivity = Self.read(defaults, Key.mostRecentActivity, false)
         forceEnableActivity = Self.read(defaults, Key.forceEnableActivity, true)
+        swipeToDismiss = Self.read(defaults, Key.swipeToDismiss, true)
+        naturalMovement = Self.read(defaults, Key.naturalMovement, true)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
