@@ -33,6 +33,8 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         var generation = 0
         /// Первая строка нового процесса ещё не пришла
         var awaitingFirstLine = true
+        /// Перезапуск начался с пустой строки: ждём строку с треком, иначе старый трек забывается
+        var awaitingTrack = false
     }
 
     public init(paths: AdapterPaths) {
@@ -79,6 +81,16 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     /// Аргументы команды seek: секунды в микросекунды, отрицательная позиция зажата в 0
     nonisolated static func seekArguments(_ position: TimeInterval) -> [String] {
         ["seek", String(Int((max(position, 0) * 1_000_000).rounded()))]
+    }
+
+    /// Сколько ждать трек от перезапущенного адаптера. Замера нет, оценка: у живого адаптера строка
+    /// с треком приходит сразу за пустой первой
+    static let staleTimeout: Duration = .seconds(3)
+
+    /// Первая строка перезапуска пустая (change nil), а трек был: запустить проверку старого трека.
+    /// Первый запуск (generation 1) не в счёт — там трека ещё нет
+    static func startsStaleCheck(isFirstLine: Bool, generation: Int, change: NowPlayingChange?, hasTrack: Bool) -> Bool {
+        isFirstLine && generation > 1 && change == nil && hasTrack
     }
 
     /// Разовая команда адаптера: отдельный perl, поток stream не трогаем
@@ -145,20 +157,46 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     }
 
     private func receive(_ chunk: Data, generation: Int) {
-        let changes = state.withLockUnchecked { s -> [NowPlayingChange] in
+        let (changes, staleCheck) = state.withLockUnchecked { s -> ([NowPlayingChange], Bool) in
             // вывод старого процесса после перезапуска не нужен
-            guard s.generation == generation else { return [] }
-            return s.buffer.append(chunk).compactMap { line in
+            guard s.generation == generation else { return ([], false) }
+            var staleCheck = false
+            let changes = s.buffer.append(chunk).compactMap { line -> NowPlayingChange? in
                 let isFirstLine = s.awaitingFirstLine
                 s.awaitingFirstLine = false
-                guard let change = s.parser.consume(line, ignoringClear: isFirstLine) else { return nil }
+                let hadTrack = s.parser.current != nil
+                let change = s.parser.consume(line, ignoringClear: isFirstLine)
+                if Self.startsStaleCheck(isFirstLine: isFirstLine, generation: generation, change: change, hasTrack: hadTrack) {
+                    s.awaitingTrack = true
+                    staleCheck = true
+                }
+                guard let change else { return nil }
+                s.awaitingTrack = false
                 s.backoff.reset()
                 return change
             }
+            return (changes, staleCheck)
         }
         for change in changes {
             continuation.yield(withAccent(change))
         }
+        if staleCheck {
+            Task { [weak self] in await self?.dropStaleTrack(generation: generation) }
+        }
+    }
+
+    /// Перезапущенный адаптер так и не прислал трек: музыки больше нет, старый трек не должен висеть
+    private func dropStaleTrack(generation: Int) async {
+        try? await Task.sleep(for: Self.staleTimeout)
+        let dropped = state.withLockUnchecked { s -> Bool in
+            guard !s.stopped, s.generation == generation, s.awaitingTrack, s.parser.current != nil else { return false }
+            s.awaitingTrack = false
+            s.parser = NowPlayingParser()
+            return true
+        }
+        guard dropped else { return }
+        log.info("adapter relaunched without a track: dropping the stale one")
+        continuation.yield(.cleared)
     }
 
     private func withAccent(_ change: NowPlayingChange) -> NowPlayingChange {
