@@ -59,6 +59,9 @@ final class AppSettings: ObservableObject {
         static let mediaSource = "mediaSource"
         static let playerControl = "playerControl"
         static let showRemainingTime = "showRemainingTime"
+        static let idleActivity = "idleActivity"
+        static let mostRecentActivity = "mostRecentActivity"
+        static let forceEnableActivity = "forceEnableActivity"
     }
 
     var onChange: () -> Void = {}
@@ -196,6 +199,11 @@ final class AppSettings: ObservableObject {
     /// Клик по времени плеера переключает её. showRemainingTime = 1 у Alcove по умолчанию
     @Published var showRemainingTime: Bool { didSet { save(oldValue, showRemainingTime, Key.showRemainingTime) } }
 
+    // General → Idle Activity (ui-inspection 1.2). mostRecentActivity — ключ Alcove
+    @Published var idleActivity: IdleActivity { didSet { saveRaw(oldValue, idleActivity, Key.idleActivity) } }
+    @Published var mostRecentActivity: Bool { didSet { save(oldValue, mostRecentActivity, Key.mostRecentActivity) } }
+    @Published var forceEnableActivity: Bool { didSet { save(oldValue, forceEnableActivity, Key.forceEnableActivity) } }
+
     /// Источник, который реально запускается: Automatic и недоступные пока источники — System
     var effectiveMediaSource: MediaSourceChoice {
         automaticMediaSource || !mediaSource.isAvailable ? .system : mediaSource
@@ -275,6 +283,9 @@ final class AppSettings: ObservableObject {
         mediaSource = Self.readRaw(defaults, Key.mediaSource, MediaSourceChoice.system)
         playerControl = Self.readRaw(defaults, Key.playerControl, PlayerExtraControl.shuffle)
         showRemainingTime = Self.read(defaults, Key.showRemainingTime, true)
+        idleActivity = Self.readRaw(defaults, Key.idleActivity, IdleActivity.duo)
+        mostRecentActivity = Self.read(defaults, Key.mostRecentActivity, false)
+        forceEnableActivity = Self.read(defaults, Key.forceEnableActivity, true)
     }
 
     /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -346,6 +357,11 @@ final class AppSettings: ObservableObject {
         nowPlaying.peekDuration = .seconds(peekDuration)
         nowPlaying.hidesWhileSourceActive = hideWhileSourceActive
         config.nowPlaying = nowPlaying
+        var expanded = ExpandedRules()
+        expanded.idleActivity = idleActivity
+        expanded.mostRecent = mostRecentActivity
+        expanded.forceEnable = forceEnableActivity
+        config.expanded = expanded
         return config
     }
 }

@@ -69,8 +69,10 @@ public struct IslandModel: Equatable, Sendable {
     public var heardAlerts: Set<IslandAlert.Kind> = []
     /// Открыто окно календаря (T−1 мин … конец события): компакт календаря вытесняет музыку (решение 27.09)
     public var calendarLive = false
-    /// Вид раскрытого. Каждое раскрытие начинается с Duo (ui-inspection 3.7, «Переоткрытие сбрасывает вид на Duo»)
+    /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
     public var expandedView: ExpandedView = .duo
+    /// Последний просмотренный вид раскрытого: для Most Recent
+    public var lastExpandedView: ExpandedView = .duo
     /// Строка громкости под кнопками плеера: остров выше на IslandGeometry.volumeRowHeight.
     /// Живёт только в раскрытом плеере: уход из него сбрасывает её (reduce)
     public var volumeRowShown = false
@@ -150,6 +152,8 @@ public enum IslandMachine {
         public var hudDurations = HUDDurations()
         /// Now Playing: пауза, Quick Peek, источник на переднем плане
         public var nowPlaying = NowPlayingRules()
+        /// Idle Activity (General): какой вид открывается раскрытием
+        public var expanded = ExpandedRules()
 
         public init(
             hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
@@ -510,6 +514,7 @@ public enum IslandMachine {
     private static func expandedViewCycled(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.surface == .expanded else { return [] }
         m.expandedView = m.expandedView.next
+        m.lastExpandedView = m.expandedView
         return [.animate(.viewSwap)]
     }
 
@@ -520,20 +525,32 @@ public enum IslandMachine {
         return [.animate(.volumeRow)]
     }
 
+    /// Вид при раскрытии по Idle Activity. nil — None, раскрывать нечего
+    private static func openingView(_ m: IslandModel) -> ExpandedView? {
+        m.config.expanded.openingView(last: m.lastExpandedView, hasMedia: m.hasMedia)
+    }
+
     private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {
         guard m.pending == nil else { return [] }
+        let view = target == .expanded ? openingView(m) : nil
+        // Idle Activity None: раскрытый не открывается
+        if target == .expanded, view == nil { return [] }
         switch m.surface {
         case .idle, .compact, .peek, .calendar, .calendarPeek: break
         case .hover where target == .expanded: break
         case .hoverNudge where target == .expanded:
             // клик во время отклика раскрывает сразу, не дожидаясь таймера
-            m.expandedView = .duo
+            m.expandedView = view ?? .duo
+            m.lastExpandedView = m.expandedView
             m.surface = target
             return [.cancel(.hoverOpen), .animate(transition)]
         default: return []
         }
         let cancels = peekCancels(from: m.surface)
-        if target == .expanded { m.expandedView = .duo }
+        if let view {
+            m.expandedView = view
+            m.lastExpandedView = view
+        }
         m.surface = target
         return cancels + [.animate(transition)]
     }
@@ -549,14 +566,16 @@ public enum IslandMachine {
         switch m.surface {
         case .idle, .compact, .peek, .calendar, .calendarPeek:
             let cancels = peekCancels(from: m.surface)
-            if m.config.expandsOnHover, m.config.hoverDelay == .zero {
-                m.expandedView = .duo
+            let view = openingView(m)
+            if m.config.expandsOnHover, m.config.hoverDelay == .zero, let view {
+                m.expandedView = view
+                m.lastExpandedView = view
                 m.surface = .expanded
                 return cancels + [.animate(.hoverExpand)]
             }
             m.surface = .hoverNudge(from: m.surface)
-            // Expand on hover выключен: отклик держится, пока курсор над островом, раскрывает клик
-            guard m.config.expandsOnHover else { return cancels + [.animate(.hoverNudge)] }
+            // Expand on hover выключен или Idle Activity None: отклик держится, пока курсор над островом
+            guard m.config.expandsOnHover, view != nil else { return cancels + [.animate(.hoverNudge)] }
             return cancels + [
                 .animate(.hoverNudge),
                 .schedule(.hoverOpen, after: m.config.hoverDelay * m.config.timeScale),
@@ -630,8 +649,9 @@ public enum IslandMachine {
             return [.animate(.grow)]
         case .hoverOpen:
             // настройку могли выключить, пока таймер уже стоял в очереди: не раскрываем задним числом
-            guard m.config.expandsOnHover, case .hoverNudge = m.surface, m.pending == nil else { return [] }
-            m.expandedView = .duo
+            guard m.config.expandsOnHover, case .hoverNudge = m.surface, m.pending == nil, let view = openingView(m) else { return [] }
+            m.expandedView = view
+            m.lastExpandedView = view
             m.surface = .expanded
             return [.animate(.hoverExpand)]
         case .hoverLeave:

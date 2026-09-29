@@ -245,4 +245,18 @@ struct AppSettingsTests {
         // переживает перезапуск, как остальные настройки
         #expect(!AppSettings(defaults: defaults).showRemainingTime)
     }
+
+    @Test("Idle Activity: по умолчанию Duo, Most Recent выкл, Force enable вкл, правила уходят в машину")
+    func idleActivity() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.idleActivity == .duo && !settings.mostRecentActivity && settings.forceEnableActivity)
+        #expect(settings.machineConfig(from: .user).expanded == ExpandedRules())
+        settings.idleActivity = .playing
+        settings.mostRecentActivity = true
+        #expect(settings.machineConfig(from: .user).expanded.idleActivity == .playing)
+        #expect(settings.machineConfig(from: .user).expanded.mostRecent)
+        #expect(AppSettings(defaults: defaults).idleActivity == .playing)
+    }
 }

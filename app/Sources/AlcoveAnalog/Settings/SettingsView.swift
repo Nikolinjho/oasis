@@ -130,6 +130,31 @@ struct GeneralPage: View {
                     SliderRow(title: "Hover duration", value: $settings.hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
                 }
             }
+            // Most Recent включён — плитки и Force enable прячутся, вместо них подпись с текущей плиткой (ui-inspection 1.2)
+            SettingsCard(title: "Idle Activity") {
+                ToggleRow(title: "Most Recent", isOn: $settings.mostRecentActivity)
+                if settings.mostRecentActivity {
+                    RowDivider()
+                    HStack {
+                        Text("Most Recent ∙ \(settings.idleActivity.rawValue.capitalized)")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                } else {
+                    RowDivider()
+                    TileRow(tiles: [
+                        Tile(value: IdleActivity.none, title: "None", preview: AnyView(tileGlyph("nosign"))),
+                        Tile(value: IdleActivity.playing, title: "Playing", preview: AnyView(tileGlyph("play.fill"))),
+                        Tile(value: IdleActivity.calendar, title: "Calendar", preview: AnyView(tileGlyph("calendar"))),
+                        Tile(value: IdleActivity.duo, title: "Duo", preview: AnyView(tileGlyph("rectangle.split.2x1.fill"))),
+                    ], selection: $settings.idleActivity, height: 52)
+                    RowDivider()
+                    ToggleRow(title: "Force enable activity", isOn: $settings.forceEnableActivity)
+                }
+            }
             SettingsCard(title: "Tuning") {
                 SliderRow(title: "Notch width", value: $settings.notchWidthOffset, range: -2...2, step: 1,
                           format: .integer("pt"))
@@ -144,5 +169,9 @@ struct GeneralPage: View {
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
             launchAtLogin = LoginItem.isEnabled
         }
+    }
+
+    private func tileGlyph(_ symbol: String) -> some View {
+        Image(systemName: symbol).font(.system(size: 18)).foregroundStyle(.white)
     }
 }
