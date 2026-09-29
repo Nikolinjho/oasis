@@ -27,7 +27,8 @@ public enum IslandTiming {
 
     /// Скорость бегущей строки: ~34 pt/с по записи нативного Alcove (ui-inspection 3.3). Веб-демо давало 30
     public static let marqueeSpeed: CGFloat = 34
-    /// Бегущая строка стоит ~1.1 с после появления текста (ui-inspection 3.3)
+    /// Бегущая строка стоит ~1.1 с после появления текста (ui-inspection 3.3).
+    /// Задержка одна на все бегущие строки — peek, плеер, Duo — как у нативного Alcove
     public static let marqueeDelay: Double = 1.1
     /// Старая обложка начинает поворачиваться через ~130 мс после смены названия
     /// (capture/analysis/README.md, «Смена трека: 3D-переворот обложки»)

@@ -13,9 +13,10 @@ struct MusicLiveView: View {
             HStack(spacing: 0) {
                 // радиус 4: замера нет, оценка
                 ArtworkFlip(info: info, side: 16, radius: 4, flips: appearance.artworkFlip)
-                    // пауза — 0.85, peek — ×1.2 от левого верха. Масштаб едет пружиной перехода peek
-                    .scaleEffect((isPlaying ? 1 : 0.85) * (showsTitle ? IslandTiming.peekArtworkScale : 1),
-                                 anchor: UnitPoint(x: 0.2, y: 0))
+                    // пауза — 0.85 от центра, отдельно от peek-масштаба, иначе на паузе обложку ещё и сносит к левому верху
+                    .scaleEffect(isPlaying ? 1 : 0.85)
+                    // peek — ×1.2 от левого верха (motion.md)
+                    .scaleEffect(showsTitle ? IslandTiming.peekArtworkScale : 1, anchor: UnitPoint(x: 0.2, y: 0))
                     .opacity(isPlaying ? 1 : 0.6)
                     .animation(.easeOut(duration: 0.5), value: isPlaying)
                 Spacer(minLength: notchWidth)

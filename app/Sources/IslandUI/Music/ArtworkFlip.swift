@@ -33,13 +33,18 @@ struct ArtworkFlip: View {
         guard let old else { return }
         // Disable artwork flip: новая обложка сразу, без поворота
         guard flips else { return }
+        // прошлый переворот ещё не долистал до угла 0: трек скипнули быстро — не копим по 130 мс на каждый
+        // такой скип, иначе при частой перемотке обложка дольше обычного простаивает на ребре
+        let alreadyFlipping = angle != 0 || outgoing != nil
         flipTask?.cancel()
         // переворот ещё не дошёл до ребра: на экране по-прежнему прежний outgoing
         if outgoing == nil { outgoing = old }
         flipTask = Task { @MainActor in
-            // название уже сменилось, обложка ждёт ~130 мс (запись Alcove №2)
-            try? await Task.sleep(for: IslandTiming.artworkFlipDelay)
-            guard !Task.isCancelled else { return }
+            if !alreadyFlipping {
+                // название уже сменилось, обложка ждёт ~130 мс (запись Alcove №2)
+                try? await Task.sleep(for: IslandTiming.artworkFlipDelay)
+                guard !Task.isCancelled else { return }
+            }
             withAnimation(.easeIn(duration: 0.12)) { angle = 90 }
             try? await Task.sleep(for: .milliseconds(120))
             guard !Task.isCancelled else { return }
