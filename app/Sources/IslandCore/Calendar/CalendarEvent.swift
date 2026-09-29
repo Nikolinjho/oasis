@@ -67,10 +67,11 @@ public struct DayAgenda: Equatable, Sendable {
     }
 
     /// Карточки Duo стопкой (Alcove 1.7.9, 29.09): первым — то же событие, что current, за ним сегодняшние,
-    /// которые начнутся позже него. Идущие рядом с live, но начавшиеся раньше, не показываем: карточка
-    /// и Join сверху должны совпадать с компактом
+    /// которые начнутся не раньше него. Идущие рядом с live, но начавшиеся раньше, не показываем: карточка
+    /// и Join сверху должны совпадать с компактом.
+    /// `>=` вместо `>`: одновременная встреча (тот же start, что у первой карточки) не должна пропадать
     public func upcoming(at now: Date, live: CalendarEvent? = nil) -> [CalendarEvent] {
         guard let first = current(at: now, live: live) else { return [] }
-        return [first] + today.filter { $0.id != first.id && $0.end > now && $0.start > first.start }
+        return [first] + today.filter { $0.id != first.id && $0.end > now && $0.start >= first.start }
     }
 }

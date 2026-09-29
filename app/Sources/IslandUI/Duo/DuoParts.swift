@@ -51,12 +51,15 @@ enum DuoLayout {
     /// Низ колонки событий — низ разделителя. Сколько карточек влезает у Alcove, не проверяли: оценка
     static let eventColumnBottom: CGFloat = dividerBottom
 
-    /// Сколько карточек стопки помещается целиком от eventOrigin.y до eventColumnBottom
+    /// Сколько карточек стопки помещается целиком от eventOrigin.y до eventColumnBottom.
+    /// Первая карточка остаётся всегда, даже если бы не влезла по бюджету: иначе при коротком дне Duo мог бы
+    /// показать «No more events today», хотя событие есть — с ним всегда совпадает current/live
     static func fitting(_ events: [CalendarEvent]) -> [CalendarEvent] {
-        var used: CGFloat = 0
-        var result: [CalendarEvent] = []
-        for event in events {
-            let height = EventCard.height(for: event) + (result.isEmpty ? 0 : eventSpacing)
+        guard let first = events.first else { return [] }
+        var used = EventCard.height(for: first)
+        var result = [first]
+        for event in events.dropFirst() {
+            let height = EventCard.height(for: event) + eventSpacing
             guard used + height <= eventColumnBottom - eventOrigin.y else { break }
             used += height
             result.append(event)
@@ -195,13 +198,12 @@ struct EventCard: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 if let location = Self.location(event) {
-                    // булавка и место, как на кадре duo-event-location.jpg; кегль — как у времени, оценка
-                    Label {
-                        Text(location).lineLimit(1).truncationMode(.tail)
-                    } icon: {
+                    // булавка и место, как на кадре duo-event-location.jpg; кегль — как у времени, оценка.
+                    // HStack вместо Label: у Label(.titleAndIcon) зазор ~8pt между иконкой и текстом — заметно шире
+                    HStack(spacing: 2) {
                         Image(systemName: "mappin").font(.system(size: 8, weight: .semibold))
+                        Text(location).lineLimit(1).truncationMode(.tail)
                     }
-                    .labelStyle(.titleAndIcon)
                     .font(.system(size: 10, weight: .medium))
                     .opacity(0.8)
                 }
@@ -226,8 +228,10 @@ struct EventCard: View {
                 .help("Join")
             }
         }
-        // отступы и прозрачность фона не мерили, оценка по кадру duo-event.jpg
-        .padding(.vertical, 3)
+        // отступы и прозрачность фона не мерили, оценка по кадру duo-event.jpg.
+        // У карточки с местом три строки почти вплотную заполняют 40pt — вертикальный паддинг меньше, чем у двух строк,
+        // иначе текст упирается в край (оценка по кадру 29.09)
+        .padding(.vertical, Self.height(for: event) > 28 ? 1 : 3)
         .padding(.leading, 4)
         .frame(width: DuoLayout.eventWidth, height: Self.height(for: event))
         .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.15)))

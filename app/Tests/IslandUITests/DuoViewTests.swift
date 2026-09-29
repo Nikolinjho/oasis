@@ -19,6 +19,14 @@ struct DuoViewTests {
         id: "e", title: "тест для alcove", start: at(23, 5), end: at(23, 30), isAllDay: false,
         color: RGB(red: 0.35, green: 0.85, blue: 0.35))
 
+    // Стопка из двух карточек: 40pt с местом (текущая) и 28pt без места (следующая), как на кадре AX 29.09
+    static let eventWithLocation = CalendarEvent(
+        id: "e-loc", title: "Шарп SEO Q4 - оценка задач", start: at(23, 5), end: at(23, 30), isAllDay: false,
+        color: RGB(red: 0.35, green: 0.85, blue: 0.35), location: "Двор-1-Камчатка (30)")
+    static let nextEvent = CalendarEvent(
+        id: "e-next", title: "Энхиридион", start: at(23, 30), end: at(23, 50), isAllDay: false,
+        color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+
     @Test("Дата как в Alcove: день недели капсом по-английски и число")
     func dateBadge() {
         #expect(DateBadge.weekday(Self.at(23, 10), calendar: Self.calendar) == "SAT")
@@ -70,6 +78,7 @@ struct DuoViewTests {
         for (name, agenda) in [
             ("duo-event", DayAgenda(today: [Self.event], tomorrow: [])),
             ("duo-empty", DayAgenda.empty),
+            ("duo-stack", DayAgenda(today: [Self.eventWithLocation, Self.nextEvent], tomorrow: [])),
         ] {
             let view = ZStack(alignment: .topLeading) {
                 IslandShape(spec: spec, shoulder: 0).fill(IslandPalette.background)

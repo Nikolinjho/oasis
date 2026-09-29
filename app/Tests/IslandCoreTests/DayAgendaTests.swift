@@ -81,4 +81,21 @@ struct DayAgendaTests {
         // окно календаря у второго события: оно первое, первое по времени уже не показываем
         #expect(agenda.upcoming(at: now, live: book).map(\.id) == ["book"])
     }
+
+    @Test("Стопка Duo: одновременная встреча с тем же началом, что у первой карточки, не пропадает")
+    func upcomingConcurrentStart() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        func event(_ id: String, _ start: TimeInterval, _ end: TimeInterval) -> CalendarEvent {
+            CalendarEvent(
+                id: id, title: id, start: now.addingTimeInterval(start), end: now.addingTimeInterval(end),
+                isAllDay: false, color: RGB(red: 1, green: 0, blue: 0))
+        }
+        // B 14:00–14:30 и A 14:00–15:00: одинаковый старт, current выбирает B (кончается раньше)
+        let short = event("short", 0, 1800)
+        let long = event("long", 0, 3600)
+        let agenda = DayAgenda(today: [short, long], tomorrow: [])
+        #expect(agenda.upcoming(at: now).map(\.id) == ["short", "long"])
+        // то же самое, если карточка сверху — событие окна календаря (live)
+        #expect(agenda.upcoming(at: now, live: long).map(\.id) == ["long", "short"])
+    }
 }
