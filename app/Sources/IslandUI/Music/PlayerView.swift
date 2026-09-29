@@ -199,18 +199,23 @@ struct ProgressRow: View {
         }
     }
 
+    /// m:ss, а от часа и дальше — h:mm:ss (подкасты и видео идут дольше 60 минут, «75:12» не читается)
     nonisolated static func format(_ seconds: TimeInterval) -> String {
         let total = Int(max(0, seconds).rounded(.down))
-        return String(format: "%d:%02d", total / 60, total % 60)
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let secs = total % 60
+        guard hours > 0 else { return String(format: "%d:%02d", minutes, secs) }
+        return String(format: "%d:%02d:%02d", hours, minutes, secs)
     }
 
-    /// Справа от прогресса, как в Alcove: «-m:ss» до конца трека.
+    /// Справа от прогресса, как в Alcove: «-m:ss» до конца трека, «-h:mm:ss» для долгих.
     /// Считается от уже округлённой позиции, чтобы сумма двух подписей всегда давала длительность
     nonisolated static func remaining(position: TimeInterval, duration: TimeInterval) -> String {
         "-" + format(duration - max(0, position).rounded(.down))
     }
 
-    /// Справа от прогресса: «-m:ss» до конца или «m:ss» длительность (showRemainingTime у Alcove)
+    /// Справа от прогресса: «-m:ss»/«-h:mm:ss» до конца или длительность целиком (showRemainingTime у Alcove)
     nonisolated static func trailing(position: TimeInterval, duration: TimeInterval, remaining: Bool) -> String {
         remaining ? Self.remaining(position: position, duration: duration) : format(duration)
     }

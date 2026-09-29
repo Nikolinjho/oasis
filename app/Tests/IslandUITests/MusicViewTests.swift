@@ -34,11 +34,11 @@ struct MusicViewTests {
         #expect(abs(MarqueeText.travelled(elapsed: 2.1) - 34) < 1e-9)
     }
 
-    @Test("Время в минутах и секундах")
+    @Test("Время в минутах и секундах, а от часа — в h:mm:ss")
     func timeFormat() {
         #expect(ProgressRow.format(0) == "0:00")
         #expect(ProgressRow.format(61.9) == "1:01")
-        #expect(ProgressRow.format(3600) == "60:00")
+        #expect(ProgressRow.format(3600) == "1:00:00")
     }
 
     @Test("Оставшееся время со знаком минус")

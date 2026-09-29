@@ -67,6 +67,22 @@ struct PlayerControlTests {
         #expect(ProgressRow.trailing(position: 61, duration: 263, remaining: false) == "4:23")
     }
 
+    @Test("Формат времени: m:ss до часа, дальше h:mm:ss — подкасты и видео длиннее 60 минут не съезжают в «75:12»")
+    func formatLongMedia() {
+        #expect(ProgressRow.format(0) == "0:00")
+        #expect(ProgressRow.format(3599) == "59:59")
+        #expect(ProgressRow.format(3600) == "1:00:00")
+        #expect(ProgressRow.format(4512) == "1:15:12")
+    }
+
+    @Test("Остаток у двухчасового видео тоже в h:mm:ss")
+    func remainingLongMedia() {
+        // 2 ч видео (7200 с), позиция 3477 с — до конца 3723 с = 1:02:03
+        #expect(ProgressRow.remaining(position: 3477, duration: 7200) == "-1:02:03")
+        #expect(ProgressRow.trailing(position: 3477, duration: 7200, remaining: true) == "-1:02:03")
+        #expect(ProgressRow.trailing(position: 3477, duration: 7200, remaining: false) == "2:00:00")
+    }
+
     @Test("Перемотка: позиция по точке клика, за краями зажата")
     func seekPosition() {
         #expect(ProgressRow.seekPosition(at: 60, width: 240, duration: 200) == 50)
