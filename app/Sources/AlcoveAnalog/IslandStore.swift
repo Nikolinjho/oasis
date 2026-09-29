@@ -74,7 +74,7 @@ final class IslandStore {
             for: model.surface, hasMedia: model.hasMedia, notch: notch,
             calendarIndicatorWidth: IslandView.calendarIndicatorWidth,
             reminderIndicatorWidth: IslandView.reminderIndicatorWidth, battery: appearance.battery,
-            volumeRow: model.volumeRowShown)
+            calendarWithMusic: model.showsMedia, volumeRow: model.volumeRowShown)
         if model.surface == .expanded, stretch != 0 {
             spec.size.height += stretch
             spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: spec.size.height)

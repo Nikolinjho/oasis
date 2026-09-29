@@ -78,6 +78,17 @@ struct GeometryTests {
         #expect(nudge.size.width == 300 * IslandGeometry.hoverNudgeWidthScale)
     }
 
+    @Test("Календарь при музыке — размеры музыки: компакт 257×32, peek 276×73.5 (Alcove 1.7.9: 258 и 277, 29.09)")
+    func calendarWithMusic() {
+        func size(_ surface: Surface) -> CGSize {
+            IslandGeometry.spec(
+                for: surface, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0,
+                reminderIndicatorWidth: 0, calendarWithMusic: true).size
+        }
+        #expect(size(.calendar) == CGSize(width: 257, height: 32))
+        #expect(size(.calendarPeek) == CGSize(width: 276, height: 73.5))
+    }
+
     @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
     func radiusFromVideo() {
         #expect(abs(IslandGeometry.bottomRadius(forHeight: 32) - 10.5) < 1e-9)

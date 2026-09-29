@@ -9,13 +9,12 @@ import SwiftUI
 struct ActivityCompactView: View {
     let layout: ActivityLayout
     let notchWidth: CGFloat
+    var artwork: NowPlayingInfo? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Image(systemName: layout.symbol)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(layout.symbolColor))
+                icon
                     .frame(width: ActivityLayout.iconWidth, height: 15)
                 Spacer(minLength: notchWidth)
                 indicator
@@ -36,6 +35,27 @@ struct ActivityCompactView: View {
     nonisolated static let rowHeight = IslandGeometry.calendarCompact.height
     /// Строка peek — остаток высоты peek календаря (73.5) под строкой компакта: 41.5
     nonisolated static let lineHeight = IslandGeometry.calendarPeek.height - rowHeight
+
+    /// Иконка слева. При музыке — обложка 16 pt, как в компакте музыки, и красный бейдж с часами в правом нижнем
+    /// углу. Размер бейджа и сдвиг — оценка по кадру music-event-compact.jpg
+    @ViewBuilder
+    private var icon: some View {
+        if layout.showsArtwork {
+            ArtworkFlip(info: artwork, side: 16, radius: 4)
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: layout.symbol)
+                        .font(.system(size: 6, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 9, height: 9)
+                        .background(Circle().fill(Color(layout.symbolColor)))
+                        .offset(x: 4, y: 4)
+                }
+        } else {
+            Image(systemName: layout.symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color(layout.symbolColor))
+        }
+    }
 
     @ViewBuilder
     private var indicator: some View {

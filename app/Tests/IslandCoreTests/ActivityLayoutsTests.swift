@@ -16,10 +16,31 @@ struct ActivityLayoutsTests {
         #expect(layout.line == nil)
     }
 
-    @Test("Самый широкий индикатор — отсчёт в момент открытия окна, за минуту до начала")
+    @Test("Самый широкий индикатор — минуты в момент открытия окна при музыке, «15m»")
     func widestIndicator() {
-        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
+        let layout = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false, withMusic: true)
         #expect(layout.indicator == ActivityLayouts.calendarWidestIndicator)
+    }
+
+    @Test("С музыкой: обложка с бейджем, минуты вверх до начала, в последнюю минуту секунды (Alcove 1.7.9, 29.09)")
+    func withMusic() {
+        func indicator(_ offset: TimeInterval) -> ActivityLayout.Indicator {
+            ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(offset), showsLine: false, withMusic: true).indicator
+        }
+        #expect(indicator(-484) == .text("9m", color: ActivityLayouts.calendarRed))
+        #expect(indicator(-61) == .text("2m", color: ActivityLayouts.calendarRed))
+        #expect(indicator(-30) == .text("30s", color: ActivityLayouts.calendarRed))
+        #expect(indicator(750) == .ring(progress: 0.5, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
+        #expect(ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: false, withMusic: true).showsArtwork)
+    }
+
+    @Test("Без музыки до начала — кольцо, которое заполняется к старту, в последнюю минуту секунды")
+    func withoutMusic() {
+        let half = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-450), showsLine: false)
+        #expect(half.indicator == .ring(progress: 0.5, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
+        #expect(!half.showsArtwork)
+        let last = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-30), showsLine: false)
+        #expect(last.indicator == .text("30s", color: ActivityLayouts.calendarRed))
     }
 
     @Test("Во время события — кольцо хода события")

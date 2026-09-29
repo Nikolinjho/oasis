@@ -4,6 +4,7 @@ import SwiftUI
 /// Компакт и peek календаря: секунды до начала и время до конца обновляются раз в секунду (ui-inspection 3.5)
 struct CalendarLiveView: View {
     let event: CalendarEvent?
+    var music: NowPlayingInfo? = nil
     let showsLine: Bool
     let notchWidth: CGFloat
 
@@ -12,8 +13,8 @@ struct CalendarLiveView: View {
         TimelineView(.periodic(from: event?.start ?? .now, by: 1)) { context in
             if let event {
                 ActivityCompactView(
-                    layout: ActivityLayouts.calendar(event: event, now: context.date, showsLine: showsLine),
-                    notchWidth: notchWidth)
+                    layout: ActivityLayouts.calendar(event: event, now: context.date, showsLine: showsLine, withMusic: music != nil),
+                    notchWidth: notchWidth, artwork: music)
             }
         }
     }

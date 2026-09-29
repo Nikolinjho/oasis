@@ -71,7 +71,8 @@ public struct IslandModel: Equatable, Sendable {
     /// Виды уведомлений, которые HUD вытеснил с экрана и вернул в очередь: их звук уже прозвучал,
     /// повторный показ после HUD идёт без звука. Новое уведомление того же вида и отзыв снимают отметку
     public var heardAlerts: Set<IslandAlert.Kind> = []
-    /// Открыто окно календаря (T−1 мин … конец события): компакт календаря вытесняет музыку (решение 27.09)
+    /// Открыто окно календаря (за 15 минут до начала (liveLead) … конец события): без музыки компакт календаря
+    /// вытесняет покой, при играющей музыке он и есть компакт музыки (Alcove 1.7.9, 29.09)
     public var calendarLive = false
     /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
     public var expandedView: ExpandedView = .duo
@@ -521,8 +522,8 @@ public enum IslandMachine {
     }
 
     /// Звук на старте события играет всегда (Play sound on calendar event), peek — только из компакта календаря.
-    /// Во время HUD, сжатия и раскрытого — только звук. Вживую окно открывается за 60 с до старта, и сжатие
-    /// к календарю к этому времени давно закончилось: сюда попадает разве что отладочная кнопка calendar.start
+    /// Во время HUD, сжатия и раскрытого — только звук. Вживую окно открывается за 15 минут до старта (liveLead),
+    /// и сжатие к календарю к этому времени давно закончилось: сюда попадает разве что отладочная кнопка calendar.start
     private static func calendarStarted(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.surface == .calendar, m.pending == nil else { return [.play(.event)] }
         m.surface = .calendarPeek

@@ -99,7 +99,7 @@ struct CalendarMenuSectionTests {
         let now = Date()
         let store = IslandStore(config: .alcove)
         let clock = CalendarClock(store: store, start: now)
-        // начало через 30 с: окно календаря уже открыто (liveLead 60 с)
+        // начало через 30 с: окно календаря уже открыто (liveLead 15 минут)
         clock.update(agenda: DayAgenda(today: [Self.event(notes: "https://meet.google.com/abc-defg-hij", startsIn: 30, now: now)], tomorrow: []), now: now)
         #expect(store.model.calendarLive)
         #expect(clock.menuModel(now: now)?.event.id == "call@1")

@@ -16,9 +16,13 @@ final class CalendarClock {
     private var dismissed: Set<String> = []
     private var timer: Task<Void, Never>?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
+    /// Before event starts: напоминания-peek за 15 и 5 минут. У Alcove по умолчанию выключено (ui-inspection 1.9),
+    /// страницы Calendar в P2 нет — включается только кодом и в тестах
+    private let remindsBeforeStart: Bool
 
-    init(store: IslandStore, start: Date = Date()) {
+    init(store: IslandStore, start: Date = Date(), remindsBeforeStart: Bool = false) {
         self.store = store
+        self.remindsBeforeStart = remindsBeforeStart
         lastTick = start
         let wake: [(NotificationCenter, Notification.Name)] = [
             (.default, .NSSystemClockDidChange),
@@ -57,6 +61,7 @@ final class CalendarClock {
         for tick in CalendarSchedule.crossings(in: visible, from: lastTick, to: now) {
             switch tick {
             case let .reminder(event, minutes):
+                guard remindsBeforeStart else { continue }
                 store.send(.alertArrived(.calendarReminder(CalendarReminder(
                     eventID: event.id, title: event.title, minutes: minutes, color: event.color))))
             case .started where !started:

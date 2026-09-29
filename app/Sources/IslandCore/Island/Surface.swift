@@ -21,7 +21,7 @@ public enum Surface: Equatable, Sendable {
     case hud(HUDKind, level: Double)
     /// Уведомление: Charging, в P1 — батарея, AirPods, напоминания календаря
     case alert(IslandAlert)
-    /// Компакт календаря: от минуты до начала события до его конца (решение 27.09). Второй вид покоя
+    /// Компакт календаря: за 15 минут до начала (liveLead) события до его конца (Alcove 1.7.9, 29.09). Второй вид покоя
     case calendar
     /// Компакт календаря и строка с названием: старт события, 4.2 с
     case calendarPeek

@@ -11,10 +11,10 @@ struct CalendarScheduleTests {
 
     static func at(_ offset: TimeInterval) -> Date { start.addingTimeInterval(offset) }
 
-    @Test("Окно календаря: с минуты до начала до конца события")
+    @Test("Окно календаря: за 15 минут до начала до конца события (Time before event у Alcove 1.7.9)")
     func liveWindow() {
-        #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-61)) == nil)
-        #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-60)) == Self.event)
+        #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-901)) == nil)
+        #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-900)) == Self.event)
         #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(1799)) == Self.event)
         #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(1800)) == nil)
     }
@@ -33,10 +33,10 @@ struct CalendarScheduleTests {
         #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-1000), to: Self.at(-250)) == [.reminder(Self.event, minutes: 5)])
     }
 
-    @Test("Следующая граница — ближайшая из напоминаний, T−1, старта и конца")
+    @Test("Следующая граница — ближайшая из напоминаний, окна T−15, старта и конца")
     func nextBoundary() {
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000)) == Self.at(-900))
-        #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-200)) == Self.at(-60))
+        #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(0)) == Self.at(1800))
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-30)) == Self.at(0))
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(10)) == Self.at(1800))
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(1800)) == nil)
@@ -49,8 +49,8 @@ struct CalendarScheduleTests {
         let inner = CalendarEvent(
             id: "inner", title: "Внутри", start: Self.at(1800), end: Self.at(2700), isAllDay: false, color: Self.event.color)
         let agenda = DayAgenda.make(events: [inner, long], now: Self.at(-100))
-        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1739)) == long)
-        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1740)) == inner)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(899)) == long)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(900)) == inner)
         #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2000)) == inner)
         #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2700)) == long)
     }

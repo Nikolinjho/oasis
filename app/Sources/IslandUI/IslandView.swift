@@ -77,7 +77,8 @@ public struct IslandView: View {
                 .id(ContentID.music)
                 .transition(.slot)
         case .calendar, .calendarPeek, .hoverNudge(from: .calendar), .hoverNudge(from: .calendarPeek):
-            CalendarLiveView(event: calendarEvent, showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth)
+            CalendarLiveView(event: calendarEvent, music: model.showsMedia ? nowPlaying : nil,
+                             showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth)
                 // как у музыки: рамка итогового размера, контент открывается маской формы
                 .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
                 .id(ContentID.calendar)
@@ -129,7 +130,7 @@ public struct IslandView: View {
         let notch = CGSize(width: notchWidth, height: spec.size.height)
         return IslandGeometry.spec(
             for: liveSurface, hasMedia: model.hasMedia, notch: notch, calendarIndicatorWidth: Self.calendarIndicatorWidth,
-            reminderIndicatorWidth: Self.reminderIndicatorWidth
+            reminderIndicatorWidth: Self.reminderIndicatorWidth, calendarWithMusic: model.showsMedia
         ).size
     }
 

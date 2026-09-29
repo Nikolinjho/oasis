@@ -6,16 +6,17 @@ public enum CalendarTick: Equatable, Sendable {
     case started(CalendarEvent)
 }
 
-/// Время календаря (решение 27.09): напоминания за 15 и 5 минут, компакт с минуты до начала, peek на старте
+/// Время календаря (Alcove 1.7.9, 29.09): окно — за Time before event до начала (15 минут по умолчанию),
+/// peek на старте. Напоминания за 15 и 5 минут — Before event starts, у Alcove по умолчанию выключен
 public enum CalendarSchedule {
     public static let reminderMinutes = [15, 5]
-    /// Компакт календаря появляется за минуту до начала
-    public static let liveLead: TimeInterval = 60
+    /// Окно календаря открывается за 15 минут до начала: Time before event по умолчанию (ui-inspection 1.9)
+    public static let liveLead: TimeInterval = 15 * 60
     /// Отметку старше этого (Mac спал, таймер опоздал) уже не показываем
     public static let staleAfter: TimeInterval = 60
 
-    /// Событие окна календаря: из тех, что начнутся в ближайшую минуту или уже идут, — начавшееся позже всех.
-    /// Событие внутри идущего забирает окно со своей минуты до начала, после его конца окно возвращается
+    /// Событие окна календаря: из тех, что начнутся за liveLead или уже идут, — начавшееся позже всех.
+    /// Событие внутри идущего забирает окно за liveLead до своего начала, после его конца окно возвращается
     /// к идущему. События по началу (DayAgenda.make), завтрашние после сегодняшних
     public static func liveEvent(in agenda: DayAgenda, at now: Date) -> CalendarEvent? {
         events(agenda).last { $0.start.addingTimeInterval(-liveLead) <= now && now < $0.end }
@@ -33,7 +34,7 @@ public enum CalendarSchedule {
         return ticks
     }
 
-    /// Ближайшая граница после now: по ней часы просыпаются
+    /// Следующая граница — ближайшая из напоминаний, окна T−15, старта и конца: по ней часы просыпаются
     public static func nextBoundary(in agenda: DayAgenda, after now: Date) -> Date? {
         events(agenda)
             .flatMap { event in

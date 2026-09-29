@@ -158,16 +158,19 @@ public enum IslandGeometry {
 
     /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
     /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
-    /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:)
+    /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:). calendarWithMusic — пока
+    /// играет музыка, компакт и peek календаря занимают её размеры (Alcove 1.7.9, 29.09)
     public static func spec(
         for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
-        reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle(), volumeRow: Bool = false
+        reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle(),
+        calendarWithMusic: Bool = false, volumeRow: Bool = false
     ) -> IslandShapeSpec {
         if case let .hoverNudge(from) = surface {
             // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
             var base = spec(
                 for: from, hasMedia: hasMedia, notch: notch, calendarIndicatorWidth: calendarIndicatorWidth,
-                reminderIndicatorWidth: reminderIndicatorWidth, battery: battery, volumeRow: volumeRow)
+                reminderIndicatorWidth: reminderIndicatorWidth, battery: battery,
+                calendarWithMusic: calendarWithMusic, volumeRow: volumeRow)
             base.size.width *= hoverNudgeWidthScale
             return base
         }
@@ -180,8 +183,13 @@ public enum IslandGeometry {
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
         case .hud: hud
         case let .alert(alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
-        case .calendar: calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
-        case .calendarPeek: calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
+        // при музыке компакт и peek календаря — размеры музыки (Alcove 1.7.9: 258 и 277, 29.09)
+        case .calendar:
+            calendarWithMusic ? compact : calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
+        case .calendarPeek:
+            calendarWithMusic
+                ? CGSize(width: peek.width, height: calendarPeek.height)
+                : calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
         // разобран выше, сюда не доходит
         case .hoverNudge: notch
         }
