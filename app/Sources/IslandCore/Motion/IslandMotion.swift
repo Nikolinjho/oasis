@@ -24,6 +24,9 @@ public enum IslandTransition: Equatable, Sendable {
     /// Компакт/peek календаря меняет размер на месте: музыка появилась или пропала во время окна
     /// календаря (257↔254, 276↔270). У Alcove живьём не проверяли — оценка, берём пружину компакта
     case calendarRestyle
+    /// Подложка подгонки выреза (Task 17t): вход из покоя, новое значение на месте, уход обратно в покой.
+    /// У Alcove 1.7.9 «переход обычными пружинами формы» (29.09) — своих замеров нет
+    case tuningIn, tuningUpdate, tuningOut
 
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
@@ -82,6 +85,11 @@ public enum IslandMotion {
         case .volumeRow: .smooth(duration: 0.3)
         // не мерили: тот же масштаб изменения ширины, что у входа в компакт — оценка
         case .calendarRestyle: SpringSpec(stiffness: 235, damping: 31)
+        // Task 17t: своих замеров нет, Alcove 1.7.9 «обычные пружины формы» (29.09) — переиспользуем
+        // HUD (тоже вход/уход у покоя без музыки) для входа и ухода, компакт — для живой смены значения
+        case .tuningIn: .smooth(duration: 0.44)
+        case .tuningOut: .smooth(duration: 0.45)
+        case .tuningUpdate: SpringSpec(stiffness: 235, damping: 31)
         // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)

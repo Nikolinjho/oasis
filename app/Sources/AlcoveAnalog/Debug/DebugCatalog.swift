@@ -277,6 +277,21 @@ enum DebugCatalog {
                     (at: 1.0, run: { store.send(.hudChanged(.volume, level: 0.5)) }),
                 ])
             }),
+            .separator,
+            // Task 17t: подложка подгонки выреза на ~2 с, как будто ползунок зажат, потом отпущен —
+            // без окна настроек, значение то же, что стояло бы у Notch width/height (−1) на живом сравнении
+            .action(DebugAction(id: "tuning.width", title: "Tuning Hint: Notch Width") {
+                DebugScript.run([
+                    (at: 0, run: { store.send(.tuningHintChanged(.width(-1))) }),
+                    (at: 2, run: { store.send(.tuningHintChanged(nil)) }),
+                ])
+            }),
+            .action(DebugAction(id: "tuning.height", title: "Tuning Hint: Notch Height") {
+                DebugScript.run([
+                    (at: 0, run: { store.send(.tuningHintChanged(.height(0))) }),
+                    (at: 2, run: { store.send(.tuningHintChanged(nil)) }),
+                ])
+            }),
         ])
     }
 

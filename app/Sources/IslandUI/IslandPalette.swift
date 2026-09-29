@@ -26,4 +26,6 @@ public enum IslandPalette {
     public static let lowBattery = Color(red: 1, green: 69 / 255, blue: 58 / 255)
     /// Low Power Mode: жёлтая батарейка, как у macOS. Оценка
     public static let lowPower = Color(red: 1, green: 214 / 255, blue: 10 / 255)
+    /// Подложка подгонки выреза (Task 17t): красная плашка Alcove 1.7.9 (29.09, осмотр). Содержимое на ней чёрное
+    public static let tuning = Color(red: 233 / 255, green: 103 / 255, blue: 115 / 255)
 }

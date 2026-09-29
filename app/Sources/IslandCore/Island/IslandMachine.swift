@@ -35,6 +35,9 @@ public enum IslandEvent: Equatable, Sendable {
     case activityRestored
     /// Клик по кнопке вывода в раскрытом плеере: строка громкости под кнопками (Alcove 1.7.9, 28.09)
     case volumeRowToggled
+    /// Ползунок Notch width/height в General → Tuning зажат (значение) или отпущен (nil), Task 17t:
+    /// как уведомление, только без звука и очереди — держит подсказку, пока кнопка мыши на ползунке
+    case tuningHintChanged(TuningHint?)
     case hoverEntered, hoverExited
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
@@ -222,6 +225,7 @@ public enum IslandMachine {
         case .activityDismissed: activityDismissed(&model)
         case .activityRestored: activityRestored(&model)
         case .volumeRowToggled: volumeRowToggled(&model)
+        case let .tuningHintChanged(hint): tuningHintChanged(&model, hint)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
@@ -396,7 +400,8 @@ public enum IslandMachine {
         case let .alert(alert):
             m.displaceByHUD(alert, heard: true)
             return shrink(&m, then: hud)
-        case .compact, .peek, .calendar, .calendarPeek:
+        // подложка подгонки (Task 17t) тоже уступает HUD: не проверялось, ведём как компакт/peek — через сжатие
+        case .compact, .peek, .calendar, .calendarPeek, .tuning:
             return shrink(&m, then: hud)
         case .hover, .expanded:
             // раскрытый морфится прямо в HUD, без схлопывания и сжатия (осмотр нативного Alcove 26.09).
@@ -454,7 +459,8 @@ public enum IslandMachine {
         case .alert, .hud:
             m.enqueue(alert)
             return []
-        case .compact, .peek, .calendar, .calendarPeek:
+        // подложка подгонки (Task 17t) тоже уступает уведомлению: не проверялось, ведём как компакт/peek
+        case .compact, .peek, .calendar, .calendarPeek, .tuning:
             return shrink(&m, then: .alert(alert))
         case .hover, .expanded:
             m.surface = .alert(alert)
@@ -601,6 +607,61 @@ public enum IslandMachine {
         guard m.surface == .expanded, m.expandedView == .player else { return [] }
         m.volumeRowShown.toggle()
         return [.animate(.volumeRow)]
+    }
+
+    /// Подложка подгонки выреза (Task 17t): пока ползунок Tuning зажат, остров показывает подсказку
+    /// вместо чего угодно, что было на экране — как HUD/уведомление, но без звука и очереди.
+    /// nil (отпустили ползунок) — tuningReleased. Отклик и уход курсора разворачиваются так же, как у HUD:
+    /// раскрытие подсказки — то, что реально происходит, а не промежуточное состояние
+    private static func tuningHintChanged(_ m: inout IslandModel, _ hint: TuningHint?) -> [IslandEffect] {
+        guard let hint else { return tuningReleased(&m) }
+        if case let .hoverNudge(from) = m.surface {
+            m.surface = from
+            return [.cancel(.hoverOpen)] + tuningHintChanged(&m, hint)
+        }
+        if m.leaving {
+            m.leaving = false
+            return [.cancel(.hoverLeave)] + tuningHintChanged(&m, hint)
+        }
+        if m.pending != nil {
+            // сжатие уже идёт: подсказка становится его целью. Уведомление, к которому оно шло, — в очередь,
+            // как при вытеснении HUD (displaceByHUD), звук ещё не звучал
+            if case let .alert(alert) = m.pending { m.displaceByHUD(alert, heard: false) }
+            m.pending = .tuning(hint)
+            return []
+        }
+        switch m.surface {
+        case let .tuning(current) where current == hint:
+            return []
+        case .tuning:
+            m.surface = .tuning(hint)
+            return [.animate(.tuningUpdate)]
+        case .idle:
+            m.surface = .tuning(hint)
+            return [.animate(.tuningIn)]
+        case .compact, .peek, .calendar, .calendarPeek:
+            return shrink(&m, then: .tuning(hint))
+        // раскрытый, HUD и уведомление перетекают прямо в подложку, без схлопывания — как HUD из них же
+        case .hover, .expanded, .hud, .alert:
+            m.surface = .tuning(hint)
+            return [.animate(.hudMorph)]
+        case .shrink:
+            m.pending = .tuning(hint)
+            return []
+        case .hoverNudge:
+            return [] // разобран выше
+        }
+    }
+
+    /// Ползунок отпущен: подсказка отслужила, возврат в покой — как у отслужившего уведомления
+    /// (hideAlert), без очереди и звука. Если сжатие уже шло к другой цели, подсказку из pending
+    /// просто снимаем — освободившееся сжатие вернётся в base само
+    private static func tuningReleased(_ m: inout IslandModel) -> [IslandEffect] {
+        if case .tuning = m.pending { m.pending = m.base }
+        guard case .tuning = m.surface, m.pending == nil else { return [] }
+        if m.base != .idle { return shrink(&m, then: m.base) }
+        m.surface = .idle
+        return [.animate(.tuningOut)]
     }
 
     /// Вид при раскрытии по Idle Activity. nil — None, раскрывать нечего
@@ -792,6 +853,8 @@ public enum IslandMachine {
         case .compact, .peek, .hoverNudge: .shrink
         // замера нет: компакт календаря той же высоты 32, что компакт музыки, peek — как peek музыки
         case .calendar, .calendarPeek: .shrink
+        // Task 17t: замера нет, подложка близка по масштабу к компакту (не к широкому HUD) — та же пружина
+        case .tuning: .shrink
         // отсюда сжатия нет: покой показывает HUD сразу, раскрытый морфится, сжатие уже идёт
         case .idle, .hover, .expanded, .shrink: .shrink
         }

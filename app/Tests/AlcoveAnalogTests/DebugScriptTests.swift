@@ -29,6 +29,18 @@ struct DebugScriptTests {
         #expect(store.config == .user)
     }
 
+    @Test("tuning.width показывает подложку сразу и снимает её через ~2 с (Task 17t)")
+    func tuningWidthActionShowsThenReleases() async throws {
+        let store = IslandStore(config: .alcove)
+        let action = try #require(DebugCatalogTests.actions(store).first { $0.id == "tuning.width" })
+        action.run()
+        // первый шаг сценария (at: 0) всё равно выполняется в Task — синхронно сразу после run() его ещё нет
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(store.model.surface == .tuning(.width(-1)))
+        try await Task.sleep(for: .milliseconds(2200))
+        #expect(store.model.surface == .idle)
+    }
+
     @Test("Двойной старт demo.run (второй поверх первого) в итоге тоже возвращает исходный конфиг")
     func doubleStartedDemoRunRestoresConfig() async throws {
         let store = IslandStore(config: .user)

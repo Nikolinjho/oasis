@@ -135,13 +135,20 @@ struct SliderRow: View {
     let range: ClosedRange<Double>
     let step: Double
     let format: SliderFormat
+    /// Начало/конец перетаскивания (SwiftUI Slider.onEditingChanged): Tuning шлёт это в подсказку
+    /// острова (Task 17t), остальные слайдеры не используют
+    var onEditingChanged: (Bool) -> Void = { _ in }
 
-    init(title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, format: SliderFormat) {
+    init(
+        title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, format: SliderFormat,
+        onEditingChanged: @escaping (Bool) -> Void = { _ in }
+    ) {
         self.title = title
         _value = value
         self.range = range
         self.step = step
         self.format = format
+        self.onEditingChanged = onEditingChanged
     }
 
     init(title: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double, unit: String) {
@@ -159,7 +166,7 @@ struct SliderRow: View {
                     .padding(.vertical, 2)
                     .background(Capsule().fill(Color.primary.opacity(0.08)))
             }
-            Slider(value: $value.snapped(to: step), in: range, step: step)
+            Slider(value: $value.snapped(to: step), in: range, step: step, onEditingChanged: onEditingChanged)
                 .tint(SettingsPalette.accent)
         }
         .padding(.horizontal, 12)

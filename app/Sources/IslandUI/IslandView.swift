@@ -45,7 +45,8 @@ public struct IslandView: View {
     public var body: some View {
         ZStack(alignment: .top) {
             IslandShape(spec: spec)
-                .fill(IslandPalette.background)
+                // подложка подгонки выреза красная, а не чёрная, как обычно (Task 17t, Alcove 1.7.9, 29.09)
+                .fill(isTuningHint ? IslandPalette.tuning : IslandPalette.background)
                 // тень только у раскрытого: меняется вместе с моделью внутри withAnimation и растёт той же пружиной
                 .shadow(
                     color: .black.opacity(model.surface == .expanded ? IslandGeometry.Shadow.opacity : 0),
@@ -104,9 +105,20 @@ public struct IslandView: View {
                 .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
                 .id(ContentID.alert)
                 .transition(.slot)
+        case let .tuning(hint):
+            TuningHintView(hint: hint, notchWidth: notchWidth)
+                .frame(width: spec.size.width, height: spec.size.height, alignment: .top)
+                .id(ContentID.tuning)
+                .transition(.slot)
         case .idle, .hover, .shrink, .hoverNudge:
             Color.clear
         }
+    }
+
+    /// Подложка подгонки выреза (Task 17t) — заливка формы красная, а не обычная чёрная
+    private var isTuningHint: Bool {
+        if case .tuning = model.surface { return true }
+        return false
     }
 
     /// Ширина самого широкого индикатора компакта календаря: по ней считается фиксированная ширина
@@ -139,5 +151,6 @@ public struct IslandView: View {
         case calendar
         case hud(HUDKind)
         case alert
+        case tuning
     }
 }

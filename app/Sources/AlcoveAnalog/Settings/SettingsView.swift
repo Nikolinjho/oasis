@@ -154,11 +154,12 @@ struct GeneralPage: View {
                           isOn: $settings.swipeToDismiss)
             }
             SettingsCard(title: "Tuning") {
+                // onEditingChanged — подсказка острова, пока ползунок зажат (Task 17t)
                 SliderRow(title: "Notch width", value: $settings.notchWidthOffset, range: -2...2, step: 1,
-                          format: .integer("pt"))
+                          format: .integer("pt"), onEditingChanged: settings.notchWidthDragChanged)
                 RowDivider()
                 SliderRow(title: "Notch height", value: $settings.notchHeightOffset, range: -2...2, step: 1,
-                          format: .integer("pt"))
+                          format: .integer("pt"), onEditingChanged: settings.notchHeightDragChanged)
             }
         }
         // launchAtLogin меняют и снаружи (пункт меню, System Settings): подхватываем при появлении

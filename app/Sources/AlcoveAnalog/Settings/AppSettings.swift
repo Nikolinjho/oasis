@@ -67,6 +67,12 @@ final class AppSettings: ObservableObject {
     }
 
     var onChange: () -> Void = {}
+    /// Ползунок Notch width/height зажат (значение) или отпущен (nil): Task 17t, остров показывает
+    /// красную подложку-подсказку. AppDelegate шлёт это напрямую в store.send(.tuningHintChanged(...))
+    var onTuningHint: (TuningHint?) -> Void = { _ in }
+    /// Зажат ли сейчас каждый из двух ползунков Tuning: onTuningHint(nil) шлётся, только когда отпущены оба
+    private var isDraggingWidth = false
+    private var isDraggingHeight = false
     private let defaults: UserDefaults
 
     /// General → Expand on hover, по умолчанию вкл
@@ -125,6 +131,9 @@ final class AppSettings: ObservableObject {
             guard oldValue != notchWidthOffset else { return }
             defaults.set(notchWidthOffset, forKey: Key.notchWidthOffset)
             onChange()
+            // подсказку двигаем, только пока ползунок реально зажат (isDraggingWidth): значение,
+            // выставленное отладкой или восстановленное из defaults, подсказку сама не включает
+            if isDraggingWidth { onTuningHint(.width(Int(notchWidthOffset))) }
         }
     }
     /// General → Tuning → Notch height, pt, −2…2
@@ -133,7 +142,21 @@ final class AppSettings: ObservableObject {
             guard oldValue != notchHeightOffset else { return }
             defaults.set(notchHeightOffset, forKey: Key.notchHeightOffset)
             onChange()
+            if isDraggingHeight { onTuningHint(.height(Int(notchHeightOffset))) }
         }
+    }
+
+    /// SliderRow(Notch width).onEditingChanged (Task 17t): зажали — подсказка сразу с текущим значением,
+    /// отпустили — подсказка снимается, если второй ползунок Tuning не зажат тоже
+    func notchWidthDragChanged(_ editing: Bool) {
+        isDraggingWidth = editing
+        onTuningHint(editing ? .width(Int(notchWidthOffset)) : (isDraggingHeight ? .height(Int(notchHeightOffset)) : nil))
+    }
+
+    /// То же для Notch height
+    func notchHeightDragChanged(_ editing: Bool) {
+        isDraggingHeight = editing
+        onTuningHint(editing ? .height(Int(notchHeightOffset)) : (isDraggingWidth ? .width(Int(notchWidthOffset)) : nil))
     }
 
     // Battery (ui-inspection 1.3). batteryDuration и enableBattery — единственные подтверждённые ключи Alcove

@@ -25,4 +25,6 @@ public enum Surface: Equatable, Sendable {
     case calendar
     /// Компакт календаря и строка с названием: старт события, 4.2 с
     case calendarPeek
+    /// Подложка подгонки выреза (Task 17t): пока ползунок Notch width/height в Tuning зажат
+    case tuning(TuningHint)
 }

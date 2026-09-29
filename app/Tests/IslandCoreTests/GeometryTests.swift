@@ -74,6 +74,27 @@ struct GeometryTests {
         #expect(wide.expanded == 345)
     }
 
+    @Test("Подложка подгонки выреза (Task 17t): width-подсказка — подогнанный вырез × 69, углы и ушко как у высоты 69")
+    func tuningWidthHintSize() {
+        // фикстура уже «подогнанный» вырез (тюнинг применяется до вызова spec, как у store.notch)
+        let spec = IslandGeometry.spec(for: .tuning(.width(-1)), hasMedia: false, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
+        #expect(spec.size == CGSize(width: 185, height: 69))
+        #expect(spec.bottomRadius == IslandGeometry.bottomRadius(forHeight: 69))
+        #expect(spec.shoulder == IslandGeometry.Shoulder.compact)
+    }
+
+    @Test("Подложка подгонки выреза (Task 17t): height-подсказка — ширина компакта, высота 32 + h (h = 0 замерено, иные — оценка)")
+    func tuningHeightHintSize() {
+        let notch = Self.mbp16.notchSize
+        func size(_ h: Int) -> CGSize {
+            IslandGeometry.spec(for: .tuning(.height(h)), hasMedia: false, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0).size
+        }
+        // компакт notch-relative: на фикстуре 185 (эталон 183) даёт 257 + 2 = 259 (задача 1)
+        #expect(size(0) == CGSize(width: 259, height: 32))
+        #expect(size(2) == CGSize(width: 259, height: 34))
+        #expect(size(-1) == CGSize(width: 259, height: 31))
+    }
+
     @Test("Charging: тело 350×32 на эталонном вырезе, растёт с вырезом как компакт/HUD, ушко как у HUD")
     func chargingSize() {
         let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)

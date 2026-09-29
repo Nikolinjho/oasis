@@ -49,6 +49,13 @@ public enum IslandGeometry {
     /// до и после сжатия между ними — значит, тело то же, что у calendarCompact. Это пол: см. airpodsSize
     public static let airpodsCompact = calendarCompact
 
+    /// Подложка подгонки выреза (Task 17t): высота width-подсказки. Alcove 1.7.9, 29.09, MBP 16",
+    /// API-вырез 185, Notch width −1 → плашка 184×69
+    public static let tuningWidthHeight: CGFloat = 69
+    /// Высота height-подсказки при h = 0 (осмотр 29.09). При иных h — замера нет, оценка «32 + h»
+    /// (см. size(for:notch:calendarIndicatorWidth:reminderIndicatorWidth:) case .tuning)
+    public static let tuningHeightBase: CGFloat = 32
+
     /// Ширина компакта AirPods: замер — пол, но не уже, чем нужно кольцу по обе стороны выреза.
     /// Тот же подход, что calendarSize: на широком вырезе глиф и кольцо не уходят под него
     public static func airpodsSize(notch: CGSize) -> CGSize {
@@ -216,6 +223,14 @@ public enum IslandGeometry {
             calendarWithMusic
                 ? CGSize(width: notchRelativeWidth(peek.width, notch: notch.width), height: calendarPeek.height)
                 : calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
+        // Подложка подгонки выреза (Task 17t, Alcove 1.7.9, 29.09): width-подсказка — подогнанный вырез
+        // (notch уже пришёл тюнингованным, задача 1) высотой tuningWidthHeight; height-подсказка — ширина
+        // компакта той же формулой, что .compact, высота tuningHeightBase + сырое значение ползунка h
+        case let .tuning(hint):
+            switch hint {
+            case .width: CGSize(width: notch.width, height: tuningWidthHeight)
+            case let .height(h): CGSize(width: notchRelativeWidth(compact.width, notch: notch.width), height: tuningHeightBase + CGFloat(h))
+            }
         // разобран выше, сюда не доходит
         case .hoverNudge: notch
         }
@@ -233,6 +248,8 @@ public enum IslandGeometry {
         // замера нет: компакт как у музыки той же высоты, peek — оценка по высоте
         case .calendar: Shoulder.compact
         case .calendarPeek: Shoulder.estimated(forHeight: calendarPeek.height)
+        // замера нет: «как у компакта» (задание Task 17t)
+        case .tuning: Shoulder.compact
         case .hoverNudge: Shoulder.idle // разобран выше
         }
         // со строкой громкости углы на кадре те же, что у 175: радиус по высоте без строки (замера нет, оценка)

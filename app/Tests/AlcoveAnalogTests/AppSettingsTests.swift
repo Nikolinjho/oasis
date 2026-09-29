@@ -119,6 +119,67 @@ struct AppSettingsTests {
         #expect(again.notchWidthOffset == -2)
     }
 
+    @Test("Ползунок Notch width зажат: подсказка сразу с текущим значением, движение обновляет её, отпускание снимает (Task 17t)")
+    func widthDragSendsTuningHint() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        settings.notchWidthOffset = -1
+        var hints: [TuningHint?] = []
+        settings.onTuningHint = { hints.append($0) }
+
+        settings.notchWidthDragChanged(true)
+        settings.notchWidthOffset = -2
+        settings.notchWidthDragChanged(false)
+
+        #expect(hints == [.width(-1), .width(-2), nil])
+    }
+
+    @Test("Ползунок Notch height зажат: та же подсказка, но .height (Task 17t)")
+    func heightDragSendsTuningHint() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        var hints: [TuningHint?] = []
+        settings.onTuningHint = { hints.append($0) }
+
+        settings.notchHeightDragChanged(true)
+        settings.notchHeightOffset = 1
+        settings.notchHeightDragChanged(false)
+
+        #expect(hints == [.height(0), .height(1), nil])
+    }
+
+    @Test("Значение слайдера меняется без зажатого ползунка (отладка, восстановление defaults): подсказки нет")
+    func programmaticChangeDoesNotSendTuningHint() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        var calls = 0
+        settings.onTuningHint = { _ in calls += 1 }
+        settings.notchWidthOffset = -1
+        settings.notchHeightOffset = 1
+        #expect(calls == 0)
+    }
+
+    @Test("Оба ползунка Tuning зажаты разом: подсказка снимается, только когда отпущены оба (защита, не проверялось на Alcove)")
+    func bothSlidersDraggedTogether() {
+        let (name, defaults) = Self.freshDefaults()
+        defer { Self.cleanup(name, defaults) }
+        let settings = AppSettings(defaults: defaults)
+        var hints: [TuningHint?] = []
+        settings.onTuningHint = { hints.append($0) }
+
+        settings.notchWidthDragChanged(true)
+        settings.notchHeightDragChanged(true)
+        settings.notchWidthDragChanged(false)
+        #expect(hints.last == .height(0))
+        settings.notchHeightDragChanged(false)
+        // hints.last — TuningHint??: force-unwrap внешний Optional массива, чтобы «nil» здесь
+        // сравнивался с последним отправленным значением, а не проверял, что массив пуст
+        #expect(hints.last! == nil)
+    }
+
     @Test("Hover-настройки попадают в конфиг машины, темп остаётся от базы")
     func machineConfig() {
         let (name, defaults) = Self.freshDefaults()

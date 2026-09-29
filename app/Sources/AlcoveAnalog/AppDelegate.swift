@@ -58,6 +58,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.config = settings.machineConfig(from: store.config)
         applyAppearance()
         settings.onChange = { [weak self] in self?.applySettings() }
+        // Notch width/height зажаты в Tuning: подсказка острова (Task 17t)
+        settings.onTuningHint = { [weak self] hint in self?.store.send(.tuningHintChanged(hint)) }
         // статус-айтем раньше окна: остров открывает его меню по правому клику
         let statusItem = StatusItemController(
             debugItem: DebugMenu.item(sections: debugSections),
