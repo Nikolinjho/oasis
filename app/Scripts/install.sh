@@ -15,7 +15,11 @@ LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchS
 # два острова над вырезом мешают друг другу
 osascript -e 'quit app "Alcove"' 2>/dev/null || true
 pkill -f "AlcoveAnalog.app/Contents/MacOS/AlcoveAnalog" 2>/dev/null || true
-sleep 0.5
+# ждём выхода старой копии: stop() адаптера занимает до 0.5 с, иначе два острова живут одновременно
+for _ in $(seq 1 30); do
+    pgrep -f "AlcoveAnalog.app/Contents/MacOS/AlcoveAnalog" >/dev/null || break
+    sleep 0.1
+done
 
 mkdir -p "$HOME/Applications"
 rm -rf "$TARGET"
