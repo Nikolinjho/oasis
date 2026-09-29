@@ -58,6 +58,7 @@ struct DuoViewTests {
         #expect(EventCard.height(for: event) == 28)
     }
 
+    @MainActor
     @Test("Карточка со ссылкой на созвон открывает его по клику, без ссылки — нет")
     func cardOpensMeeting() {
         let event = CalendarEvent(
