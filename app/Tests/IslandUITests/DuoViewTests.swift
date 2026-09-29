@@ -58,6 +58,15 @@ struct DuoViewTests {
         #expect(EventCard.height(for: event) == 28)
     }
 
+    @Test("Карточка со ссылкой на созвон открывает его по клику, без ссылки — нет")
+    func cardOpensMeeting() {
+        let event = CalendarEvent(
+            id: "e", title: "Sync", start: .now, end: .now.addingTimeInterval(1800), isAllDay: false,
+            color: RGB(red: 1, green: 0, blue: 0))
+        #expect(EventCard(event: event, onJoin: {}).opensMeeting)
+        #expect(!EventCard(event: event).opensMeeting)
+    }
+
     @Test("Стопка в колонке Duo: 40 + 28 помещаются, из трёх по 28 — две")
     func fitting() {
         func event(_ id: String, location: String? = nil) -> CalendarEvent {

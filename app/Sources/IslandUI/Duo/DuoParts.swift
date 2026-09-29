@@ -186,6 +186,10 @@ struct EventCard: View {
     let event: CalendarEvent
     var onJoin: (() -> Void)? = nil
 
+    /// Вся карточка — кнопка созвона, если ссылка есть (решение 28.09). У Alcove карточка — AX-кнопка,
+    /// что она делает, не проверяли (ui-inspection 3.5)
+    var opensMeeting: Bool { onJoin != nil }
+
     var body: some View {
         let color = Color(event.color)
         HStack(spacing: 5) {
@@ -235,6 +239,11 @@ struct EventCard: View {
         .padding(.leading, 4)
         .frame(width: DuoLayout.eventWidth, height: Self.height(for: event))
         .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.15)))
+        .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        // жест карточки перекрывает клик по острову; Join внутри — своя кнопка и срабатывает сам
+        .onTapGesture { onJoin?() }
+        .pointerStyle(opensMeeting ? .link : .default)
+        .help(opensMeeting ? "Join" : "")
     }
 
     nonisolated static func timeRange(_ event: CalendarEvent, calendar: Calendar = .current) -> String {
