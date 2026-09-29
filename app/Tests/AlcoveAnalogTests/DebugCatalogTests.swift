@@ -90,6 +90,30 @@ struct DebugCatalogTests {
         #expect(!store.isDebugAgendaPinned)
     }
 
+    @Test("Duo With Fake Event открывает Duo даже при другой Idle Activity (Task 14)")
+    func calendarActionsAlwaysOpenDuo() throws {
+        let store = IslandStore()
+        store.config.expanded.idleActivity = .none
+        let duoEvent = try #require(Self.actions(store).first { $0.id == "calendar.duo-event" })
+        duoEvent.run()
+        #expect(store.model.surface == .expanded && store.model.expandedView == .duo)
+        // настройка не осталась переключённой отладочным действием
+        #expect(store.config.expanded.idleActivity == .none)
+    }
+
+    @Test("Cycle Idle Activity идёт по кругу None → Playing → Calendar → Duo → None")
+    func cycleIdleActivityAction() throws {
+        let store = IslandStore()
+        store.config.expanded.idleActivity = .none
+        let cycle = try #require(Self.actions(store).first { $0.id == "island.cycle-idle-activity" })
+        var seen: [IdleActivity] = []
+        for _ in 0..<4 {
+            cycle.run()
+            seen.append(store.config.expanded.idleActivity)
+        }
+        #expect(seen == [.playing, .calendar, .duo, .none])
+    }
+
     @Test("Debug-переключатель Expand on Hover идёт через AppSettings, а не мимо него в store.config")
     func expandOnHoverToggle() throws {
         let (name, defaults) = AppSettingsTests.freshDefaults()

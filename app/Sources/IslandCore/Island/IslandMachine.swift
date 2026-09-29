@@ -539,9 +539,12 @@ public enum IslandMachine {
         case .idle, .compact, .peek, .calendar, .calendarPeek: break
         case .hover where target == .expanded: break
         case .hoverNudge where target == .expanded:
-            // клик во время отклика раскрывает сразу, не дожидаясь таймера
-            m.expandedView = view ?? .duo
-            m.lastExpandedView = m.expandedView
+            // клик во время отклика раскрывает сразу, не дожидаясь таймера. target == .expanded здесь уже
+            // гарантирует view != nil (иначе return [] выше) — guard, а не ?? .duo, чтобы не выглядело,
+            // будто None открывает Duo
+            guard let view else { return [] }
+            m.expandedView = view
+            m.lastExpandedView = view
             m.surface = target
             return [.cancel(.hoverOpen), .animate(transition)]
         default: return []

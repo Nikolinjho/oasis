@@ -98,15 +98,22 @@ extension Binding where Value == Double {
     }
 }
 
-/// Строка с тумблером, 42 pt. preview — кнопка ▶ после подписи: у Alcove у Play sound on low battery (ui-inspection 1.1)
+/// Строка с тумблером, 42 pt. preview — кнопка ▶ после подписи: у Alcove у Play sound on low battery (ui-inspection 1.1).
+/// icon — глиф перед подписью: у Alcove перед Most Recent (ui-inspection 1.2, `clock.arrow.circlepath`)
 struct ToggleRow: View {
     let title: String
     var info: String? = nil
     var preview: (() -> Void)? = nil
+    var icon: String? = nil
     @Binding var isOn: Bool
 
     var body: some View {
         HStack(spacing: 6) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+            }
             Text(title)
             if let info { InfoButton(text: info) }
             if let preview { SoundPreviewButton(play: preview) }

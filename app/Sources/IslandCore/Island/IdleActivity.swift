@@ -2,6 +2,16 @@
 /// (idleActivity.expandedActivity.*) они выбирают вид раскрытого, а не покой (решение 28.09)
 public enum IdleActivity: String, CaseIterable, Sendable {
     case none, playing, calendar, duo
+
+    /// Подпись плитки и тумблера Most Recent (ui-inspection 1.2): None / Playing / Calendar / Duo
+    public var title: String {
+        switch self {
+        case .none: "None"
+        case .playing: "Playing"
+        case .calendar: "Calendar"
+        case .duo: "Duo"
+        }
+    }
 }
 
 public struct ExpandedRules: Equatable, Sendable {

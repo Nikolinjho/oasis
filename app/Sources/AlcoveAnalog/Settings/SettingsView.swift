@@ -130,20 +130,12 @@ struct GeneralPage: View {
                     SliderRow(title: "Hover duration", value: $settings.hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
                 }
             }
-            // Most Recent включён — плитки и Force enable прячутся, вместо них подпись с текущей плиткой (ui-inspection 1.2)
+            // Most Recent включён — плитки и Force enable прячутся, текущая плитка дописана в подпись тумблера (ui-inspection 1.2)
             SettingsCard(title: "Idle Activity") {
-                ToggleRow(title: "Most Recent", isOn: $settings.mostRecentActivity)
-                if settings.mostRecentActivity {
-                    RowDivider()
-                    HStack {
-                        Text("Most Recent ∙ \(settings.idleActivity.rawValue.capitalized)")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .frame(height: 32)
-                } else {
+                ToggleRow(
+                    title: settings.mostRecentActivity ? "Most Recent ∙ \(settings.idleActivity.title)" : "Most Recent",
+                    icon: "clock.arrow.circlepath", isOn: $settings.mostRecentActivity)
+                if !settings.mostRecentActivity {
                     RowDivider()
                     TileRow(tiles: [
                         Tile(value: IdleActivity.none, title: "None", preview: AnyView(tileGlyph("nosign"))),

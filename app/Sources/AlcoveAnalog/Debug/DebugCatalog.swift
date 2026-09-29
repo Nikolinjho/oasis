@@ -16,7 +16,7 @@ enum DebugCatalog {
             battery(store),
             connectivity(store),
             sound(sounds),
-            island(store),
+            island(store, settings),
             scenarios(store, tracks),
             timing(store, settings),
         ]
@@ -83,7 +83,7 @@ enum DebugCatalog {
                     id: "fake-event", title: "Fake Event",
                     start: now.addingTimeInterval(-300), end: now.addingTimeInterval(1500),
                     isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))])
-                store.send(.clicked)
+                openInDuo(store)
             }),
             .action(DebugAction(id: "calendar.duo-meet", title: "Duo With Fake Meet Call") {
                 let now = Date()
@@ -91,11 +91,11 @@ enum DebugCatalog {
                     id: "fake-meet", title: "Fake Call", start: now.addingTimeInterval(-60), end: now.addingTimeInterval(1740),
                     isAllDay: false, color: RGB(red: 0.2, green: 0.5, blue: 1),
                     notes: "Join: https://meet.google.com/abc-defg-hij")])
-                store.send(.clicked)
+                openInDuo(store)
             }),
             .action(DebugAction(id: "calendar.duo-empty", title: "Duo Empty Day") {
                 store.pinDebugEvents([])
-                store.send(.clicked)
+                openInDuo(store)
             }),
             // галочка показывает, что реальный календарь сейчас активен: полезно после duo-event/duo-empty
             .action(DebugAction(
@@ -137,6 +137,16 @@ enum DebugCatalog {
                     notes: "Join: https://meet.google.com/abc-defg-hij")])
             }),
         ])
+    }
+
+    /// "Duo With …" ждут раскрытия в Duo независимо от Idle Activity (General): подставляют правила Duo
+    /// на время клика и возвращают настройку сразу после — иначе с Playing/Calendar/None открылся бы не Duo
+    /// или ничего (Task 14). Идёт через машину (.clicked), не пишет expandedView напрямую
+    private static func openInDuo(_ store: IslandStore) {
+        let config = store.config
+        store.config.expanded = ExpandedRules()
+        store.send(.clicked)
+        store.config = config
     }
 
     private static func battery(_ store: IslandStore) -> DebugSection {
@@ -198,7 +208,7 @@ enum DebugCatalog {
         })
     }
 
-    private static func island(_ store: IslandStore) -> DebugSection {
+    private static func island(_ store: IslandStore, _ settings: AppSettings?) -> DebugSection {
         DebugSection(title: "Island", entries: [
             .action(DebugAction(id: "island.hover", title: "Hover") { store.send(.hoverEntered) }),
             .action(DebugAction(id: "island.leave", title: "Leave") { store.send(.hoverExited) }),
@@ -206,6 +216,19 @@ enum DebugCatalog {
             .action(DebugAction(id: "island.close", title: "Close") { store.send(.clickedOutside) }),
             .action(DebugAction(id: "island.cycle", title: "Cycle Expanded View") { store.send(.expandedViewCycled) }),
             .action(DebugAction(id: "island.volume-row", title: "Toggle Volume Row") { store.send(.volumeRowToggled) }),
+            .separator,
+            // General → Idle Activity без окна настроек (Task 17): через settings, если оно есть — как
+            // settings.expand-on-hover в timing(), иначе окно настроек откатило бы переключение обратно
+            .action(DebugAction(id: "island.cycle-idle-activity", title: "Cycle Idle Activity (None → Playing → Calendar → Duo)") {
+                let order = IdleActivity.allCases
+                let current = settings?.idleActivity ?? store.config.expanded.idleActivity
+                let next = order[(order.firstIndex(of: current)! + 1) % order.count]
+                if let settings {
+                    settings.idleActivity = next
+                } else {
+                    store.config.expanded.idleActivity = next
+                }
+            }),
             .separator,
             // синтетический свайп двумя пальцами по раскрытому (Task 9): те же фазы, что шлёт монитор scrollWheel.
             // Шаги по 30 мс, travel — сжатие/растяжение в pt, hold — пауза перед отпусканием для скриншота
