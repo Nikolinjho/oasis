@@ -66,9 +66,12 @@ struct HUDView: View {
         return deviceSymbol
     }
 
-    /// Крыло от края паддинга до выреза: половина (367 − вырез) минус паддинг 14. На notchWidth 185 — 77 pt
+    /// Крыло от края паддинга до тела HUD: тело растёт вместе с вырезом на ту же величину (задача 1,
+    /// IslandGeometry.notchRelativeWidth), поэтому крыло не зависит от notchWidth — всегда
+    /// (367 − 183) / 2 − паддинг 14 = 78 pt
     nonisolated static func wingWidth(notchWidth: CGFloat) -> CGFloat {
-        max(0, (IslandGeometry.hud.width - notchWidth) / 2 - 14)
+        let total = IslandGeometry.notchRelativeWidth(IslandGeometry.hud.width, notch: notchWidth)
+        return max(0, (total - notchWidth) / 2 - 14)
     }
 
     /// С процентом полоска уже, чтобы «100%» + зазор 6 + полоска не выходили за крыло.

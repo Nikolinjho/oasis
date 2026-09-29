@@ -3,13 +3,13 @@
   "notch": { "width": 185, "height": 32 },
   "tolerance": { "sizePt": 2, "overshootPt": 2, "settleMs": 50 },
   "segments": [
-    { "name": "компакт: появление", "from": "idle", "to": "compact", "start": 1.0, "end": 2.0, "x0": 187.9, "x1": 264.4, "stiffness": 235, "damping": 31 },
-    { "name": "сжатие перед HUD", "from": "compact", "to": "shrink", "start": 5.5, "end": 5.83, "x0": 264.4, "x1": 195, "stiffness": 345, "damping": 30.5, "settle": false },
-    { "name": "раскрытие в HUD", "from": "shrink", "to": "hud", "start": 5.83, "end": 6.6, "x0": 195, "x1": 374, "stiffness": 190, "damping": 24.5 },
-    { "name": "сжатие после HUD", "from": "hud", "to": "shrink", "start": 7.33, "end": 7.66, "x0": 374, "x1": 195, "stiffness": 360, "damping": 38, "settle": false },
-    { "name": "раскрытие в компакт", "from": "shrink", "to": "compact", "start": 7.66, "end": 8.4, "x0": 195, "x1": 264.4, "stiffness": 210, "damping": 27.5 },
-    { "name": "раскрытие плеера", "from": "hover", "to": "expanded", "start": 11.0, "end": 11.9, "x0": 200.8, "x1": 366.1, "stiffness": 175, "damping": 16 },
-    { "name": "схлопывание", "from": "expanded", "to": "compact", "start": 13.0, "end": 13.8, "x0": 366.1, "x1": 264.4, "stiffness": 250, "damping": 32 },
-    { "name": "компакт: уход", "from": "compact", "to": "idle", "start": 14.5, "end": 15.4, "x0": 264.4, "x1": 187.9, "stiffness": 185, "damping": 27.5 }
+    { "name": "компакт: появление", "from": "idle", "to": "compact", "start": 1.0, "end": 2.0, "x0": 187.9, "x1": 266.4, "stiffness": 235, "damping": 31 },
+    { "name": "сжатие перед HUD", "from": "compact", "to": "shrink", "start": 5.5, "end": 5.83, "x0": 266.4, "x1": 195, "stiffness": 345, "damping": 30.5, "settle": false },
+    { "name": "раскрытие в HUD", "from": "shrink", "to": "hud", "start": 5.83, "end": 6.6, "x0": 195, "x1": 376.3, "stiffness": 190, "damping": 24.5 },
+    { "name": "сжатие после HUD", "from": "hud", "to": "shrink", "start": 7.33, "end": 7.66, "x0": 376.3, "x1": 195, "stiffness": 360, "damping": 38, "settle": false },
+    { "name": "раскрытие в компакт", "from": "shrink", "to": "compact", "start": 7.66, "end": 8.4, "x0": 195, "x1": 266.4, "stiffness": 210, "damping": 27.5 },
+    { "name": "раскрытие плеера", "from": "hover", "to": "expanded", "start": 11.0, "end": 11.9, "x0": 202.8, "x1": 366.1, "stiffness": 175, "damping": 16 },
+    { "name": "схлопывание", "from": "expanded", "to": "compact", "start": 13.0, "end": 13.8, "x0": 366.1, "x1": 266.4, "stiffness": 250, "damping": 32 },
+    { "name": "компакт: уход", "from": "compact", "to": "idle", "start": 14.5, "end": 15.4, "x0": 266.4, "x1": 187.9, "stiffness": 185, "damping": 27.5 }
   ]
 }

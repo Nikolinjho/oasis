@@ -42,51 +42,76 @@ struct GeometryTests {
             IslandGeometry.spec(for: surface, hasMedia: media, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0).size
         }
         #expect(size(.idle) == notch)
-        #expect(size(.compact) == CGSize(width: 257, height: 32))
-        #expect(size(.peek) == CGSize(width: 276, height: 51))
-        #expect(size(.hover, media: true) == CGSize(width: 190, height: 73))
+        // 257 снят на referenceNotchWidth 183: на вырезе фикстуры 185 (тюнинг 0) +2 (задача 1)
+        #expect(size(.compact) == CGSize(width: 259, height: 32))
+        #expect(size(.peek) == CGSize(width: 278, height: 51))
+        #expect(size(.hover, media: true) == CGSize(width: 192, height: 73))
+        // без музыки hover не привязан к вырезу (задача 1: в список поверхностей не входит)
         #expect(size(.hover, media: false) == CGSize(width: 203, height: 90))
         #expect(size(.expanded) == CGSize(width: 345, height: 175))
-        #expect(size(.hud(.volume, level: 0.5)) == CGSize(width: 367, height: 32))
+        #expect(size(.hud(.volume, level: 0.5)) == CGSize(width: 369, height: 32))
         #expect(size(.shrink) == CGSize(width: 188, height: 32))
     }
 
-    @Test("Charging: тело 350×32, ушко как у HUD")
+    @Test("Notch tuning двигает компакт и HUD 1:1 (Alcove 1.7.9, 29.09: компакт 257@−2…261@+2, HUD 367@−2…371@+2), раскрытый не меняется")
+    func notchTuningMovesWidths() {
+        func widths(_ tuning: NotchTuning) -> (compact: CGFloat, hud: CGFloat, peek: CGFloat, expanded: CGFloat) {
+            let notch = Self.mbp16.tuned(by: tuning).notchSize
+            func size(_ surface: Surface) -> CGSize {
+                IslandGeometry.spec(for: surface, hasMedia: true, notch: notch, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0).size
+            }
+            return (size(.compact).width, size(.hud(.volume, level: 0.5)).width, size(.peek).width, size(.expanded).width)
+        }
+        let narrow = widths(NotchTuning(width: -2))
+        #expect(narrow.compact == 257)
+        #expect(narrow.hud == 367)
+        #expect(narrow.expanded == 345)
+
+        let wide = widths(NotchTuning(width: 2))
+        #expect(wide.compact == 261)
+        #expect(wide.hud == 371)
+        // раскрытый (345×175) и строка громкости (207) от выреза не зависят
+        #expect(wide.expanded == 345)
+    }
+
+    @Test("Charging: тело 350×32 на эталонном вырезе, растёт с вырезом как компакт/HUD, ушко как у HUD")
     func chargingSize() {
         let spec = IslandGeometry.spec(for: .alert(.charging(level: 0.5)), hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
-        #expect(spec.size == CGSize(width: 350, height: 32))
+        // 350 снят на referenceNotchWidth 183: на вырезе фикстуры 185 +2 (задача 1)
+        #expect(spec.size == CGSize(width: 352, height: 32))
         #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
     }
 
-    @Test("Календарь: компакт 254×32 и peek 270×73.5 на обычном вырезе, ушко компакта как у музыки")
+    @Test("Календарь: компакт 254×32 и peek 270×73.5 на эталонном вырезе, на фикстуре +2 (задача 1), ушко компакта как у музыки")
     func calendarSizes() {
         let notch = Self.mbp16.notchSize
         let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: notch, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
-        #expect(compact.size == CGSize(width: 254, height: 32))
+        #expect(compact.size == CGSize(width: 256, height: 32))
         #expect(compact.shoulder == IslandGeometry.Shoulder.compact)
         let peek = IslandGeometry.spec(for: .calendarPeek, hasMedia: false, notch: notch, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
-        #expect(peek.size == CGSize(width: 270, height: 73.5))
+        #expect(peek.size == CGSize(width: 272, height: 73.5))
     }
 
-    @Test("Календарь на широком вырезе не уже, чем нужно индикатору по обе стороны")
+    @Test("Календарь на широком вырезе не уже, чем нужно индикатору по обе стороны: пол тоже notch-relative (задача 1)")
     func calendarWidthFloor() {
         let wide = CGSize(width: 240, height: 32)
-        // 240 + 2 × (8 + 22): индикатор шире иконки 18
-        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: wide, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
-        #expect(compact.size.width == 300)
-        let nudge = IslandGeometry.spec(for: .hoverNudge(from: .calendar), hasMedia: false, notch: wide, calendarIndicatorWidth: 22, reminderIndicatorWidth: 0)
-        #expect(nudge.size.width == 300 * IslandGeometry.hoverNudgeWidthScale)
+        // пол компакта тоже двигается с вырезом: 254 + (240 − 183) = 311. Чтобы индикатор реально
+        // продавил пол, индикатор должен быть заметно шире иконки: 240 + 2 × (8 + 40) = 336
+        let compact = IslandGeometry.spec(for: .calendar, hasMedia: false, notch: wide, calendarIndicatorWidth: 40, reminderIndicatorWidth: 0)
+        #expect(compact.size.width == 336)
+        let nudge = IslandGeometry.spec(for: .hoverNudge(from: .calendar), hasMedia: false, notch: wide, calendarIndicatorWidth: 40, reminderIndicatorWidth: 0)
+        #expect(nudge.size.width == 336 * IslandGeometry.hoverNudgeWidthScale)
     }
 
-    @Test("Календарь при музыке — размеры музыки: компакт 257×32, peek 276×73.5 (Alcove 1.7.9: 258 и 277, 29.09)")
+    @Test("Календарь при музыке — размеры музыки: компакт 259×32, peek 278×73.5 на фикстуре (компакт/peek notch-relative, задача 1)")
     func calendarWithMusic() {
         func size(_ surface: Surface) -> CGSize {
             IslandGeometry.spec(
                 for: surface, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0,
                 reminderIndicatorWidth: 0, calendarWithMusic: true).size
         }
-        #expect(size(.calendar) == CGSize(width: 257, height: 32))
-        #expect(size(.calendarPeek) == CGSize(width: 276, height: 73.5))
+        #expect(size(.calendar) == CGSize(width: 259, height: 32))
+        #expect(size(.calendarPeek) == CGSize(width: 278, height: 73.5))
     }
 
     @Test("Радиус нижних углов по видео Alcove: 10.5 в покое, 35 в раскрытом, линейно по высоте")
@@ -149,7 +174,8 @@ struct GeometryTests {
         let window = IslandGeometry.windowFrame(for: Self.mbp16)
         let spec = IslandGeometry.spec(for: .compact, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         let rect = IslandGeometry.islandScreenRect(spec, windowFrame: window)
-        #expect(abs(rect.minX - 726.7) < 1e-9 && abs(rect.width - 274.6) < 1e-9)
+        // компакт notch-relative (задача 1): на фикстуре 259 + 2×8.8 = 276.6, было 274.6 при 257
+        #expect(abs(rect.minX - 725.7) < 1e-9 && abs(rect.width - 276.6) < 1e-9)
         #expect(rect.maxY == 1117 && rect.height == 32)
         let expanded = IslandGeometry.spec(for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
         #expect(abs(IslandGeometry.islandScreenRect(expanded, windowFrame: window).width - 381.6) < 1e-9)
@@ -285,41 +311,43 @@ struct GeometryTests {
 
     static let reminder = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: RGB(red: 0.2, green: 0.5, blue: 1)))
 
-    @Test("Напоминание: 270×73.5 на обычном вырезе, ушко — оценка по высоте, как у peek календаря")
+    @Test("Напоминание: 270×73.5 на эталонном вырезе, на фикстуре +2 (задача 1), ушко — оценка по высоте, как у peek календаря")
     func reminderSize() {
         let spec = IslandGeometry.spec(
             for: .alert(Self.reminder), hasMedia: false, notch: Self.mbp16.notchSize,
             calendarIndicatorWidth: 22, reminderIndicatorWidth: 26)
-        #expect(spec.size == CGSize(width: 270, height: 73.5))
+        #expect(spec.size == CGSize(width: 272, height: 73.5))
         #expect(spec.shoulder == IslandGeometry.Shoulder.estimated(forHeight: 73.5))
     }
 
     @Test("Напоминание на широком вырезе не уже, чем нужно «15m» по обе стороны, — пол свой, не календаря")
     func reminderWidthFloor() {
         let wide = CGSize(width: 240, height: 32)
-        // 240 + 2 × (8 + 26): пол по индикатору напоминания, ширина календаря (22) здесь ни при чём
+        // пол peek календаря тоже notch-relative: 270 + (240 − 183) = 327 (задача 1). Чтобы индикатор
+        // реально продавил пол, индикатор должен быть заметно шире иконки: 240 + 2 × (8 + 40) = 336
         let spec = IslandGeometry.spec(
             for: .alert(Self.reminder), hasMedia: false, notch: wide,
-            calendarIndicatorWidth: 22, reminderIndicatorWidth: 26)
-        #expect(spec.size.width == 308)
-        #expect(IslandGeometry.size(for: Self.reminder, notch: wide, reminderIndicatorWidth: 26).width == 308)
+            calendarIndicatorWidth: 22, reminderIndicatorWidth: 40)
+        #expect(spec.size.width == 336)
+        #expect(IslandGeometry.size(for: Self.reminder, notch: wide, reminderIndicatorWidth: 40).width == 336)
     }
 
-    @Test("AirPods: компакт 254×32 как у календаря, ушко как у уведомлений")
+    @Test("AirPods: компакт 254×32 на эталонном вырезе, как у календаря, на фикстуре +2 (задача 1), ушко как у уведомлений")
     func airpodsSize() {
         let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
         let spec = IslandGeometry.spec(
             for: .alert(airpods), hasMedia: false, notch: Self.mbp16.notchSize,
             calendarIndicatorWidth: 0, reminderIndicatorWidth: 0)
-        #expect(spec.size == CGSize(width: 254, height: 32))
+        #expect(spec.size == CGSize(width: 256, height: 32))
         #expect(spec.shoulder == IslandGeometry.Shoulder.hud)
     }
 
-    @Test("AirPods на широком вырезе: кольцо и глиф не уходят под вырез")
+    @Test("AirPods на широком вырезе: пол (кольцо 16 уже иконки 18) сам notch-relative и всегда шире needed")
     func airpodsWidthFloor() {
         let airpods = IslandAlert.airpods(AirPodsInfo(name: "AirPods Pro", battery: 1))
-        // 240 + 2 × (8 + 18): кольцо 16 уже иконки 18, крыло по иконке
-        #expect(IslandGeometry.size(for: airpods, notch: CGSize(width: 240, height: 32), reminderIndicatorWidth: 0).width == 292)
+        // пол: 254 + (240 − 183) = 311. needed по кольцу: 240 + 2 × (8 + 18) = 292 — пол больше,
+        // потому что кольцо (16) уже иконки (18) при любом вырезе
+        #expect(IslandGeometry.size(for: airpods, notch: CGSize(width: 240, height: 32), reminderIndicatorWidth: 0).width == 311)
     }
 
     @Test("Hide label: крыло Low Battery и Low Power по правому блоку (замера нет, оценка)")
@@ -333,6 +361,7 @@ struct GeometryTests {
         #expect(width(.lowBattery(level: 0.1), BatteryAlertStyle(hidesLabel: true, hidesPercentage: true)) == notch.width + 2 * 46)
         #expect(width(.lowPower(level: 0.4), hidden) == notch.width + 2 * 46)
         #expect(width(.lowBattery(level: 0.1), BatteryAlertStyle()) == notch.width + 2 * IslandGeometry.BatteryAlertWing.lowBattery)
-        #expect(width(.charging(level: 0.5), hidden) == IslandGeometry.charging.width)
+        // charging notch-relative (задача 1): на фикстуре +2 к эталонному 350
+        #expect(width(.charging(level: 0.5), hidden) == IslandGeometry.notchRelativeWidth(IslandGeometry.charging.width, notch: notch.width))
     }
 }

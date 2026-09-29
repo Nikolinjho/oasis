@@ -74,12 +74,14 @@ struct IslandStoreTests {
         store.send(.timerFired(.grow))
         #expect(store.model.surface == .calendar)
         #expect(store.model.showsMedia)
-        #expect(store.spec.size == CGSize(width: 257, height: 32))
+        // компакт музыки notch-relative (задача 1): на store.notch по умолчанию (185) 257+2 = 259
+        #expect(store.spec.size == CGSize(width: 259, height: 32))
 
         store.send(.mediaCleared)
         #expect(store.model.surface == .calendar)
         #expect(!store.model.showsMedia)
-        // без музыки — тело календаря (254, замер 1.7.7): пол по «60s» на этом notch его не превышает
-        #expect(store.spec.size == CGSize(width: 254, height: 32))
+        // без музыки — тело календаря (254, замер 1.7.7), тоже notch-relative: 254+2 = 256;
+        // пол по «60s» на этом notch его не превышает
+        #expect(store.spec.size == CGSize(width: 256, height: 32))
     }
 }

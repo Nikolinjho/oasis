@@ -56,10 +56,25 @@ public enum IslandGeometry {
     }
 
     /// Ширина компакта и peek календаря: замер — пол, но не уже, чем нужно индикатору по обе стороны выреза
-    /// (ActivityLayout.width). Жёсткая ширина без пола уводит длинный индикатор под широкий вырез
+    /// (ActivityLayout.width). Жёсткая ширина без пола уводит длинный индикатор под широкий вырез.
+    /// Пол сам растёт вместе с вырезом (задача 1), как и остальные ширины вокруг него
     public static func calendarSize(_ base: CGSize, notch: CGSize, indicatorWidth: CGFloat) -> CGSize {
+        let floor = notchRelativeWidth(base.width, notch: notch.width)
         let needed = ActivityLayout.width(notchWidth: notch.width, indicatorWidth: indicatorWidth)
-        return CGSize(width: max(base.width, needed), height: base.height)
+        return CGSize(width: max(floor, needed), height: base.height)
+    }
+
+    /// Вырез, на котором сняты все ширины выше (compact, peek, hoverWithMedia, hud, charging,
+    /// calendarCompact, calendarPeek): Notch width −2 на API-вырезе 185 pt, то есть тело выреза 183
+    /// (ui-inspection 3.1, задача 1). Настройка Notch width двигает эти ширины на свою величину
+    /// пт-в-пт (Alcove 1.7.9, 29.09: компакт 257@−2…261@+2, HUD 367@−2…371@+2, раскрытый не меняется)
+    public static let referenceNotchWidth: CGFloat = 183
+
+    /// Растягивает ширину, снятую на referenceNotchWidth, на текущий вырез notch — 1:1, как в Alcove
+    /// (задача 1). Для поверхностей, что рисуются вокруг выреза (компакт, peek, hover с музыкой, HUD,
+    /// charging, компакт/peek календаря); раскрытый и строка громкости от выреза не зависят
+    public static func notchRelativeWidth(_ measured: CGFloat, notch: CGFloat) -> CGFloat {
+        measured + (notch - referenceNotchWidth)
     }
 
     /// Крыло Low Battery/Low Power по одной стороне от выреза: подпись + 14 padding (BatteryAlertView.padding)
@@ -95,7 +110,9 @@ public enum IslandGeometry {
         for alert: IslandAlert, notch: CGSize, reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle()
     ) -> CGSize {
         switch alert {
-        case .charging: charging
+        // как компакт/HUD: тело растёт вместе с вырезом (задача 1). lowBattery/lowPower ниже уже
+        // считаются от notch.width напрямую — при них это не нужно
+        case .charging: CGSize(width: notchRelativeWidth(charging.width, notch: notch.width), height: charging.height)
         case .lowBattery: CGSize(width: notch.width + 2 * BatteryAlertWing.lowBatteryWing(battery), height: charging.height)
         case .lowPower: CGSize(width: notch.width + 2 * BatteryAlertWing.lowPowerWing(battery), height: charging.height)
         // напоминание не снималось: размер peek календаря (ui-inspection 3.5), тот же вид строки
@@ -177,19 +194,27 @@ public enum IslandGeometry {
         }
         var size: CGSize = switch surface {
         case .idle: notch
-        case .compact: compact
-        case .peek: peek
-        case .hover: hasMedia ? hoverWithMedia : hoverEmpty
+        // компакт, peek, hover с музыкой и HUD растут вместе с вырезом (задача 1): эталоны сняты
+        // на referenceNotchWidth, дальше 1:1 к текущему notch.width
+        case .compact: CGSize(width: notchRelativeWidth(compact.width, notch: notch.width), height: compact.height)
+        case .peek: CGSize(width: notchRelativeWidth(peek.width, notch: notch.width), height: peek.height)
+        case .hover:
+            hasMedia
+                ? CGSize(width: notchRelativeWidth(hoverWithMedia.width, notch: notch.width), height: hoverWithMedia.height)
+                : hoverEmpty
         case .expanded: expanded
         case .shrink: CGSize(width: shrinkWidth, height: notch.height)
-        case .hud: hud
+        case .hud: CGSize(width: notchRelativeWidth(hud.width, notch: notch.width), height: hud.height)
         case let .alert(alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
-        // при музыке компакт и peek календаря — размеры музыки (Alcove 1.7.9: 258 и 277, 29.09)
+        // при музыке компакт и peek календаря — размеры музыки (Alcove 1.7.9: 258 и 277, 29.09; теперь
+        // тоже notch-relative, потому что сами компакт/peek notch-relative, задача 1)
         case .calendar:
-            calendarWithMusic ? compact : calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
+            calendarWithMusic
+                ? CGSize(width: notchRelativeWidth(compact.width, notch: notch.width), height: compact.height)
+                : calendarSize(calendarCompact, notch: notch, indicatorWidth: calendarIndicatorWidth)
         case .calendarPeek:
             calendarWithMusic
-                ? CGSize(width: peek.width, height: calendarPeek.height)
+                ? CGSize(width: notchRelativeWidth(peek.width, notch: notch.width), height: calendarPeek.height)
                 : calendarSize(calendarPeek, notch: notch, indicatorWidth: calendarIndicatorWidth)
         // разобран выше, сюда не доходит
         case .hoverNudge: notch

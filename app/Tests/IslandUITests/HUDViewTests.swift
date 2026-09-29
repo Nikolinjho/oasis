@@ -40,17 +40,19 @@ struct HUDViewTests {
         #expect(HUDView.iconSymbol(.brightness, 0.8, device, deviceSymbol: "airpodspro") == "sun.max.fill")
     }
 
-    @Test("Полоска уже, когда рядом процент — по крылу выреза 185 и широкого 211")
+    @Test("Полоска уже, когда рядом процент — крыло не зависит от выреза: тело HUD растёт вместе с ним (задача 1)")
     func barWidth() {
+        // (367 − эталонный вырез 183) / 2 − паддинг 14 = 78, для любого notchWidth — тело и вырез
+        // растут вровень, крыло между ними не меняется
         let narrow = HUDView.wingWidth(notchWidth: 185)
-        #expect(narrow == 77)
+        #expect(narrow == 78)
         #expect(HUDView.barWidth(HUDAppearance(style: .white), wing: narrow) == 64)
-        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: narrow) == 35)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: narrow) == 36)
 
         let wide = HUDView.wingWidth(notchWidth: 211)
-        #expect(wide == 64)
+        #expect(wide == narrow)
         #expect(HUDView.barWidth(HUDAppearance(style: .white), wing: wide) == 64)
-        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: wide) == 22)
+        #expect(HUDView.barWidth(HUDAppearance(style: .white, showsPercentage: true), wing: wide) == 36)
 
         #expect(HUDView.percent(0.456) == "46%")
     }
