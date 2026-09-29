@@ -300,6 +300,9 @@ public enum IslandMachine {
         m.hasMedia = false
         m.isPlaying = false
         m.mediaIdle = false
+        // музыки больше нет: если и календарь не живёт, прятать больше нечего — флаг не должен пережить
+        // обе активности разом (review Task 15)
+        if !m.calendarLive { m.dismissed = false }
         if let pending = m.pending, isRest(pending) { m.pending = m.base }
         switch m.surface {
         case .compact, .peek:
@@ -482,6 +485,8 @@ public enum IslandMachine {
         // окно календаря открылось — убранная свайпом активность возвращается
         if live { m.dismissed = false }
         m.calendarLive = live
+        // календарь закрылся и музыки на экране нет — прятать больше нечего (review Task 15)
+        if !live, !m.showsMedia { m.dismissed = false }
         if let pending = m.pending, isRest(pending) { m.pending = m.base }
         guard old != m.base, m.pending == nil else { return [] }
         switch m.surface {
@@ -533,29 +538,50 @@ public enum IslandMachine {
         return [.animate(.viewSwap)]
     }
 
-    /// Свайп вверх по компакту, peek или компакту календаря: активность уходит в форму выреза.
-    /// Отклик разворачивается в исходную поверхность первым, как HUD и уведомления
-    private static func activityDismissed(_ m: inout IslandModel) -> [IslandEffect] {
-        if case let .hoverNudge(from) = m.surface {
-            m.surface = from
-            return [.cancel(.hoverOpen)] + activityDismissed(&m)
+    /// Поверхность под откликом hover, если сейчас отклик: то, что реально проверяют
+    /// activityDismissed/activityRestored перед тем, как его развернуть
+    private static func unwrapHoverNudge(_ surface: Surface) -> Surface {
+        if case let .hoverNudge(from) = surface { return from }
+        return surface
+    }
+
+    /// Свайп вверх убирает именно эти поверхности покоя. Компакт и peek календаря — туда же, что и музыка
+    private static func isDismissible(_ surface: Surface) -> Bool {
+        switch surface {
+        case .compact, .peek, .calendar, .calendarPeek: true
+        default: false
         }
-        guard !m.dismissed, m.pending == nil, m.base != .idle else { return [] }
-        switch m.surface {
-        case .compact, .peek, .calendar, .calendarPeek: break
-        default: return []
+    }
+
+    /// Свайп вверх по компакту, peek или компакту календаря: активность уходит в форму выреза.
+    /// Есть ли что убирать, проверяется до разворота отклика hover — иначе свайп без активности
+    /// заодно закрывал бы отклик и снимал его таймер, хотя внешне ничего не изменилось (review Task 15)
+    private static func activityDismissed(_ m: inout IslandModel) -> [IslandEffect] {
+        let surface = unwrapHoverNudge(m.surface)
+        guard !m.dismissed, m.pending == nil, m.base != .idle, isDismissible(surface) else { return [] }
+        var effects: [IslandEffect] = []
+        if case .hoverNudge = m.surface {
+            m.surface = surface
+            effects.append(.cancel(.hoverOpen))
         }
         let old = m.base
         m.dismissed = true
-        return baseChanged(&m, from: old)
+        return effects + baseChanged(&m, from: old)
     }
 
-    /// Свайп вниз по форме выреза: убранная активность возвращается
+    /// Свайп вниз по форме выреза: убранная активность возвращается. Отклик hover разворачивается
+    /// тем же путём, что и при уборке — иначе base вернётся, а surface останется в hoverNudge
+    /// поверх уже неактуального выреза, и baseChanged не увидит смены (review Task 15)
     private static func activityRestored(_ m: inout IslandModel) -> [IslandEffect] {
         guard m.dismissed else { return [] }
+        var effects: [IslandEffect] = []
+        if case let .hoverNudge(from) = m.surface {
+            m.surface = from
+            effects.append(.cancel(.hoverOpen))
+        }
         let old = m.base
         m.dismissed = false
-        return baseChanged(&m, from: old)
+        return effects + baseChanged(&m, from: old)
     }
 
     /// Строка громкости: форма растёт или сжимается на 32 pt, контент тот же

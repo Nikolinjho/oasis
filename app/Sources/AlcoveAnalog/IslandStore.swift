@@ -24,6 +24,12 @@ final class IslandStore {
     @ObservationIgnored var swipeToDismiss = true
     /// Свайп по покою: свой трекер, у раскрытого — tracker
     @ObservationIgnored private var restTracker = SwipeTracker()
+    /// Кто ведёт текущий жест: решается один раз на .began по surface на тот момент и держится
+    /// до .ended/.cancelled. Без этого surface, сменившийся посреди жеста (например, close раскрытого
+    /// увёл его в компакт), увёл бы остаток тех же пальцев ко второму трекеру и выполнил бы второе
+    /// действие тем же движением (review Task 15)
+    private enum SwipeOwner { case none, expanded, rest }
+    @ObservationIgnored private var swipeOwner = SwipeOwner.none
     /// Отладочная повестка держится, пока источник календаря шлёт реальные события: pinDebugEvents/unpinDebugEvents
     private(set) var isDebugAgendaPinned = false
     /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
@@ -90,20 +96,31 @@ final class IslandStore {
         }
     }
 
+    /// Свайп трекпада: раскрытый листает/закрывается, покой убирает/возвращает активность. Кто ведёт жест,
+    /// решается на .began и не меняется до конца жеста (swipeOwner) — surface может смениться посреди
+    /// жеста (close раскрытого уводит его в компакт), но остаток тех же пальцев не должен достаться
+    /// другому трекеру и выполнить второе действие
+    func swipe(_ phase: SwipeTracker.Phase, dx: CGFloat = 0, dy: CGFloat) {
+        if phase == .began {
+            tracker = SwipeTracker()
+            restTracker = SwipeTracker()
+            swipeOwner = model.surface == .expanded ? .expanded
+                : (swipeToDismiss && Self.isRestSwipeSurface(model.surface) ? .rest : .none)
+        }
+        switch swipeOwner {
+        case .expanded: swipeExpanded(phase, dx: dx, dy: dy)
+        case .rest: restSwipe(phase, dx: dx, dy: dy)
+        case .none:
+            stretch = 0
+            dragBlurred = false
+        }
+        if phase == .ended || phase == .cancelled { swipeOwner = .none }
+    }
+
     /// Двухпальцевый свайп над раскрытым (ui-inspection 3.7). Тяга идёт за пальцами без анимации.
     /// Блюр анимируется здесь, через withAnimation, а не .animation во вью: так он не перебивает
     /// пружину перехода машины (HUD или уведомление посреди жеста), а едет в её транзакции
-    func swipe(_ phase: SwipeTracker.Phase, dx: CGFloat = 0, dy: CGFloat) {
-        if model.surface != .expanded, swipeToDismiss, Self.isRestSwipeSurface(model.surface) {
-            restSwipe(phase, dx: dx, dy: dy)
-            return
-        }
-        guard model.surface == .expanded else {
-            tracker = SwipeTracker()
-            stretch = 0
-            dragBlurred = false
-            return
-        }
+    private func swipeExpanded(_ phase: SwipeTracker.Phase, dx: CGFloat, dy: CGFloat) {
         guard let output = tracker.feed(phase, dx: dx, dy: dy) else { return }
         let timeScale = model.config.timeScale
         switch output {
@@ -138,18 +155,25 @@ final class IslandStore {
         }
     }
 
-    /// Свайп по компакту и форме выреза: пороги те же 21 pt, форма за пальцами не тянется (замера у Alcove нет)
+    /// Свайп по компакту и форме выреза: пороги те же 21 pt, форма за пальцами не тянется (замера у Alcove нет).
+    /// Отклик и onSwipeClose — только когда dismissed реально сменился: иначе свайп без активности
+    /// (покой пуст, уже убрано, свайп вниз, когда нечего возвращать) держал бы остров закрытым под курсором
+    /// без причины и блокировал бы досылку hoverEntered после следующего alert/HUD (review Task 15)
     private func restSwipe(_ phase: SwipeTracker.Phase, dx: CGFloat, dy: CGFloat) {
         guard let output = restTracker.feed(phase, dx: dx, dy: dy) else { return }
         switch output {
         case .close:
+            let wasDismissed = model.dismissed
+            send(.activityDismissed)
+            guard model.dismissed != wasDismissed else { return }
             NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
             // курсор остаётся над вырезом: без флага окно тут же раскрыло бы остров снова
             onSwipeClose()
-            send(.activityDismissed)
         case .cycle:
-            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+            let wasDismissed = model.dismissed
             send(.activityRestored)
+            guard model.dismissed != wasDismissed else { return }
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
         case .stretch, .settle:
             break
         }

@@ -139,4 +139,57 @@ struct IslandStoreSwipeTests {
         store.swipe(.changed, dy: Self.delta(-22))
         #expect(!store.model.dismissed)
     }
+
+    @Test("Долгий свайп вверх по раскрытому: после close остаток того же жеста не убирает вернувшийся компакт")
+    func upCloseContinuationIgnoresRestSwipe() {
+        let store = Self.expanded()
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(store.model.surface != .expanded)
+        // тот же жест, без нового .began: раскрытый трекер уже сработал и держит fired,
+        // второй проход тех же пальцев не должен достаться restTracker вернувшегося компакта/выреза
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(!store.model.dismissed)
+        store.swipe(.ended, dy: 0)
+        #expect(!store.model.dismissed)
+    }
+
+    @Test("Свайп вверх, когда убирать нечего, не даёт отклика: остров не держится закрытым под курсором")
+    func dismissNoOpDoesNotClose() {
+        let store = IslandStore(config: .user)
+        var closed = false
+        store.onSwipeClose = { closed = true }
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(!store.model.dismissed)
+        #expect(!closed)
+    }
+
+    @Test("Свайп вниз, когда убирать нечего, не даёт отклика: активность и так не убрана")
+    func restoreNoOpKeepsDismissedFalse() {
+        let store = Self.compactStore()
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(22))
+        #expect(!store.model.dismissed)
+    }
+
+    @Test("Swipe to dismiss activity выключили, пока активность убрана: без тумблера её больше нечем вернуть, поэтому она возвращается сама")
+    func disablingSwipeToDismissRestoresDismissed() {
+        let (name, defaults) = AppSettingsTests.freshDefaults()
+        defer { AppSettingsTests.cleanup(name, defaults) }
+        let store = Self.compactStore()
+        let settings = AppSettings(defaults: defaults)
+        // тот же кусок, что в AppDelegate.applySettings
+        settings.onChange = {
+            if store.swipeToDismiss, !settings.swipeToDismiss { store.send(.activityRestored) }
+            store.swipeToDismiss = settings.swipeToDismiss
+        }
+        store.swipeToDismiss = settings.swipeToDismiss
+        store.swipe(.began, dy: 0)
+        store.swipe(.changed, dy: Self.delta(-22))
+        #expect(store.model.dismissed)
+
+        settings.swipeToDismiss = false
+        #expect(!store.model.dismissed)
+    }
 }

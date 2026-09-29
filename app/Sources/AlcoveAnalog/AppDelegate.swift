@@ -110,6 +110,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyAppearance()
         statusItem?.setIconHidden(settings.hideMenuBarIcon)
         window?.tuning = settings.notchTuning
+        // тумблер выключили, пока активность убрана свайпом: без него вернуть её больше нечем — возвращаем сами
+        if store.swipeToDismiss, !settings.swipeToDismiss { store.send(.activityRestored) }
         store.swipeToDismiss = settings.swipeToDismiss
         window?.naturalMovement = settings.naturalMovement
     }

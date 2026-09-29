@@ -128,10 +128,11 @@ final class IslandWindowController {
     }
 
     /// Разбор события scrollWheel для SwipeTracker. Инерцию не берём: у Alcove её нет. Колесо мыши
-    /// (без точных дельт) не трогаем. Натуральная прокрутка: пальцы вниз — dy > 0, как в записи жестов,
-    /// без неё знак обратный. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь) решает трекер.
-    /// Natural movement (General → Gestures) выключен: жест читается как прокрутка контента —
-    /// с натуральной прокруткой системы (inverted) знак обратный тому, что даёт natural: true
+    /// (без точных дельт) не трогаем. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь)
+    /// решает трекер. Знак зависит от General → Gestures → Natural movement (natural): вкл (по умолчанию) —
+    /// как в записи жестов, пальцы вниз дают dy > 0 при включённой системной натуральной прокрутке (inverted),
+    /// и наоборот при выключенной. Natural movement выкл — жест всегда читается как прокрутка контента:
+    /// системная inverted не учитывается, знак тот же, что у natural: true, inverted: false
     static func swipeInput(
         phase: NSEvent.Phase, momentumPhase: NSEvent.Phase, precise: Bool,
         deltaX: CGFloat, deltaY: CGFloat, inverted: Bool, natural: Bool = true
