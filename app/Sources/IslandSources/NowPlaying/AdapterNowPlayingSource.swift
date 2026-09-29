@@ -33,8 +33,8 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         var generation = 0
         /// Первая строка нового процесса ещё не пришла
         var awaitingFirstLine = true
-        /// Перезапуск начался с пустой строки: ждём строку с треком, иначе старый трек забывается
-        var awaitingTrack = false
+        /// Слежение за треком, оставшимся от предыдущего запуска (Task 13)
+        var staleCheck = StaleTrackCheck()
     }
 
     public init(paths: AdapterPaths) {
@@ -87,10 +87,36 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     /// с треком приходит сразу за пустой первой
     static let staleTimeout: Duration = .seconds(3)
 
-    /// Первая строка перезапуска пустая (change nil), а трек был: запустить проверку старого трека.
+    /// Первая строка перезапуска ничего не дала — она пустая или её не удалось разобрать, в обоих случаях
+    /// change nil, — а трек был: запустить проверку старого трека.
     /// Первый запуск (generation 1) не в счёт — там трека ещё нет
     static func startsStaleCheck(isFirstLine: Bool, generation: Int, change: NowPlayingChange?, hasTrack: Bool) -> Bool {
         isFirstLine && generation > 1 && change == nil && hasTrack
+    }
+
+    /// Слежение за треком, оставшимся от предыдущего запуска: построчно копится в receive(),
+    /// по таймауту проверяется в dropStaleTrack(). Вынесено в отдельный тип, чтобы решения проверялись
+    /// юнит-тестами без реального Process и Task.sleep
+    struct StaleTrackCheck: Equatable {
+        private(set) var awaiting = false
+
+        /// Очередная строка от адаптера. true — она вооружает проверку; строка с треком (change != nil) проверку снимает
+        mutating func line(isFirst: Bool, generation: Int, change: NowPlayingChange?, hadTrack: Bool) -> Bool {
+            if AdapterNowPlayingSource.startsStaleCheck(isFirstLine: isFirst, generation: generation, change: change, hasTrack: hadTrack) {
+                awaiting = true
+                return true
+            }
+            if change != nil { awaiting = false }
+            return false
+        }
+
+        /// Сработал таймаут. true — трек пора забыть: проверка ещё активна, запуск тот же, adapter не
+        /// остановлен и трек всё ещё висит
+        mutating func timeout(generation: Int, currentGeneration: Int, stopped: Bool, hasTrack: Bool) -> Bool {
+            guard awaiting, generation == currentGeneration, !stopped, hasTrack else { return false }
+            awaiting = false
+            return true
+        }
     }
 
     /// Разовая команда адаптера: отдельный perl, поток stream не трогаем
@@ -123,6 +149,7 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
             // хвост недописанной строки от умершего процесса не должен приклеиться к первой строке нового
             s.buffer = LineBuffer()
             s.awaitingFirstLine = true
+            s.staleCheck = StaleTrackCheck()
             return s.generation
         }
         guard let generation else { return }
@@ -166,12 +193,10 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
                 s.awaitingFirstLine = false
                 let hadTrack = s.parser.current != nil
                 let change = s.parser.consume(line, ignoringClear: isFirstLine)
-                if Self.startsStaleCheck(isFirstLine: isFirstLine, generation: generation, change: change, hasTrack: hadTrack) {
-                    s.awaitingTrack = true
+                if s.staleCheck.line(isFirst: isFirstLine, generation: generation, change: change, hadTrack: hadTrack) {
                     staleCheck = true
                 }
                 guard let change else { return nil }
-                s.awaitingTrack = false
                 s.backoff.reset()
                 return change
             }
@@ -188,15 +213,16 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     /// Перезапущенный адаптер так и не прислал трек: музыки больше нет, старый трек не должен висеть
     private func dropStaleTrack(generation: Int) async {
         try? await Task.sleep(for: Self.staleTimeout)
-        let dropped = state.withLockUnchecked { s -> Bool in
-            guard !s.stopped, s.generation == generation, s.awaitingTrack, s.parser.current != nil else { return false }
-            s.awaitingTrack = false
+        state.withLockUnchecked { s in
+            guard s.staleCheck.timeout(generation: generation, currentGeneration: s.generation, stopped: s.stopped, hasTrack: s.parser.current != nil) else { return }
             s.parser = NowPlayingParser()
-            return true
+            log.info("adapter relaunched without a track: dropping the stale one")
+            // yield здесь же, пока лок ещё держим: иначе receive() на своей очереди может между нашим
+            // сбросом парсера и yield(.cleared) успеть распарсить свежий трек, сбросить staleCheck и
+            // разослать .newTrack — и стрим получит .newTrack, а следом устаревший .cleared поверх него.
+            // .cleared не трогает fillAccent (см. withAccent), так что повторного захвата лока тут нет
+            continuation.yield(.cleared)
         }
-        guard dropped else { return }
-        log.info("adapter relaunched without a track: dropping the stale one")
-        continuation.yield(.cleared)
     }
 
     private func withAccent(_ change: NowPlayingChange) -> NowPlayingChange {
