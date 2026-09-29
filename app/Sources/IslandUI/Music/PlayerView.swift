@@ -115,9 +115,9 @@ struct PausedArtwork: ViewModifier {
 
     let isPlaying: Bool
 
-    /// Масштаб 0.9 по кадрам; насыщенность и прозрачность — замера нет, оценка
+    /// Масштаб 0.83 — замер Alcove 1.7.9 в Duo: 54×30 → 45×25 (28.09). Насыщенность и прозрачность — замера нет, оценка
     static func look(isPlaying: Bool) -> Look {
-        isPlaying ? Look(scale: 1, saturation: 1, opacity: 1) : Look(scale: 0.9, saturation: 0.2, opacity: 0.6)
+        isPlaying ? Look(scale: 1, saturation: 1, opacity: 1) : Look(scale: 0.83, saturation: 0.2, opacity: 0.6)
     }
 
     func body(content: Content) -> some View {

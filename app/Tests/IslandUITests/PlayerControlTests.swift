@@ -114,7 +114,7 @@ struct PausedArtworkTests {
         let playing = PausedArtwork.look(isPlaying: true)
         let paused = PausedArtwork.look(isPlaying: false)
         #expect(playing == PausedArtwork.Look(scale: 1, saturation: 1, opacity: 1))
-        #expect(paused.scale == 0.9)
+        #expect(paused.scale == 0.83)
         #expect(paused.saturation < 1)
         #expect(paused.opacity < 1)
     }

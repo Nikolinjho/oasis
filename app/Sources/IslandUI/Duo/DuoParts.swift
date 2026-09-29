@@ -26,11 +26,11 @@ private enum DuoFormatters {
 /// координаты здесь — от левого верхнего угла тела 345×175
 enum DuoLayout {
     static let size = CGSize(width: 345, height: 175)
-    /// Обложка 45 по ширине. У YouTube Alcove показывает превью 16:9 (45×25), у квадратной обложки
-    /// на кадре rec2 плейсхолдер ~45×45. Центр по вертикали у обоих ≈ 44.5. Превью 16:9 не делаем: обложка квадратная
-    static let artworkSide: CGFloat = 45
-    static let artworkX: CGFloat = 21.5
-    static let artworkCenterY: CGFloat = 44.5
+    /// Обложка 55 по ширине, от края тела 17.5, центр по y 45.5 (AX Alcove 1.7.9: 55×55 у Music, 54×30 у YouTube,
+    /// 28.09 и 29.09). Прежние 45 — рамка на паузе из осмотра 1.7.7: 54 × 0.83
+    static let artworkSide: CGFloat = 55
+    static let artworkX: CGFloat = 17.5
+    static let artworkCenterY: CGFloat = 45.5
     static let titleOrigin = CGPoint(x: 17.5, y: 75)
     static let titleSize = CGSize(width: 138, height: 40)
     static let controlsY: CGFloat = 121

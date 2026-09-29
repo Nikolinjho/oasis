@@ -28,7 +28,9 @@ struct DuoView: View {
                 // Alcove 1.7.9: клик по обложке или названию выводит источник вперёд, остров не закрывается
                 .contentShape(Rectangle())
                 .onTapGesture { onAction(.openSource) }
-                .offset(x: DuoLayout.artworkX, y: DuoLayout.artworkCenterY - DuoLayout.artworkSide / 2)
+                .offset(
+                    x: DuoLayout.artworkX,
+                    y: DuoLayout.artworkCenterY - ArtworkView.frame(for: info?.artwork, side: DuoLayout.artworkSide).height / 2)
             DuoTitle(info: info, title: appearance.title(for: info))
                 .frame(width: DuoLayout.titleSize.width, height: DuoLayout.titleSize.height, alignment: .topLeading)
                 .contentShape(Rectangle())
