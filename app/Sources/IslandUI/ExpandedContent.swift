@@ -8,6 +8,8 @@ struct ExpandedContent: View {
     let agenda: DayAgenda
     var appearance = IslandAppearance.default
     var liveEvent: CalendarEvent? = nil
+    var volume: Double = 0
+    var showsVolumeRow = false
     let onAction: (PlayerAction) -> Void
     let onJoin: (URL) -> Void
     var timeScale: Double = 1
@@ -19,7 +21,7 @@ struct ExpandedContent: View {
                 DuoView(info: info, agenda: agenda, appearance: appearance, liveEvent: liveEvent, onJoin: onJoin, onAction: onAction)
                     .transition(.viewSwap(timeScale: timeScale))
             case .player:
-                PlayerView(info: info, appearance: appearance, onAction: onAction)
+                PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
                     .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .top)
                     .transition(.viewSwap(timeScale: timeScale))
             case .calendar:

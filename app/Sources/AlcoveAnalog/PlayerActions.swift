@@ -8,13 +8,12 @@ import os
 final class PlayerActions: PlayerActionPerforming {
     private weak var source: (any NowPlayingSource)?
     private let favorite = MusicFavorite()
-    private let outputs = OutputDevices()
-    private let showMenu: (NSMenu) -> Void
+    private let setVolumeLevel: (Double) -> Void
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "player")
 
-    init(source: (any NowPlayingSource)?, showMenu: @escaping (NSMenu) -> Void) {
+    init(source: (any NowPlayingSource)?, setVolume: @escaping (Double) -> Void) {
         self.source = source
-        self.showMenu = showMenu
+        self.setVolumeLevel = setVolume
     }
 
     func send(_ command: MediaCommand) {
@@ -34,9 +33,7 @@ final class PlayerActions: PlayerActionPerforming {
         AppActivator.activate(bundleID: bundleID)
     }
 
-    func chooseOutput() {
-        let menu = OutputMenu.make(devices: outputs)
-        // после выхода из действия кнопки SwiftUI: popUp крутит свой цикл событий до закрытия меню
-        Task { @MainActor [showMenu] in showMenu(menu) }
+    func setVolume(_ level: Double) {
+        setVolumeLevel(level)
     }
 }

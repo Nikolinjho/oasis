@@ -7,7 +7,7 @@ public protocol PlayerActionPerforming: AnyObject {
     func send(_ command: MediaCommand)
     func favoriteInMusic()
     func activateApp(bundleID: String)
-    func chooseOutput()
+    func setVolume(_ level: Double)
 }
 
 /// Решает, кому и с чем отдать действие кнопки плеера
@@ -39,8 +39,11 @@ public struct PlayerActionRouter {
                 return
             }
             performer.activateApp(bundleID: bundleID)
-        case .chooseOutput:
-            performer.chooseOutput()
+        case .toggleVolumeRow:
+            // это состояние острова, а не система: его перехватывает AppDelegate и шлёт в store
+            log.info("toggle volume row reached the router")
+        case let .setVolume(level):
+            performer.setVolume(level)
         }
     }
 }

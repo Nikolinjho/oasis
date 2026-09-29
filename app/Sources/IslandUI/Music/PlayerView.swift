@@ -5,6 +5,8 @@ import SwiftUI
 struct PlayerView: View {
     let info: NowPlayingInfo?
     var appearance = IslandAppearance.default
+    var volume: Double = 0
+    var showsVolumeRow = false
     let onAction: (PlayerAction) -> Void
 
     var body: some View {
@@ -30,13 +32,64 @@ struct PlayerView: View {
             HStack(spacing: 15) {
                 // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку и не рвёт replace-переход
                 ForEach(Array(PlayerControl.row(info).enumerated()), id: \.offset) { _, control in
-                    PlayerButton(control: control) { onAction(control.action) }
+                    PlayerButton(control: control, isActive: control.action == .toggleVolumeRow && showsVolumeRow) {
+                        onAction(control.action)
+                    }
                 }
+            }
+            if showsVolumeRow {
+                VolumeRow(level: volume) { onAction(.setVolume($0)) }
+                    .padding(.horizontal, 4)
+                    // строка открывается маской растущей формы, как контент при раскрытии
+                    .transition(.opacity)
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 36)
         .padding(.bottom, 10)
+    }
+}
+
+/// Строка громкости под кнопками плеера (Alcove 1.7.9, 28.09): 🔈 и 🔊 — шаг 10%, полоска — уровень по месту.
+/// Цвет полоски — серый, как на кадре player-volume-row.jpg; толщина и кегль — оценка
+struct VolumeRow: View {
+    let level: Double
+    let onChange: (Double) -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button { onChange(Self.stepped(level, up: false)) } label: { Image(systemName: "speaker.fill") }
+                .buttonStyle(.plain)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(IslandPalette.foreground.opacity(0.2))
+                    Capsule()
+                        .fill(IslandPalette.secondary)
+                        .frame(width: proxy.size.width * min(max(level, 0), 1))
+                }
+                .frame(height: 5)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0).onChanged { value in
+                    onChange(Self.level(at: value.location.x, width: proxy.size.width))
+                })
+            }
+            Button { onChange(Self.stepped(level, up: true)) } label: { Image(systemName: "speaker.wave.2.fill") }
+                .buttonStyle(.plain)
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(IslandPalette.secondary)
+        .frame(height: 18)
+    }
+
+    nonisolated static func level(at x: CGFloat, width: CGFloat) -> Double {
+        guard width > 0 else { return 0 }
+        return Double(min(max(x / width, 0), 1))
+    }
+
+    /// 🔈 и 🔊: ±10% (у Alcove 56 → 46 → 56)
+    nonisolated static func stepped(_ level: Double, up: Bool) -> Double {
+        min(max(level + (up ? 0.1 : -0.1), 0), 1)
     }
 }
 
@@ -126,7 +179,7 @@ struct PlayerControl: Equatable {
                 symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
                 action: .media(.togglePlayPause), isSide: false),
             PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false),
-            PlayerControl(symbol: "laptopcomputer", action: .chooseOutput, isSide: true),
+            PlayerControl(symbol: "laptopcomputer", action: .toggleVolumeRow, isSide: true),
         ]
     }
 
@@ -142,6 +195,7 @@ struct PlayerControl: Equatable {
 
 struct PlayerButton: View {
     let control: PlayerControl
+    var isActive = false
     let action: () -> Void
     @State private var isHovered = false
 
@@ -156,7 +210,7 @@ struct PlayerButton: View {
                 .frame(width: 48, height: 40)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(HoverBackgroundStyle(isHovered: isHovered))
+        .buttonStyle(HoverBackgroundStyle(isHovered: isHovered || isActive))
         .onHover { isHovered = $0 }
     }
 }

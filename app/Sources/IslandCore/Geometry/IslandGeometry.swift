@@ -30,6 +30,8 @@ public enum IslandGeometry {
     public static let hoverNudgeWidthScale: CGFloat = 1.1
     /// Видео hover-открытия Alcove 2026-09-26: 345.1×175.0 (пик 359.3×187.7); rec2 и кадр пользователя — те же 345
     public static let expanded = CGSize(width: 345, height: 175)
+    /// Строка громкости под кнопками плеера: 345×175 → 345×207 (Alcove 1.7.9, осмотр 28.09)
+    public static let volumeRowHeight: CGFloat = 32
     /// states/t69.4.png (запись №1): тело 732.5 px, в строке 1 pt ушки добавляют по 3.6 pt с каждой стороны
     public static let hud = CGSize(width: 367, height: 32)
     /// Ширина, до которой остров сжимается при смене активности. Трекер дал 195 по строке 1 pt;
@@ -150,25 +152,26 @@ public enum IslandGeometry {
 
     /// Окно под самое большое состояние с перелётом, ушками и тенью. Раскрытие кликом из покоя (175/16,
     /// перелёт 9.2%): тело 345 → пик 359.6, ушко 18.3 → 19.5, форма 398.6 × 188.1.
-    /// Плюс тень: по 36 pt с боков, 36 + 5 снизу → 470.6 × 229.1
-    public static let windowSize = CGSize(width: 480, height: 232)
+    /// Плюс тень: по 36 pt с боков, 36 + 5 снизу → 470.6 × 229.1. По высоте выше всех плеер
+    /// со строкой громкости: 207 + 41 тени = 248, перелёта у .volumeRow нет
+    public static let windowSize = CGSize(width: 480, height: 250)
 
     /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
     /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
     /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:)
     public static func spec(
         for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
-        reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle()
+        reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle(), volumeRow: Bool = false
     ) -> IslandShapeSpec {
         if case let .hoverNudge(from) = surface {
             // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
             var base = spec(
                 for: from, hasMedia: hasMedia, notch: notch, calendarIndicatorWidth: calendarIndicatorWidth,
-                reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
+                reminderIndicatorWidth: reminderIndicatorWidth, battery: battery, volumeRow: volumeRow)
             base.size.width *= hoverNudgeWidthScale
             return base
         }
-        let size: CGSize = switch surface {
+        var size: CGSize = switch surface {
         case .idle: notch
         case .compact: compact
         case .peek: peek
@@ -182,6 +185,7 @@ public enum IslandGeometry {
         // разобран выше, сюда не доходит
         case .hoverNudge: notch
         }
+        if surface == .expanded, volumeRow { size.height += volumeRowHeight }
         let shoulder: CGFloat = switch surface {
         case .idle: Shoulder.idle
         case .compact: Shoulder.compact
@@ -197,7 +201,9 @@ public enum IslandGeometry {
         case .calendarPeek: Shoulder.estimated(forHeight: calendarPeek.height)
         case .hoverNudge: Shoulder.idle // разобран выше
         }
-        return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: size.height), shoulder: shoulder)
+        // со строкой громкости углы на кадре те же, что у 175: радиус по высоте без строки (замера нет, оценка)
+        let radiusHeight = surface == .expanded && volumeRow ? expanded.height : size.height
+        return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: radiusHeight), shoulder: shoulder)
     }
 
     /// Радиус нижних углов (squircle-порт с сайта). Замер видео hover-открытия Alcove 2026-09-26,

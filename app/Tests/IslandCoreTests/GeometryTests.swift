@@ -99,7 +99,18 @@ struct GeometryTests {
 
     @Test("Окно прижато к верху экрана по центру выреза")
     func windowFrame() {
-        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 885, width: 480, height: 232))
+        #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 867, width: 480, height: 250))
+    }
+
+    @Test("Строка громкости: плеер 345×207, углы как у 175 (Alcove 1.7.9, 28.09)")
+    func volumeRow() {
+        let spec = IslandGeometry.spec(
+            for: .expanded, hasMedia: true, notch: Self.mbp16.notchSize, calendarIndicatorWidth: 0,
+            reminderIndicatorWidth: 0, volumeRow: true)
+        #expect(spec.size == CGSize(width: 345, height: 207))
+        #expect(abs(spec.bottomRadius - 35) < 1e-9)
+        let shadow = IslandGeometry.Shadow.self
+        #expect(IslandGeometry.windowSize.height >= spec.size.height + shadow.y + shadow.reach)
     }
 
     @Test("Окно вмещает пик перелёта раскрытия из покоя вместе с ушками и тенью")

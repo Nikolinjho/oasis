@@ -9,7 +9,7 @@ final class FakePerformer: PlayerActionPerforming {
         case media(MediaCommand)
         case favorite
         case activate(String)
-        case chooseOutput
+        case volume(Double)
     }
 
     private(set) var calls: [Call] = []
@@ -17,7 +17,7 @@ final class FakePerformer: PlayerActionPerforming {
     func send(_ command: MediaCommand) { calls.append(.media(command)) }
     func favoriteInMusic() { calls.append(.favorite) }
     func activateApp(bundleID: String) { calls.append(.activate(bundleID)) }
-    func chooseOutput() { calls.append(.chooseOutput) }
+    func setVolume(_ level: Double) { calls.append(.volume(level)) }
 }
 
 @MainActor
@@ -68,10 +68,10 @@ struct PlayerActionRouterTests {
         #expect(fake.calls.isEmpty)
     }
 
-    @Test("Выбор выхода не зависит от трека")
-    func chooseOutput() {
+    @Test("Строка громкости уходит исполнителю уровнем")
+    func volume() {
         let fake = FakePerformer()
-        PlayerActionRouter(performer: fake).perform(.chooseOutput, nowPlaying: nil)
-        #expect(fake.calls == [.chooseOutput])
+        PlayerActionRouter(performer: fake).perform(.setVolume(0.4), nowPlaying: nil)
+        #expect(fake.calls == [.volume(0.4)])
     }
 }

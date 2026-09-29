@@ -29,6 +29,8 @@ public enum IslandEvent: Equatable, Sendable {
     case calendarStarted
     /// Свайп вниз по раскрытому: следующий вид
     case expandedViewCycled
+    /// Клик по кнопке вывода в раскрытом плеере: строка громкости под кнопками (Alcove 1.7.9, 28.09)
+    case volumeRowToggled
     case hoverEntered, hoverExited
     case clicked, clickedOutside
     /// На экране с вырезом открылось или закрылось полноэкранное приложение
@@ -69,6 +71,9 @@ public struct IslandModel: Equatable, Sendable {
     public var calendarLive = false
     /// Вид раскрытого. Каждое раскрытие начинается с Duo (ui-inspection 3.7, «Переоткрытие сбрасывает вид на Duo»)
     public var expandedView: ExpandedView = .duo
+    /// Строка громкости под кнопками плеера: остров выше на IslandGeometry.volumeRowHeight.
+    /// Живёт только в раскрытом плеере: уход из него сбрасывает её (reduce)
+    public var volumeRowShown = false
     /// Музыка играет. Трек на паузе держит компакт Idle duration (NowPlayingRules.idleDelay)
     public var isPlaying = false
     /// Пауза длится дольше Idle duration: компакт музыки не показывается
@@ -176,6 +181,14 @@ public enum IslandMachine {
     }
 
     public static func reduce(_ model: inout IslandModel, _ event: IslandEvent) -> [IslandEffect] {
+        let effects = reduceEvent(&model, event)
+        // строка громкости есть только в раскрытом плеере. У Alcove после схлопывания и нового раскрытия
+        // её нет (28.09). Сброс при смене вида свайпом — оценка: не проверяли
+        if model.surface != .expanded || model.expandedView != .player { model.volumeRowShown = false }
+        return effects
+    }
+
+    private static func reduceEvent(_ model: inout IslandModel, _ event: IslandEvent) -> [IslandEffect] {
         switch event {
         case .trackChanged: trackChanged(&model)
         case .pausedTrackChanged: pausedTrackChanged(&model)
@@ -186,6 +199,7 @@ public enum IslandMachine {
         case let .calendarLiveChanged(live): calendarLiveChanged(&model, live)
         case .calendarStarted: calendarStarted(&model)
         case .expandedViewCycled: expandedViewCycled(&model)
+        case .volumeRowToggled: volumeRowToggled(&model)
         case .hoverEntered:
             model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
         case .clicked: open(&model, to: .expanded, with: .expand)
@@ -497,6 +511,13 @@ public enum IslandMachine {
         guard m.surface == .expanded else { return [] }
         m.expandedView = m.expandedView.next
         return [.animate(.viewSwap)]
+    }
+
+    /// Строка громкости: форма растёт или сжимается на 32 pt, контент тот же
+    private static func volumeRowToggled(_ m: inout IslandModel) -> [IslandEffect] {
+        guard m.surface == .expanded, m.expandedView == .player else { return [] }
+        m.volumeRowShown.toggle()
+        return [.animate(.volumeRow)]
     }
 
     private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {

@@ -28,8 +28,10 @@ public enum PlayerAction: Equatable, Sendable {
     case favorite
     /// Левая кнопка у остальных источников: 🔗 открыть приложение, откуда играет звук
     case openSource
-    /// Правая кнопка 💻: выбор устройства вывода звука
-    case chooseOutput
+    /// Кнопка вывода справа: показать или спрятать строку громкости (Alcove 1.7.9: меню устройств нет)
+    case toggleVolumeRow
+    /// Строка громкости: уровень 0…1 текущего выхода
+    case setVolume(Double)
 }
 
 public struct NowPlayingInfo: Equatable, Sendable {

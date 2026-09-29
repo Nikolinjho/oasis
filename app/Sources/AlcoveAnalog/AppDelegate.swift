@@ -33,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastPower: PowerState?
     private var tasks: [Task<Void, Never>] = []
     private var debugSections: [DebugSection] = []
+    /// Строка громкости плеера: пока её двигают, изменения громкости HUD не показывают (у Alcove HUD
+    /// от строки не появляется, 28.09). 0.5 с после последнего сдвига — оценка: CoreAudio отвечает за десятки мс
+    private var rowQuietUntil = Date.distantPast
     private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
 
     /// При холодном запуске по ссылке (`open -g -a … "alcove-analog://…"`) AppKit доставляет
@@ -187,13 +190,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nowPlaying = source
     }
 
+    /// Строка громкости плеера: изменение уровня, HUD подавлен на rowQuietUntil
+    private func setVolumeFromRow(_ level: Double) {
+        rowQuietUntil = Date().addingTimeInterval(0.5)
+        volume?.setVolume(level)
+        store.volumeLevel = level
+    }
+
     /// Кнопки плеера. Без адаптера медиакоманды пропадают, остальные кнопки работают
     private func startPlayerActions() {
-        let performer = PlayerActions(source: nowPlaying) { [weak window] menu in window?.popUpUnderIsland(menu) }
+        let performer = PlayerActions(source: nowPlaying) { [weak self] level in self?.setVolumeFromRow(level) }
         let router = PlayerActionRouter(performer: performer)
         store.onAction = { [weak store, log] action in
             guard let store else { return }
             log.debug("player action \(String(describing: action), privacy: .public)")
+            // строка громкости — состояние острова: в машину, а не в систему
+            if action == .toggleVolumeRow {
+                store.send(.volumeRowToggled)
+                return
+            }
             router.perform(action, nowPlaying: store.nowPlaying)
         }
     }
@@ -279,7 +294,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tasks.append(Task { [weak self] in
             for await level in volume.changes {
                 guard let self else { return }
-                guard settings.soundHUDEnabled else { continue }
+                store.volumeLevel = level
+                guard settings.soundHUDEnabled, Date() >= rowQuietUntil else { continue }
                 store.send(.hudChanged(.volume, level: level))
             }
         })
@@ -291,6 +307,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         })
         self.volume = volume
+        store.volumeLevel = volume.volume ?? 0
         brightness = BrightnessControl()
         if brightness == nil { log.error("DisplayServices unavailable: brightness keys stay with the system") }
     }

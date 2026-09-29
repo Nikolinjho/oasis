@@ -19,6 +19,8 @@ public enum IslandTransition: Equatable, Sendable {
     case calendarPeekOpen, calendarPeekClose
     /// Смена вида раскрытого: форма та же, контент через блюр
     case viewSwap
+    /// Строка громкости в раскрытом плеере: высота 175 ↔ 207
+    case volumeRow
 
     /// Остров раскрылся наведением курсора: на это приложение отвечает тактильным откликом
     public var opensByHover: Bool { self == .hoverOpen || self == .hoverExpand }
@@ -73,6 +75,8 @@ public enum IslandMotion {
         // Форма не меняется. Тайминг блюра задаёт сам переход AnyTransition.viewSwap: его анимация
         // важнее анимации транзакции, эта пружина на контент не влияет
         case .viewSwap: .smooth(duration: 0.23)
+        // замера нет, оценка: на кадрах 28.09 рост без заметного перелёта
+        case .volumeRow: .smooth(duration: 0.3)
         // замеры сжатия перед сменой (analysis/README.md): из компакта 261 → ~195 — 345/30.5,
         // из HUD 369 → ~199 — 360/38. Одна .smooth(0.33) (≈ 362/38) давала сжатию перед HUD
         // на 2.6 pt меньше хода к моменту раскрытия (demo-сверка 28.09)

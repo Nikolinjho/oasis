@@ -12,6 +12,8 @@ public struct IslandView: View {
     /// Остров тянут свайпом вверх: контент в блюре
     let dragBlurred: Bool
     let appearance: IslandAppearance
+    /// Уровень строки громкости плеера 0…1
+    let volume: Double
     let onClick: () -> Void
     let onAction: (PlayerAction) -> Void
     let onJoin: (URL) -> Void
@@ -22,6 +24,7 @@ public struct IslandView: View {
         calendarEvent: CalendarEvent? = nil,
         dragBlurred: Bool = false,
         appearance: IslandAppearance = .default,
+        volume: Double = 0,
         onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
         onJoin: @escaping (URL) -> Void = { _ in }
     ) {
@@ -33,6 +36,7 @@ public struct IslandView: View {
         self.calendarEvent = calendarEvent
         self.dragBlurred = dragBlurred
         self.appearance = appearance
+        self.volume = volume
         self.onClick = onClick
         self.onAction = onAction
         self.onJoin = onJoin
@@ -82,7 +86,8 @@ public struct IslandView: View {
             // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
             // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
             ExpandedContent(view: model.expandedView, info: nowPlaying, agenda: agenda, appearance: appearance,
-                            liveEvent: model.calendarLive ? calendarEvent : nil, onAction: onAction, onJoin: onJoin,
+                            liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
+                            showsVolumeRow: model.volumeRowShown, onAction: onAction, onJoin: onJoin,
                             timeScale: model.config.timeScale)
                 .id(ContentID.expanded)
                 .transition(.playerEntrance(timeScale: model.config.timeScale))

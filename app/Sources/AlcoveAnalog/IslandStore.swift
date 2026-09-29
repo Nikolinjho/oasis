@@ -28,6 +28,8 @@ final class IslandStore {
     var notch = CGSize(width: 185, height: 32)
     /// Вид страниц настроек, которые не меняют поведение машины: Battery и т.д. (IslandAppearance)
     var appearance = IslandAppearance.default
+    /// Уровень текущего выхода 0…1: строка громкости плеера читает его, AppDelegate обновляет
+    var volumeLevel: Double = 0
 
     @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
     /// Звук уведомления: AppDelegate подключает сюда SoundPlayer.play, если в настройках включён Play sounds
@@ -61,7 +63,8 @@ final class IslandStore {
         var spec = IslandGeometry.spec(
             for: model.surface, hasMedia: model.hasMedia, notch: notch,
             calendarIndicatorWidth: IslandView.calendarIndicatorWidth,
-            reminderIndicatorWidth: IslandView.reminderIndicatorWidth, battery: appearance.battery)
+            reminderIndicatorWidth: IslandView.reminderIndicatorWidth, battery: appearance.battery,
+            volumeRow: model.volumeRowShown)
         if model.surface == .expanded, stretch != 0 {
             spec.size.height += stretch
             spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: spec.size.height)
