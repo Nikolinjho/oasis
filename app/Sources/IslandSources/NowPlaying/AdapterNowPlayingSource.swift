@@ -142,11 +142,11 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         if let cached = state.withLockUnchecked({ $0.accents[key] }) {
             info.accent = cached.0
             info.accentBottom = cached.1
-        } else if let artwork = info.artwork, let color = ArtworkColor.accent(of: artwork) {
-            let bottom = ArtworkColor.gradient(of: artwork)?.bottom
-            state.withLockUnchecked { $0.accents[key] = (color, bottom) }
-            info.accent = color
-            info.accentBottom = bottom
+        } else if let artwork = info.artwork, let both = ArtworkColor.accentAndBottom(of: artwork) {
+            // один decode обложки вместо отдельных accent(of:) + gradient(of:)
+            state.withLockUnchecked { $0.accents[key] = (both.accent, both.bottom) }
+            info.accent = both.accent
+            info.accentBottom = both.bottom
         }
         return info
     }

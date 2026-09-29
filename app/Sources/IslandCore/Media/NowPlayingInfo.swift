@@ -46,7 +46,8 @@ public struct NowPlayingInfo: Equatable, Sendable {
     public var artwork: Data?
     /// Цвет волны из обложки, считается в IslandSources
     public var accent: RGB?
-    /// Цвет низа обложки для волны Gradient (motion.md: «вертикальный градиент из двух цветов обложки»)
+    /// Цвет низа обложки для волны и прогресса Gradient: горизонтальный переход слева направо между
+    /// accent и accentBottom (поправка 29.09 по Alcove 1.7.9, кадр style-gradient.jpg)
     public var accentBottom: RGB?
 
     public init(

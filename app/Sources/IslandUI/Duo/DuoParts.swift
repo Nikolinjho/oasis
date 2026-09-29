@@ -50,10 +50,13 @@ enum DuoLayout {
 /// Название бегущей строкой и артист под ним
 struct DuoTitle: View {
     let info: NowPlayingInfo?
+    /// Показанное название (Hide media title extras чистит его снаружи через appearance.title(for:)).
+    /// info.title остаётся исходным по умолчанию: трогать его самого не нужно, trackKey от него не зависит здесь
+    var title: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
-            MarqueeText(text: info?.title ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
+            MarqueeText(text: title ?? info?.title ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(IslandPalette.foreground)
                 .frame(height: 18)

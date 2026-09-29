@@ -7,17 +7,37 @@ func accentColor(_ info: NowPlayingInfo?) -> Color {
     return Color(accent)
 }
 
-/// Заливка волны по Now Playing → цвет. Gradient без второго цвета обложки — как Colored
-func waveformFill(_ info: NowPlayingInfo?, _ style: WaveformStyle) -> AnyShapeStyle {
+/// Итог выбора цвета волны/прогресса без AnyShapeStyle: чистое значение, которое можно сравнивать в юнит-тестах
+enum WaveformColorChoice: Equatable {
+    case monochrome
+    /// Цвет обложки, если она есть; без обложки — серый (Colored, и Gradient без второго цвета обложки)
+    case colored(RGB?)
+    case gradient(top: RGB, bottom: RGB)
+}
+
+/// Gradient без второго цвета обложки — как Colored
+func waveformColorChoice(_ info: NowPlayingInfo?, _ style: WaveformStyle) -> WaveformColorChoice {
     switch style {
     case .monochrome:
-        return AnyShapeStyle(IslandPalette.secondary)
+        return .monochrome
     case .colored:
-        return AnyShapeStyle(accentColor(info))
+        return .colored(info?.accent)
     case .gradient:
-        guard let top = info?.accent, let bottom = info?.accentBottom else { return AnyShapeStyle(accentColor(info)) }
+        guard let top = info?.accent, let bottom = info?.accentBottom else { return .colored(info?.accent) }
+        return .gradient(top: top, bottom: bottom)
+    }
+}
+
+/// Заливка волны по Now Playing → цвет
+func waveformFill(_ info: NowPlayingInfo?, _ style: WaveformStyle) -> AnyShapeStyle {
+    switch waveformColorChoice(info, style) {
+    case .monochrome:
+        AnyShapeStyle(IslandPalette.secondary)
+    case .colored:
+        AnyShapeStyle(accentColor(info))
+    case let .gradient(top, bottom):
         // Alcove 1.7.9: переход слева направо между двумя цветами обложки (кадр style-gradient.jpg, 28.09)
-        return AnyShapeStyle(LinearGradient(colors: [Color(top), Color(bottom)], startPoint: .leading, endPoint: .trailing))
+        AnyShapeStyle(LinearGradient(colors: [Color(top), Color(bottom)], startPoint: .leading, endPoint: .trailing))
     }
 }
 

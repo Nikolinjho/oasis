@@ -25,7 +25,7 @@ struct MusicLiveView: View {
             .frame(height: 32)
 
             if showsTitle {
-                MarqueeText(text: Self.titleLine(info))
+                MarqueeText(text: Self.titleLine(info, title: appearance.title(for: info)))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(IslandPalette.foreground.opacity(0.85))
                     .frame(height: 16)
@@ -37,10 +37,12 @@ struct MusicLiveView: View {
 
     private var isPlaying: Bool { info?.isPlaying ?? false }
 
-    /// Формат из motion.md: «♪ Название ∙ Артист»
-    nonisolated static func titleLine(_ info: NowPlayingInfo?) -> String {
+    /// Формат из motion.md: «♪ Название ∙ Артист». title — что показываем (Hide media title extras чистит его
+    /// снаружи, через appearance.title(for:)); сам info и его trackKey не трогаем — от них зависит ArtworkFlip
+    nonisolated static func titleLine(_ info: NowPlayingInfo?, title: String? = nil) -> String {
         guard let info else { return "" }
-        guard let artist = info.artist, !artist.isEmpty else { return "♪ \(info.title)" }
-        return "♪ \(info.title) ∙ \(artist)"
+        let title = title ?? info.title
+        guard let artist = info.artist, !artist.isEmpty else { return "♪ \(title)" }
+        return "♪ \(title) ∙ \(artist)"
     }
 }

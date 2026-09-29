@@ -84,5 +84,12 @@ public struct IslandAppearance: Equatable, Sendable {
         kind == .volume ? volumeHUD : brightnessHUD
     }
 
+    /// Hide media title extras: только показанный текст. NowPlayingInfo (и его trackKey) не трогаем —
+    /// иначе ArtworkFlip увидел бы «новый трек» при каждом переключении настройки (ревью Task 9, 29.09)
+    public func title(for info: NowPlayingInfo?) -> String? {
+        guard let info else { return nil }
+        return hidesTitleExtras ? TitleCleaner.clean(info.title) : info.title
+    }
+
     public static let `default` = IslandAppearance()
 }

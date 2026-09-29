@@ -13,7 +13,7 @@ struct PlayerView: View {
                 ArtworkFlip(info: info, side: 56, radius: 12, flips: appearance.artworkFlip)
                     .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 VStack(alignment: .leading, spacing: 2) {
-                    MarqueeText(text: info?.title ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
+                    MarqueeText(text: appearance.title(for: info) ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(IslandPalette.foreground)
                         .frame(height: 18)

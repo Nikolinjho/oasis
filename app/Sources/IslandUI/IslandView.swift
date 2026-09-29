@@ -65,7 +65,7 @@ public struct IslandView: View {
         switch model.surface {
         // отклик на hover в той же ветке: вью музыки не пересоздаётся и не играет переход
         case .compact, .peek, .hoverNudge(from: .compact), .hoverNudge(from: .peek):
-            MusicLiveView(info: shownInfo, notchWidth: notchWidth, showsTitle: liveSurface == .peek, appearance: appearance)
+            MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: liveSurface == .peek, appearance: appearance)
                 // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
                 // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку.
                 // В отклике рамка исходного состояния: форма расширяется вокруг контента, он не сдвигается
@@ -81,7 +81,7 @@ public struct IslandView: View {
         case .expanded:
             // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
             // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
-            ExpandedContent(view: model.expandedView, info: shownInfo, agenda: agenda, appearance: appearance,
+            ExpandedContent(view: model.expandedView, info: nowPlaying, agenda: agenda, appearance: appearance,
                             liveEvent: model.calendarLive ? calendarEvent : nil, onAction: onAction, onJoin: onJoin,
                             timeScale: model.config.timeScale)
                 .id(ContentID.expanded)
@@ -118,13 +118,6 @@ public struct IslandView: View {
     private var liveSurface: Surface {
         if case let .hoverNudge(from) = model.surface { return from }
         return model.surface
-    }
-
-    /// Hide media title extras: названия без «(Official Video)» во всех видах музыки
-    private var shownInfo: NowPlayingInfo? {
-        guard appearance.hidesTitleExtras, var info = nowPlaying else { return nowPlaying }
-        info.title = TitleCleaner.clean(info.title)
-        return info
     }
 
     private var liveSize: CGSize {

@@ -26,7 +26,7 @@ struct DuoView: View {
             ArtworkFlip(info: info, side: DuoLayout.artworkSide, radius: 6, flips: appearance.artworkFlip)
                 .modifier(PausedArtwork(isPlaying: info?.isPlaying ?? false))
                 .offset(x: DuoLayout.artworkX, y: DuoLayout.artworkCenterY - DuoLayout.artworkSide / 2)
-            DuoTitle(info: info)
+            DuoTitle(info: info, title: appearance.title(for: info))
                 .frame(width: DuoLayout.titleSize.width, height: DuoLayout.titleSize.height, alignment: .topLeading)
                 .offset(x: DuoLayout.titleOrigin.x, y: DuoLayout.titleOrigin.y)
             // id по месту в ряду: смена ⏸/▶ не пересоздаёт кнопку

@@ -170,7 +170,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             log.error("mediaremote-adapter not found in bundle resources")
             return
         }
-        // Source (Now Playing): пока источник один. Яндекс Музыка — свой NowPlayingSource в этом switch
+        // Source (Now Playing): пока источник один. Яндекс Музыка — свой NowPlayingSource в этом switch.
+        // .yandexMusic сюда не доходит, пока его нет: effectiveMediaSource у AppSettings сводит
+        // недоступный источник к .system (MediaSourceChoice.isAvailable для неё false)
         let source: AdapterNowPlayingSource
         switch settings.effectiveMediaSource {
         case .system, .yandexMusic: source = AdapterNowPlayingSource(paths: paths)
