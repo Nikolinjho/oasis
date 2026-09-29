@@ -39,8 +39,8 @@ struct PlayerView: View {
                 ForEach(Array(PlayerControl.row(info, extra: appearance.playerControl, outputSymbol: appearance.output.symbol)
                     .enumerated()), id: \.offset) { _, control in
                     if let control {
-                        PlayerButton(control: control, isActive: control.isActive
-                            || (control.action == .toggleVolumeRow && showsVolumeRow)) { onAction(control.action) }
+                        let showsBackground = PlayerButton.showsBackground(control, showsVolumeRow: showsVolumeRow)
+                        PlayerButton(control: control, showsBackground: showsBackground) { onAction(control.action) }
                     } else {
                         // пустой слот держит место: остальные кнопки не сдвигаются
                         Color.clear.frame(width: 48, height: 40)
@@ -224,9 +224,16 @@ struct PlayerControl: Equatable {
 
 struct PlayerButton: View {
     let control: PlayerControl
-    var isActive = false
+    /// Подсветка подложки: активный Shuffle/Repeat или открытая строка громкости у кнопки вывода.
+    /// Точка под иконкой от этого не зависит — она только про control.isActive (см. overlay в body)
+    var showsBackground = false
     let action: () -> Void
     @State private var isHovered = false
+
+    /// Строка громкости подсвечивает только кнопку вывода; Shuffle/Repeat подсвечиваются своим состоянием
+    static func showsBackground(_ control: PlayerControl, showsVolumeRow: Bool) -> Bool {
+        control.isActive || (control.action == .toggleVolumeRow && showsVolumeRow)
+    }
 
     var body: some View {
         Button(action: action) {
@@ -239,13 +246,13 @@ struct PlayerButton: View {
                 .frame(width: 48, height: 40)
                 .contentShape(Rectangle())
                 .overlay(alignment: .bottom) {
-                    if isActive, control.isSide {
-                        // точка под иконкой активного Shuffle: размер и отступ — оценка по кадру 28.09
-                        Circle().fill(IslandPalette.secondary).frame(width: 3, height: 3).offset(y: 7)
+                    if control.isActive, control.isSide {
+                        // точка под иконкой активного Shuffle, внутри подложки кнопки: оценка по кадру 28.09
+                        Circle().fill(IslandPalette.secondary).frame(width: 3, height: 3).offset(y: -6)
                     }
                 }
         }
-        .buttonStyle(HoverBackgroundStyle(isHovered: (isHovered || isActive) && control.isEnabled))
+        .buttonStyle(HoverBackgroundStyle(isHovered: (isHovered || showsBackground) && control.isEnabled))
         .onHover { isHovered = $0 }
         .disabled(!control.isEnabled)
     }

@@ -75,6 +75,14 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
         process.arguments = [paths.script.path, paths.framework.path] + arguments
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        // ненулевой статус — например, адаптер не принял режим shuffle/repeat: без этого лога было бы не отличить
+        // от «команда просто не сработала» (вживую проверить в Task 17)
+        process.terminationHandler = { [log, arguments] finished in
+            guard finished.terminationStatus != 0 else { return }
+            log.error("\(arguments.joined(separator: " "), privacy: .public) exited with status \(finished.terminationStatus)")
+        }
         do {
             try process.run()
         } catch {

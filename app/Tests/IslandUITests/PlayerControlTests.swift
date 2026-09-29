@@ -47,6 +47,18 @@ struct PlayerControlTests {
         #expect(PlayerControl.extra(Self.music(), choice: .copy) == nil)
         #expect(PlayerControl.extra(nil, choice: .shuffle) == nil)
     }
+
+    @Test("Подложка кнопки: активный Shuffle/Repeat светится сам, вывод — только при открытой строке громкости")
+    func buttonBackground() {
+        let activeShuffle = PlayerControl(symbol: "shuffle", action: .toggleShuffle, isSide: true, isActive: true)
+        #expect(PlayerButton.showsBackground(activeShuffle, showsVolumeRow: false))
+        let output = PlayerControl(symbol: "headphones", action: .toggleVolumeRow, isSide: true)
+        #expect(!PlayerButton.showsBackground(output, showsVolumeRow: false))
+        #expect(PlayerButton.showsBackground(output, showsVolumeRow: true))
+        // подложка вывода при открытой строке громкости не значит, что control.isActive истинно:
+        // точка под иконкой (рисуется отдельно от showsBackground) у него не появится
+        #expect(!output.isActive)
+    }
 }
 
 struct VolumeRowTests {
