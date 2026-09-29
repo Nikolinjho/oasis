@@ -78,11 +78,23 @@ public final class VolumeControl: @unchecked Sendable {
     /// Текущая громкость без учёта mute
     public var volume: Double? { Self.volume(of: Self.defaultDevice()) }
 
+    /// Уровень для HUD и строки громкости — та же логика, что у changes (VolumeState.level): 0 при mute.
+    /// Оба должны сходиться в одной цифре, иначе строка мигала бы то реальным уровнем, то нулём
+    public var level: Double { Self.currentState().level }
+
     public func setVolume(_ level: Double) {
         var address = Self.volumeAddress
         var value = Float32(level)
         let status = AudioObjectSetPropertyData(Self.defaultDevice(), &address, 0, nil, UInt32(MemoryLayout<Float32>.size), &value)
         if status != noErr { log.error("set volume failed: \(status)") }
+    }
+
+    /// Строка громкости: уровень по месту клика/перетаскивания, mute снимается — как у клавиши (step).
+    /// Без этого при замьюченном выходе уровень снаружи (VolumeState.level) остался бы 0, и строка
+    /// тут же откатилась бы назад при первом же уведомлении CoreAudio о смене громкости
+    public func setVolumeUnmuted(_ level: Double) {
+        if Self.isMuted(Self.defaultDevice()) { setMuted(false) }
+        setVolume(level)
     }
 
     /// Шаг клавиши; при mute сначала снимает его

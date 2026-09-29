@@ -190,10 +190,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nowPlaying = source
     }
 
-    /// Строка громкости плеера: изменение уровня, HUD подавлен на rowQuietUntil
+    /// Строка громкости плеера: изменение уровня, HUD подавлен на rowQuietUntil.
+    /// setVolumeUnmuted снимает mute — иначе VolumeState.level снаружи остался бы 0, и store.volumeLevel
+    /// тут же откатился бы к нулю на первом же уведомлении CoreAudio о смене громкости
     private func setVolumeFromRow(_ level: Double) {
         rowQuietUntil = Date().addingTimeInterval(0.5)
-        volume?.setVolume(level)
+        volume?.setVolumeUnmuted(level)
         store.volumeLevel = level
     }
 
@@ -304,10 +306,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 output = info
                 applyAppearance()
+                // новый выход — свой уровень и mute: строка громкости не должна остаться с цифрой прежнего
+                store.volumeLevel = volume.level
             }
         })
         self.volume = volume
-        store.volumeLevel = volume.volume ?? 0
+        store.volumeLevel = volume.level
         brightness = BrightnessControl()
         if brightness == nil { log.error("DisplayServices unavailable: brightness keys stay with the system") }
     }
@@ -336,6 +340,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .volumeUp, .volumeDown:
             guard settings.soundHUDEnabled else { return false }
             if press.isDown, let volume {
+                // клавиша всегда даёт HUD, даже если её нажали в те же 0.5 с, что и строку громкости
+                // (строка сама HUD не показывает, но не должна глушить и клавишу следом за собой)
+                rowQuietUntil = .distantPast
                 let before = volume.volume
                 volume.step(up: press.key == .volumeUp, fine: press.fine)
                 // на границе (100% и вверх, 0% и вниз) CoreAudio не меняется и слушатель молчит: HUD шлём сами.
@@ -346,7 +353,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         case .mute:
             guard settings.soundHUDEnabled else { return false }
-            if press.isDown, !press.isRepeat { volume?.toggleMute() }
+            if press.isDown, !press.isRepeat {
+                rowQuietUntil = .distantPast
+                volume?.toggleMute()
+            }
             return true
         case .brightnessUp, .brightnessDown:
             guard settings.displayHUDEnabled, let brightness else { return false }

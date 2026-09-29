@@ -22,14 +22,22 @@ struct ExpandedContent: View {
                     .transition(.viewSwap(timeScale: timeScale))
             case .player:
                 PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
-                    .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .top)
+                    .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
                     .transition(.viewSwap(timeScale: timeScale))
             case .calendar:
                 CalendarDayView(agenda: agenda, onJoin: onJoin)
                     .transition(.viewSwap(timeScale: timeScale))
             }
         }
-        .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)
+        .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .topLeading)
+    }
+
+    /// Duo и календарь — фиксированные 175 (DuoLayout.size), как раньше. Плеер со строкой громкости выше
+    /// на IslandGeometry.volumeRowHeight: высота контента совпадает с IslandGeometry.spec(volumeRow: true),
+    /// а не остаётся 175 в расчёте, что лишнее просто не обрежется вышестоящим clipShape
+    private var contentHeight: CGFloat {
+        guard view == .player, showsVolumeRow else { return DuoLayout.size.height }
+        return DuoLayout.size.height + IslandGeometry.volumeRowHeight
     }
 }
 

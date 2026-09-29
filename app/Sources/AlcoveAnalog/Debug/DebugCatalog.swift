@@ -205,6 +205,7 @@ enum DebugCatalog {
             .action(DebugAction(id: "island.open", title: "Open") { store.send(.clicked) }),
             .action(DebugAction(id: "island.close", title: "Close") { store.send(.clickedOutside) }),
             .action(DebugAction(id: "island.cycle", title: "Cycle Expanded View") { store.send(.expandedViewCycled) }),
+            .action(DebugAction(id: "island.volume-row", title: "Toggle Volume Row") { store.send(.volumeRowToggled) }),
             .separator,
             // синтетический свайп двумя пальцами по раскрытому (Task 9): те же фазы, что шлёт монитор scrollWheel.
             // Шаги по 30 мс, travel — сжатие/растяжение в pt, hold — пауза перед отпусканием для скриншота
