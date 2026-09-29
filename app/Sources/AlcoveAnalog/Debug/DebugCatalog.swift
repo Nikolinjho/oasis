@@ -2,6 +2,32 @@ import Foundation
 import IslandCore
 import IslandSources
 
+/// calendar.live/calendar.start ставят фейковое событие через store.setCalendarLive напрямую, в обход
+/// CalendarClock (тот следит за agenda, а не за отладочными событиями), поэтому в проде некому закрыть
+/// окно по истечении event.end — кольцо остаётся полным навсегда (репродукция живой проверки, задача 3).
+/// Держит свой таймер на закрытие: новый debug-live через тот же экземпляр отменяет предыдущее закрытие,
+/// а не оставляет его тикать по концу уже подменённого события
+@MainActor
+final class DebugCalendarLive {
+    private var pendingClose: Task<Void, Never>?
+
+    func set(_ event: CalendarEvent, on store: IslandStore, now: Date = Date()) {
+        pendingClose?.cancel()
+        store.setCalendarLive(event)
+        let delay = max(0, event.end.timeIntervalSince(now))
+        pendingClose = Task { [weak store] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled else { return }
+            store?.setCalendarLive(nil)
+        }
+    }
+
+    func cancel() {
+        pendingClose?.cancel()
+        pendingClose = nil
+    }
+}
+
 /// Все отладочные действия по разделам. Новая поверхность приходит вместе со своим разделом или пунктом
 @MainActor
 enum DebugCatalog {
@@ -76,7 +102,8 @@ enum DebugCatalog {
     }
 
     private static func calendar(_ store: IslandStore) -> DebugSection {
-        DebugSection(title: "Calendar", entries: [
+        let debugLive = DebugCalendarLive()
+        return DebugSection(title: "Calendar", entries: [
             .action(DebugAction(id: "calendar.duo-event", title: "Duo With Fake Event") {
                 let now = Date()
                 store.pinDebugEvents([CalendarEvent(
@@ -107,18 +134,21 @@ enum DebugCatalog {
             .separator,
             .action(DebugAction(id: "calendar.live", title: "Live: Fake Event in 45 s") {
                 let start = Date().addingTimeInterval(45)
-                store.setCalendarLive(CalendarEvent(
+                debugLive.set(CalendarEvent(
                     id: "fake-live", title: "Fake Event", start: start, end: start.addingTimeInterval(300),
-                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)))
+                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)), on: store)
             }),
             .action(DebugAction(id: "calendar.start", title: "Event Starts Now") {
                 let now = Date()
-                store.setCalendarLive(CalendarEvent(
+                debugLive.set(CalendarEvent(
                     id: "fake-start", title: "Fake Event", start: now, end: now.addingTimeInterval(300),
-                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)))
+                    isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35)), on: store)
                 store.send(.calendarStarted)
             }),
-            .action(DebugAction(id: "calendar.live-off", title: "Live Off") { store.setCalendarLive(nil) }),
+            .action(DebugAction(id: "calendar.live-off", title: "Live Off") {
+                debugLive.cancel()
+                store.setCalendarLive(nil)
+            }),
             .action(DebugAction(id: "calendar.remind", title: "Reminder in 2 s (15 min before)") {
                 // событие через 15 мин 2 с: часы получат повестку через onAgendaChange и сами пересекут отметку T−15.
                 // Закреплённая повестка, как у calendar.duo-event: живой источник её не перезапишет, снимает calendar.real

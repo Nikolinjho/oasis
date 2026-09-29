@@ -149,6 +149,57 @@ struct DebugCatalogTests {
         #expect(toggle.isOn?() == false)
     }
 
+    @Test("DebugCalendarLive закрывает окно календаря сама по истечении event.end (задача 3)")
+    func debugCalendarLiveClosesAtEnd() async throws {
+        let store = IslandStore()
+        let live = DebugCalendarLive()
+        let now = Date()
+        // короткое фейковое событие: конец через 0.05 с, чтобы тест не ждал реальные минуты
+        let event = CalendarEvent(
+            id: "fake-live", title: "Fake Event", start: now, end: now.addingTimeInterval(0.05),
+            isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+        live.set(event, on: store, now: now)
+        #expect(store.model.calendarLive)
+
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!store.model.calendarLive, "окно должно закрыться само по концу события")
+    }
+
+    @Test("DebugCalendarLive: новое debug-live-событие отменяет закрытие предыдущего")
+    func debugCalendarLiveReplacementCancelsOldClose() async throws {
+        let store = IslandStore()
+        let live = DebugCalendarLive()
+        let now = Date()
+        // первое событие заканчивается почти сразу, но второе (длиннее) должно пережить его старый таймер
+        let short = CalendarEvent(
+            id: "fake-short", title: "Short", start: now, end: now.addingTimeInterval(0.05),
+            isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+        let long = CalendarEvent(
+            id: "fake-long", title: "Long", start: now, end: now.addingTimeInterval(5),
+            isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+        live.set(short, on: store, now: now)
+        live.set(long, on: store, now: now)
+
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(store.model.calendarLive, "старый таймер short не должен закрыть уже подменённое событие long")
+    }
+
+    @Test("DebugCalendarLive.cancel останавливает запланированное закрытие")
+    func debugCalendarLiveCancelStopsClose() async throws {
+        let store = IslandStore()
+        let live = DebugCalendarLive()
+        let now = Date()
+        let event = CalendarEvent(
+            id: "fake-live", title: "Fake Event", start: now, end: now.addingTimeInterval(0.05),
+            isAllDay: false, color: RGB(red: 0.35, green: 0.85, blue: 0.35))
+        live.set(event, on: store, now: now)
+        live.cancel()
+        store.setCalendarLive(nil)
+
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(!store.model.calendarLive)
+    }
+
     @Test("airpods.connected и airpods.low показывают уведомление AirPods с полным и почти пустым кольцом")
     func airpodsActions() throws {
         for (id, battery) in [("airpods.connected", 1.0), ("airpods.low", 0.15)] {
