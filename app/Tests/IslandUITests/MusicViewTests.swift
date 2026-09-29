@@ -27,6 +27,13 @@ struct MusicViewTests {
         #expect(MusicLiveView.titleLine(nil) == "")
     }
 
+    @Test("Бегущая строка стоит 1.1 с, потом идёт 34 pt/с")
+    func marqueeTravel() {
+        #expect(MarqueeText.travelled(elapsed: 0.5) == 0)
+        #expect(MarqueeText.travelled(elapsed: 1.1) == 0)
+        #expect(abs(MarqueeText.travelled(elapsed: 2.1) - 34) < 1e-9)
+    }
+
     @Test("Время в минутах и секундах")
     func timeFormat() {
         #expect(ProgressRow.format(0) == "0:00")

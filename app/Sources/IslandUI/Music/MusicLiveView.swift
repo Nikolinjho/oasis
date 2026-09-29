@@ -13,7 +13,9 @@ struct MusicLiveView: View {
             HStack(spacing: 0) {
                 // радиус 4: замера нет, оценка
                 ArtworkFlip(info: info, side: 16, radius: 4, flips: appearance.artworkFlip)
-                    .scaleEffect(isPlaying ? 1 : 0.85)
+                    // пауза — 0.85, peek — ×1.2 от левого верха. Масштаб едет пружиной перехода peek
+                    .scaleEffect((isPlaying ? 1 : 0.85) * (showsTitle ? IslandTiming.peekArtworkScale : 1),
+                                 anchor: UnitPoint(x: 0.2, y: 0))
                     .opacity(isPlaying ? 1 : 0.6)
                     .animation(.easeOut(duration: 0.5), value: isPlaying)
                 Spacer(minLength: notchWidth)

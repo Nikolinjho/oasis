@@ -25,8 +25,16 @@ public enum IslandTiming {
     public static let slotInBlur: CGFloat = 10
     public static let slotOutBlur: CGFloat = 4
 
-    /// Скорость бегущей строки в peek, pt/с
-    public static let marqueeSpeed: CGFloat = 30
+    /// Скорость бегущей строки: ~34 pt/с по записи нативного Alcove (ui-inspection 3.3). Веб-демо давало 30
+    public static let marqueeSpeed: CGFloat = 34
+    /// Бегущая строка стоит ~1.1 с после появления текста (ui-inspection 3.3)
+    public static let marqueeDelay: Double = 1.1
+    /// Старая обложка начинает поворачиваться через ~130 мс после смены названия
+    /// (capture/analysis/README.md, «Смена трека: 3D-переворот обложки»)
+    public static let artworkFlipDelay: Duration = .milliseconds(130)
+    /// В peek обложка растёт до 1.2 от левого верха (motion.md, веб-демо: scale 1.2, origin 20% 0%).
+    /// В нативном по кадру rec2 обложка peek крупнее компакта, точнее не мерили
+    public static let peekArtworkScale: CGFloat = 1.2
     /// Периоды полосок эквалайзера, высота пульса 3 → 12 pt
     public static let equalizerPeriods: [Double] = [0.95, 1.46, 0.82, 1.24]
 }

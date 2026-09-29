@@ -37,6 +37,9 @@ struct ArtworkFlip: View {
         // переворот ещё не дошёл до ребра: на экране по-прежнему прежний outgoing
         if outgoing == nil { outgoing = old }
         flipTask = Task { @MainActor in
+            // название уже сменилось, обложка ждёт ~130 мс (запись Alcove №2)
+            try? await Task.sleep(for: IslandTiming.artworkFlipDelay)
+            guard !Task.isCancelled else { return }
             withAnimation(.easeIn(duration: 0.12)) { angle = 90 }
             try? await Task.sleep(for: .milliseconds(120))
             guard !Task.isCancelled else { return }

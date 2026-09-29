@@ -1,7 +1,7 @@
 import IslandCore
 import SwiftUI
 
-/// Бегущая строка 30 pt/с с гаснущими краями (motion.md, «Бегущая строка в peek»).
+/// Бегущая строка 34 pt/с с гаснущими краями (motion.md, «Бегущая строка в peek»).
 /// Короткий текст стоит на месте: в peek по центру, в плеере у левого края
 struct MarqueeText: View {
     let text: String
@@ -23,7 +23,7 @@ struct MarqueeText: View {
             let width = proxy.size.width + bleed
             TimelineView(.animation(paused: !overflow)) { context in
                 let cycle = textWidth + gap
-                let travelled = CGFloat(context.date.timeIntervalSince(start)) * IslandTiming.marqueeSpeed
+                let travelled = Self.travelled(elapsed: context.date.timeIntervalSince(start))
                 HStack(spacing: gap) {
                     label
                     if overflow { label }
@@ -38,6 +38,11 @@ struct MarqueeText: View {
         }
         // новый текст бежит с начала
         .onChange(of: text) { start = .now }
+    }
+
+    /// Сколько строка прошла: стоит marqueeDelay, дальше marqueeSpeed
+    nonisolated static func travelled(elapsed: TimeInterval) -> CGFloat {
+        CGFloat(max(0, elapsed - IslandTiming.marqueeDelay)) * IslandTiming.marqueeSpeed
     }
 
     private var label: some View {
