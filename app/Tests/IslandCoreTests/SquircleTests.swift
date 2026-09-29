@@ -61,4 +61,33 @@ struct SquircleTests {
         let path = IslandOutline.path(size: CGSize(width: 195, height: 32), bottomRadius: 28, shoulder: 7)
         #expect(abs(path.boundingBoxOfPath.height - 32) < 0.01)
     }
+
+    @Test("Стык тела и ушек без щели: на дробном плече по обе стороны от шва заливка есть, контур один")
+    func outlineHasNoSeamAtShoulderJoin() {
+        // дробное плечо — как во время пружины анимации, где и был замечен шов
+        let shoulder: CGFloat = 7.37
+        let width: CGFloat = 261
+        let path = IslandOutline.path(size: CGSize(width: width, height: 32), bottomRadius: 10, shoulder: shoulder)
+        let earHeight = shoulder * IslandOutline.EarProfile.heightRatio
+
+        // левый стык, у самого края экрана (внутри выпуклой части ушка)
+        #expect(path.contains(CGPoint(x: shoulder - 0.01, y: 1)))
+        #expect(path.contains(CGPoint(x: shoulder + 0.01, y: 1)))
+        // тот же стык глубже — у 90% высоты ушка, где кривая ещё держит ширину до самого борта
+        let deep = earHeight * 0.9
+        #expect(path.contains(CGPoint(x: shoulder - 0.01, y: deep)))
+        #expect(path.contains(CGPoint(x: shoulder + 0.01, y: deep)))
+        // правый стык зеркально
+        let right = shoulder + width
+        #expect(path.contains(CGPoint(x: right - 0.01, y: 1)))
+        #expect(path.contains(CGPoint(x: right + 0.01, y: 1)))
+
+        // тело и оба ушка сливаются в одну область: единственный контур вместо трёх раздельных подпутей
+        // (старая реализация с addPath тела + двух ушек давала здесь 3 moveTo)
+        var subpathStarts = 0
+        path.applyWithBlock { element in
+            if element.pointee.type == .moveToPoint { subpathStarts += 1 }
+        }
+        #expect(subpathStarts == 1)
+    }
 }

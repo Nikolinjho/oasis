@@ -12,36 +12,42 @@ public enum IslandOutline {
             width: w, height: h,
             radii: .init(topLeft: 0, topRight: 0, bottomRight: r, bottomLeft: r))
 
-        let path = CGMutablePath()
-        path.addPath(SVGPath.cgPath(svg), transform: CGAffineTransform(translationX: shoulder, y: 0))
-        guard shoulder > 0 else { return path }
+        let body = CGMutablePath()
+        body.addPath(SVGPath.cgPath(svg), transform: CGAffineTransform(translationX: shoulder, y: 0))
+        guard shoulder > 0 else { return body }
 
         // ушко ниже острова не опускается: во время пружины высота и ушко растут вместе
         let earHeight = min(shoulder * EarProfile.heightRatio, h)
         let tip = EarProfile.tipHandle * shoulder
         let side = earHeight * (1 - EarProfile.sideHandle)
 
+        let ears = CGMutablePath()
         // левое ушко: заливка между краем экрана и бортом острова над вогнутой кривой
-        path.move(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: shoulder, y: 0))
-        path.addLine(to: CGPoint(x: shoulder, y: earHeight))
-        path.addCurve(
+        ears.move(to: CGPoint(x: 0, y: 0))
+        ears.addLine(to: CGPoint(x: shoulder, y: 0))
+        ears.addLine(to: CGPoint(x: shoulder, y: earHeight))
+        ears.addCurve(
             to: CGPoint(x: 0, y: 0),
             control1: CGPoint(x: shoulder, y: side),
             control2: CGPoint(x: tip, y: 0))
-        path.closeSubpath()
+        ears.closeSubpath()
 
         // правое ушко зеркально
         let right = shoulder + w
-        path.move(to: CGPoint(x: right + shoulder, y: 0))
-        path.addLine(to: CGPoint(x: right, y: 0))
-        path.addLine(to: CGPoint(x: right, y: earHeight))
-        path.addCurve(
+        ears.move(to: CGPoint(x: right + shoulder, y: 0))
+        ears.addLine(to: CGPoint(x: right, y: 0))
+        ears.addLine(to: CGPoint(x: right, y: earHeight))
+        ears.addCurve(
             to: CGPoint(x: right + shoulder, y: 0),
             control1: CGPoint(x: right, y: side),
             control2: CGPoint(x: right + shoulder - tip, y: 0))
-        path.closeSubpath()
-        return path
+        ears.closeSubpath()
+
+        // тело и ушки раньше были раздельными подпутями с общим стыком по x = shoulder / shoulder + w:
+        // на дробных координатах анимации оба края сглаживались по отдельности и в стыке проступала
+        // светлая нить (шов на правом ушке при live-приёмке). CGPath.union сливает их в один контур
+        // без внутреннего ребра на стыке — по кадру дороже, чем addPath, но заметно не на глаз
+        return body.union(ears)
     }
 
     /// Ширина тёмной области контура на глубине depth от края экрана: тело плюс заполненная часть ушек.
