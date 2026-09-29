@@ -1,3 +1,4 @@
+import Foundation
 import IslandCore
 import Testing
 @testable import IslandUI
@@ -72,6 +73,25 @@ struct PlayerControlTests {
         #expect(ProgressRow.seekPosition(at: -5, width: 240, duration: 200) == 0)
         #expect(ProgressRow.seekPosition(at: 999, width: 240, duration: 200) == 200)
         #expect(ProgressRow.seekPosition(at: 10, width: 0, duration: 200) == 0)
+    }
+
+    @Test("Что показывать: перетаскивание важнее отложенного seek, тот — важнее позиции источника")
+    func displayPosition() {
+        let now = Date()
+        // тянут прямо сейчас — неважно, что уже отправлен seek и что говорит источник
+        #expect(ProgressRow.displayPosition(
+            dragFraction: 0.5, pendingSeek: (10, now), sourcePosition: 5, duration: 100, isPlaying: true, now: now) == 50)
+        // отложенный seek 2 с назад, играет — тикает свой отсчёт, а не источник
+        #expect(ProgressRow.displayPosition(
+            dragFraction: nil, pendingSeek: (10, now.addingTimeInterval(-2)), sourcePosition: 5, duration: 100,
+            isPlaying: true, now: now) == 12)
+        // тот же отложенный seek, но на паузе — отсчёт не идёт
+        #expect(ProgressRow.displayPosition(
+            dragFraction: nil, pendingSeek: (10, now.addingTimeInterval(-2)), sourcePosition: 5, duration: 100,
+            isPlaying: false, now: now) == 10)
+        // ни перетаскивания, ни отложенного seek — позиция источника
+        #expect(ProgressRow.displayPosition(
+            dragFraction: nil, pendingSeek: nil, sourcePosition: 5, duration: 100, isPlaying: true, now: now) == 5)
     }
 }
 

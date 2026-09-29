@@ -242,5 +242,7 @@ struct AppSettingsTests {
         #expect(settings.showRemainingTime && settings.appearance.showsRemainingTime)
         settings.showRemainingTime = false
         #expect(!settings.appearance.showsRemainingTime)
+        // переживает перезапуск, как остальные настройки
+        #expect(!AppSettings(defaults: defaults).showRemainingTime)
     }
 }

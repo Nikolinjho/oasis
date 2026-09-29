@@ -73,7 +73,12 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
 
     /// seek адаптера принимает микросекунды
     public func seek(to position: TimeInterval) {
-        run(["seek", String(Int((max(position, 0) * 1_000_000).rounded()))])
+        run(Self.seekArguments(position))
+    }
+
+    /// Аргументы команды seek: секунды в микросекунды, отрицательная позиция зажата в 0
+    nonisolated static func seekArguments(_ position: TimeInterval) -> [String] {
+        ["seek", String(Int((max(position, 0) * 1_000_000).rounded()))]
     }
 
     /// Разовая команда адаптера: отдельный perl, поток stream не трогаем

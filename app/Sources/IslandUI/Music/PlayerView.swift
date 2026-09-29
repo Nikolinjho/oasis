@@ -136,13 +136,20 @@ struct ProgressRow: View {
     var fill: AnyShapeStyle = AnyShapeStyle(IslandPalette.foreground)
     var showsRemaining = true
     var onAction: (PlayerAction) -> Void = { _ in }
-    /// Пока тянут полоску — позиция пальца в долях 0…1, после отпускания снова берём позицию из info
-    @State private var dragFraction: Double?
+    /// Пока палец на полоске — позиция под ним в долях 0…1. @GestureState сам сбрасывается в nil,
+    /// когда жест кончается или отменяется системой — руками очищать нечем и не нужно
+    @GestureState private var dragFraction: Double?
+    /// После отпускания — отправленный seek и момент отправки, пока источник не прислал новую позицию.
+    /// Без этого полоска на 0.3–0.6 с отскакивала назад к старой info.position, а потом прыгала вперёд
+    @State private var pendingSeek: (position: TimeInterval, at: Date)?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
             let duration = info?.duration ?? 0
-            let position = dragFraction.map { $0 * duration } ?? info?.position(at: context.date) ?? 0
+            let position = Self.displayPosition(
+                dragFraction: dragFraction, pendingSeek: pendingSeek,
+                sourcePosition: info?.position(at: context.date) ?? 0, duration: duration,
+                isPlaying: info?.isPlaying ?? false, now: context.date)
             HStack(spacing: 8) {
                 Text(Self.format(position)).monospacedDigit()
                 GeometryReader { proxy in
@@ -156,14 +163,15 @@ struct ProgressRow: View {
                     .frame(maxHeight: .infinity)
                     .contentShape(Rectangle())
                     .gesture(DragGesture(minimumDistance: 0)
-                        .onChanged { value in
+                        .updating($dragFraction) { value, fraction, _ in
                             guard duration > 0 else { return }
-                            dragFraction = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration) / duration
+                            fraction = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration) / duration
                         }
                         .onEnded { value in
-                            dragFraction = nil
                             guard duration > 0 else { return }
-                            onAction(.seek(Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration)))
+                            let seeked = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration)
+                            pendingSeek = (seeked, Date())
+                            onAction(.seek(seeked))
                         })
                 }
                 .frame(height: 14)
@@ -176,6 +184,15 @@ struct ProgressRow: View {
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(IslandPalette.secondary)
             .frame(height: 14)
+            // источник подтвердил позицию своим payload — держать seek дальше незачем
+            .onChange(of: info?.elapsedAt) { _, _ in pendingSeek = nil }
+            // сменился трек — отложенный seek был про прошлый
+            .onChange(of: info?.trackKey) { _, _ in pendingSeek = nil }
+            // источник молчит дольше 1.5 с — оценка, не держим позицию вечно без подтверждения
+            .onChange(of: context.date) { _, date in
+                guard let pendingSeek, date.timeIntervalSince(pendingSeek.at) > 1.5 else { return }
+                self.pendingSeek = nil
+            }
         }
     }
 
@@ -199,6 +216,17 @@ struct ProgressRow: View {
     nonisolated static func seekPosition(at x: CGFloat, width: CGFloat, duration: TimeInterval) -> TimeInterval {
         guard width > 0 else { return 0 }
         return duration * Double(min(max(x / width, 0), 1))
+    }
+
+    /// Что показать под позицией: перетаскивание — самое свежее, дальше — отложенный seek
+    /// (свой отсчёт от at, пока играет), и только потом — позиция источника
+    nonisolated static func displayPosition(
+        dragFraction: Double?, pendingSeek: (position: TimeInterval, at: Date)?, sourcePosition: TimeInterval,
+        duration: TimeInterval, isPlaying: Bool, now: Date
+    ) -> TimeInterval {
+        if let dragFraction { return dragFraction * duration }
+        if let pendingSeek { return pendingSeek.position + (isPlaying ? now.timeIntervalSince(pendingSeek.at) : 0) }
+        return sourcePosition
     }
 }
 
