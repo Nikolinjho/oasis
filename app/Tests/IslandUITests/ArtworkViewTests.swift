@@ -25,4 +25,12 @@ struct ArtworkViewTests {
         #expect(ArtworkView.frame(for: Self.png(width: 20, height: 20), side: 55) == CGSize(width: 55, height: 55))
         #expect(ArtworkView.frame(for: nil, side: 16) == CGSize(width: 16, height: 16))
     }
+
+    @Test("Порог 1.3: 4:3 ещё широкая, 5:4 уже квадрат")
+    func frameThreshold() {
+        // 40:30 = 1.333 — выше порога, как 16:9
+        #expect(ArtworkView.frame(for: Self.png(width: 40, height: 30), side: 60) == CGSize(width: 60, height: 34))
+        // 50:40 = 1.25 — ниже порога, квадрат
+        #expect(ArtworkView.frame(for: Self.png(width: 50, height: 40), side: 60) == CGSize(width: 60, height: 60))
+    }
 }

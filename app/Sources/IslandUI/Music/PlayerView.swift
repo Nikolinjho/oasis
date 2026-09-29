@@ -17,6 +17,9 @@ struct PlayerView: View {
                     // Alcove 1.7.9: клик по обложке или названию выводит источник вперёд, остров не закрывается
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.openSource) }
+                    // AX 28.09: время прогресса стоит на одном y у Music и YouTube — квадратный слот 56×56
+                    // не даёт 56×31 обложке сжать строку и сдвинуть прогресс с кнопками вверх
+                    .frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 2) {
                     MarqueeText(text: appearance.title(for: info) ?? "Not Playing", shortAlignment: .leading, outdentsFade: true)
                         .font(.system(size: 14, weight: .semibold))
