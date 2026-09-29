@@ -69,10 +69,10 @@ struct IslandMachineCalendarTests {
         #expect(m.surface == .idle)
     }
 
-    @Test("Трек во время окна календаря только запоминается")
+    @Test("Трек во время окна календаря: компакт остаётся календарём, но перестраивается под музыку на месте")
     func trackDuringLive() {
         var m = Self.model(.calendar, live: true)
-        #expect(IslandMachine.reduce(&m, .trackChanged).isEmpty)
+        #expect(IslandMachine.reduce(&m, .trackChanged) == [.animate(.calendarRestyle)])
         #expect(m.hasMedia)
         #expect(m.surface == .calendar)
     }

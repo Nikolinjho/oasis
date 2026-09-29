@@ -6,11 +6,14 @@ public enum ActivityLayouts {
     public static let calendarRed = RGB(red: 1, green: 0.27, blue: 0.23)
     /// Тёмно-красный трек кольца. Оценка по кадру cal-compact.jpg
     public static let calendarTrack = RGB(red: 0.35, green: 0.08, blue: 0.08)
-    /// Самый широкий индикатор компакта календаря: минуты в момент открытия окна при музыке. У Alcove ширина
-    /// компакта фиксирована, пол ширины (IslandGeometry.calendarSize) считается по нему
+    /// Пол ширины компакта календаря БЕЗ музыки (IslandGeometry.calendarSize) — при музыке размер уже
+    /// фиксирован размером компакта музыки, и этот пол не участвует. Без музыки текст-индикатор сам никогда
+    /// не шире «60s» (минуты показываются только при музыке): «15m» здесь — запас по безопасности,
+    /// тот же текст, что у самого раннего напоминания (reminderWidestIndicator)
     public static let calendarWidestIndicator = ActivityLayout.Indicator.text("15m", color: calendarRed)
-    /// Самый широкий индикатор напоминания: «15m» шире «60s», поэтому у напоминания свой пол ширины
-    /// (IslandGeometry.size(for:notch:reminderIndicatorWidth:)). Самое раннее напоминание — за 15 минут
+    /// Самый широкий индикатор напоминания — у напоминания свой пол ширины
+    /// (IslandGeometry.size(for:notch:reminderIndicatorWidth:)), тот же текст, что и у calendarWidestIndicator
+    /// выше. Самое раннее напоминание — за 15 минут
     public static let reminderWidestIndicator = ActivityLayout.Indicator.text("15m", color: calendarRed)
 
     /// Компакт календаря (Alcove 1.7.9, 29.09). До начала: при музыке — минуты вверх («9m»), без музыки — кольцо,
@@ -22,7 +25,9 @@ public enum ActivityLayouts {
         if untilStart > 60 {
             indicator = withMusic
                 ? .text("\(Int((untilStart / 60).rounded(.up)))m", color: calendarRed)
-                : .ring(progress: 1 - untilStart / CalendarSchedule.liveLead, color: calendarRed, track: calendarTrack)
+                // max(0, …): calendar() в норме зовут только пока окно уже открыто (untilStart <= liveLead),
+                // клапан — на случай вызова раньше окна, чтобы прогресс не ушёл в минус
+                : .ring(progress: max(0, 1 - untilStart / CalendarSchedule.liveLead), color: calendarRed, track: calendarTrack)
         } else if untilStart > 0 {
             indicator = .text("\(Int(untilStart.rounded(.up)))s", color: calendarRed)
         } else {

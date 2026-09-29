@@ -15,11 +15,20 @@ public enum CalendarSchedule {
     /// Отметку старше этого (Mac спал, таймер опоздал) уже не показываем
     public static let staleAfter: TimeInterval = 60
 
-    /// Событие окна календаря: из тех, что начнутся за liveLead или уже идут, — начавшееся позже всех.
-    /// Событие внутри идущего забирает окно за liveLead до своего начала, после его конца окно возвращается
-    /// к идущему. События по началу (DayAgenda.make), завтрашние после сегодняшних
+    /// Событие окна календаря. Сначала — среди уже начавшихся и ещё не закончившихся, то, что стартовало
+    /// позже всех: событие внутри идущего забирает окно в момент своего старта, а не раньше — это отдельная
+    /// проверка именно ради событий встык/пересечения, отдельно от простого «начнётся в ближайшие liveLead».
+    /// Если ни одно не началось — ближайшее по старту предстоящее, чьё окно (start−liveLead) уже открыто.
+    /// Поведение Alcove для событий встык (A 10:00–10:30, B 10:30…) вживую не проверяли — оценка.
+    /// События по началу (DayAgenda.make), завтрашние после сегодняшних
     public static func liveEvent(in agenda: DayAgenda, at now: Date) -> CalendarEvent? {
-        events(agenda).last { $0.start.addingTimeInterval(-liveLead) <= now && now < $0.end }
+        let list = events(agenda)
+        if let started = list.last(where: { $0.start <= now && now < $0.end }) {
+            return started
+        }
+        return list
+            .filter { now < $0.start && $0.start.addingTimeInterval(-liveLead) <= now }
+            .min { $0.start < $1.start }
     }
 
     public static func crossings(in agenda: DayAgenda, from previous: Date, to now: Date) -> [CalendarTick] {

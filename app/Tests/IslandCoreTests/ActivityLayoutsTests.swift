@@ -36,9 +36,15 @@ struct ActivityLayoutsTests {
 
     @Test("Без музыки до начала — кольцо, которое заполняется к старту, в последнюю минуту секунды")
     func withoutMusic() {
+        // момент открытия окна (T−15): кольцо пустое, а не в минусе (max(0, …))
+        let opening = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false)
+        #expect(opening.indicator == .ring(progress: 0, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
         let half = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-450), showsLine: false)
         #expect(half.indicator == .ring(progress: 0.5, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
         #expect(!half.showsArtwork)
+        // ровно на границе минуты — ещё секунды, а не кольцо
+        let boundary = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
+        #expect(boundary.indicator == .text("60s", color: ActivityLayouts.calendarRed))
         let last = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-30), showsLine: false)
         #expect(last.indicator == .text("30s", color: ActivityLayouts.calendarRed))
     }

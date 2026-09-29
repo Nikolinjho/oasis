@@ -42,17 +42,28 @@ struct CalendarScheduleTests {
         #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(1800)) == nil)
     }
 
-    @Test("Пересекающиеся события: окно переходит к начавшемуся позже, после его конца — обратно")
+    @Test("Пересекающиеся события: окно переходит к начавшемуся позже ровно в момент его старта, после конца — обратно")
     func overlappingLiveEvent() {
         let long = CalendarEvent(
             id: "long", title: "Длинное", start: Self.start, end: Self.at(3600), isAllDay: false, color: Self.event.color)
         let inner = CalendarEvent(
             id: "inner", title: "Внутри", start: Self.at(1800), end: Self.at(2700), isAllDay: false, color: Self.event.color)
         let agenda = DayAgenda.make(events: [inner, long], now: Self.at(-100))
-        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(899)) == long)
-        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(900)) == inner)
+        // до старта inner окно держит long, даже когда T−15 у inner уже прошёл: переход не раньше старта
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1799)) == long)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1800)) == inner)
         #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2000)) == inner)
         #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2700)) == long)
+    }
+
+    @Test("События встык без разрыва: окно переходит к следующему точно в момент его начала, не раньше (Alcove — не проверено, оценка)")
+    func adjacentEvents() {
+        let a = CalendarEvent(id: "a", title: "A", start: Self.start, end: Self.at(1800), isAllDay: false, color: Self.event.color)
+        let b = CalendarEvent(id: "b", title: "B", start: Self.at(1800), end: Self.at(2400), isAllDay: false, color: Self.event.color)
+        let agenda = DayAgenda.make(events: [a, b], now: Self.at(-100))
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(900)) == a)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1799)) == a)
+        #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1800)) == b)
     }
 
     @Test("Событие завтра в начале суток: напоминание, граница и окно работают ещё до полуночи")

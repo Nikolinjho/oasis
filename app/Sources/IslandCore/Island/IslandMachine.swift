@@ -193,10 +193,18 @@ public enum IslandMachine {
     }
 
     public static func reduce(_ model: inout IslandModel, _ event: IslandEvent) -> [IslandEffect] {
-        let effects = reduceEvent(&model, event)
+        let showedMedia = model.showsMedia
+        var effects = reduceEvent(&model, event)
         // строка громкости есть только в раскрытом плеере. У Alcove после схлопывания и нового раскрытия
         // её нет (28.09). Сброс при смене вида свайпом — оценка: не проверяли
         if model.surface != .expanded || model.expandedView != .player { model.volumeRowShown = false }
+        // музыка появилась или пропала во время окна календаря, а обработчик события не менял surface
+        // (calendarLiveChanged ждёт смены base, а calendar приоритетнее музыки в base независимо от неё):
+        // компакт/peek меняют размер на месте, без этого — мгновенный скачок ширины без анимации
+        if (model.surface == .calendar || model.surface == .calendarPeek), showedMedia != model.showsMedia,
+           !effects.contains(where: { if case .animate = $0 { true } else { false } }) {
+            effects.append(.animate(.calendarRestyle))
+        }
         return effects
     }
 

@@ -56,7 +56,7 @@ struct CalendarClockTests {
         #expect(store.calendarEvent == Self.event)
     }
 
-    @Test("Событие начинается внутри идущего: окно и peek старта переходят к нему")
+    @Test("Событие начинается внутри идущего: окно и peek старта переходят к нему в момент его начала")
     func overlappingEventTakesWindow() {
         let long = CalendarEvent(
             id: "long", title: "Длинное", start: Self.start, end: Self.at(3600), isAllDay: false, color: Self.event.color)
@@ -66,8 +66,9 @@ struct CalendarClockTests {
         let clock = CalendarClock(store: store, start: Self.at(10))
         clock.update(agenda: DayAgenda.make(events: [long, inner], now: Self.at(10)), now: Self.at(10))
         #expect(store.calendarEvent == long)
+        // до старта inner окно остаётся у long, даже когда T−15 у inner уже прошёл (события встык — оценка)
         clock.tick(now: Self.at(1745))
-        #expect(store.calendarEvent == inner)
+        #expect(store.calendarEvent == long)
         clock.tick(now: Self.at(1800))
         #expect(store.model.surface == .calendarPeek)
         #expect(store.calendarEvent == inner)
@@ -221,14 +222,15 @@ struct CalendarClockDismissTests {
         // окно long уже открыто (T−15 у liveLead 900 с раньше −600): меню — по нему, inner ещё не наступило
         #expect(clock.menuModel(now: Self.at(-600))?.event.id == "long")
 
-        clock.tick(now: Self.at(1790))
+        // inner берёт компакт ровно в момент своего старта, не раньше (события встык — оценка)
+        clock.tick(now: Self.at(1800))
         #expect(store.calendarEvent == inner)
-        #expect(clock.menuModel(now: Self.at(1790))?.event.id == "inner")
+        #expect(clock.menuModel(now: Self.at(1800))?.event.id == "inner")
 
-        clock.dismiss(try! #require(clock.menuModel(now: Self.at(1790))).event.id, now: Self.at(1790))
+        clock.dismiss(try! #require(clock.menuModel(now: Self.at(1800))).event.id, now: Self.at(1800))
         #expect(store.calendarEvent == long)
         #expect(store.model.calendarLive)
-        #expect(clock.menuModel(now: Self.at(1790))?.event.id == "long")
+        #expect(clock.menuModel(now: Self.at(1800))?.event.id == "long")
     }
 
     @Test("Dismiss убирает ждущее в очереди напоминание события, показанное напоминание другого события остаётся")

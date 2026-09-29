@@ -65,4 +65,22 @@ struct IslandStoreTests {
         store.unpinDebugEvents(now: now)
         #expect(seen == [["real"], ["fake"], ["real2"]])
     }
+
+    @Test("Spec компакта календаря при играющей музыке — размеры компакта музыки, без музыки — прежний пол")
+    func calendarSpecFollowsMusic() {
+        let store = IslandStore(config: .alcove)
+        store.send(.trackChanged)
+        store.send(.calendarLiveChanged(true))
+        store.send(.timerFired(.grow))
+        #expect(store.model.surface == .calendar)
+        #expect(store.model.showsMedia)
+        #expect(store.spec.size == CGSize(width: 257, height: 32))
+
+        store.send(.mediaCleared)
+        #expect(store.model.surface == .calendar)
+        #expect(!store.model.showsMedia)
+        // без музыки — прежний пол по «15m» (27 pt на этой системе, см. AlertViewTests.reminderIndicatorWidth):
+        // notch 185 + 2 × (8 паддинга + 27 индикатора) = 255, шире тела календаря (254)
+        #expect(store.spec.size == CGSize(width: 255, height: 32))
+    }
 }
