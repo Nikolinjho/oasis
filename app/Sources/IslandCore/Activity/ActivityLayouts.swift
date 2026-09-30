@@ -6,27 +6,23 @@ public enum ActivityLayouts {
     public static let calendarRed = RGB(red: 1, green: 0.27, blue: 0.23)
     /// Тёмно-красный трек кольца. Оценка по кадру cal-compact.jpg
     public static let calendarTrack = RGB(red: 0.35, green: 0.08, blue: 0.08)
-    /// Самый широкий индикатор компакта календаря БЕЗ музыки: «60s» в момент открытия окна, дальше только
-    /// убывающие секунды (минуты показываются только при музыке — с ней размер уже фиксирован размером
-    /// компакта музыки, и этот пол не участвует). У Alcove ширина компакта без музыки фиксирована (254,
-    /// замер 1.7.7), пол (IslandGeometry.calendarSize) считается по этому индикатору, а не мерить его шире
-    public static let calendarWidestIndicator = ActivityLayout.Indicator.text("60s", color: calendarRed)
-    /// Самый широкий индикатор напоминания: «15m» шире «60s», поэтому у напоминания свой пол ширины
+    /// Самый широкий индикатор компакта календаря: «15m» в момент открытия окна (T−15), дальше минуты и секунды
+    /// только убывают, кольцо уже. У Alcove ширина компакта без музыки фиксирована (254, замер 1.7.7), пол
+    /// (IslandGeometry.calendarSize) считается по этому индикатору, а не по текущему. С музыкой размер задаёт
+    /// компакт музыки, пол не участвует
+    public static let calendarWidestIndicator = ActivityLayout.Indicator.text("15m", color: calendarRed)
+    /// Самый широкий индикатор напоминания — тоже «15m», но у напоминания свой пол ширины
     /// (IslandGeometry.size(for:notch:reminderIndicatorWidth:)). Самое раннее напоминание — за 15 минут
     public static let reminderWidestIndicator = ActivityLayout.Indicator.text("15m", color: calendarRed)
 
-    /// Компакт календаря (Alcove 1.7.9, 29.09). До начала: при музыке — минуты вверх («9m»), без музыки — кольцо,
-    /// которое заполняется к старту (осмотр 1.7.7). Последняя минута — секунды. Во время события — кольцо хода.
+    /// Компакт календаря (Alcove 1.7.9, 29.09). До начала — минуты вверх («9m»), с музыкой и без (решение
+    /// пользователя 30.09), последняя минута — секунды. Кольцо — только ход идущего события.
     /// withMusic: иконка — обложка трека с бейджем часов. С showsLine — строка peek на старте
     public static func calendar(event: CalendarEvent, now: Date, showsLine: Bool, withMusic: Bool = false) -> ActivityLayout {
         let untilStart = event.start.timeIntervalSince(now)
         let indicator: ActivityLayout.Indicator
         if untilStart > 60 {
-            indicator = withMusic
-                ? .text("\(Int((untilStart / 60).rounded(.up)))m", color: calendarRed)
-                // max(0, …): calendar() в норме зовут только пока окно уже открыто (untilStart <= liveLead),
-                // клапан — на случай вызова раньше окна, чтобы прогресс не ушёл в минус
-                : .ring(progress: max(0, 1 - untilStart / CalendarSchedule.liveLead), color: calendarRed, track: calendarTrack)
+            indicator = .text("\(Int((untilStart / 60).rounded(.up)))m", color: calendarRed)
         } else if untilStart > 0 {
             indicator = .text("\(Int(untilStart.rounded(.up)))s", color: calendarRed)
         } else {

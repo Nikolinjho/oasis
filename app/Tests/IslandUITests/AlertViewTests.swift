@@ -86,7 +86,8 @@ struct AlertViewTests {
     @Test("Пол ширины напоминания меряется по «15m», самому широкому индикатору напоминания")
     func reminderIndicatorWidth() {
         #expect(IslandView.reminderIndicatorWidth == ActivityCompactView.indicatorWidth(.text("15m", color: ActivityLayouts.calendarRed)))
-        #expect(IslandView.reminderIndicatorWidth > IslandView.calendarIndicatorWidth)
+        // компакт календаря до начала тоже показывает минуты: пол у них теперь один
+        #expect(IslandView.reminderIndicatorWidth == IslandView.calendarIndicatorWidth)
     }
 
     @MainActor

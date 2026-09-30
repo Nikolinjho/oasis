@@ -16,12 +16,12 @@ struct ActivityLayoutsTests {
         #expect(layout.line == nil)
     }
 
-    @Test("Самый широкий индикатор без музыки — «60s» на границе последней минуты; с музыкой на T−15 — «15m»")
+    @Test("Самый широкий индикатор до начала — «15m» в момент открытия окна (T−15), с музыкой и без")
     func widestIndicator() {
-        let noMusic = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
-        #expect(noMusic.indicator == ActivityLayouts.calendarWidestIndicator)
-        let withMusic = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false, withMusic: true)
-        #expect(withMusic.indicator == .text("15m", color: ActivityLayouts.calendarRed))
+        for withMusic in [false, true] {
+            let opening = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false, withMusic: withMusic)
+            #expect(opening.indicator == ActivityLayouts.calendarWidestIndicator)
+        }
     }
 
     @Test("С музыкой: обложка с бейджем, минуты вверх до начала, в последнюю минуту секунды (Alcove 1.7.9, 29.09)")
@@ -36,19 +36,18 @@ struct ActivityLayoutsTests {
         #expect(ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: false, withMusic: true).showsArtwork)
     }
 
-    @Test("Без музыки до начала — кольцо, которое заполняется к старту, в последнюю минуту секунды")
+    @Test("Без музыки до начала — минуты вверх, в последнюю минуту секунды: кольцо только у идущего события")
     func withoutMusic() {
-        // момент открытия окна (T−15): кольцо пустое, а не в минусе (max(0, …))
-        let opening = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-900), showsLine: false)
-        #expect(opening.indicator == .ring(progress: 0, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
-        let half = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-450), showsLine: false)
-        #expect(half.indicator == .ring(progress: 0.5, color: ActivityLayouts.calendarRed, track: ActivityLayouts.calendarTrack))
-        #expect(!half.showsArtwork)
-        // ровно на границе минуты — ещё секунды, а не кольцо
-        let boundary = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-60), showsLine: false)
-        #expect(boundary.indicator == .text("60s", color: ActivityLayouts.calendarRed))
-        let last = ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-30), showsLine: false)
-        #expect(last.indicator == .text("30s", color: ActivityLayouts.calendarRed))
+        func indicator(_ offset: TimeInterval) -> ActivityLayout.Indicator {
+            ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(offset), showsLine: false).indicator
+        }
+        #expect(indicator(-900) == .text("15m", color: ActivityLayouts.calendarRed))
+        #expect(indicator(-484) == .text("9m", color: ActivityLayouts.calendarRed))
+        #expect(indicator(-61) == .text("2m", color: ActivityLayouts.calendarRed))
+        // ровно на границе минуты — уже секунды
+        #expect(indicator(-60) == .text("60s", color: ActivityLayouts.calendarRed))
+        #expect(indicator(-30) == .text("30s", color: ActivityLayouts.calendarRed))
+        #expect(!ActivityLayouts.calendar(event: Self.event, now: Self.start.addingTimeInterval(-484), showsLine: false).showsArtwork)
     }
 
     @Test("Во время события — кольцо хода события")
