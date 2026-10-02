@@ -6,7 +6,11 @@ import os
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable:this type_body_length - разбивка вне задачи
   private let store = IslandStore()
-  private let settings = AppSettings()
+  /// Миграция старого домена Alcove Analog — до первого чтения настроек
+  private let settings: AppSettings = {
+    LegacyDefaultsMigration.runAtLaunch()
+    return AppSettings()
+  }()
   private let sounds = SoundPlayer()
   private lazy var settingsWindow = SettingsWindowController(settings: settings) { [weak self] sound in
     self?.sounds.play(sound)
