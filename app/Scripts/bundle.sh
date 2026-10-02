@@ -15,6 +15,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/AlcoveAnalog"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
+cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png "$APP/Contents/Resources/"
 
 if [ -d "$ADAPTER" ]; then
     cp -R "$ADAPTER/MediaRemoteAdapter.framework" "$ADAPTER/mediaremote-adapter.pl" "$APP/Contents/Resources/"

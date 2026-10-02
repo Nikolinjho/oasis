@@ -47,7 +47,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     self.isTrusted = isTrusted
     self.calendarItems = calendarItems
     super.init()
-    item.button?.image = NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
+    item.button?.image = Self.menuBarIcon()
     // позиция после перетаскивания с Cmd сохраняется между запусками
     item.autosaveName = "AlcoveAnalogStatus"
 
@@ -61,6 +61,18 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     menu.addItem(.separator())
     menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     item.menu = menu
+  }
+
+  /// Пальма на острове из бандла (MenuBarIcon.png + @2x), template — macOS сама красит под тему menu bar.
+  /// Без бандла (swift run) — SF Symbol
+  private static func menuBarIcon() -> NSImage? {
+    guard let image = Bundle.main.image(forResource: "MenuBarIcon") else {
+      return NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
+    }
+    image.size = NSSize(width: 18, height: 18)
+    image.isTemplate = true
+    image.accessibilityDescription = "Alcove Analog"
+    return image
   }
 
   /// Hide menu bar icon: NSStatusItem остаётся живым, меню по-прежнему открывается правым кликом по острову

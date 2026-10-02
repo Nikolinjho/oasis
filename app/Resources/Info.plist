@@ -6,6 +6,8 @@
     <string>dev.nikoko.alcove-analog</string>
     <key>CFBundleName</key>
     <string>Alcove Analog</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleExecutable</key>
     <string>AlcoveAnalog</string>
     <key>CFBundlePackageType</key>
