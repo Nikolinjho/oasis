@@ -43,6 +43,7 @@
 | Подпись | бесплатный Apple Development (Personal Team). Стабильная подпись нужна, чтобы macOS не сбрасывала разрешения при каждой пересборке |
 | Sandbox | выключен: нужны приватные фреймворки, Apple Events и перехват клавиш |
 | Тесты | `swift test`: машина состояний, геометрия, парсинг источников |
+| Стиль | swift-format из тулчейна (раскладка) + SwiftLint 0.65.1 в `app/Vendor` (правила). `Scripts/lint.sh --check` — перед каждым коммитом |
 | Проверка анимаций | `capture/tools/track.py` и `fit.py`: записываем прототип, меряем габариты по кадрам, сравниваем пружины с Alcove |
 
 **Системные API по модулям:**
@@ -116,9 +117,11 @@
 
 ```bash
 cd app
-./Scripts/make-cert.sh      # один раз: сертификат для стабильной подписи
-./Scripts/fetch-adapter.sh  # один раз: mediaremote-adapter для музыки (нужен cmake)
-./Scripts/bundle.sh         # сборка build/AlcoveAnalog.app
+./Scripts/make-cert.sh        # один раз: сертификат для стабильной подписи
+./Scripts/fetch-adapter.sh    # один раз: mediaremote-adapter для музыки (нужен cmake)
+./Scripts/fetch-swiftlint.sh  # один раз: SwiftLint 0.65.1 в Vendor/swiftlint
+./Scripts/bundle.sh           # сборка build/AlcoveAnalog.app
+./Scripts/lint.sh             # форматирование и линт; --check только проверяет
 open build/AlcoveAnalog.app
 ```
 
