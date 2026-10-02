@@ -7,142 +7,142 @@ import SwiftUI
 /// С line снизу добавляется строка peek (высота формы 73.5). Паддинг и кегль индикатора — общие константы
 /// ActivityLayout (compactPadding, indicatorFontSize), чтобы контракт и рисование не разъехались
 struct ActivityCompactView: View {
-    let layout: ActivityLayout
-    let notchWidth: CGFloat
-    var artwork: NowPlayingInfo? = nil
-    /// Disable artwork flip и масштаб паузы обложки — те же настройки, что у компакта музыки
-    /// (MusicLiveView), сюда добираются с бейджем календаря поверх обложки
-    var artworkFlip = true
+  let layout: ActivityLayout
+  let notchWidth: CGFloat
+  var artwork: NowPlayingInfo? = nil
+  /// Disable artwork flip и масштаб паузы обложки — те же настройки, что у компакта музыки
+  /// (MusicLiveView), сюда добираются с бейджем календаря поверх обложки
+  var artworkFlip = true
 
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                icon
-                    .frame(width: ActivityLayout.iconWidth, height: 15)
-                Spacer(minLength: notchWidth)
-                indicator
-            }
-            .padding(.horizontal, ActivityLayout.compactPadding)
-            .frame(height: Self.rowHeight)
+  var body: some View {
+    VStack(spacing: 0) {
+      HStack(spacing: 0) {
+        icon
+          .frame(width: ActivityLayout.iconWidth, height: 15)
+        Spacer(minLength: notchWidth)
+        indicator
+      }
+      .padding(.horizontal, ActivityLayout.compactPadding)
+      .frame(height: Self.rowHeight)
 
-            if let line = layout.line {
-                ActivityLine(line: line)
-                    .padding(.horizontal, 14)
-                    .frame(height: Self.lineHeight)
-                    .transition(.slot)
-            }
-        }
+      if let line = layout.line {
+        ActivityLine(line: line)
+          .padding(.horizontal, 14)
+          .frame(height: Self.lineHeight)
+          .transition(.slot)
+      }
     }
+  }
 
-    /// Строка компакта — высота компакта календаря (32)
-    nonisolated static let rowHeight = IslandGeometry.calendarCompact.height
-    /// Строка peek — остаток высоты peek календаря (73.5) под строкой компакта: 41.5
-    nonisolated static let lineHeight = IslandGeometry.calendarPeek.height - rowHeight
+  /// Строка компакта — высота компакта календаря (32)
+  nonisolated static let rowHeight = IslandGeometry.calendarCompact.height
+  /// Строка peek — остаток высоты peek календаря (73.5) под строкой компакта: 41.5
+  nonisolated static let lineHeight = IslandGeometry.calendarPeek.height - rowHeight
 
-    /// Иконка слева. При музыке — обложка 16 pt, как в компакте музыки, и красный бейдж с часами в правом нижнем
-    /// углу. Размер бейджа и сдвиг — оценка по кадру music-event-compact.jpg
-    @ViewBuilder
-    private var icon: some View {
-        if layout.showsArtwork {
-            ArtworkFlip(info: artwork, side: 16, radius: 4, flips: artworkFlip)
-                // пауза — тот же масштаб 0.83, что у компакта музыки (MusicLiveView, PausedArtwork.look):
-                // без него обложка под бейджем календаря не уменьшается на паузе, хотя рядом в компакте музыки — да
-                .scaleEffect(PausedArtwork.look(isPlaying: artwork?.isPlaying ?? false).scale)
-                .overlay(alignment: .bottomTrailing) {
-                    Image(systemName: layout.symbol)
-                        .font(.system(size: 6, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 9, height: 9)
-                        .background(Circle().fill(Color(layout.symbolColor)))
-                        .offset(x: 4, y: 4)
-                }
-        } else {
-            Image(systemName: layout.symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color(layout.symbolColor))
+  /// Иконка слева. При музыке — обложка 16 pt, как в компакте музыки, и красный бейдж с часами в правом нижнем
+  /// углу. Размер бейджа и сдвиг — оценка по кадру music-event-compact.jpg
+  @ViewBuilder
+  private var icon: some View {
+    if layout.showsArtwork {
+      ArtworkFlip(info: artwork, side: 16, radius: 4, flips: artworkFlip)
+        // пауза — тот же масштаб 0.83, что у компакта музыки (MusicLiveView, PausedArtwork.look):
+        // без него обложка под бейджем календаря не уменьшается на паузе, хотя рядом в компакте музыки — да
+        .scaleEffect(PausedArtwork.look(isPlaying: artwork?.isPlaying ?? false).scale)
+        .overlay(alignment: .bottomTrailing) {
+          Image(systemName: layout.symbol)
+            .font(.system(size: 6, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 9, height: 9)
+            .background(Circle().fill(Color(layout.symbolColor)))
+            .offset(x: 4, y: 4)
         }
+    } else {
+      Image(systemName: layout.symbol)
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(Color(layout.symbolColor))
     }
+  }
 
-    @ViewBuilder
-    private var indicator: some View {
-        switch layout.indicator {
-        case let .ring(progress, color, track):
-            ActivityRing(progress: progress, color: Color(color), track: Color(track))
-                .frame(width: ActivityLayout.ringWidth, height: ActivityLayout.ringWidth)
-        case let .text(text, color):
-            Text(text)
-                .font(.system(size: ActivityLayout.indicatorFontSize, weight: .semibold))
-                .monospacedDigit()
-                .foregroundStyle(Color(color))
-                // держит натуральную ширину текста: без этого перенос на две строки при нехватке места.
-                // Само место под текст должно быть посчитано заранее через ActivityLayout.width
-                .lineLimit(1)
-                .fixedSize()
-        }
+  @ViewBuilder
+  private var indicator: some View {
+    switch layout.indicator {
+    case .ring(let progress, let color, let track):
+      ActivityRing(progress: progress, color: Color(color), track: Color(track))
+        .frame(width: ActivityLayout.ringWidth, height: ActivityLayout.ringWidth)
+    case .text(let text, let color):
+      Text(text)
+        .font(.system(size: ActivityLayout.indicatorFontSize, weight: .semibold))
+        .monospacedDigit()
+        .foregroundStyle(Color(color))
+        // держит натуральную ширину текста: без этого перенос на две строки при нехватке места.
+        // Само место под текст должно быть посчитано заранее через ActivityLayout.width
+        .lineLimit(1)
+        .fixedSize()
     }
+  }
 
-    /// Ширина индикатора без построения SwiftUI-дерева — нужна вызывающей стороне (ширины компакта и peek
-    /// календаря, напоминания в IslandView) заранее, чтобы посчитать ActivityLayout.width. Кольцо — фиксированные 16 pt, текст — метрика того же шрифта,
-    /// что рисует .text выше (indicatorFontSize, полужирный, моноширинные цифры), с округлением вверх
-    nonisolated static func indicatorWidth(_ indicator: ActivityLayout.Indicator) -> CGFloat {
-        switch indicator {
-        case .ring:
-            return ActivityLayout.ringWidth
-        case let .text(text, _):
-            let font = NSFont.monospacedDigitSystemFont(ofSize: ActivityLayout.indicatorFontSize, weight: .semibold)
-            let size = (text as NSString).size(withAttributes: [.font: font])
-            return size.width.rounded(.up)
-        }
+  /// Ширина индикатора без построения SwiftUI-дерева — нужна вызывающей стороне (ширины компакта и peek
+  /// календаря, напоминания в IslandView) заранее, чтобы посчитать ActivityLayout.width. Кольцо — фиксированные 16 pt, текст — метрика того же шрифта,
+  /// что рисует .text выше (indicatorFontSize, полужирный, моноширинные цифры), с округлением вверх
+  nonisolated static func indicatorWidth(_ indicator: ActivityLayout.Indicator) -> CGFloat {
+    switch indicator {
+    case .ring:
+      return ActivityLayout.ringWidth
+    case .text(let text, _):
+      let font = NSFont.monospacedDigitSystemFont(ofSize: ActivityLayout.indicatorFontSize, weight: .semibold)
+      let size = (text as NSString).size(withAttributes: [.font: font])
+      return size.width.rounded(.up)
     }
+  }
 }
 
 /// Кольцо 16 pt, линия 3 pt, начало сверху. Толщину не мерили, оценка по кадру cal-compact.jpg
 struct ActivityRing: View {
-    let progress: Double
-    let color: Color
-    let track: Color
+  let progress: Double
+  let color: Color
+  let track: Color
 
-    nonisolated static func clamped(_ progress: Double) -> Double { min(max(progress, 0), 1) }
+  nonisolated static func clamped(_ progress: Double) -> Double { min(max(progress, 0), 1) }
 
-    var body: some View {
-        ZStack {
-            Circle().stroke(track, lineWidth: 3)
-            Circle()
-                .trim(from: 0, to: Self.clamped(progress))
-                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-        }
-        .animation(.smooth(duration: 0.3), value: progress)
+  var body: some View {
+    ZStack {
+      Circle().stroke(track, lineWidth: 3)
+      Circle()
+        .trim(from: 0, to: Self.clamped(progress))
+        .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+        .rotationEffect(.degrees(-90))
     }
+    .animation(.smooth(duration: 0.3), value: progress)
+  }
 }
 
 /// «▌название ⏳ 59s»: полоска в цвете календаря, название белым, иконка и время серым (ui-inspection 3.5)
 struct ActivityLine: View {
-    let line: ActivityLayout.Line
+  let line: ActivityLayout.Line
 
-    var body: some View {
-        HStack(spacing: 6) {
-            if let bar = line.bar {
-                Capsule().fill(Color(bar)).frame(width: 3, height: 16)
-            }
-            Text(line.title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(IslandPalette.foreground)
-                .lineLimit(1)
-            Spacer(minLength: 8)
-            if let symbol = line.trailingSymbol {
-                Image(systemName: symbol)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(IslandPalette.secondary)
-            }
-            if let trailing = line.trailing {
-                Text(trailing)
-                    .font(.system(size: 12, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(IslandPalette.secondary)
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-        }
+  var body: some View {
+    HStack(spacing: 6) {
+      if let bar = line.bar {
+        Capsule().fill(Color(bar)).frame(width: 3, height: 16)
+      }
+      Text(line.title)
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(IslandPalette.foreground)
+        .lineLimit(1)
+      Spacer(minLength: 8)
+      if let symbol = line.trailingSymbol {
+        Image(systemName: symbol)
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundStyle(IslandPalette.secondary)
+      }
+      if let trailing = line.trailing {
+        Text(trailing)
+          .font(.system(size: 12, weight: .medium))
+          .monospacedDigit()
+          .foregroundStyle(IslandPalette.secondary)
+          .lineLimit(1)
+          .fixedSize()
+      }
     }
+  }
 }
