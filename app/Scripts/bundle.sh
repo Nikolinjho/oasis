@@ -46,7 +46,7 @@ fi
 if security find-identity -p codesigning | grep -q "$IDENTITY"; then
     SIGN="$IDENTITY"
 else
-    echo "Нет сертификата «$IDENTITY», подписываю ad-hoc: разрешения будут слетать" >&2
+    echo "Нет сертификата «${IDENTITY}», подписываю ad-hoc: разрешения будут слетать" >&2
     SIGN="-"
 fi
 

@@ -6,7 +6,7 @@ NAME="Oasis Dev"
 KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 
 if security find-certificate -c "$NAME" "$KEYCHAIN" >/dev/null 2>&1; then
-    echo "Сертификат «$NAME» уже есть"
+    echo "Сертификат «${NAME}» уже есть"
     exit 0
 fi
 
