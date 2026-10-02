@@ -4,7 +4,7 @@ import IslandSources
 import os
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable:this type_body_length - разбивка вне задачи
   private let store = IslandStore()
   private let settings = AppSettings()
   private let sounds = SoundPlayer()
@@ -357,7 +357,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   /// true — клавиша наша, системе её не отдаём.
   /// Вызывается прямо из колбэка tap на главном потоке: только быстрые вызовы, без ожиданий
-  private func handleKey(_ press: MediaKeyPress) -> Bool {
+  private func handleKey(_ press: MediaKeyPress) -> Bool {  // swiftlint:disable:this cyclomatic_complexity - по case на клавишу
     switch press.key {
     case .volumeUp, .volumeDown:
       guard settings.soundHUDEnabled else { return false }

@@ -86,6 +86,7 @@ final class IslandWindowController {
     return panel
   }
 
+  // swiftlint:disable:next function_body_length - мониторы событий одним списком, порядок установки виден целиком
   private func installMonitors() {
     let moves: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged]
     if let global = NSEvent.addGlobalMonitorForEvents(
@@ -195,7 +196,7 @@ final class IslandWindowController {
   /// как в записи жестов, пальцы вниз дают dy > 0 при включённой системной натуральной прокрутке (inverted),
   /// и наоборот при выключенной. Natural movement выкл — жест всегда читается как прокрутка контента:
   /// системная inverted не учитывается, знак тот же, что у natural: true, inverted: false
-  static func swipeInput(
+  static func swipeInput(  // swiftlint:disable:this function_parameter_count - поля NSEvent плюс две настройки
     phase: NSEvent.Phase, momentumPhase: NSEvent.Phase, precise: Bool,
     deltaX: CGFloat, deltaY: CGFloat, inverted: Bool, natural: Bool = true
   ) -> SwipeInput? {

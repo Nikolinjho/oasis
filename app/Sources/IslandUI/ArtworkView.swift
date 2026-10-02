@@ -14,7 +14,7 @@ struct ArtworkView: View {
       if let image {
         Image(nsImage: image)
           .resizable()
-          .aspectRatio(contentMode: .fill)
+          .scaledToFill()
       } else {
         ZStack {
           IslandPalette.placeholder

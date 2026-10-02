@@ -8,8 +8,8 @@ struct DuoView: View {
   let agenda: DayAgenda
   var appearance = IslandAppearance.default
   /// Событие открытого окна календаря: карточка и Join — о нём, как компакт и меню (DayAgenda.current)
-  var liveEvent: CalendarEvent? = nil
-  var now: Date? = nil
+  var liveEvent: CalendarEvent?
+  var now: Date?
   var onJoin: (URL) -> Void = { _ in }
   let onAction: (PlayerAction) -> Void
 

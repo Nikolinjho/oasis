@@ -5,7 +5,7 @@ import SwiftUI
 /// AX-фреймов этого вида нет: колонки и отступы по кадру gest-cycle.jpg, те же, что у Duo, оценка
 struct CalendarDayView: View {
   let agenda: DayAgenda
-  var now: Date? = nil
+  var now: Date?
   let onJoin: (URL) -> Void
 
   static let shown = 2

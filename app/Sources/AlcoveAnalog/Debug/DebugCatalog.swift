@@ -30,7 +30,7 @@ final class DebugCalendarLive {
 
 /// Все отладочные действия по разделам. Новая поверхность приходит вместе со своим разделом или пунктом
 @MainActor
-enum DebugCatalog {
+enum DebugCatalog {  // swiftlint:disable:this type_body_length - каталог отладочных пунктов
   static func sections(
     store: IslandStore, settings: AppSettings? = nil, sounds: SoundPlayer = SoundPlayer()
   ) -> [DebugSection] {
@@ -80,10 +80,8 @@ enum DebugCatalog {
         .action(
           DebugAction(
             id: "music.source-active", title: "Toggle Source App Active",
-            isOn: { store.model.sourceActive }
-          ) {
-            store.send(.sourceActiveChanged(!store.model.sourceActive))
-          }),
+            isOn: { store.model.sourceActive },
+            run: { store.send(.sourceActiveChanged(!store.model.sourceActive)) })),
         .separator,
         .action(DebugAction(id: "music.clear", title: "Clear Track") { store.apply(.cleared) }),
       ])
@@ -114,6 +112,7 @@ enum DebugCatalog {
       ])
   }
 
+  // swiftlint:disable:next function_body_length - раздел меню одним литералом, как он выглядит в меню
   private static func calendar(_ store: IslandStore) -> DebugSection {
     let debugLive = DebugCalendarLive()
     return DebugSection(
@@ -150,10 +149,8 @@ enum DebugCatalog {
         .action(
           DebugAction(
             id: "calendar.real", title: "Use Real Calendar",
-            isOn: { !store.isDebugAgendaPinned }
-          ) {
-            store.unpinDebugEvents()
-          }),
+            isOn: { !store.isDebugAgendaPinned },
+            run: { store.unpinDebugEvents() })),
         .separator,
         .action(
           DebugAction(id: "calendar.live", title: "Live: Fake Event in 45 s") {
@@ -291,6 +288,7 @@ enum DebugCatalog {
       })
   }
 
+  // swiftlint:disable:next function_body_length - раздел меню одним литералом, как он выглядит в меню
   private static func island(_ store: IslandStore, _ settings: AppSettings?) -> DebugSection {
     DebugSection(
       title: "Island",
@@ -395,9 +393,9 @@ enum DebugCatalog {
   private static func timing(_ store: IslandStore, _ settings: AppSettings?) -> DebugSection {
     func mode(_ id: String, _ title: String, _ scale: Double) -> DebugEntry {
       .action(
-        DebugAction(id: id, title: title, isOn: { store.config.timeScale == scale }) {
-          store.config.timeScale = scale
-        })
+        DebugAction(
+          id: id, title: title, isOn: { store.config.timeScale == scale },
+          run: { store.config.timeScale = scale }))
     }
     return DebugSection(
       title: "Timing",
@@ -412,14 +410,14 @@ enum DebugCatalog {
         .action(
           DebugAction(
             id: "settings.expand-on-hover", title: "Expand on Hover",
-            isOn: { settings?.expandOnHover ?? store.config.expandsOnHover }
-          ) {
-            if let settings {
-              settings.expandOnHover.toggle()
-            } else {
-              store.config.expandsOnHover.toggle()
-            }
-          }),
+            isOn: { settings?.expandOnHover ?? store.config.expandsOnHover },
+            run: {
+              if let settings {
+                settings.expandOnHover.toggle()
+              } else {
+                store.config.expandsOnHover.toggle()
+              }
+            })),
       ])
   }
-}
+}  // swiftlint:disable:this file_length - каталог отладочных пунктов

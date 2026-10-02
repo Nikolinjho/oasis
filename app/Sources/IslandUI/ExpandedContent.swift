@@ -7,7 +7,7 @@ struct ExpandedContent: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var appearance = IslandAppearance.default
-  var liveEvent: CalendarEvent? = nil
+  var liveEvent: CalendarEvent?
   var volume: Double = 0
   var showsVolumeRow = false
   let onAction: (PlayerAction) -> Void

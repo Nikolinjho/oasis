@@ -9,6 +9,7 @@ public enum TitleCleaner {
   private static let patterns: [NSRegularExpression] = [
     #"\s*[\(\[][^\)\]]*\b(\#(keywords))\b[^\)\]]*[\)\]]"#,
     #"\s*\|\s*[^|]*\b(\#(keywords))\b.*$"#,
+    // swiftlint:disable:next force_try - шаблоны — литералы в коде, битую регулярку сразу поймает TitleCleanerTests
   ].map { try! NSRegularExpression(pattern: $0, options: [.caseInsensitive]) }
 
   public static func clean(_ title: String) -> String {

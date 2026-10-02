@@ -7,7 +7,7 @@ import IslandCore
 /// к машине острова. Выбор экрана (display) пока никуда не применяется — отдельная задача, P2.
 /// ObservableObject: окно настроек держит его через @ObservedObject
 @MainActor
-final class AppSettings: ObservableObject {
+final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body_length - по свойству на настройку
   enum Key {
     static let expandOnHover = "expandOnHover"
     static let hoverDuration = "hoverDuration"
@@ -262,6 +262,7 @@ final class AppSettings: ObservableObject {
     }
   }
 
+  // swiftlint:disable:next function_body_length - чтение каждой настройки из UserDefaults, по строке на ключ
   init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
     expandOnHover = defaults.object(forKey: Key.expandOnHover) as? Bool ?? true

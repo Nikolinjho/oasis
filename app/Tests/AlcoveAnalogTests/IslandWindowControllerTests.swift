@@ -39,6 +39,7 @@ struct IslandWindowControllerTests {
 
 @MainActor
 struct IslandWindowControllerDragTests {
+  // swiftlint:disable:next type_name - короткий псевдоним тестируемого типа, читается как в формулах
   typealias W = IslandWindowController
 
   @Test("Курсор внутри — hoverExited не нужен независимо от кнопки и старта жеста")
@@ -80,6 +81,7 @@ struct IslandWindowControllerSwipeCloseTests {
 
 @MainActor
 struct IslandWindowControllerSwipeInputTests {
+  // swiftlint:disable:next type_name - короткий псевдоним тестируемого типа, читается как в формулах
   typealias W = IslandWindowController
 
   static func input(

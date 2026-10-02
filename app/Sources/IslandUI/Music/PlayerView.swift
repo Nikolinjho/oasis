@@ -241,7 +241,7 @@ struct ProgressRow: View {
 
   /// Что показать под позицией: перетаскивание — самое свежее, дальше — отложенный seek
   /// (свой отсчёт от at, пока играет), и только потом — позиция источника
-  nonisolated static func displayPosition(
+  nonisolated static func displayPosition(  // swiftlint:disable:this function_parameter_count - чистая функция от состояния
     dragFraction: Double?, pendingSeek: (position: TimeInterval, at: Date)?, sourcePosition: TimeInterval,
     duration: TimeInterval, isPlaying: Bool, now: Date
   ) -> TimeInterval {

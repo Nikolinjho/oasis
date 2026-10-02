@@ -50,7 +50,7 @@ public enum Squircle {
   }
 
   /// Сколько места угол может занять вдоль сторон с учётом соседей
-  static func adjacentBudget(
+  static func adjacentBudget(  // swiftlint:disable:this function_parameter_count - сигнатура как в формуле Alcove
     _ r: Double, _ adjacentR: Double, _ adjacentBudget: Double, _ w: Double,
     _ oppositeR: Double, _ oppositeBudget: Double, _ h: Double
   ) -> Double {

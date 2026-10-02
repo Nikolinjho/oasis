@@ -185,7 +185,7 @@ public enum IslandGeometry {
   /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
   /// (.alert(.calendarReminder)), см. size(for:notch:reminderIndicatorWidth:). calendarWithMusic — пока
   /// играет музыка, компакт и peek календаря занимают её размеры (Alcove 1.7.9, 29.09)
-  public static func spec(
+  public static func spec(  // swiftlint:disable:this cyclomatic_complexity function_body_length - таблица поверхность → форма
     for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
     reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle(),
     calendarWithMusic: Bool = false, volumeRow: Bool = false

@@ -197,6 +197,7 @@ final class IslandStore {
     }
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - редьюс и по case на эффект, разбивка спрячет порядок применения
   func send(_ event: IslandEvent) {
     var next = model
     let previous = model.surface

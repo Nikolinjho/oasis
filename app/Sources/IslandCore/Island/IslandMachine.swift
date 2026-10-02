@@ -136,7 +136,7 @@ public struct IslandModel: Equatable, Sendable {
 
 /// Чистая машина состояний острова: приоритеты и хореография смены активностей.
 /// Приоритет: HUD > уведомления > раскрытый (Duo/плеер) > hover и отклик на него > peek > компакт календаря > компакт музыки > покой
-public enum IslandMachine {
+public enum IslandMachine {  // swiftlint:disable:this type_body_length - редьюсер машины, разбивка вне задачи
   /// Поведение, которое отличает наш режим от Alcove. Эталон сверки записан
   /// в режиме Alcove, поэтому оба поведения — настройка, а не замена
   public struct Config: Equatable, Sendable {
@@ -212,6 +212,7 @@ public enum IslandMachine {
     return effects
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - плоская таблица событие → обработчик, по case на событие
   private static func reduceEvent(_ model: inout IslandModel, _ event: IslandEvent) -> [IslandEffect] {
     switch event {
     case .trackChanged: trackChanged(&model)
@@ -373,6 +374,7 @@ public enum IslandMachine {
     }
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - по case на поверхность, разбивка спрячет порядок проверок
   private static func hudChanged(_ m: inout IslandModel, _ hud: Surface) -> [IslandEffect] {
     if case .hoverNudge(let from) = m.surface {
       // раскрытие отменяется, HUD приходит как из исходного состояния
@@ -425,7 +427,9 @@ public enum IslandMachine {
 
   /// Уведомление: из покоя сразу, из компакта через сжатие, из раскрытого морфом, как HUD (решение 27.09).
   /// Во время HUD и уведомления другого вида ждёт в очереди. Тот же вид обновляет показанное и продлевает его
-  private static func alertArrived(_ m: inout IslandModel, _ alert: IslandAlert) -> [IslandEffect] {
+  private static func alertArrived(  // swiftlint:disable:this cyclomatic_complexity - по case на поверхность
+    _ m: inout IslandModel, _ alert: IslandAlert
+  ) -> [IslandEffect] {
     // уведомление — активность, которую свайпом уже не удержать в вырезе
     m.dismissed = false
     // новое уведомление вида, вытесненного HUD, — новый показ со звуком
@@ -614,7 +618,9 @@ public enum IslandMachine {
   /// вместо чего угодно, что было на экране — как HUD/уведомление, но без звука и очереди.
   /// nil (отпустили ползунок) — tuningReleased. Отклик и уход курсора разворачиваются так же, как у HUD:
   /// раскрытие подсказки — то, что реально происходит, а не промежуточное состояние
-  private static func tuningHintChanged(_ m: inout IslandModel, _ hint: TuningHint?) -> [IslandEffect] {
+  private static func tuningHintChanged(  // swiftlint:disable:this cyclomatic_complexity - по case на поверхность
+    _ m: inout IslandModel, _ hint: TuningHint?
+  ) -> [IslandEffect] {
     guard let hint else { return tuningReleased(&m) }
     if case .hoverNudge(let from) = m.surface {
       m.surface = from
@@ -764,6 +770,7 @@ public enum IslandMachine {
     return [.animate(.collapse)]
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - по case на таймер, разбивка спрячет порядок проверок
   private static func timerFired(_ m: inout IslandModel, _ id: TimerID) -> [IslandEffect] {
     switch id {
     case .peekEnd:
@@ -872,4 +879,4 @@ public struct HUDDurations: Equatable, Sendable {
   public func duration(for kind: HUDKind) -> Duration {
     kind == .volume ? volume : brightness
   }
-}
+}  // swiftlint:disable:this file_length - редьюсер машины, разбивка вне задачи

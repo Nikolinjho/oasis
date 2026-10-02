@@ -9,7 +9,7 @@ import SwiftUI
 struct ActivityCompactView: View {
   let layout: ActivityLayout
   let notchWidth: CGFloat
-  var artwork: NowPlayingInfo? = nil
+  var artwork: NowPlayingInfo?
   /// Disable artwork flip и масштаб паузы обложки — те же настройки, что у компакта музыки
   /// (MusicLiveView), сюда добираются с бейджем календаря поверх обложки
   var artworkFlip = true

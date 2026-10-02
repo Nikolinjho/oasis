@@ -4,7 +4,7 @@ import SwiftUI
 /// Компакт и peek календаря: секунды до начала и время до конца обновляются раз в секунду (ui-inspection 3.5)
 struct CalendarLiveView: View {
   let event: CalendarEvent?
-  var music: NowPlayingInfo? = nil
+  var music: NowPlayingInfo?
   let showsLine: Bool
   let notchWidth: CGFloat
   var appearance = IslandAppearance.default

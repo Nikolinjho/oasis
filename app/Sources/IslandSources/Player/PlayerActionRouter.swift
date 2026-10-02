@@ -24,6 +24,7 @@ public struct PlayerActionRouter {
     self.performer = performer
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - плоская таблица действие → вызов, по case на действие
   public func perform(_ action: PlayerAction, nowPlaying: NowPlayingInfo?) {
     switch action {
     case .media(let command):

@@ -39,6 +39,7 @@ public enum IslandMotion {
     spring(for: transition)?.slowed(by: timeScale)
   }
 
+  // swiftlint:disable:next cyclomatic_complexity - плоская таблица переход → пружина, по case на переход
   public static func spring(for transition: IslandTransition) -> SpringSpec? {
     switch transition {
     case .compactIn: SpringSpec(stiffness: 235, damping: 31)

@@ -7,7 +7,7 @@ struct DebugAction {
   let id: String
   let title: String
   /// Галочка в меню: для переключателей режима
-  var isOn: (@MainActor () -> Bool)? = nil
+  var isOn: (@MainActor () -> Bool)?
   let run: @MainActor () -> Void
 
   /// Запуск из меню или по ссылке: с записью в лог, по ней скрипты записи сверяют время шагов

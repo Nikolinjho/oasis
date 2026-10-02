@@ -8,7 +8,7 @@ struct HUDView: View {
   let notchWidth: CGFloat
   var appearance = HUDAppearance(style: .white)
   /// Глиф устройства вывода для Show device (IslandAppearance.output)
-  var deviceSymbol: String? = nil
+  var deviceSymbol: String?
 
   var body: some View {
     // Оба крыла зашиты в вырез напрямую, а не через Spacer(minLength:): иначе запас слева

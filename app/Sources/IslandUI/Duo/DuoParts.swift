@@ -73,7 +73,7 @@ struct DuoTitle: View {
   let info: NowPlayingInfo?
   /// Показанное название (Hide media title extras чистит его снаружи через appearance.title(for:)).
   /// info.title остаётся исходным по умолчанию: трогать его самого не нужно, trackKey от него не зависит здесь
-  var title: String? = nil
+  var title: String?
 
   var body: some View {
     VStack(alignment: .leading, spacing: 1) {
@@ -185,7 +185,7 @@ struct DateBadge: View {
 /// 138×28 без места (название + время), 138×40 с местом (название + 📍место + время, Alcove 1.7.9, 29.09)
 struct EventCard: View {
   let event: CalendarEvent
-  var onJoin: (() -> Void)? = nil
+  var onJoin: (() -> Void)?
 
   /// Вся карточка — кнопка созвона, если ссылка есть (решение 28.09). У Alcove карточка — AX-кнопка,
   /// что она делает, не проверяли (ui-inspection 3.5)

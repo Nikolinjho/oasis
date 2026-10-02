@@ -103,9 +103,9 @@ extension Binding where Value == Double {
 /// icon — глиф перед подписью: у Alcove перед Most Recent (ui-inspection 1.2, `clock.arrow.circlepath`)
 struct ToggleRow: View {
   let title: String
-  var info: String? = nil
-  var preview: (() -> Void)? = nil
-  var icon: String? = nil
+  var info: String?
+  var preview: (() -> Void)?
+  var icon: String?
   @Binding var isOn: Bool
 
   var body: some View {
@@ -197,7 +197,7 @@ struct InfoButton: View {
 
 /// Главный тумблер страницы: иконка страницы акцентным цветом и её название.
 /// Выключен — остальные строки страницы прячутся (ui-inspection 1.1, проверено на Battery)
-struct MasterToggleRow: View {
+struct MasterToggleRow: View {  // swiftlint:disable:this inclusive_language - master тут «главный тумблер страницы»
   let page: SettingsPage
   @Binding var isOn: Bool
 

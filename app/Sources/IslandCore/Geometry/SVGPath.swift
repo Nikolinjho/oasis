@@ -52,7 +52,9 @@ public enum SVGPath {
   }
 
   /// Дуга окружности по конечным точкам (SVG 1.1, F.6.5, rx = ry, без поворота), кубиками по ≤ 90°
-  static func appendArc(to path: CGMutablePath, from p1: CGPoint, to p2: CGPoint, radius: CGFloat, largeArc: Bool, sweep: Bool) {
+  static func appendArc(  // swiftlint:disable:this function_parameter_count - параметры дуги по SVG 1.1
+    to path: CGMutablePath, from p1: CGPoint, to p2: CGPoint, radius: CGFloat, largeArc: Bool, sweep: Bool
+  ) {
     let x1p = (p1.x - p2.x) / 2
     let y1p = (p1.y - p2.y) / 2
     var r = radius
