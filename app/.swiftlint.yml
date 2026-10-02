@@ -1,0 +1,13 @@
+# SwiftLint 0.65.1 (Scripts/fetch-swiftlint.sh). Раскладку кода ведёт swift-format (.swift-format),
+# поэтому правила, которые спорят с форматтером, выключены
+included:
+  - Sources
+  - Tests
+disabled_rules:
+  - trailing_comma # swift-format ставит запятую в многострочных литералах
+  - opening_brace # swift-format переносит `{` после многострочной сигнатуры
+  - line_length # длину строки держит swift-format (lineLength 140)
+  - void_function_in_ternary # в редьюсере IslandMachine ветка case в одну строку читается лучше if/else
+  - optional_data_string_conversion # String(decoding:as:) намеренно заменяет битые байты, а не роняет строку
+identifier_name:
+  min_length: 1 # в геометрии и пружинах короткие имена — формулы: m, fx, x0, r
