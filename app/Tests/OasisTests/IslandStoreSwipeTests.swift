@@ -2,7 +2,7 @@ import CoreGraphics
 import IslandCore
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 @MainActor
 struct IslandStoreSwipeTests {

@@ -4,7 +4,7 @@ import Foundation
 /// applicationWillTerminate не вызвался, и perl усыновил launchd (ppid 1).
 /// Процесс другой запущенной сборки не трогаем: у него ppid — живое приложение
 public enum StaleAdapters {
-  static let marker = "AlcoveAnalog.app/Contents/Resources/mediaremote-adapter.pl"
+  static let marker = "Oasis.app/Contents/Resources/mediaremote-adapter.pl"
 
   /// Строки `ps -axo pid=,ppid=,command=` → pid сирот адаптера из любой нашей сборки
   public static func pids(psOutput: String) -> [pid_t] {

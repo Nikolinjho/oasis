@@ -36,9 +36,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// Строка громкости плеера: пока её двигают, изменения громкости HUD не показывают (у Alcove HUD
   /// от строки не появляется, 28.09). 0.5 с после последнего сдвига — оценка: CoreAudio отвечает за десятки мс
   private var rowQuietUntil = Date.distantPast
-  private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "app")
+  private let log = Logger(subsystem: "dev.nikoko.oasis", category: "app")
 
-  /// При холодном запуске по ссылке (`open -g -a … "alcove-analog://…"`) AppKit доставляет
+  /// При холодном запуске по ссылке (`open -g -a … "oasis://…"`) AppKit доставляет
   /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
   func applicationWillFinishLaunching(_ notification: Notification) {
     debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds)
@@ -135,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     return false
   }
 
-  /// alcove-analog://debug/<id>: то же действие, что пункт меню Debug
+  /// oasis://debug/<id>: то же действие, что пункт меню Debug
   func application(_ application: NSApplication, open urls: [URL]) {
     for url in urls {
       guard let id = DebugURL.actionID(from: url) else {

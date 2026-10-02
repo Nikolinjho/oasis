@@ -8,7 +8,7 @@ import Testing
 func liveAdapter() async throws {
   let app = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
   let vendor = app.appendingPathComponent("Vendor/mediaremote-adapter").path
-  let paths = try #require(AdapterPaths.locate(bundle: .main, environment: ["ALCOVE_ADAPTER_DIR": vendor]))
+  let paths = try #require(AdapterPaths.locate(bundle: .main, environment: ["OASIS_ADAPTER_DIR": vendor]))
   let source = AdapterNowPlayingSource(paths: paths)
   source.start()
   defer { source.stop() }

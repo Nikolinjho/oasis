@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>dev.nikoko.alcove-analog</string>
+    <string>dev.nikoko.oasis</string>
     <key>CFBundleName</key>
-    <string>Alcove Analog</string>
+    <string>Oasis</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleExecutable</key>
-    <string>AlcoveAnalog</string>
+    <string>Oasis</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -21,19 +21,19 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Alcove Analog needs your permission to add the playing Apple Music track to Favorites.</string>
+    <string>Oasis needs your permission to add the playing Apple Music track to Favorites.</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>Alcove Analog shows your headphones and their battery when they connect.</string>
+    <string>Oasis shows your headphones and their battery when they connect.</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>Alcove Analog shows your next event next to the player and reminds you before calls.</string>
+    <string>Oasis shows your next event next to the player and reminds you before calls.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>dev.nikoko.alcove-analog.debug</string>
+            <string>dev.nikoko.oasis.debug</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>alcove-analog</string>
+                <string>oasis</string>
             </array>
         </dict>
     </array>

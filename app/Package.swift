@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-  name: "AlcoveAnalog",
+  name: "Oasis",
   platforms: [.macOS(.v26)],
   targets: [
     .target(name: "IslandCore"),
     .target(name: "IslandSources", dependencies: ["IslandCore"]),
     .target(name: "IslandUI", dependencies: ["IslandCore"]),
-    .executableTarget(name: "AlcoveAnalog", dependencies: ["IslandCore", "IslandSources", "IslandUI"]),
+    .executableTarget(name: "Oasis", dependencies: ["IslandCore", "IslandSources", "IslandUI"]),
     .testTarget(name: "IslandCoreTests", dependencies: ["IslandCore"], resources: [.copy("Fixtures")]),
     .testTarget(name: "IslandSourcesTests", dependencies: ["IslandSources", "IslandCore"], resources: [.copy("Fixtures")]),
     .testTarget(name: "IslandUITests", dependencies: ["IslandUI", "IslandCore"]),
     // исполняемый таргет тестируется через @testable import: SwiftPM переименовывает точку входа main
-    .testTarget(name: "AlcoveAnalogTests", dependencies: ["AlcoveAnalog", "IslandCore"]),
+    .testTarget(name: "OasisTests", dependencies: ["Oasis", "IslandCore"]),
   ]
 )

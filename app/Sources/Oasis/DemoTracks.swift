@@ -23,7 +23,7 @@ enum DemoTracks {
   static func make(_ title: String, color: NSColor) -> NowPlayingInfo {
     let artwork = png(color)
     return NowPlayingInfo(
-      bundleID: "dev.nikoko.alcove-analog.demo", title: title, artist: "Demo Artist",
+      bundleID: "dev.nikoko.oasis.demo", title: title, artist: "Demo Artist",
       isPlaying: true, duration: 200, elapsed: 30, elapsedAt: Date(),
       artwork: artwork, accent: artwork.flatMap(ArtworkColor.accent(of:)))
   }

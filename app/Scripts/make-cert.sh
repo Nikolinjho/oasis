@@ -2,7 +2,7 @@
 # Один раз создаёт самоподписанный сертификат для подписи сборок.
 # Стабильная подпись нужна, чтобы macOS не сбрасывала Accessibility при каждой пересборке.
 set -euo pipefail
-NAME="Alcove Analog Dev"
+NAME="Oasis Dev"
 KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 
 if security find-certificate -c "$NAME" "$KEYCHAIN" >/dev/null 2>&1; then

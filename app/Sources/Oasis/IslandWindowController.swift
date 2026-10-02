@@ -25,7 +25,7 @@ final class IslandWindowController {
   /// тянущийся слайдер (прогресс, громкость) не должен схлопнуть остров, если курсор ушёл за его
   /// пределы — реальный hover пересчитывается по отпусканию кнопки (задача 4, репродукция живой проверки)
   private var dragStartedInside = false
-  private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "window")
+  private let log = Logger(subsystem: "dev.nikoko.oasis", category: "window")
   /// General → Tuning: смена сразу переставляет остров
   var tuning = NotchTuning() {
     didSet { if tuning != oldValue { placeOnNotchScreen() } }

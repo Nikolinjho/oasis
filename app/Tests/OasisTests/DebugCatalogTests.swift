@@ -2,7 +2,7 @@ import Foundation
 import IslandCore
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 // Тесты действий, которые внутри вызывают DebugScript.run (серии, сценарии, demo.run), сюда не кладём:
 // у DebugScript.current общий на процесс слот, для них место в сериализованной суите DebugScriptTests
@@ -21,16 +21,16 @@ struct DebugCatalogTests {
     }
   }
 
-  @Test("Ссылка alcove-analog://debug/<id> даёт id действия, другие ссылки — nil")
+  @Test("Ссылка oasis://debug/<id> даёт id действия, другие ссылки — nil")
   func parsesURL() {
-    #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/hud.sound.50")!) == "hud.sound.50")
-    #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/")!) == nil)
-    #expect(DebugURL.actionID(from: URL(string: "alcove-analog://settings/general")!) == nil)
+    #expect(DebugURL.actionID(from: URL(string: "oasis://debug/hud.sound.50")!) == "hud.sound.50")
+    #expect(DebugURL.actionID(from: URL(string: "oasis://debug/")!) == nil)
+    #expect(DebugURL.actionID(from: URL(string: "oasis://settings/general")!) == nil)
     #expect(DebugURL.actionID(from: URL(string: "https://debug/hud.sound.50")!) == nil)
     // регистр схемы и хоста не важен, хвостовой слэш и query не мешают разбору
-    #expect(DebugURL.actionID(from: URL(string: "ALCOVE-ANALOG://DEBUG/hud.sound.50")!) == "hud.sound.50")
-    #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/hud.sound.50/")!) == "hud.sound.50")
-    #expect(DebugURL.actionID(from: URL(string: "alcove-analog://debug/hud.sound.50?x=1")!) == "hud.sound.50")
+    #expect(DebugURL.actionID(from: URL(string: "OASIS://DEBUG/hud.sound.50")!) == "hud.sound.50")
+    #expect(DebugURL.actionID(from: URL(string: "oasis://debug/hud.sound.50/")!) == "hud.sound.50")
+    #expect(DebugURL.actionID(from: URL(string: "oasis://debug/hud.sound.50?x=1")!) == "hud.sound.50")
   }
 
   @Test("Sound 50% ставит остров в HUD громкости с уровнем 0.5")

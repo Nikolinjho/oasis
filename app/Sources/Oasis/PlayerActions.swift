@@ -9,7 +9,7 @@ final class PlayerActions: PlayerActionPerforming {
   private weak var source: (any NowPlayingSource)?
   private let favorite = MusicFavorite()
   private let setVolumeLevel: (Double) -> Void
-  private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "player")
+  private let log = Logger(subsystem: "dev.nikoko.oasis", category: "player")
 
   init(source: (any NowPlayingSource)?, setVolume: @escaping (Double) -> Void) {
     self.source = source

@@ -3,7 +3,7 @@ import Foundation
 import IslandCore
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 // .serialized: тесты пишут в UserDefaults(suiteName:) на диск через cfprefsd. Параллельно с другими
 // тестами того же файла это иногда обгоняет removePersistentDomain (запись после удаления) и
@@ -14,7 +14,7 @@ struct AppSettingsTests {
   /// Каждый суит уникален (UUID), но домен реально пишется в ~/Library/Preferences: без удаления
   /// он там и остаётся. Возвращаем имя вместе с defaults, чтобы тест мог убрать его за собой
   static func freshDefaults() -> (name: String, defaults: UserDefaults) {
-    let name = "alcove-analog-tests-\(UUID().uuidString)"
+    let name = "oasis-tests-\(UUID().uuidString)"
     return (name, UserDefaults(suiteName: name)!)
   }
 

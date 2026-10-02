@@ -49,7 +49,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     super.init()
     item.button?.image = Self.menuBarIcon()
     // позиция после перетаскивания с Cmd сохраняется между запусками
-    item.autosaveName = "AlcoveAnalogStatus"
+    item.autosaveName = "OasisStatus"
 
     menu.delegate = self
     menu.addItem(ClosureMenuItem("Settings…", key: ",") { openSettings() })
@@ -67,11 +67,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
   /// Без бандла (swift run) — SF Symbol
   private static func menuBarIcon() -> NSImage? {
     guard let image = Bundle.main.image(forResource: "MenuBarIcon") else {
-      return NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Alcove Analog")
+      return NSImage(systemSymbolName: "capsule.fill", accessibilityDescription: "Oasis")
     }
     image.size = NSSize(width: 18, height: 18)
     image.isTemplate = true
-    image.accessibilityDescription = "Alcove Analog"
+    image.accessibilityDescription = "Oasis"
     return image
   }
 

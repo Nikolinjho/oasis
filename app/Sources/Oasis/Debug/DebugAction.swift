@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// Синтетическое действие для отладки: шлёт в store то же событие, что и живой источник.
-/// id стабильный: по нему действие вызывается из меню и по ссылке alcove-analog://debug/<id>
+/// id стабильный: по нему действие вызывается из меню и по ссылке oasis://debug/<id>
 struct DebugAction {
   let id: String
   let title: String
@@ -17,7 +17,7 @@ struct DebugAction {
     run()
   }
 
-  static let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "debug")
+  static let log = Logger(subsystem: "dev.nikoko.oasis", category: "debug")
 }
 
 enum DebugEntry {
@@ -38,9 +38,9 @@ struct DebugSection {
   }
 }
 
-/// Ссылка alcove-analog://debug/<id>: агенты и скрипты записи вызывают действия без меню
+/// Ссылка oasis://debug/<id>: агенты и скрипты записи вызывают действия без меню
 enum DebugURL {
-  static let scheme = "alcove-analog"
+  static let scheme = "oasis"
 
   static func actionID(from url: URL) -> String? {
     guard url.scheme?.lowercased() == scheme, url.host()?.lowercased() == "debug" else { return nil }

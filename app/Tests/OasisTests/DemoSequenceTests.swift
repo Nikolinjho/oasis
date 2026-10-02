@@ -2,7 +2,7 @@ import Foundation
 import IslandCore
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 @MainActor
 struct DemoSequenceTests {

@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 @MainActor
 struct DemoTracksTests {

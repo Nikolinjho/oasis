@@ -4,16 +4,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 CONFIG="${1:-debug}"
-APP="build/AlcoveAnalog.app"
-IDENTITY="Alcove Analog Dev"
+APP="build/Oasis.app"
+IDENTITY="Oasis Dev"
 ADAPTER="Vendor/mediaremote-adapter"
 
 swift build -c "$CONFIG"
-BIN="$(swift build -c "$CONFIG" --show-bin-path)/AlcoveAnalog"
+BIN="$(swift build -c "$CONFIG" --show-bin-path)/Oasis"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/AlcoveAnalog"
+cp "$BIN" "$APP/Contents/MacOS/Oasis"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 # иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
 cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png "$APP/Contents/Resources/"
@@ -26,7 +26,7 @@ fi
 
 # звуки Alcove: только для локальной сборки, в git их нет (assets/ в .gitignore)
 # в worktree папки assets нет: по умолчанию берём из основного клона
-SOUNDS="${ALCOVE_ASSETS:-$HOME/alcove-analog/assets}/sounds"
+SOUNDS="${ALCOVE_ASSETS:-$HOME/oasis/assets}/sounds"
 if [ -d "$SOUNDS" ]; then
     mkdir -p "$APP/Contents/Resources/Sounds"
     cp "$SOUNDS/event.caf" "$SOUNDS/low-battery.caf" "$SOUNDS/low-power.caf" "$APP/Contents/Resources/Sounds/"
@@ -35,7 +35,7 @@ else
 fi
 
 # иконка Meet для пункта Join в меню: из бандла Alcove (assets/images), в git её нет
-IMAGES="${ALCOVE_ASSETS:-$HOME/alcove-analog/assets}/images"
+IMAGES="${ALCOVE_ASSETS:-$HOME/oasis/assets}/images"
 if [ -f "$IMAGES/GoogleMeetAppIcon18x18.png" ]; then
     mkdir -p "$APP/Contents/Resources/Icons"
     cp "$IMAGES/GoogleMeetAppIcon18x18.png" "$APP/Contents/Resources/Icons/google-meet.png"

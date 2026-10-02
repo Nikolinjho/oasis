@@ -16,7 +16,7 @@
 ## Как записывать
 
 ```bash
-cd ~/alcove-analog/capture
+cd ~/oasis/capture
 ./record.sh hover-in 4        # имя сценария, длительность в секундах
 ./frames.sh recordings/hover-in.mov   # режет запись на кадры
 ```

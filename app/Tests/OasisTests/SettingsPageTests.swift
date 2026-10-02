@@ -1,6 +1,6 @@
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 @MainActor
 struct SettingsPageTests {
@@ -14,7 +14,7 @@ struct SettingsPageTests {
     #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity, .display, .sound, .nowPlaying])
     #expect(SettingsPage.battery.group == "Notifications")
     #expect(SettingsPage.lockScreen.group == "Live Activities")
-    #expect(SettingsPage.about.group == "Alcove")
+    #expect(SettingsPage.about.group == "Oasis")
     #expect(SettingsPage.general.group == nil)
   }
 

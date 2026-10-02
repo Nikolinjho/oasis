@@ -1,7 +1,7 @@
 import IslandCore
 import Testing
 
-@testable import AlcoveAnalog
+@testable import Oasis
 
 /// DebugScript.current — общий на процесс слот: параллельно тесты этого файла не гоняем,
 /// иначе один прогон случайно отменяет чужой и тесты становятся редко-плавающими

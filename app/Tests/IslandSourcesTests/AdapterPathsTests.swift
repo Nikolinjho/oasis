@@ -12,10 +12,10 @@ struct AdapterPathsTests {
     return dir
   }
 
-  @Test("Адаптер находится по ALCOVE_ADAPTER_DIR")
+  @Test("Адаптер находится по OASIS_ADAPTER_DIR")
   func fromEnvironment() throws {
     let dir = try Self.makeAdapterDir()
-    let paths = try #require(AdapterPaths.locate(bundle: Bundle(for: BundleToken.self), environment: ["ALCOVE_ADAPTER_DIR": dir.path]))
+    let paths = try #require(AdapterPaths.locate(bundle: Bundle(for: BundleToken.self), environment: ["OASIS_ADAPTER_DIR": dir.path]))
     #expect(paths.script.lastPathComponent == "mediaremote-adapter.pl")
     #expect(paths.framework.lastPathComponent == "MediaRemoteAdapter.framework")
   }

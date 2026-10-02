@@ -59,7 +59,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .general: nil
     case .battery, .connectivity, .focus, .display, .sound: "Notifications"
     case .nowPlaying, .calendar, .fileTray, .lockScreen: "Live Activities"
-    case .about: "Alcove"
+    case .about: "Oasis"
     }
   }
 

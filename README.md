@@ -1,4 +1,4 @@
-# alcove-analog
+# Oasis
 
 Личный Dynamic Island для MacBook по мотивам [Alcove](https://tryalcove.com/). Остров живёт над вырезом экрана: в покое совпадает с ним по размеру, при событиях расширяется и показывает музыку, HUD громкости и яркости, зарядку, календарь. По наведению или клику раскрывается в панель с управлением.
 
@@ -104,7 +104,7 @@
 
 | Путь | Что |
 |---|---|
-| `app/` | код приложения: SwiftPM-пакет, `Scripts/bundle.sh` собирает `build/AlcoveAnalog.app` |
+| `app/` | код приложения: SwiftPM-пакет, `Scripts/bundle.sh` собирает `build/Oasis.app` |
 | `motion/` | геометрия, пружины, тайминги. `motion.md` — главный документ, `AlcoveMotion.swift` — константы |
 | `design/` | палитра Alcove: 66 цветов, JSON, Swift |
 | `architecture/` | как устроен Alcove: модули, API, приватные обходы, все UI-строки |
@@ -120,17 +120,17 @@ cd app
 ./Scripts/make-cert.sh        # один раз: сертификат для стабильной подписи
 ./Scripts/fetch-adapter.sh    # один раз: mediaremote-adapter для музыки (нужен cmake)
 ./Scripts/fetch-swiftlint.sh  # один раз: SwiftLint 0.65.1 в Vendor/swiftlint
-./Scripts/bundle.sh           # сборка build/AlcoveAnalog.app
+./Scripts/bundle.sh           # сборка build/Oasis.app
 ./Scripts/lint.sh             # форматирование и линт; --check только проверяет
-open build/AlcoveAnalog.app
+open build/Oasis.app
 ```
 
-Рабочая копия — одна, в `~/Applications`: `./Scripts/install.sh` собирает release, гасит нативный Alcove и запущенные копии, кладёт бандл в `~/Applications/AlcoveAnalog.app` и запускает его. Launch at Login включать из этой копии. Сборки в `build/` и worktree — только для отладки: у всех один bundle id, и с несколькими копиями разрешения и ссылки `alcove-analog://` путаются.
+Рабочая копия — одна, в `~/Applications`: `./Scripts/install.sh` собирает release, гасит нативный Alcove и запущенные копии, кладёт бандл в `~/Applications/Oasis.app` и запускает его. Launch at Login включать из этой копии. Сборки в `build/` и worktree — только для отладки: у всех один bundle id, и с несколькими копиями разрешения и ссылки `oasis://` путаются.
 
 Отладочные состояния без железа: меню Debug у иконки в menu bar или ссылка
-`open -g -a "$PWD/build/AlcoveAnalog.app" "alcove-analog://debug/<id>"` (id — в `Sources/AlcoveAnalog/Debug/DebugCatalog.swift`).
+`open -g -a "$PWD/build/Oasis.app" "oasis://debug/<id>"` (id — в `Sources/Oasis/Debug/DebugCatalog.swift`).
 
-Сверка анимаций с эталоном: `open -n app/build/AlcoveAnalog.app --args --demo-after 3`, затем
+Сверка анимаций с эталоном: `open -n app/build/Oasis.app --args --demo-after 3`, затем
 `capture/record.sh demo 21` и `PYTHON=/usr/bin/python3 capture/tools/measure.sh capture/recordings/demo.mov`.
 Файл записи перед повторной записью удалить: `screencapture` не перезаписывает существующий.
 

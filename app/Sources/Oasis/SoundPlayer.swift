@@ -7,7 +7,7 @@ import os
 @MainActor
 final class SoundPlayer {
   private var cache: [IslandSound: NSSound] = [:]
-  private let log = Logger(subsystem: "dev.nikoko.alcove-analog", category: "sound")
+  private let log = Logger(subsystem: "dev.nikoko.oasis", category: "sound")
 
   nonisolated static func url(for sound: IslandSound, resources: URL) -> URL {
     resources.appendingPathComponent("Sounds").appendingPathComponent("\(sound.rawValue).caf")
