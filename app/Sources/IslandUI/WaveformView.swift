@@ -3,8 +3,12 @@ import SwiftUI
 
 /// Цвет волны из обложки или нейтральный, если обложки нет
 func accentColor(_ info: NowPlayingInfo?) -> Color {
-  guard let accent = info?.accent else { return IslandPalette.secondary }
-  return Color(accent)
+  coloredFill(info?.accent)
+}
+
+/// Цвет стиля Colored по уже выбранному цвету обложки; без него — серый
+func coloredFill(_ accent: RGB?) -> Color {
+  accent.map(Color.init) ?? IslandPalette.secondary
 }
 
 /// Итог выбора цвета волны/прогресса без AnyShapeStyle: чистое значение, которое можно сравнивать в юнит-тестах
@@ -33,8 +37,9 @@ func waveformFill(_ info: NowPlayingInfo?, _ style: WaveformStyle) -> AnyShapeSt
   switch waveformColorChoice(info, style) {
   case .monochrome:
     AnyShapeStyle(IslandPalette.secondary)
-  case .colored:
-    AnyShapeStyle(accentColor(info))
+  case .colored(let accent):
+    // цвет из выбора, а не снова из info: у Gradient без второго цвета это тот же Colored
+    AnyShapeStyle(coloredFill(accent))
   case .gradient(let top, let bottom):
     // Alcove 1.7.9: переход слева направо между двумя цветами обложки (кадр style-gradient.jpg, 28.09)
     AnyShapeStyle(LinearGradient(colors: [Color(top), Color(bottom)], startPoint: .leading, endPoint: .trailing))

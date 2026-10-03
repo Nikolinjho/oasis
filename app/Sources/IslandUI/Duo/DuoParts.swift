@@ -72,7 +72,8 @@ enum DuoLayout {
 struct DuoTitle: View {
   let info: NowPlayingInfo?
   /// Показанное название (Hide media title extras чистит его снаружи через appearance.title(for:)).
-  /// info.title остаётся исходным по умолчанию: трогать его самого не нужно, trackKey от него не зависит здесь
+  /// Сам info не трогаем: trackKey собран из исходного info.title, по нему ловят смену трека ArtworkFlip
+  /// и кэш цветов обложки — чистка названия не должна выглядеть как новый трек
   var title: String?
 
   var body: some View {

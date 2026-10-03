@@ -1,4 +1,5 @@
 import IslandCore
+import SwiftUI
 import Testing
 
 @testable import IslandUI
@@ -30,5 +31,13 @@ struct WaveformColorChoiceTests {
     #expect(
       waveformColorChoice(Self.info(accent: Self.accent, accentBottom: Self.bottom), .gradient)
         == .gradient(top: Self.accent, bottom: Self.bottom))
+  }
+}
+
+extension WaveformColorChoiceTests {
+  @Test("Colored красит волну цветом из выбора, без цвета — серым")
+  func coloredFillUsesChoice() {
+    #expect(coloredFill(Self.accent) == Color(Self.accent))
+    #expect(coloredFill(nil) == IslandPalette.secondary)
   }
 }
