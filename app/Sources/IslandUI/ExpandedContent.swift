@@ -29,7 +29,7 @@ struct ExpandedContent: View {
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
           .transition(.viewSwap(timeScale: timeScale))
       case .calendar:
-        CalendarDayView(agenda: agenda, liveEvent: liveEvent, dismissedEvents: dismissedEvents, onJoin: onJoin)
+        CalendarDayView(agenda: agenda, dismissedEvents: dismissedEvents, onJoin: onJoin)
           .transition(.viewSwap(timeScale: timeScale))
       }
     }

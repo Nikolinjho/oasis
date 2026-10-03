@@ -21,20 +21,19 @@ struct CalendarDayViewTests {
     #expect(CalendarDayView.more(total: 2, shown: 2) == nil)
   }
 
-  @Test("Сегодня: первым событие окна календаря, как у Duo и компакта, отклонённых нет")
-  func todayFollowsLive() {
-    let long = CalendarEvent(
-      id: "long", title: "long", start: Self.base, end: Self.base.addingTimeInterval(3 * 3600), isAllDay: false,
+  @Test("Сегодня — полный список дня: идущая «Планёрка» не пропадает, когда открылось окно следующей встречи")
+  func todayKeepsRunningEvents() {
+    let standup = CalendarEvent(
+      id: "Планёрка", title: "Планёрка", start: Self.base, end: Self.base.addingTimeInterval(3 * 3600), isAllDay: false,
       color: RGB(red: 1, green: 0, blue: 0))
-    let inner = Self.event("inner", 1)
-    let later = Self.event("later", 2)
-    let agenda = DayAgenda(today: [long, inner, later], tomorrow: [])
-    let now = Self.base.addingTimeInterval(3600 + 60)
-    // окна нет: по началу, как раньше
-    #expect(CalendarDayView.today(agenda, now: now).map(\.id) == ["long", "inner", "later"])
-    // окно у inner: карточка сверху и её Join — о том же событии, что компакт
-    #expect(CalendarDayView.today(agenda, now: now, live: inner).map(\.id) == ["inner", "later"])
-    #expect(CalendarDayView.today(agenda, now: now, live: inner, dismissed: ["later"]).map(\.id) == ["inner"])
+    let meeting = Self.event("Встреча", 2)
+    let later = Self.event("Ретро", 4)
+    let done = Self.event("Завтрак", -1)
+    let agenda = DayAgenda(today: [done, standup, meeting, later], tomorrow: [])
+    // 11:45 при «Планёрке» с 10:00: окно «Встречи» в 12:00 уже открыто, «Планёрка» ещё идёт
+    let now = Self.base.addingTimeInterval(1.75 * 3600)
+    #expect(CalendarDayView.today(agenda, now: now).map(\.id) == ["Планёрка", "Встреча", "Ретро"])
+    #expect(CalendarDayView.today(agenda, now: now, dismissed: ["Встреча"]).map(\.id) == ["Планёрка", "Ретро"])
   }
 
   @MainActor

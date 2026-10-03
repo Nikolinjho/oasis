@@ -5,8 +5,6 @@ import SwiftUI
 /// AX-фреймов этого вида нет: колонки и отступы по кадру gest-cycle.jpg, те же, что у Duo, оценка
 struct CalendarDayView: View {
   let agenda: DayAgenda
-  /// Событие открытого окна календаря: первая карточка сегодня и её Join — о нём, как у Duo, компакта и меню
-  var liveEvent: CalendarEvent?
   /// Отклонённые через Dismiss Event: их нет, как в стопке Duo
   var dismissedEvents: Set<String> = []
   var now: Date?
@@ -23,7 +21,7 @@ struct CalendarDayView: View {
   }
 
   private func content(_ now: Date) -> some View {
-    let today = Self.today(agenda, now: now, live: liveEvent, dismissed: dismissedEvents)
+    let today = Self.today(agenda, now: now, dismissed: dismissedEvents)
     return ZStack(alignment: .topLeading) {
       VStack(alignment: .leading, spacing: -3) {
         Text(DateBadge.weekday(now))
@@ -67,12 +65,10 @@ struct CalendarDayView: View {
     .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)
   }
 
-  /// Колонка «сегодня» по тому же правилу, что стопка Duo (DayAgenda.upcoming). Без окна и отклонённых —
-  /// незакончившиеся по началу, как раньше
-  nonisolated static func today(
-    _ agenda: DayAgenda, now: Date, live: CalendarEvent? = nil, dismissed: Set<String> = []
-  ) -> [CalendarEvent] {
-    agenda.upcoming(at: now, live: live, dismissed: dismissed)
+  /// Колонка «сегодня» — полный список дня: все незакончившиеся по началу, без отклонённых. Не стопка Duo:
+  /// окно календаря у другого события не выкидывает идущие, начавшиеся раньше него
+  nonisolated static func today(_ agenda: DayAgenda, now: Date, dismissed: Set<String> = []) -> [CalendarEvent] {
+    agenda.today.filter { $0.end > now && !dismissed.contains($0.id) }
   }
 
   nonisolated static func more(total: Int, shown: Int) -> String? {
