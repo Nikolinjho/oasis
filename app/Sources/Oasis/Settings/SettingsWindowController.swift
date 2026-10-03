@@ -31,11 +31,17 @@ private final class SettingsWindow: NSWindow {
 final class SettingsWindowController {
   private let settings: AppSettings
   private let playSound: (IslandSound) -> Void
+  /// Календари EventKit для страницы Calendar: AppDelegate берёт их у источника календаря
+  private let calendars: () -> [CalendarInfo]
   private var window: NSWindow?
   private var closeShortcutMonitor: Any?
 
-  init(settings: AppSettings, playSound: @escaping (IslandSound) -> Void = { _ in }) {
+  init(
+    settings: AppSettings, calendars: @escaping () -> [CalendarInfo] = { [] },
+    playSound: @escaping (IslandSound) -> Void = { _ in }
+  ) {
     self.settings = settings
+    self.calendars = calendars
     self.playSound = playSound
   }
 
@@ -55,7 +61,7 @@ final class SettingsWindowController {
     window.isReleasedWhenClosed = false
     window.contentView = NSHostingView(
       rootView: SettingsView(
-        settings: settings, playSound: playSound,
+        settings: settings, playSound: playSound, calendars: calendars,
         onPageChange: { [weak window] page in window?.title = page.title }))
     window.center()
     installCloseShortcut(on: window)

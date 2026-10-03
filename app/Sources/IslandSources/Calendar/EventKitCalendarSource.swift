@@ -77,15 +77,15 @@ public final class EventKitCalendarSource {
       calendarID: event.calendar?.calendarIdentifier)
   }
 
-  /// Календари для списка Calendars на странице настроек: свой store, доступ к событиям уже выдан источнику.
+  /// Календари для списка Calendars на странице настроек — из store источника, без второго EKEventStore.
   /// Порядок — по аккаунту, внутри по названию
-  public static func calendars() -> [CalendarInfo] {
+  public func calendars() -> [CalendarInfo] {
     guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else { return [] }
-    return EKEventStore().calendars(for: .event)
+    return store.calendars(for: .event)
       .sorted { ($0.source?.title ?? "", $0.title) < ($1.source?.title ?? "", $1.title) }
       .map { calendar in
         CalendarInfo(
-          id: calendar.calendarIdentifier, title: calendar.title, color: rgb(calendar.cgColor),
+          id: calendar.calendarIdentifier, title: calendar.title, color: Self.rgb(calendar.cgColor),
           kind: calendar.type == .birthday ? .birthdays : calendar.type == .subscription ? .subscription : .regular)
       }
   }

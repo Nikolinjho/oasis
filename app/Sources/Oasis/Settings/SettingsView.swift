@@ -7,6 +7,8 @@ struct SettingsView: View {
   @ObservedObject var settings: AppSettings
   /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
   var playSound: (IslandSound) -> Void = { _ in }
+  /// Календари EventKit для страницы Calendar
+  var calendars: () -> [CalendarInfo] = { [] }
   /// Заголовок окна у Alcove — название страницы
   var onPageChange: (SettingsPage) -> Void = { _ in }
   @State private var page: SettingsPage = .general
@@ -40,7 +42,7 @@ struct SettingsView: View {
     case .display: HUDPage(settings: settings, kind: .brightness)
     case .sound: HUDPage(settings: settings, kind: .volume)
     case .nowPlaying: NowPlayingPage(settings: settings)
-    case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound)
+    case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
     default: EmptyView()
     }
   }

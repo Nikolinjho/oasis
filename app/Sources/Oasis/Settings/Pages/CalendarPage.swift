@@ -1,6 +1,5 @@
 import EventKit
 import IslandCore
-import IslandSources
 import SwiftUI
 
 /// Calendar (ui-inspection 1.9, settings-08-calendar*.png) без Show weather on empty day (решение 03.10).
@@ -8,6 +7,8 @@ import SwiftUI
 struct CalendarPage: View {
   @ObservedObject var calendar: CalendarSettings
   let playSound: (IslandSound) -> Void
+  /// Календари из store источника (CalendarBridge.calendars)
+  let loadCalendars: () -> [CalendarInfo]
   @State private var calendars: [CalendarInfo] = []
 
   var body: some View {
@@ -64,9 +65,10 @@ struct CalendarPage: View {
         }
       }
     }
-    .onAppear { calendars = EventKitCalendarSource.calendars() }
-    .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in
-      calendars = EventKitCalendarSource.calendars()
+    .onAppear { calendars = loadCalendars() }
+    // EKEventStoreChanged приходит с фонового потока: @State меняем на главном
+    .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: RunLoop.main)) { _ in
+      calendars = loadCalendars()
     }
   }
 }

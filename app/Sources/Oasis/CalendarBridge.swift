@@ -42,6 +42,11 @@ final class CalendarBridge {
     self.source = source
   }
 
+  /// Список Calendars на странице настроек. До старта источника — пусто
+  func calendars() -> [CalendarInfo] {
+    source?.calendars() ?? []
+  }
+
   /// Смена настроек Calendar применяется на лету: фильтр календарей и часы
   func apply() {
     store.setCalendarFilter(settings.filter)

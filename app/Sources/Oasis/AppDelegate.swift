@@ -12,9 +12,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     return AppSettings()
   }()
   private let sounds = SoundPlayer()
-  private lazy var settingsWindow = SettingsWindowController(settings: settings) { [weak self] sound in
-    self?.sounds.play(sound)
-  }
+  private lazy var settingsWindow = SettingsWindowController(
+    settings: settings, calendars: { [weak self] in self?.calendar.calendars() ?? [] },
+    playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
   private var statusItem: StatusItemController?
   private var nowPlaying: NowPlayingSourceSwitcher?
