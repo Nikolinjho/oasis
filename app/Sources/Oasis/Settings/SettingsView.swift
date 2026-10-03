@@ -130,6 +130,10 @@ struct GeneralPage: View {
           isOn: $settings.hideMenuBarIcon)
       }
       SettingsCard(title: "Behaviour") {
+        ToggleRow(title: "Contrast outline", isOn: $settings.contrastOutline)
+        RowDivider()
+        ToggleRow(title: "Progressive blur", isOn: $settings.progressiveBlur)
+        RowDivider()
         ToggleRow(title: "Play sounds", isOn: $settings.playSounds)
         RowDivider()
         ToggleRow(title: "Expand on hover", info: "Disables certain interactions", isOn: $settings.expandOnHover)

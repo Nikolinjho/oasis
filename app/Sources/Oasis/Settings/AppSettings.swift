@@ -65,6 +65,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     static let lastExpandedView = "lastExpandedView"
     static let swipeToDismiss = "swipeToDismiss"
     static let naturalMovement = "naturalMovement"
+    static let contrastOutline = "contrastOutline"
+    static let progressiveBlur = "progressiveBlur"
   }
 
   var onChange: () -> Void = {}
@@ -233,6 +235,9 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   // General → Gestures (ui-inspection 1.2)
   @Published var swipeToDismiss: Bool { didSet { save(oldValue, swipeToDismiss, Key.swipeToDismiss) } }
   @Published var naturalMovement: Bool { didSet { save(oldValue, naturalMovement, Key.naturalMovement) } }
+  // General → Behaviour (ui-inspection 1.2): ключи Alcove
+  @Published var contrastOutline: Bool { didSet { save(oldValue, contrastOutline, Key.contrastOutline) } }
+  @Published var progressiveBlur: Bool { didSet { save(oldValue, progressiveBlur, Key.progressiveBlur) } }
 
   /// Источник, который реально запускается: Automatic и недоступные пока источники — System
   var effectiveMediaSource: MediaSourceChoice {
@@ -326,6 +331,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     forceEnableActivity = Self.read(defaults, Key.forceEnableActivity, true)
     swipeToDismiss = Self.read(defaults, Key.swipeToDismiss, true)
     naturalMovement = Self.read(defaults, Key.naturalMovement, true)
+    contrastOutline = Self.read(defaults, Key.contrastOutline, true)
+    progressiveBlur = Self.read(defaults, Key.progressiveBlur, false)
   }
 
   /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
@@ -382,6 +389,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     appearance.hidesTitleExtras = hideTitleExtras
     appearance.playerControl = playerControl
     appearance.showsRemainingTime = showRemainingTime
+    appearance.contrastOutline = contrastOutline
+    appearance.progressiveBlur = progressiveBlur
     return appearance
   }
 
