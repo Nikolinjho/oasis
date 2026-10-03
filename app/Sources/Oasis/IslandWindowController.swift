@@ -26,6 +26,8 @@ final class IslandWindowController {
   /// пределы — реальный hover пересчитывается по отпусканию кнопки (задача 4, репродукция живой проверки)
   private var dragStartedInside = false
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "window")
+  /// Contrast outline: яркость фона под раскрытым
+  private lazy var backdrop = BackdropMonitor(store: store)
   /// General → Tuning: смена сразу переставляет остров
   var tuning = NotchTuning() {
     didSet { if tuning != oldValue { placeOnNotchScreen() } }
@@ -279,6 +281,7 @@ final class IslandWindowController {
   /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
   private func surfaceChanged() {
     pointerMoved()
+    backdrop.update(panel: panel)
     closedBySwipe = Self.keepsClosedBySwipe(closedBySwipe, surface: store.model.surface, pointerInside: pointerInside)
     guard let panel, metrics != nil, !menuOpen,
       Self.shouldReenterHover(surface: store.model.surface, pointerInside: pointerInside, closedBySwipe: closedBySwipe)
@@ -323,6 +326,7 @@ struct IslandRootView: View {
       calendarEvent: store.calendarEvent,
       dragBlurred: store.dragBlurred,
       appearance: store.appearance,
+      backdropDark: store.backdropDark,
       volume: store.volumeLevel,
       onClick: { store.send(.clicked) },
       onAction: { store.onAction($0) },

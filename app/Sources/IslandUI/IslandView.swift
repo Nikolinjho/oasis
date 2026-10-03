@@ -14,6 +14,8 @@ public struct IslandView: View {
   /// Остров тянут свайпом вверх: контент в блюре
   let dragBlurred: Bool
   let appearance: IslandAppearance
+  /// Фон под раскрытым тёмный: Contrast outline виден только над ним. Без замера — тёмный
+  let backdropDark: Bool
   /// Уровень строки громкости плеера 0…1
   let volume: Double
   let onClick: () -> Void
@@ -27,6 +29,7 @@ public struct IslandView: View {
     calendarEvent: CalendarEvent? = nil,
     dragBlurred: Bool = false,
     appearance: IslandAppearance = .default,
+    backdropDark: Bool = true,
     volume: Double = 0,
     onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
     onJoin: @escaping (URL) -> Void = { _ in }
@@ -40,6 +43,7 @@ public struct IslandView: View {
     self.calendarEvent = calendarEvent
     self.dragBlurred = dragBlurred
     self.appearance = appearance
+    self.backdropDark = backdropDark
     self.volume = volume
     self.onClick = onClick
     self.onAction = onAction
@@ -56,6 +60,13 @@ public struct IslandView: View {
           color: .black.opacity(model.surface == .expanded ? IslandGeometry.Shadow.opacity : 0),
           radius: IslandGeometry.Shadow.radius,
           y: IslandGeometry.Shadow.y)
+      // поверх тени, под контентом: проявляется и гаснет вместе с тенью, форма анимируется той же пружиной.
+      // Смена фона под островом приходит без withAnimation — свой короткий переход только по ней
+      ContrastOutline(spec: spec)
+        .opacity(
+          ContrastOutline.isVisible(surface: model.surface, enabled: appearance.contrastOutline, backdropDark: backdropDark) ? 1 : 0
+        )
+        .animation(.easeInOut(duration: 0.2), value: backdropDark)
       content
         .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
         .clipShape(IslandShape(spec: spec, shoulder: 0))

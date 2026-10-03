@@ -46,6 +46,8 @@ final class IslandStore {
   var notch = CGSize(width: 185, height: 32)
   /// Вид страниц настроек, которые не меняют поведение машины: Battery и т.д. (IslandAppearance)
   var appearance = IslandAppearance.default
+  /// Фон под раскрытым тёмный (BackdropMonitor): Contrast outline виден только над ним
+  var backdropDark = true
   /// Уровень текущего выхода 0…1: строка громкости плеера читает его, AppDelegate обновляет
   var volumeLevel: Double = 0
 
