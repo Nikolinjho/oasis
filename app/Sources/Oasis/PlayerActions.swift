@@ -6,7 +6,9 @@ import os
 /// Системные исполнители кнопок плеера. Что кому отдать, решает PlayerActionRouter
 @MainActor
 final class PlayerActions: PlayerActionPerforming {
-  private weak var source: (any NowPlayingSource)?
+  /// Источник берётся в момент нажатия: Source в настройках меняют на лету (NowPlayingSourceSwitcher)
+  private let currentSource: () -> (any NowPlayingSource)?
+  private var source: (any NowPlayingSource)? { currentSource() }
   private let favorite = MusicFavorite()
   /// Громкость появляется позже кнопок (startLevels после startPlayerActions): берём её в момент нажатия
   private let volume: () -> VolumeControl?
@@ -15,9 +17,9 @@ final class PlayerActions: PlayerActionPerforming {
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "player")
 
   init(
-    source: (any NowPlayingSource)?, volume: @escaping () -> VolumeControl?, onRowVolume: @escaping (Double) -> Void
+    source: @escaping () -> (any NowPlayingSource)?, volume: @escaping () -> VolumeControl?, onRowVolume: @escaping (Double) -> Void
   ) {
-    self.source = source
+    currentSource = source
     self.volume = volume
     self.onRowVolume = onRowVolume
   }

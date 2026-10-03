@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   }
   private var window: IslandWindowController?
   private var statusItem: StatusItemController?
-  private var nowPlaying: AdapterNowPlayingSource?
+  private var nowPlaying: NowPlayingSourceSwitcher?
   private var volume: VolumeControl?
   private var brightness: BrightnessControl?
   private var keyTap: MediaKeyTap?
@@ -125,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     if store.swipeToDismiss, !settings.swipeToDismiss { store.send(.activityRestored) }
     store.swipeToDismiss = settings.swipeToDismiss
     window?.naturalMovement = settings.naturalMovement
+    nowPlaying?.apply(settings.effectiveMediaSource)
   }
 
   /// Вид острова: настройки плюс текущее устройство вывода
@@ -193,19 +194,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     // Source (Now Playing): пока источник один. Яндекс Музыка — свой NowPlayingSource в этом switch.
     // .yandexMusic сюда не доходит, пока его нет: effectiveMediaSource у AppSettings сводит
     // недоступный источник к .system (MediaSourceChoice.isAvailable для неё false)
-    let source: AdapterNowPlayingSource
-    switch settings.effectiveMediaSource {
-    case .system, .yandexMusic: source = AdapterNowPlayingSource(paths: paths)
-    }
-    tasks.append(
-      Task { [weak self, store] in
-        for await change in source.changes {
-          store.apply(change)
-          self?.updateSourceActive()
+    let switcher = NowPlayingSourceSwitcher(
+      make: { choice in
+        switch choice {
+        case .system, .yandexMusic: AdapterNowPlayingSource(paths: paths)
         }
+      },
+      onChange: { [weak self, store] change in
+        store.apply(change)
+        self?.updateSourceActive()
       })
-    source.start()
-    nowPlaying = source
+    // смена Source в настройках доходит сюда через applySettings, без перезапуска
+    switcher.apply(settings.effectiveMediaSource)
+    nowPlaying = switcher
   }
 
   /// Строка громкости плеера сменила уровень (PlayerActions уже отдал его системе): HUD подавлен на rowQuietUntil
@@ -217,7 +218,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// Кнопки плеера. Без адаптера медиакоманды пропадают, остальные кнопки работают
   private func startPlayerActions() {
     let performer = PlayerActions(
-      source: nowPlaying, volume: { [weak self] in self?.volume },
+      source: { [weak self] in self?.nowPlaying?.source }, volume: { [weak self] in self?.volume },
       onRowVolume: { [weak self] level in self?.volumeChangedFromRow(level) })
     let router = PlayerActionRouter(performer: performer)
     store.onAction = { [weak self, weak store, log] action in
