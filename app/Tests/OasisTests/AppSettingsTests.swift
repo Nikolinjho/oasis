@@ -11,19 +11,17 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct AppSettingsTests {
-  /// Каждый суит уникален (UUID), но домен реально пишется в ~/Library/Preferences: без удаления
-  /// он там и остаётся. Возвращаем имя вместе с defaults, чтобы тест мог убрать его за собой
-  static func freshDefaults() -> (name: String, defaults: UserDefaults) {
-    let name = "oasis-tests-\(UUID().uuidString)"
-    return (name, UserDefaults(suiteName: name)!)
-  }
+  static func freshDefaults() -> (name: String, defaults: UserDefaults) { TestDefaults.fresh() }
+  static func cleanup(_ name: String, _ defaults: UserDefaults) { TestDefaults.cleanup(name, defaults) }
 
-  /// synchronize принудительно проталкивает запись перед удалением: без неё под параллельной
-  /// нагрузкой swift test отложенный флаш cfprefsd иногда обгоняет removePersistentDomain
-  static func cleanup(_ name: String, _ defaults: UserDefaults) {
+  @Test("Тестовый домен живёт во временной папке и не оставляет файлов в ~/Library/Preferences")
+  func cleanupRemovesPlist() {
+    let (name, defaults) = Self.freshDefaults()
+    defaults.set(true, forKey: "probe")
     defaults.synchronize()
-    defaults.removePersistentDomain(forName: name)
-    defaults.synchronize()
+    Self.cleanup(name, defaults)
+    #expect(name.hasPrefix(TestDefaults.directory.path))
+    #expect(!FileManager.default.fileExists(atPath: TestDefaults.preferencesURL(name).path))
   }
 
   @Test("По умолчанию как в Alcove: Expand on hover вкл, 0 с, главный экран, без виртуального выреза")

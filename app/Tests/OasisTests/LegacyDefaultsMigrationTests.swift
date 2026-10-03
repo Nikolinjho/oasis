@@ -6,16 +6,8 @@ import Testing
 // .serialized и уборка домена — по той же причине, что в AppSettingsTests: суит пишется на диск через cfprefsd
 @Suite(.serialized)
 struct LegacyDefaultsMigrationTests {
-  static func freshDefaults() -> (name: String, defaults: UserDefaults) {
-    let name = "oasis-tests-\(UUID().uuidString)"
-    return (name, UserDefaults(suiteName: name)!)
-  }
-
-  static func cleanup(_ name: String, _ defaults: UserDefaults) {
-    defaults.synchronize()
-    defaults.removePersistentDomain(forName: name)
-    defaults.synchronize()
-  }
+  static func freshDefaults() -> (name: String, defaults: UserDefaults) { TestDefaults.fresh() }
+  static func cleanup(_ name: String, _ defaults: UserDefaults) { TestDefaults.cleanup(name, defaults) }
 
   @Test("Ключи старого домена Alcove Analog копируются в новые настройки и ставится метка")
   func copiesLegacyKeys() {
