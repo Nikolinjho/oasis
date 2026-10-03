@@ -48,7 +48,8 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
   }
 
   /// Гасит адаптер и ждёт его выхода до 0.5 с. Если perl не завершился по SIGTERM — SIGKILL.
-  /// Зовётся из applicationWillTerminate
+  /// Зовётся на выходе и при смене Source в настройках. Ожидание блокирует вызывающий поток (MainActor):
+  /// со вторым источником смену стоит увести с главного потока
   public func stop() {
     let process = state.withLockUnchecked { s -> Process? in
       s.stopped = true
