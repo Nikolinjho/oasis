@@ -80,5 +80,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
   /// Страницы, готовые в P2. Остальные — затенены и подписаны Soon
   var isAvailable: Bool { Self.available.contains(self) }
 
-  private static let available: Set<SettingsPage> = [.general, .battery, .connectivity, .display, .sound, .nowPlaying]
+  private static let available: Set<SettingsPage> = [
+    .general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar,
+  ]
 }

@@ -40,6 +40,7 @@ struct SettingsView: View {
     case .display: HUDPage(settings: settings, kind: .brightness)
     case .sound: HUDPage(settings: settings, kind: .volume)
     case .nowPlaying: NowPlayingPage(settings: settings)
+    case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound)
     default: EmptyView()
     }
   }

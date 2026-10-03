@@ -4,14 +4,14 @@ import Testing
 
 @MainActor
 struct SettingsPageTests {
-  @Test("Сайдбар в порядке Alcove, готова только General, остальные — заглушки Soon")
+  @Test("Сайдбар в порядке Alcove, неготовые страницы — заглушки Soon")
   func sidebar() {
     #expect(
       SettingsPage.allCases.map(\.title) == [
         "General", "Battery", "Connectivity", "Focus", "Display", "Sound",
         "Now Playing", "Calendar", "File Tray", "Lock Screen", "Claude Code", "Pomodoro", "Soon", "About",
       ])
-    #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity, .display, .sound, .nowPlaying])
+    #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar])
     #expect(SettingsPage.battery.group == "Notifications")
     #expect(SettingsPage.lockScreen.group == "Live Activities")
     #expect(SettingsPage.about.group == "Oasis")

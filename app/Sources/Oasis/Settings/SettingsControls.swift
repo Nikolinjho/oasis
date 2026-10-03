@@ -199,11 +199,13 @@ struct InfoButton: View {
 /// Выключен — остальные строки страницы прячутся (ui-inspection 1.1, проверено на Battery)
 struct MasterToggleRow: View {  // swiftlint:disable:this inclusive_language - master тут «главный тумблер страницы»
   let page: SettingsPage
+  /// Глиф строки, если он не совпадает с иконкой сайдбара: у Calendar `calendar.badge.clock` (ui-inspection 1.9)
+  var symbol: String?
   @Binding var isOn: Bool
 
   var body: some View {
     HStack(spacing: 8) {
-      Image(systemName: page.symbol)
+      Image(systemName: symbol ?? page.symbol)
         .font(.system(size: 14, weight: .semibold))
         .foregroundStyle(SettingsPalette.accent)
         .frame(width: 18)

@@ -95,6 +95,8 @@ final class CalendarSettings: ObservableObject {
     CalendarFilter(isEnabled: isEnabled, excluded: excluded, modes: modes)
   }
 
+  func mode(for calendarID: String) -> CalendarDisplayMode { filter.mode(for: calendarID) }
+
   func isIncluded(_ calendarID: String) -> Bool { !excluded.contains(calendarID) }
 
   func setIncluded(_ included: Bool, _ calendarID: String) {

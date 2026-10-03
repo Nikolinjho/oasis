@@ -29,7 +29,7 @@ fi
 SOUNDS="${ALCOVE_ASSETS:-$HOME/oasis/assets}/sounds"
 if [ -d "$SOUNDS" ]; then
     mkdir -p "$APP/Contents/Resources/Sounds"
-    cp "$SOUNDS/event.caf" "$SOUNDS/low-battery.caf" "$SOUNDS/low-power.caf" "$APP/Contents/Resources/Sounds/"
+    cp "$SOUNDS/event.caf" "$SOUNDS/chime.caf" "$SOUNDS/low-battery.caf" "$SOUNDS/low-power.caf" "$APP/Contents/Resources/Sounds/"
 else
     echo "Нет $SOUNDS: уведомления будут без звука" >&2
 fi

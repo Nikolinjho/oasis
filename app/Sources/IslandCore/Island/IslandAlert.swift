@@ -66,6 +66,8 @@ public enum IslandAlert: Equatable, Sendable {
 /// Звуки из бандла Alcove (assets/sounds). rawValue — имя файла без расширения
 public enum IslandSound: String, Sendable, CaseIterable {
   case event
+  /// Play hourly chime (Calendar): в ассетах Alcove есть chime.caf
+  case chime
   case lowBattery = "low-battery"
   case lowPower = "low-power"
 }
