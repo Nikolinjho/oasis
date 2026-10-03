@@ -15,7 +15,7 @@ final class IslandWindowController {
   private var pointerInside = false
   /// Тело острова, над которым курсор вошёл: держит hover, пока курсор над ним
   private var hoverOpenedFrom: CGRect?
-  /// Пока меню под островом открыто, курсор на меню и клики в нём не значат «ушёл с острова»
+  /// Пока контекстное меню острова открыто, курсор на меню и клики в нём не значат «ушёл с острова»
   private var menuOpen = false
   /// Остров закрыт свайпом вверх, а курсор так и стоит над ним: не раскрываем снова, пока курсор не уйдёт
   private var closedBySwipe = false
@@ -158,12 +158,12 @@ final class IslandWindowController {
     }
   }
 
-  /// Показывает меню под островом, если правый клик пришёлся на его форму
+  /// Показывает меню у курсора, если правый клик пришёлся на форму острова
   private func showMenuIfOnIsland(_ event: NSEvent) -> Bool {
     guard let panel, event.window === panel else { return false }
     let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
     guard IslandGeometry.reachingScreenTop(island).contains(NSEvent.mouseLocation) else { return false }
-    popUpUnderIsland(menu)
+    popUpAtPointer(menu)
     return true
   }
 
@@ -216,15 +216,14 @@ final class IslandWindowController {
     return SwipeInput(phase: .changed, dx: sign * deltaX, dy: sign * deltaY)
   }
 
-  /// Меню по центру под нижним краем острова. popUp возвращается, когда меню закрыто:
+  /// Меню от точки клика, как контекстное меню у Alcove. popUp возвращается, когда меню закрыто:
   /// всё это время hover и клики мимо заморожены, чтобы раскрытый плеер не схлопнулся под меню.
   /// После закрытия сверяемся с курсором: ушёл с острова — схлопнется как обычно
-  func popUpUnderIsland(_ menu: NSMenu) {
+  func popUpAtPointer(_ menu: NSMenu) {
     guard let panel, let content = panel.contentView, !menuOpen else { return }
-    let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
-    let bottomCentre = panel.convertPoint(fromScreen: CGPoint(x: island.midX, y: island.minY))
+    let pointer = panel.convertPoint(fromScreen: NSEvent.mouseLocation)
     menuOpen = true
-    menu.popUp(positioning: nil, at: content.convert(bottomCentre, from: nil), in: content)
+    menu.popUp(positioning: nil, at: content.convert(pointer, from: nil), in: content)
     menuOpen = false
     pointerMoved()
   }
