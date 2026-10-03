@@ -41,12 +41,17 @@ public struct DayAgenda: Equatable, Sendable {
   public var today: [CalendarEvent]
   /// События завтра, по началу, без событий на весь день
   public var tomorrow: [CalendarEvent]
+  /// Все загруженные события (месяц и неделя вперёд), с событиями на весь день, по началу:
+  /// правая колонка календарного вида и сетка месяца
+  public var events: [CalendarEvent]
 
   public static let empty = DayAgenda(today: [], tomorrow: [])
 
-  public init(today: [CalendarEvent], tomorrow: [CalendarEvent]) {
+  /// events по умолчанию — today и tomorrow: повестка, собранная руками, знает только их
+  public init(today: [CalendarEvent], tomorrow: [CalendarEvent], events: [CalendarEvent]? = nil) {
     self.today = today
     self.tomorrow = tomorrow
+    self.events = events ?? today + tomorrow
   }
 
   public static func make(events: [CalendarEvent], now: Date, calendar: Calendar = .current) -> DayAgenda {
@@ -58,7 +63,36 @@ public struct DayAgenda: Equatable, Sendable {
       .sorted { ($0.start, $0.end) < ($1.start, $1.end) }
     return DayAgenda(
       today: timed.filter { $0.end > now && $0.start < startOfTomorrow },
-      tomorrow: timed.filter { $0.start >= startOfTomorrow && $0.start < startOfDayAfter })
+      tomorrow: timed.filter { $0.start >= startOfTomorrow && $0.start < startOfDayAfter },
+      events: events.sorted { ($0.start, $0.end) < ($1.start, $1.end) })
+  }
+
+  /// Ближайший день после сегодняшнего (до days дней вперёд) с событиями: у Alcove правая колонка
+  /// календарного вида — он (`MON, 5`), а не всегда завтра. События на весь день сверху, остальные по началу
+  public func nearestDay(
+    after now: Date, within days: Int = 7, calendar: Calendar = .current
+  ) -> (day: Date, events: [CalendarEvent])? {
+    let today = calendar.startOfDay(for: now)
+    for offset in 1...days {
+      guard let start = calendar.date(byAdding: .day, value: offset, to: today),
+        let end = calendar.date(byAdding: .day, value: 1, to: start)
+      else { continue }
+      let day = events.filter { $0.start < end && $0.end > start }
+      if !day.isEmpty { return (start, day.filter(\.isAllDay) + day.filter { !$0.isAllDay }) }
+    }
+    return nil
+  }
+
+  /// Заголовок правой колонки: TMRW для завтра, иначе `MON, 5`
+  public static func title(for day: Date, now: Date, calendar: Calendar = .current) -> String {
+    let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+    if calendar.startOfDay(for: day) == tomorrow { return "TMRW" }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = calendar
+    formatter.timeZone = calendar.timeZone
+    formatter.dateFormat = "EEE, d"
+    return formatter.string(from: day).uppercased()
   }
 
   /// Идущее или ближайшее событие сегодня: его карточку показывает Duo.

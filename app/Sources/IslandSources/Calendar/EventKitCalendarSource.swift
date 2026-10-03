@@ -3,7 +3,7 @@ import EventKit
 import Foundation
 import IslandCore
 
-/// События сегодня и завтра из EventKit. Пересчёт на изменение базы календарей, на смену дня и раз в 5 минут:
+/// События из EventKit: месяц целиком и неделя вперёд (range). Пересчёт на изменение базы календарей, на смену дня и раз в 5 минут:
 /// agenda зависит от текущего времени, закончившееся событие уходит из Duo не позже чем через 5 минут
 @MainActor
 public final class EventKitCalendarSource {
@@ -34,13 +34,20 @@ public final class EventKitCalendarSource {
   }
 
   public func reload() {
-    let calendar = Calendar.current
-    let start = calendar.startOfDay(for: Date())
-    let end = calendar.date(byAdding: .day, value: 2, to: start)!
-    let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
+    let range = Self.range(now: Date())
+    let predicate = store.predicateForEvents(withStart: range.start, end: range.end, calendars: nil)
     let events = store.events(matching: predicate).map(Self.event)
     log.info("calendar events \(events.count)")
     continuation.yield(events)
+  }
+
+  /// Сетке месяца нужен весь месяц (индикаторы и у прошедших дней), правой колонке календарного вида —
+  /// ближайший день с событиями в пределах 7 дней: с 1-го числа до конца месяца или 8-го дня вперёд, что позже
+  nonisolated static func range(now: Date, calendar: Calendar = .current) -> DateInterval {
+    let today = calendar.startOfDay(for: now)
+    let month = calendar.dateInterval(of: .month, for: today) ?? DateInterval(start: today, duration: 0)
+    let week = calendar.date(byAdding: .day, value: 8, to: today) ?? today
+    return DateInterval(start: month.start, end: max(month.end, week))
   }
 
   private func observe() {

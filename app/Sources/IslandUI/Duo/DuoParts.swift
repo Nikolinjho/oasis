@@ -203,7 +203,7 @@ struct EventCard: View {
           .font(.system(size: 11, weight: .semibold))
           .lineLimit(1)
           .truncationMode(.tail)
-        if let location = Self.location(event) {
+        if !event.isAllDay, let location = Self.location(event) {
           // булавка и место, как на кадре duo-event-location.jpg; кегль — как у времени, оценка.
           // HStack вместо Label: у Label(.titleAndIcon) зазор ~8pt между иконкой и текстом — заметно шире
           HStack(spacing: 2) {
@@ -213,10 +213,13 @@ struct EventCard: View {
           .font(.system(size: 10, weight: .medium))
           .opacity(0.8)
         }
-        Text(Self.timeRange(event))
-          .font(.system(size: 10, weight: .medium))
-          .opacity(0.8)
-          .lineLimit(1)
+        // у события на весь день времени нет: одна строка (правая колонка календарного вида, cv-sheet.png)
+        if !event.isAllDay {
+          Text(Self.timeRange(event))
+            .font(.system(size: 10, weight: .medium))
+            .opacity(0.8)
+            .lineLimit(1)
+        }
       }
       .foregroundStyle(color)
       Spacer(minLength: 0)
@@ -237,7 +240,7 @@ struct EventCard: View {
     // отступы и прозрачность фона не мерили, оценка по кадру duo-event.jpg.
     // У карточки с местом три строки почти вплотную заполняют 40pt — вертикальный паддинг меньше, чем у двух строк,
     // иначе текст упирается в край (оценка по кадру 29.09)
-    .padding(.vertical, Self.height(for: event) > 28 ? 1 : 3)
+    .padding(.vertical, Self.height(for: event) == 28 ? 3 : 1)
     .padding(.leading, 4)
     .frame(width: DuoLayout.eventWidth, height: Self.height(for: event))
     .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.15)))
@@ -264,7 +267,8 @@ struct EventCard: View {
   }
 
   nonisolated static func height(for event: CalendarEvent) -> CGFloat {
-    location(event) == nil ? 28 : 40
+    if event.isAllDay { return 16 }
+    return location(event) == nil ? 28 : 40
   }
 }
 
