@@ -58,6 +58,8 @@ final class IslandStore {
   @ObservationIgnored var onSwipeClose: () -> Void = {}
   /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной): AppDelegate кормит ею CalendarClock
   @ObservationIgnored var onAgendaChange: (DayAgenda) -> Void = { _ in }
+  /// Сменился последний просмотренный вид раскрытого: AppDelegate сохраняет его для Most Recent
+  @ObservationIgnored var onLastExpandedViewChange: (ExpandedView) -> Void = { _ in }
   @ObservationIgnored private var timers: [TimerID: Task<Void, Never>] = [:]
 
   init(config: IslandMachine.Config = .user) {
@@ -89,6 +91,11 @@ final class IslandStore {
       spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: radiusHeight)
     }
     return spec
+  }
+
+  /// Последний вид раскрытого из настроек на запуске: без него Most Recent после перезапуска открывал бы Duo
+  func restoreLastExpandedView(_ view: ExpandedView) {
+    model.lastExpandedView = view
   }
 
   /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
@@ -207,6 +214,7 @@ final class IslandStore {
   func send(_ event: IslandEvent) {
     var next = model
     let previous = model.surface
+    let previousLast = model.lastExpandedView
     let effects = IslandMachine.reduce(&next, event)
 
     var transition: IslandTransition?
@@ -253,6 +261,7 @@ final class IslandStore {
     }
     // после эффектов: вложенный send из колбэка не перемешается с таймерами этого события
     if model.surface != previous { onSurfaceChange() }
+    if model.lastExpandedView != previousLast { onLastExpandedViewChange(model.lastExpandedView) }
   }
 
   func apply(_ change: NowPlayingChange, now: Date = Date()) {

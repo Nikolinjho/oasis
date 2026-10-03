@@ -319,4 +319,14 @@ struct AppSettingsTests {
     #expect(settings.machineConfig(from: .user).expanded.mostRecent)
     #expect(AppSettings(defaults: defaults).idleActivity == .playing)
   }
+
+  @Test("Most Recent: последний вид раскрытого переживает перезапуск, по умолчанию Duo")
+  func lastExpandedViewPersists() {
+    let (name, defaults) = Self.freshDefaults()
+    defer { Self.cleanup(name, defaults) }
+    let settings = AppSettings(defaults: defaults)
+    #expect(settings.lastExpandedView == .duo)
+    settings.lastExpandedView = .calendar
+    #expect(AppSettings(defaults: defaults).lastExpandedView == .calendar)
+  }
 }

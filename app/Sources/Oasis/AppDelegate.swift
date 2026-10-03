@@ -56,6 +56,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       log.info("join \(url.host() ?? "", privacy: .public)")
       NSWorkspace.shared.open(url)
     }
+    // Most Recent: последний вид раскрытого переживает перезапуск
+    store.restoreLastExpandedView(settings.lastExpandedView)
+    store.onLastExpandedViewChange = { [weak self] view in self?.settings.lastExpandedView = view }
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {

@@ -67,6 +67,23 @@ struct IslandStoreTests {
     #expect(seen == [["real"], ["fake"], ["real2"]])
   }
 
+  @Test("Последний вид раскрытого: восстанавливается из настроек и сообщается при смене")
+  func lastExpandedViewRoundTrip() {
+    var config = IslandMachine.Config.user
+    config.expanded.mostRecent = true
+    let store = IslandStore(config: config)
+    var seen: [ExpandedView] = []
+    store.onLastExpandedViewChange = { seen.append($0) }
+    // как после перезапуска: Most Recent открывает сохранённый вид, а не Duo
+    store.restoreLastExpandedView(.calendar)
+    store.send(.clicked)
+    #expect(store.model.expandedView == .calendar)
+    // раскрытие тем же видом не пишет настройку повторно
+    #expect(seen.isEmpty)
+    store.send(.expandedViewCycled)
+    #expect(seen == [.duo])
+  }
+
   @Test("Spec компакта календаря при играющей музыке — размеры компакта музыки, без музыки — прежний пол")
   func calendarSpecFollowsMusic() {
     let store = IslandStore(config: .alcove)

@@ -62,6 +62,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     static let idleActivity = "idleActivity"
     static let mostRecentActivity = "mostRecentActivity"
     static let forceEnableActivity = "forceEnableActivity"
+    static let lastExpandedView = "lastExpandedView"
     static let swipeToDismiss = "swipeToDismiss"
     static let naturalMovement = "naturalMovement"
   }
@@ -262,6 +263,13 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     }
   }
 
+  /// Последний просмотренный вид раскрытого: Most Recent открывает его и после перезапуска.
+  /// Служебное значение, как builtInNotch: машина меняет его сама, onChange не зовёт
+  var lastExpandedView: ExpandedView {
+    get { Self.readRaw(defaults, Key.lastExpandedView, ExpandedView.duo) }
+    set { defaults.set(newValue.rawValue, forKey: Key.lastExpandedView) }
+  }
+
   // swiftlint:disable:next function_body_length - чтение каждой настройки из UserDefaults, по строке на ключ
   init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
@@ -397,4 +405,4 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     config.expanded = expanded
     return config
   }
-}
+}  // swiftlint:disable:this file_length - по свойству на настройку, как type_body_length выше
