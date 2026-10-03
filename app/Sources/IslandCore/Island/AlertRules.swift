@@ -9,6 +9,8 @@ public struct AlertRules: Equatable, Sendable {
   public var lowBatterySound = true
   /// Connectivity → Play sound on low battery: звук низкого заряда наушников (Task 5)
   public var headphonesLowBatterySound = true
+  /// Calendar: Peek duration и звук напоминания Before event starts. Config.calendar смотрит сюда же
+  public var calendar = CalendarRules()
 
   public init() {}
 
@@ -16,8 +18,7 @@ public struct AlertRules: Equatable, Sendable {
     switch alert {
     case .charging, .lowBattery, .lowPower: batteryDuration
     case .airpods: connectivityDuration
-    // у календаря своя страница, в P2 её нет: длительность Alcove по умолчанию
-    case .calendarReminder: alert.duration
+    case .calendarReminder: calendar.peekDuration
     }
   }
 
@@ -25,7 +26,8 @@ public struct AlertRules: Equatable, Sendable {
     switch alert {
     case .lowBattery: lowBatterySound ? alert.sound : nil
     case .airpods: headphonesLowBatterySound ? alert.sound : nil
-    case .charging, .lowPower, .calendarReminder: alert.sound
+    case .calendarReminder: calendar.sound ? alert.sound : nil
+    case .charging, .lowPower: alert.sound
     }
   }
 }

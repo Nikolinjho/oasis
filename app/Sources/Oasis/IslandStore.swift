@@ -42,6 +42,10 @@ final class IslandStore {
   private(set) var isDebugAgendaPinned = false
   /// Последние реальные события с живого источника: из них соберётся agenda после unpinDebugEvents
   @ObservationIgnored private var lastRealEvents: [CalendarEvent] = []
+  /// События, из которых сейчас собраны повестки: реальные или закреплённые отладкой
+  @ObservationIgnored private var shownEvents: [CalendarEvent] = []
+  /// Страница Calendar: главный тумблер, выключенные календари и режимы (setCalendarFilter)
+  @ObservationIgnored private(set) var calendarFilter = CalendarFilter()
   /// Вырез этой машины по API до первой расстановки окна (лог window 28.09)
   var notch = CGSize(width: 185, height: 32)
   /// Вид страниц настроек, которые не меняют поведение машины: Battery и т.д. (IslandAppearance)
@@ -58,7 +62,8 @@ final class IslandStore {
   @ObservationIgnored var onSurfaceChange: () -> Void = {}
   /// Остров закрыт свайпом вверх: окно не досылает hoverEntered, пока курсор не уйдёт с острова
   @ObservationIgnored var onSwipeClose: () -> Void = {}
-  /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной): AppDelegate кормит ею CalendarClock
+  /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной, фильтр): live-повестка
+  /// (CalendarFilter.live) для CalendarClock. Повестка раскрытого к этому моменту уже в agenda
   @ObservationIgnored var onAgendaChange: (DayAgenda) -> Void = { _ in }
   /// Сменился последний просмотренный вид раскрытого: AppDelegate сохраняет его для Most Recent
   @ObservationIgnored var onLastExpandedViewChange: (ExpandedView) -> Void = { _ in }
@@ -330,22 +335,33 @@ final class IslandStore {
   func apply(events: [CalendarEvent], now: Date = Date()) {
     lastRealEvents = events
     guard !isDebugAgendaPinned else { return }
-    agenda = DayAgenda.make(events: events, now: now)
-    onAgendaChange(agenda)
+    publish(events, now: now)
   }
 
   /// Отладочная повестка вместо реальной: держится до unpinDebugEvents, реальные события не пропадают,
   /// просто не показываются, пока источник продолжает слать apply(events:)
   func pinDebugEvents(_ events: [CalendarEvent], now: Date = Date()) {
     isDebugAgendaPinned = true
-    agenda = DayAgenda.make(events: events, now: now)
-    onAgendaChange(agenda)
+    publish(events, now: now)
   }
 
   /// Возврат к реальному календарю: agenda пересобирается из последних событий живого источника
   func unpinDebugEvents(now: Date = Date()) {
     isDebugAgendaPinned = false
-    agenda = DayAgenda.make(events: lastRealEvents, now: now)
-    onAgendaChange(agenda)
+    publish(lastRealEvents, now: now)
+  }
+
+  /// Настройки страницы Calendar сменились: повестки пересобираются из тех же событий
+  func setCalendarFilter(_ filter: CalendarFilter, now: Date = Date()) {
+    guard filter != calendarFilter else { return }
+    calendarFilter = filter
+    publish(shownEvents, now: now)
+  }
+
+  /// Раскрытый (Duo, календарный вид) видит события Both и Expanded View, часы — Both и Live Activity
+  private func publish(_ events: [CalendarEvent], now: Date) {
+    shownEvents = events
+    agenda = DayAgenda.make(events: calendarFilter.expanded(events), now: now)
+    onAgendaChange(DayAgenda.make(events: calendarFilter.live(events), now: now))
   }
 }

@@ -79,9 +79,9 @@ struct ActivityLayoutsTests {
     #expect(layout.line == .init(bar: Self.event.color, title: "Созвон", trailingSymbol: "clock", trailing: "in 15 min"))
   }
 
-  @Test("Самый широкий индикатор напоминания — самое раннее напоминание, за 15 минут")
+  @Test("Самый широкий индикатор напоминания — напоминание в начале окна по умолчанию, за 15 минут")
   func reminderWidestIndicator() {
-    let earliest = CalendarSchedule.reminderMinutes.max()!
+    let earliest = Int(CalendarSchedule.defaultLead / 60)
     let layout = ActivityLayouts.reminder(CalendarReminder(eventID: "e", title: "Созвон", minutes: earliest, color: Self.event.color))
     #expect(layout.indicator == ActivityLayouts.reminderWidestIndicator)
   }

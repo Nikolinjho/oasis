@@ -408,6 +408,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     expanded.mostRecent = mostRecentActivity
     expanded.forceEnable = forceEnableActivity
     config.expanded = expanded
+    config.calendar = calendar.rules
     return config
   }
 }  // swiftlint:disable:this file_length - по свойству на настройку, как type_body_length выше

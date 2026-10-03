@@ -66,8 +66,12 @@ public struct DayAgenda: Equatable, Sendable {
   /// live — событие открытого окна календаря (CalendarSchedule.liveEvent без отклонённых): при пересечении
   /// событий карточка и Join относятся к тому же событию, что компакт и меню, а не к первому не закончившемуся
   public func current(at now: Date, live: CalendarEvent? = nil) -> CalendarEvent? {
-    // событие окна уже кончилось, а store ещё не узнал (TimelineView тикает раньше часов): прежнее правило
-    if let live, live.end > now { return live }
+    // событие окна уже кончилось, а store ещё не узнал (TimelineView тикает раньше часов): прежнее правило.
+    // Событие календаря Live Activity в повестку раскрытого не попало — и карточкой Duo не становится.
+    // У отладочного события календаря нет: его повестки может и не быть
+    if let live, live.end > now, live.calendarID == nil || (today + tomorrow).contains(where: { $0.id == live.id }) {
+      return live
+    }
     return today.first { $0.end > now }
   }
 

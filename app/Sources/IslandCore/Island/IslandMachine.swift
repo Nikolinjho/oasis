@@ -23,7 +23,7 @@ public enum IslandEvent: Equatable, Sendable {
   /// Уведомление этого вида больше не нужно (Dismiss Event): ждущие в очереди уходят. Показанное уходит сразу,
   /// как по alertHide, а сжатие к нему идёт к следующему из очереди или в покой
   case alertRetracted(IslandAlert.Kind)
-  /// Открылось или закрылось окно календаря: от liveLead (15 минут) до начала события до его конца
+  /// Открылось или закрылось окно календаря: от Time before event (15 минут по умолчанию) до начала события до его конца
   case calendarLiveChanged(Bool)
   /// Событие началось: peek с названием поверх компакта календаря и звук
   case calendarStarted
@@ -76,7 +76,7 @@ public struct IslandModel: Equatable, Sendable {
   /// Виды уведомлений, которые HUD вытеснил с экрана и вернул в очередь: их звук уже прозвучал,
   /// повторный показ после HUD идёт без звука. Новое уведомление того же вида и отзыв снимают отметку
   public var heardAlerts: Set<IslandAlert.Kind> = []
-  /// Открыто окно календаря (за 15 минут до начала (liveLead) … конец события): без музыки компакт календаря
+  /// Открыто окно календаря (за Time before event до начала (CalendarSchedule, 15 минут по умолчанию) … конец события): без музыки компакт календаря
   /// вытесняет покой, при играющей музыке он и есть компакт музыки (Alcove 1.7.9, 29.09)
   public var calendarLive = false
   /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
@@ -167,6 +167,11 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     public var nowPlaying = NowPlayingRules()
     /// Idle Activity (General): какой вид открывается раскрытием
     public var expanded = ExpandedRules()
+    /// Calendar: peek и звук на старте. Хранится в alerts: напоминанию нужны те же длительность и звук
+    public var calendar: CalendarRules {
+      get { alerts.calendar }
+      set { alerts.calendar = newValue }
+    }
 
     public init(
       hoverOpensPlayer: Bool, compactAtRest: Bool, timeScale: Double = 1, hoverDelay: Duration = .zero,
@@ -562,13 +567,16 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     }
   }
 
-  /// Звук на старте события играет всегда (Play sound on calendar event), peek — только из компакта календаря.
-  /// Во время HUD, сжатия и раскрытого — только звук. Вживую окно открывается за 15 минут до старта (liveLead),
+  /// Звук на старте события — при Play sound on calendar event, peek — только из компакта календаря.
+  /// Во время HUD, сжатия и раскрытого — только звук. Вживую окно открывается за Time before event до старта,
   /// и сжатие к календарю к этому времени давно закончилось: сюда попадает разве что отладочная кнопка calendar.start
+  /// Quick Peek или When event is starting выключены — тоже только звук (Calendar → Extension)
   private static func calendarStarted(_ m: inout IslandModel) -> [IslandEffect] {
-    guard m.surface == .calendar, m.pending == nil else { return [.play(.event)] }
+    let rules = m.config.calendar
+    let sound: [IslandEffect] = rules.sound ? [.play(.event)] : []
+    guard rules.peeksOnStart, m.surface == .calendar, m.pending == nil else { return sound }
     m.surface = .calendarPeek
-    return [.animate(.calendarPeekOpen), .schedule(.calendarPeekEnd, after: IslandTiming.calendarPeek), .play(.event)]
+    return [.animate(.calendarPeekOpen), .schedule(.calendarPeekEnd, after: rules.peekDuration)] + sound
   }
 
   /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент.

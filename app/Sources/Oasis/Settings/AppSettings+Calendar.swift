@@ -95,6 +95,20 @@ final class CalendarSettings: ObservableObject {
     CalendarFilter(isEnabled: isEnabled, excluded: excluded, modes: modes)
   }
 
+  /// Peek на старте, его длительность и звук: машина острова (IslandMachine.Config.calendar)
+  var rules: CalendarRules {
+    var rules = CalendarRules()
+    rules.peeksOnStart = quickPeek && peekOnStart
+    rules.peekDuration = CalendarRules.peekDuration(seconds: peekSeconds)
+    rules.sound = sound
+    return rules
+  }
+
+  /// Окно и напоминание Before event starts: CalendarClock
+  var clockSettings: CalendarClock.Settings {
+    CalendarClock.Settings(lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart)
+  }
+
   func mode(for calendarID: String) -> CalendarDisplayMode { filter.mode(for: calendarID) }
 
   func isIncluded(_ calendarID: String) -> Bool { !excluded.contains(calendarID) }

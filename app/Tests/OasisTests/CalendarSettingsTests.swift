@@ -104,4 +104,37 @@ struct CalendarSettingsTests {
     #expect(calendar.peekSeconds == 1)
     #expect(calendar.modes == ["home": .liveActivity])
   }
+
+  @Test("Extension и звук доходят до машины: Quick Peek и When event is starting, Peek duration, звук")
+  func machineConfig() {
+    let (name, defaults) = TestDefaults.fresh()
+    defer { TestDefaults.cleanup(name, defaults) }
+    let settings = AppSettings(defaults: defaults)
+    #expect(settings.machineConfig(from: .user).calendar == CalendarRules())
+    settings.calendar.peekDuration = 2
+    settings.calendar.sound = false
+    settings.calendar.peekOnStart = false
+    var rules = settings.machineConfig(from: .user).calendar
+    #expect(rules.peekDuration == .milliseconds(2200))
+    #expect(!rules.sound)
+    #expect(!rules.peeksOnStart)
+    // Quick Peek выключен — peek на старте нет, даже если When event is starting включён
+    settings.calendar.peekOnStart = true
+    settings.calendar.quickPeek = false
+    rules = settings.machineConfig(from: .user).calendar
+    #expect(!rules.peeksOnStart)
+  }
+
+  @Test("Часы получают Time before event и Before event starts только вместе с Quick Peek")
+  func clockSettings() {
+    let (name, defaults) = TestDefaults.fresh()
+    defer { TestDefaults.cleanup(name, defaults) }
+    let calendar = AppSettings(defaults: defaults).calendar
+    #expect(calendar.clockSettings == CalendarClock.Settings())
+    calendar.leadMinutes = 10
+    calendar.peekBeforeStart = true
+    #expect(calendar.clockSettings == CalendarClock.Settings(lead: 600, remindsBeforeStart: true))
+    calendar.quickPeek = false
+    #expect(!calendar.clockSettings.remindsBeforeStart)
+  }
 }

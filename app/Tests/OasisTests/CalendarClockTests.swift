@@ -13,11 +13,13 @@ struct CalendarClockTests {
   static let agenda = DayAgenda(today: [event], tomorrow: [])
 
   static func at(_ offset: TimeInterval) -> Date { start.addingTimeInterval(offset) }
+  /// Quick Peek и Before event starts включены
+  static let reminding = CalendarClock.Settings(remindsBeforeStart: true)
 
   @Test("Переход через T−15 шлёт в store напоминание «Созвон» за 15 минут")
   func reminderReachesStore() {
     let store = IslandStore(config: .alcove)
-    let clock = CalendarClock(store: store, start: Self.at(-901), remindsBeforeStart: true)
+    let clock = CalendarClock(store: store, start: Self.at(-901), settings: CalendarClockTests.reminding)
     clock.update(agenda: Self.agenda, now: Self.at(-899))
     let reminder = CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: Self.event.color)
     #expect((store.model.pending ?? store.model.surface) == .alert(.calendarReminder(reminder)))
@@ -105,11 +107,11 @@ struct CalendarClockTests {
   @Test("Напоминания двух событий в один тик: первое на экране, второе ждёт в очереди")
   func twoRemindersInOneTick() {
     let later = CalendarEvent(
-      id: "later", title: "Потом", start: Self.at(600), end: Self.at(1800), isAllDay: false, color: Self.event.color)
+      id: "later", title: "Потом", start: Self.start, end: Self.at(1800), isAllDay: false, color: Self.event.color)
     let store = IslandStore(config: .alcove)
-    let clock = CalendarClock(store: store, start: Self.at(-301), remindsBeforeStart: true)
-    clock.update(agenda: DayAgenda(today: [Self.event, later], tomorrow: []), now: Self.at(-300))
-    let first = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "Созвон", minutes: 5, color: Self.event.color))
+    let clock = CalendarClock(store: store, start: Self.at(-901), settings: CalendarClockTests.reminding)
+    clock.update(agenda: DayAgenda(today: [Self.event, later], tomorrow: []), now: Self.at(-900))
+    let first = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: Self.event.color))
     let second = IslandAlert.calendarReminder(CalendarReminder(eventID: "later", title: "Потом", minutes: 15, color: Self.event.color))
     #expect((store.model.pending ?? store.model.surface) == .alert(first))
     #expect(store.model.alertQueue == [second])
@@ -162,12 +164,12 @@ struct CalendarClockDismissTests {
     let first = Self.event("first", startsAt: 0)
     let second = Self.event("second", startsAt: 1200)
     let store = IslandStore(config: .alcove)
-    let clock = CalendarClock(store: store, start: Self.at(-600), remindsBeforeStart: true)
-    clock.update(agenda: DayAgenda(today: [first, second], tomorrow: []), now: Self.at(-600))
-    clock.dismiss("first", now: Self.at(-600))
+    let clock = CalendarClock(store: store, start: Self.at(-1000), settings: CalendarClockTests.reminding)
+    clock.update(agenda: DayAgenda(today: [first, second], tomorrow: []), now: Self.at(-1000))
+    clock.dismiss("first", now: Self.at(-1000))
 
-    // T−5 отклонённого: тишина
-    clock.tick(now: Self.at(-299))
+    // T−15 отклонённого: тишина
+    clock.tick(now: Self.at(-899))
     #expect(store.model.surface == .idle)
     // старт отклонённого: ни компакта, ни peek, ни пунктов меню
     clock.tick(now: Self.at(1))
@@ -265,15 +267,15 @@ struct CalendarClockDismissTests {
   @Test("Dismiss убирает ждущее в очереди напоминание события, показанное напоминание другого события остаётся")
   func dismissRetractsQueuedReminder() {
     let first = Self.event("call", startsAt: 0)
-    let later = Self.event("later", startsAt: 600)
+    let later = Self.event("later", startsAt: 0)
     let store = IslandStore(config: .alcove)
-    let clock = CalendarClock(store: store, start: Self.at(-301), remindsBeforeStart: true)
-    clock.update(agenda: DayAgenda(today: [first, later], tomorrow: []), now: Self.at(-300))
-    let shown = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "call", minutes: 5, color: first.color))
+    let clock = CalendarClock(store: store, start: Self.at(-901), settings: CalendarClockTests.reminding)
+    clock.update(agenda: DayAgenda(today: [first, later], tomorrow: []), now: Self.at(-900))
+    let shown = IslandAlert.calendarReminder(CalendarReminder(eventID: "call", title: "call", minutes: 15, color: first.color))
     #expect((store.model.pending ?? store.model.surface) == .alert(shown))
     #expect(store.model.alertQueue.count == 1)
 
-    clock.dismiss("later", now: Self.at(-300))
+    clock.dismiss("later", now: Self.at(-900))
     #expect(store.model.alertQueue.isEmpty)
     #expect((store.model.pending ?? store.model.surface) == .alert(shown))
   }

@@ -47,4 +47,14 @@ struct CalendarFilterTests {
     #expect(filter.live(Self.all).isEmpty)
     #expect(filter.expanded(Self.all).isEmpty)
   }
+
+  @Test("Событие окна из календаря Live Activity не становится карточкой Duo: его нет в повестке раскрытого")
+  func liveOnlyEventStaysOutOfDuo() {
+    let agenda = DayAgenda.make(events: [Self.home], now: Self.start.addingTimeInterval(-60))
+    let now = Self.start.addingTimeInterval(-30)
+    #expect(agenda.current(at: now, live: Self.work) == Self.home)
+    #expect(agenda.upcoming(at: now, live: Self.work) == [Self.home])
+    // отладочное событие без календаря — как раньше, карточкой
+    #expect(agenda.current(at: now, live: Self.debug) == Self.debug)
+  }
 }

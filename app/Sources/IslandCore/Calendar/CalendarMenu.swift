@@ -37,7 +37,7 @@ public enum MeetingService: Equatable, Sendable, CaseIterable {
 }
 
 /// Пункты события вверху меню: Join, Open in Calendar, Dismiss Event (скрин меню Alcove 28.09, ui-strings menu.calendar.*).
-/// Пункты видны с открытия окна календаря (CalendarSchedule.liveLead, Time before event). На скрине — за 8 минут до начала
+/// Пункты видны с открытия окна календаря (CalendarSchedule, Time before event). На скрине — за 8 минут до начала
 public struct CalendarMenuModel: Equatable, Sendable {
   public static let openTitle = "Open in Calendar"
   public static let dismissTitle = "Dismiss Event"
@@ -50,12 +50,14 @@ public struct CalendarMenuModel: Equatable, Sendable {
     self.meeting = meeting
   }
 
-  /// Самое раннее не отклонённое событие от открытия окна (T−15) до конца. Нет такого — nil.
+  /// Самое раннее не отклонённое событие от открытия окна (T − lead) до конца. Нет такого — nil.
   /// Завтрашние после сегодняшних, как в CalendarSchedule: у события в 00:05 напоминание и окно наступают накануне
-  public static func make(agenda: DayAgenda, now: Date, dismissed: Set<String>) -> CalendarMenuModel? {
+  public static func make(
+    agenda: DayAgenda, now: Date, dismissed: Set<String>, lead: TimeInterval = CalendarSchedule.defaultLead
+  ) -> CalendarMenuModel? {
     guard
       let event = (agenda.today + agenda.tomorrow).first(where: {
-        !dismissed.contains($0.id) && $0.start.addingTimeInterval(-CalendarSchedule.liveLead) <= now && now < $0.end
+        !dismissed.contains($0.id) && $0.start.addingTimeInterval(-lead) <= now && now < $0.end
       })
     else { return nil }
     return CalendarMenuModel(event: event, meeting: MeetingLink.find(in: event))

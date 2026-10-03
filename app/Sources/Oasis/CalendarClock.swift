@@ -7,8 +7,20 @@ import IslandCore
 /// смена системного времени и выход из сна: граница могла пройти, пока таймер стоял
 @MainActor
 final class CalendarClock {
+  /// Страница Calendar: то, что меняет время и напоминания. Смена применяется сразу (apply)
+  struct Settings: Equatable {
+    /// Time before event
+    var lead: TimeInterval = CalendarSchedule.defaultLead
+    /// Quick Peek и Before event starts: напоминание-peek в начале окна. У Alcove по умолчанию выключено (ui-inspection 1.9)
+    var remindsBeforeStart = false
+  }
+
   private let store: IslandStore
+  /// Повестка live-активности: компакт, peek, напоминания (CalendarFilter.live)
   private var agenda = DayAgenda.empty
+  /// Повестка раскрытого (CalendarFilter.expanded): по ней пункты меню
+  private var expanded = DayAgenda.empty
+  private var settings: Settings
   private var lastTick: Date
   /// Событие окна, отправленное в store: целиком, чтобы правка названия или конца внутри окна дошла до store
   private var live: CalendarEvent?
@@ -19,13 +31,10 @@ final class CalendarClock {
   }
   private var timer: Task<Void, Never>?
   private var observers: [(NotificationCenter, NSObjectProtocol)] = []
-  /// Before event starts: напоминания-peek за 15 и 5 минут. У Alcove по умолчанию выключено (ui-inspection 1.9),
-  /// страницы Calendar в P2 нет — включается только кодом и в тестах
-  private let remindsBeforeStart: Bool
 
-  init(store: IslandStore, start: Date = Date(), remindsBeforeStart: Bool = false) {
+  init(store: IslandStore, start: Date = Date(), settings: Settings = Settings()) {
     self.store = store
-    self.remindsBeforeStart = remindsBeforeStart
+    self.settings = settings
     lastTick = start
     let wake: [(NotificationCenter, Notification.Name)] = [
       (.default, .NSSystemClockDidChange),
@@ -46,28 +55,41 @@ final class CalendarClock {
     for (center, token) in observers { center.removeObserver(token) }
   }
 
+  /// Одна повестка на всё: все календари в режиме Both
   func update(agenda: DayAgenda, now: Date = Date()) {
-    self.agenda = agenda
-    // отклонённые, которых уже нет в agenda, забываются. Завтрашние тоже в счёт: в полночь событие
+    update(live: agenda, expanded: agenda, now: now)
+  }
+
+  func update(live: DayAgenda, expanded: DayAgenda, now: Date = Date()) {
+    agenda = live
+    self.expanded = expanded
+    // отклонённые, которых уже нет ни в одной повестке, забываются. Завтрашние тоже в счёт: в полночь событие
     // переезжает из tomorrow в today с тем же id и должно остаться отклонённым
-    dismissed.formIntersection((agenda.today + agenda.tomorrow).map(\.id))
+    dismissed.formIntersection((live.today + live.tomorrow + expanded.today + expanded.tomorrow).map(\.id))
+    tick(now: now)
+  }
+
+  /// Настройки страницы Calendar сменились: окно и граница пересчитываются сразу, без ожидания таймера
+  func apply(_ settings: Settings, now: Date = Date()) {
+    guard settings != self.settings else { return }
+    self.settings = settings
     tick(now: now)
   }
 
   func tick(now: Date = Date()) {
     // окно раньше отметок: проснулись после начала — сначала компакт календаря, и только поверх него
     // calendarStarted откроет peek старта. В обратном порядке из формы выреза был бы только звук
-    let live = CalendarSchedule.liveEvent(in: visible, at: now)
+    let live = CalendarSchedule.liveEvent(in: visible, at: now, lead: settings.lead)
     if live != self.live {
       self.live = live
       store.setCalendarLive(live)
     }
     // старт — не больше одного за тик: у событий с общим началом peek один, и звук не играет дважды
     var started = false
-    for tick in CalendarSchedule.crossings(in: visible, from: lastTick, to: now) {
+    for tick in CalendarSchedule.crossings(in: visible, from: lastTick, to: now, lead: settings.lead) {
       switch tick {
       case .reminder(let event, let minutes):
-        guard remindsBeforeStart else { continue }
+        guard settings.remindsBeforeStart else { continue }
         store.send(
           .alertArrived(
             .calendarReminder(
@@ -92,18 +114,21 @@ final class CalendarClock {
     tick(now: now)
   }
 
-  /// Пункты события для меню menu bar. Окно календаря открыто — событие компакта (начавшееся позже всех), иначе
-  /// самое раннее из T−15…конец. Отступление от «самое раннее» плана намеренное: при пересечении (A 10:00–11:00,
-  /// B с 10:30) Join и Dismiss должны относиться к B, которое показывает остров, а не к A
+  /// Пункты события для меню menu bar — по повестке раскрытого (режим Expanded View включает меню).
+  /// Окно календаря открыто — событие окна (начавшееся позже всех), иначе самое раннее из T − lead…конец.
+  /// Отступление от «самое раннее» плана намеренное: при пересечении (A 10:00–11:00, B с 10:30) Join и Dismiss
+  /// должны относиться к B, которое показывает остров, а не к A
   func menuModel(now: Date = Date()) -> CalendarMenuModel? {
-    if let live = CalendarSchedule.liveEvent(in: visible, at: now) {
+    if let live = CalendarSchedule.liveEvent(in: Self.visible(expanded, dismissed), at: now, lead: settings.lead) {
       return CalendarMenuModel(event: live, meeting: MeetingLink.find(in: live))
     }
-    return CalendarMenuModel.make(agenda: agenda, now: now, dismissed: dismissed)
+    return CalendarMenuModel.make(agenda: expanded, now: now, dismissed: dismissed, lead: settings.lead)
   }
 
-  /// События без отклонённых: по ним считаются напоминания, старт, окно календаря и граница таймера
-  private var visible: DayAgenda {
+  /// События live без отклонённых: по ним считаются напоминания, старт, окно календаря и граница таймера
+  private var visible: DayAgenda { Self.visible(agenda, dismissed) }
+
+  private static func visible(_ agenda: DayAgenda, _ dismissed: Set<String>) -> DayAgenda {
     DayAgenda(
       today: agenda.today.filter { !dismissed.contains($0.id) },
       tomorrow: agenda.tomorrow.filter { !dismissed.contains($0.id) })
@@ -112,7 +137,7 @@ final class CalendarClock {
   /// До ближайшей границы, но не дольше 5 минут: agenda могла устареть, а часы — уйти после сна
   private func schedule(after now: Date) {
     timer?.cancel()
-    let next = CalendarSchedule.nextBoundary(in: visible, after: now, reminders: remindsBeforeStart) ?? now.addingTimeInterval(300)
+    let next = CalendarSchedule.nextBoundary(in: visible, after: now, lead: settings.lead) ?? now.addingTimeInterval(300)
     let delay = min(max(next.timeIntervalSince(now), 0.05), 300)
     timer = Task { [weak self] in
       try? await Task.sleep(for: .seconds(delay))

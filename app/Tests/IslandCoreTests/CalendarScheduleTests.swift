@@ -20,10 +20,10 @@ struct CalendarScheduleTests {
     #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(1800)) == nil)
   }
 
-  @Test("Напоминания за 15 и 5 минут и старт срабатывают при переходе через отметку")
+  @Test("Напоминание в начале окна (T−15) и старт срабатывают при переходе через отметку")
   func crossings() {
     #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-901), to: Self.at(-899)) == [.reminder(Self.event, minutes: 15)])
-    #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-301), to: Self.at(-300)) == [.reminder(Self.event, minutes: 5)])
+    #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-301), to: Self.at(-300)).isEmpty)
     #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-1), to: Self.at(0)) == [.started(Self.event)])
     #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-200), to: Self.at(-100)).isEmpty)
   }
@@ -31,10 +31,10 @@ struct CalendarScheduleTests {
   @Test("После сна отметки старше минуты не показываются")
   func staleMarks() {
     #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-1000), to: Self.at(-200)).isEmpty)
-    #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-1000), to: Self.at(-250)) == [.reminder(Self.event, minutes: 5)])
+    #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-1000), to: Self.at(-850)) == [.reminder(Self.event, minutes: 15)])
   }
 
-  @Test("Следующая граница — ближайшая из напоминаний, окна T−15, старта и конца")
+  @Test("Следующая граница — ближайшая из окна T−15 (оно же напоминание), старта и конца")
   func nextBoundary() {
     #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000)) == Self.at(-900))
     #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(0)) == Self.at(1800))
@@ -43,12 +43,24 @@ struct CalendarScheduleTests {
     #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(1800)) == nil)
   }
 
-  @Test("Напоминания выключены: отметка за 5 минут не будит часы, следующая граница — старт")
-  func nextBoundaryWithoutReminders() {
-    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-900)) == Self.at(-300))
-    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-900), reminders: false) == Self.at(0))
-    // окно T−15 остаётся границей и без напоминаний
-    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000), reminders: false) == Self.at(-900))
+  @Test("Time before event 5…30 минут двигает окно, напоминание и границу")
+  func customLead() {
+    let lead: TimeInterval = 5 * 60
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-301), lead: lead) == nil)
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-300), lead: lead) == Self.event)
+    #expect(
+      CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-301), to: Self.at(-300), lead: lead)
+        == [.reminder(Self.event, minutes: 5)])
+    #expect(CalendarSchedule.crossings(in: Self.agenda, from: Self.at(-901), to: Self.at(-899), lead: lead).isEmpty)
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000), lead: lead) == Self.at(-300))
+    let long: TimeInterval = 30 * 60
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-1800), lead: long) == Self.event)
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000), lead: long) == Self.at(-1800))
+  }
+
+  @Test("Свои отметки события тоже будят часы")
+  func extraBoundary() {
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(0), extra: { [$0.start.addingTimeInterval(4)] }) == Self.at(4))
   }
 
   @Test("Пересекающиеся события: окно переходит к начавшемуся позже ровно в момент его старта, после конца — обратно")

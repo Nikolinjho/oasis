@@ -25,8 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private var fullscreen: FullscreenMonitor?
   private var sourceActivity: SourceActivityMonitor?
   private var frontmostBundleID: String?
-  private var calendar: EventKitCalendarSource?
-  private lazy var calendarClock = CalendarClock(store: store)
+  private lazy var calendar = CalendarBridge(store: store, settings: settings.calendar)
   private var power: PowerSource?
   private var bluetooth: BluetoothWatcher?
   private var headphonesMonitor: HeadphonesBatteryMonitor?
@@ -47,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   func applicationWillFinishLaunching(_ notification: Notification) {
     debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds)
     // здесь, а не в applicationDidFinishLaunching: холодный запуск по ссылке calendar.remind закрепляет повестку раньше
-    store.onAgendaChange = { [weak self] agenda in self?.calendarClock.update(agenda: agenda) }
+    calendar.apply()
     store.onSound = { [weak self] sound in
       guard let self, settings.playSounds else { return }
       sounds.play(sound)
@@ -72,15 +71,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       debugItem: DebugMenu.item(sections: debugSections),
       isTrusted: { Permissions.isAccessibilityTrusted },
       openSettings: { [weak self] in self?.settingsWindow.show() },
-      // часы читаются только при открытии меню: lazy calendarClock создаётся при первом обращении
+      // часы читаются только при открытии меню
       calendarItems: { [weak self] in
         guard let self else { return [] }
         return CalendarMenuSection.items(
-          for: calendarClock.menuModel(),
+          for: calendar.clock.menuModel(),
           actions: .init(
             join: { [store] url in store.onJoin(url) },
             open: { CalendarMenuSection.open($0) },
-            dismiss: { [calendarClock] id in calendarClock.dismiss(id) }))
+            dismiss: { [calendar] id in calendar.clock.dismiss(id) }))
       })
     self.statusItem = statusItem
     statusItem.setIconHidden(settings.hideMenuBarIcon)
@@ -90,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     window?.naturalMovement = settings.naturalMovement
     if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
       // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startSourceActivity, startNowPlaying
-      // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
+      // (адаптер медиа), startPlayerActions, calendar.start, startPower, startBluetooth, startLevels (CoreAudio HUD
       // громкости/яркости), startKeyTap
       log.info("demo mode after \(delay, privacy: .public) s")
       DemoSequence.run(store: store, after: delay)
@@ -100,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     startSourceActivity()
     startNowPlaying()
     startPlayerActions()
-    startCalendar()
+    calendar.start()
     startPower()
     startBluetooth()
     startLevels()
@@ -126,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     store.swipeToDismiss = settings.swipeToDismiss
     window?.naturalMovement = settings.naturalMovement
     nowPlaying?.apply(settings.effectiveMediaSource)
+    calendar.apply()
   }
 
   /// Вид острова: настройки плюс текущее устройство вывода
@@ -238,16 +238,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       router.perform(action, nowPlaying: store.nowPlaying)
       store.playerActionSent(action)
     }
-  }
-
-  private func startCalendar() {
-    let source = EventKitCalendarSource()
-    tasks.append(
-      Task { [store] in
-        for await events in source.changes { store.apply(events: events) }
-      })
-    source.start()
-    calendar = source
   }
 
   private func startPower() {
