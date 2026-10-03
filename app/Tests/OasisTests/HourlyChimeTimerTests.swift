@@ -16,6 +16,18 @@ struct HourlyChimeTimerTests {
     #expect(timer.target == nil)
   }
 
+  @Test("Таймер проснулся чуть раньше часа по Date (монотонные часы спешат): звон один, дальше — следующий час")
+  func earlyWakeChimesOnce() {
+    var plays = 0
+    let timer = HourlyChimeTimer { plays += 1 }
+    timer.isEnabled = true
+    let hour = HourlyChime.next(after: Date())
+    timer.fired(at: hour.addingTimeInterval(-0.01), target: hour)
+    #expect(plays == 1)
+    #expect(timer.target == HourlyChime.next(after: hour))
+    timer.isEnabled = false
+  }
+
   @Test("Главный тумблер Calendar и Play hourly chime вместе включают часы-куранты через CalendarBridge")
   func bridgeEnablesChime() {
     let (name, defaults) = TestDefaults.fresh()

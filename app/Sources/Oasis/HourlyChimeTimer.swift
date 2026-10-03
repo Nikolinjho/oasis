@@ -48,8 +48,14 @@ final class HourlyChimeTimer {
     task = Task { [weak self] in
       try? await Task.sleep(for: .seconds(next.timeIntervalSince(now)))
       guard !Task.isCancelled, let self else { return }
-      if HourlyChime.isOnTime(fired: Date(), target: next) { play() }
-      reschedule()
+      fired(at: Date(), target: next)
     }
+  }
+
+  /// Таймер дождался часа. Task.sleep идёт по монотонным часам, и Date() может чуть не дойти до target:
+  /// следующий час считаем не раньше target, иначе тот же час прозвонил бы второй раз
+  func fired(at now: Date, target: Date) {
+    if HourlyChime.isOnTime(fired: now, target: target) { play() }
+    reschedule(now: max(now, target))
   }
 }
