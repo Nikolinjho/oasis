@@ -20,22 +20,26 @@ struct VariableBlurView: NSViewRepresentable {
   }
 }
 
-/// Слой-подложка с фильтром. Фабрики внедряются: тесты проверяют, что nil не роняет вид
+/// Подложка и фильтр. Фабрики внедряются: тесты проверяют, что nil не роняет вид
 struct VariableBlurFactory {
-  var makeBackdrop: () -> CALayer?
+  var makeEffectView: () -> NSView?
   var makeFilter: () -> NSObject?
 
-  /// Радиус у края, pt: оценка по кадрам Alcove 03.10
-  static let radius: CGFloat = 16
+  /// Радиус у края. Подгонка по снимкам 2x над полосатой подложкой (03.10): перепад яркости соседних пикселей
+  /// под краем, +60, +110 и +170 px у Alcove 14 / 25 / 97 / 174, у нас 13 / 30 / 88 / 174 (в шкале Alcove).
+  /// Фильтр считает радиус не в pt: 16 размывал полосы 20 pt в сплошной цвет
+  static let radius: CGFloat = 1
 
+  /// CABackdropLayer, созданный вручную внутри SwiftUI-хоста, содержимого под окном не получает (живая проверка
+  /// 03.10). Его получает только NSVisualEffectView с .behindWindow: у неё берём её же backdrop-слой
+  /// и меняем гауссов блюр материала на variableBlur
   @MainActor static let system = VariableBlurFactory(
-    makeBackdrop: {
-      // backdrop, а не обычный слой: фильтр должен размывать содержимое под окном, а не слой острова
-      guard let type = NSClassFromString("CABackdropLayer") as? CALayer.Type else { return nil }
-      let layer = type.init()
-      // без этого backdrop видит только содержимое своего окна
-      layer.setValue(true, forKey: "windowServerAware")
-      return layer
+    makeEffectView: {
+      let view = NSVisualEffectView()
+      view.blendingMode = .behindWindow
+      view.state = .active
+      view.material = .hudWindow
+      return view
     },
     makeFilter: {
       let selector = NSSelectorFromString("filterWithType:")
@@ -43,34 +47,39 @@ struct VariableBlurFactory {
       return type.perform(selector, with: "variableBlur")?.takeUnretainedValue() as? NSObject
     })
 
-  /// Слой с фильтром или nil (одна запись в лог за запуск)
+  /// Подложка с фильтром или nil (одна запись в лог за запуск)
   @MainActor
-  func make() -> (layer: CALayer, filter: NSObject)? {
-    guard let layer = makeBackdrop(), let filter = makeFilter() else {
-      Self.logUnavailableOnce()
+  func make() -> (view: NSView, filter: NSObject)? {
+    guard let filter = makeFilter(), let view = makeEffectView() else {
+      VariableBlurLog.unavailable("no effect view or variableBlur filter")
       return nil
     }
     filter.setValue(Self.radius, forKey: "inputRadius")
     filter.setValue(true, forKey: "inputNormalizeEdges")
-    return (layer, filter)
-  }
-
-  @MainActor private static var loggedUnavailable = false
-
-  @MainActor
-  private static func logUnavailableOnce() {
-    guard !loggedUnavailable else { return }
-    loggedUnavailable = true
-    Logger(subsystem: "dev.nikoko.oasis", category: "blur").error("variableBlur unavailable: no backdrop layer or filter")
+    return (view, filter)
   }
 }
 
-/// Вид с перевёрнутой геометрией (y вниз): маска строится в тех же координатах, что SwiftUI и строки CGImage
+@MainActor
+enum VariableBlurLog {
+  private static var logged = false
+
+  static func unavailable(_ reason: String) {
+    guard !logged else { return }
+    logged = true
+    Logger(subsystem: "dev.nikoko.oasis", category: "blur").error("variableBlur unavailable: \(reason, privacy: .public)")
+  }
+}
+
+/// Хост подложки. Маска строится сверху вниз (строки CGImage), как координаты SwiftUI
 final class VariableBlurHostView: NSView {
-  private(set) var blurLayer: CALayer?
+  private var effectView: NSView?
   private var filter: NSObject?
+  /// Найденный backdrop-слой материала: nil, пока вид не в окне или подменить не удалось
+  private(set) var blurLayer: CALayer?
   private var shape: CGRect = .zero
   private var fade: CGFloat = VariableBlurMask.fade
+  private var mask: CGImage?
   /// Размер, форма и спад, под которые построена текущая маска
   private var maskKey: MaskKey?
 
@@ -84,9 +93,10 @@ final class VariableBlurHostView: NSView {
     super.init(frame: .zero)
     wantsLayer = true
     if let made = factory.make() {
-      blurLayer = made.layer
+      effectView = made.view
       filter = made.filter
-      layer?.addSublayer(made.layer)
+      made.view.autoresizingMask = [.width, .height]
+      addSubview(made.view)
     }
   }
 
@@ -101,33 +111,79 @@ final class VariableBlurHostView: NSView {
   func update(shape: CGRect, fade: CGFloat) {
     self.shape = shape
     self.fade = fade
-    applyMask()
+    installFilter()
+  }
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    installFilter()
   }
 
   override func layout() {
     super.layout()
-    CATransaction.begin()
-    CATransaction.setDisableActions(true)
-    blurLayer?.frame = bounds
-    CATransaction.commit()
-    applyMask()
+    effectView?.frame = bounds
+    // материал может пересоздать свои фильтры при раскладке: подменяем каждый раз
+    effectView?.layoutSubtreeIfNeeded()
+    installFilter()
   }
 
-  private func applyMask() {
-    guard let blurLayer, let filter, bounds.size != .zero else { return }
+  private func installFilter() {
+    guard let effectView, let filter, bounds.size != .zero else { return }
     let key = MaskKey(size: bounds.size, shape: shape, fade: fade)
-    guard key != maskKey, let mask = VariableBlurMask.image(size: bounds.size, shape: shape, fade: fade) else { return }
-    maskKey = key
-    filter.setValue(mask, forKey: "inputMaskImage")
-    // фильтры слоя копируются при присваивании: новая маска доходит только через новое присваивание
-    blurLayer.setValue([filter], forKey: "filters")
+    if key != maskKey {
+      mask = VariableBlurMask.image(size: bounds.size, shape: shape, fade: fade)
+      maskKey = key
+    }
+    guard let mask, let root = effectView.layer else { return }
+    // тот же объект фильтра с новой маской CA считает неизменным: каждый раз — свежая копия
+    let current = filter.copy() as? NSObject ?? filter
+    current.setValue(mask, forKey: "inputMaskImage")
+    blurLayer = Self.adopt(root: root, filters: [current])
+    if blurLayer == nil, window != nil { VariableBlurLog.unavailable("no backdrop layer in the effect view") }
+  }
+
+  /// Ищет в дереве слоёв материала backdrop-слой (класс CABackdropLayer и родня), ставит ему фильтры, а слои
+  /// тинта и цвета материала прячет: иначе поверх блюра лежала бы серая плёнка. nil — backdrop нет
+  static func adopt(root: CALayer, filters: [Any]) -> CALayer? {
+    guard let backdrop = firstBackdrop(in: root) else { return nil }
+    hideAll(in: root, except: backdrop)
+    // материал снимает фон в 1/8 разрешения (scale 0.125) и растягивает: это само по себе ровный блюр
+    // по всему окну, и маска фильтра на нём не видна. Полное разрешение — блюр только от variableBlur
+    backdrop.setValue(1.0, forKey: "scale")
+    backdrop.setValue(filters, forKey: "filters")
+    return backdrop
+  }
+
+  static func isBackdrop(_ layer: CALayer) -> Bool {
+    NSStringFromClass(type(of: layer)).contains("Backdrop")
+  }
+
+  private static func firstBackdrop(in layer: CALayer) -> CALayer? {
+    if isBackdrop(layer) { return layer }
+    for sublayer in layer.sublayers ?? [] {
+      if let found = firstBackdrop(in: sublayer) { return found }
+    }
+    return nil
+  }
+
+  /// Прячет всё, что не backdrop и не его предок. Сам слой-корень материала тоже может рисовать фон
+  private static func hideAll(in layer: CALayer, except backdrop: CALayer) {
+    for sublayer in layer.sublayers ?? [] where sublayer !== backdrop {
+      if firstBackdrop(in: sublayer) != nil {
+        hideAll(in: sublayer, except: backdrop)
+      } else {
+        sublayer.isHidden = true
+      }
+    }
+    if layer !== backdrop { layer.backgroundColor = nil }
   }
 }
 
-/// Маска силы блюра: 1 над формой и у её края, линейно к 0 на расстоянии fade от формы
+/// Маска силы блюра: 1 над формой и у её края, к 0 на расстоянии fade от формы по smoothstep. Линейный спад
+/// давал слишком мягкую середину: у Alcove блюр держится у края и быстро уходит за ≈55 pt (подгонка 03.10)
 enum VariableBlurMask {
-  /// Замер Alcove 03.10: к ≈40 pt слабее, к 70–90 pt исчезает
-  static let fade: CGFloat = 80
+  /// Замер Alcove 03.10: блюр исчезает к 70–90 pt, по профилю резкости — к 85
+  static let fade: CGFloat = 85
 
   /// Расстояние от точки до прямоугольника, 0 внутри
   static func distance(from point: CGPoint, to rect: CGRect) -> CGFloat {
@@ -137,7 +193,9 @@ enum VariableBlurMask {
   }
 
   static func alpha(distance: CGFloat, fade: CGFloat) -> CGFloat {
-    fade > 0 ? max(0, 1 - distance / fade) : (distance > 0 ? 0 : 1)
+    guard fade > 0 else { return distance > 0 ? 0 : 1 }
+    let t = min(distance / fade, 1)
+    return 1 - t * t * (3 - 2 * t)
   }
 
   /// RGBA8, 1 px на pt, строка 0 — верх вида. Белый с альфой: фильтр читает альфу
