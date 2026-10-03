@@ -70,9 +70,11 @@ public struct DayAgenda: Equatable, Sendable {
   /// Карточки Duo стопкой (Alcove 1.7.9, 29.09): первым — то же событие, что current, за ним сегодняшние,
   /// которые начнутся не раньше него. Идущие рядом с live, но начавшиеся раньше, не показываем: карточка
   /// и Join сверху должны совпадать с компактом.
-  /// `>=` вместо `>`: одновременная встреча (тот же start, что у первой карточки) не должна пропадать
-  public func upcoming(at now: Date, live: CalendarEvent? = nil) -> [CalendarEvent] {
-    guard let first = current(at: now, live: live) else { return [] }
-    return [first] + today.filter { $0.id != first.id && $0.end > now && $0.start >= first.start }
+  /// `>=` вместо `>`: одновременная встреча (тот же start, что у первой карточки) не должна пропадать.
+  /// dismissed — отклонённые через Dismiss Event: их нет в стопке, как нет в компакте и меню
+  public func upcoming(at now: Date, live: CalendarEvent? = nil, dismissed: Set<String> = []) -> [CalendarEvent] {
+    let shown = dismissed.isEmpty ? self : DayAgenda(today: today.filter { !dismissed.contains($0.id) }, tomorrow: tomorrow)
+    guard let first = shown.current(at: now, live: live) else { return [] }
+    return [first] + shown.today.filter { $0.id != first.id && $0.end > now && $0.start >= first.start }
   }
 }

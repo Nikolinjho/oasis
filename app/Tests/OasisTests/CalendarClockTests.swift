@@ -182,6 +182,19 @@ struct CalendarClockDismissTests {
     #expect(clock.menuModel(now: Self.at(301))?.event.id == "second")
   }
 
+  @Test("Отклонённые доходят до store для стопки Duo и забываются вместе с событием")
+  func dismissedReachStore() {
+    let first = Self.event("first", startsAt: 3600)
+    let store = IslandStore(config: .alcove)
+    let clock = CalendarClock(store: store, start: Self.at(0))
+    clock.update(agenda: DayAgenda(today: [first], tomorrow: []), now: Self.at(0))
+    #expect(store.dismissedEvents.isEmpty)
+    clock.dismiss("first", now: Self.at(0))
+    #expect(store.dismissedEvents == ["first"])
+    clock.update(agenda: .empty, now: Self.at(1))
+    #expect(store.dismissedEvents.isEmpty)
+  }
+
   @Test("Отклонённое идущее событие отдаёт окно следующему")
   func dismissLiveKeepsNext() {
     let first = Self.event("first", startsAt: 0)

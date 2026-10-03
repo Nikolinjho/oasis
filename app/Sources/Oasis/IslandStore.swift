@@ -19,6 +19,8 @@ final class IslandStore {
   @ObservationIgnored private var playbackModesTimer: Task<Void, Never>?
   /// События сегодня и завтра: Duo и календарь
   private(set) var agenda = DayAgenda.empty
+  /// Dismiss Event: id отклонённых событий. Ведёт CalendarClock, Duo не показывает их в стопке
+  var dismissedEvents: Set<String> = []
   /// Событие окна календаря: его рисуют компакт и peek. Остаётся после конца окна, пока компакт уходит
   private(set) var calendarEvent: CalendarEvent?
   /// Тяга свайпа: добавка к высоте раскрытого, вниз +, вверх −

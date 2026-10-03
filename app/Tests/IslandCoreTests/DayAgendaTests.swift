@@ -102,4 +102,22 @@ struct DayAgendaTests {
     // то же самое, если карточка сверху — событие окна календаря (live)
     #expect(agenda.upcoming(at: now, live: long).map(\.id) == ["long", "short"])
   }
+
+  @Test("Стопка Duo без отклонённых (Dismiss Event): ни сверху, ни нижними карточками")
+  func upcomingSkipsDismissed() {
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+    func event(_ id: String, _ start: TimeInterval, _ end: TimeInterval) -> CalendarEvent {
+      CalendarEvent(
+        id: id, title: id, start: now.addingTimeInterval(start), end: now.addingTimeInterval(end),
+        isAllDay: false, color: RGB(red: 1, green: 0, blue: 0))
+    }
+    let seo = event("seo", 3600, 7200)
+    let book = event("book", 7200, 8400)
+    let gym = event("gym", 9000, 9600)
+    let agenda = DayAgenda(today: [seo, book, gym], tomorrow: [])
+    #expect(agenda.upcoming(at: now, dismissed: ["book"]).map(\.id) == ["seo", "gym"])
+    // окна нет, а ближайшее отклонено: сверху следующее
+    #expect(agenda.upcoming(at: now, dismissed: ["seo"]).map(\.id) == ["book", "gym"])
+    #expect(agenda.upcoming(at: now, live: seo, dismissed: ["gym"]).map(\.id) == ["seo", "book"])
+  }
 }

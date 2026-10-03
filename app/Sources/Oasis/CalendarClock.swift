@@ -13,7 +13,10 @@ final class CalendarClock {
   /// Событие окна, отправленное в store: целиком, чтобы правка названия или конца внутри окна дошла до store
   private var live: CalendarEvent?
   /// Dismiss Event: id отклонённых событий. Их нет ни в окне, ни в напоминаниях, ни в границах таймера, ни в меню
-  private var dismissed: Set<String> = []
+  /// Store получает их для стопки Duo
+  private var dismissed: Set<String> = [] {
+    didSet { if dismissed != oldValue { store.dismissedEvents = dismissed } }
+  }
   private var timer: Task<Void, Never>?
   private var observers: [(NotificationCenter, NSObjectProtocol)] = []
   /// Before event starts: напоминания-peek за 15 и 5 минут. У Alcove по умолчанию выключено (ui-inspection 1.9),

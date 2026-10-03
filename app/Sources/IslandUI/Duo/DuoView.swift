@@ -6,6 +6,8 @@ import SwiftUI
 struct DuoView: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
+  /// Отклонённые через Dismiss Event: в стопке их нет, как в компакте и меню
+  var dismissedEvents: Set<String> = []
   var appearance = IslandAppearance.default
   /// Событие открытого окна календаря: карточка и Join — о нём, как компакт и меню (DayAgenda.current)
   var liveEvent: CalendarEvent?
@@ -49,7 +51,7 @@ struct DuoView: View {
       DateBadge(date: now)
         .frame(width: DuoLayout.dateWidth, height: DuoLayout.dateFrame.height, alignment: .topTrailing)
         .offset(x: DuoLayout.dateFrame.maxX - DuoLayout.dateWidth, y: DuoLayout.dateFrame.minY)
-      let events = DuoLayout.fitting(agenda.upcoming(at: now, live: liveEvent))
+      let events = DuoLayout.fitting(agenda.upcoming(at: now, live: liveEvent, dismissed: dismissedEvents))
       if events.isEmpty {
         EmptyDay()
           .offset(x: DuoLayout.emptyOrigin.x, y: DuoLayout.emptyOrigin.y)

@@ -6,6 +6,7 @@ struct ExpandedContent: View {
   let view: ExpandedView
   let info: NowPlayingInfo?
   let agenda: DayAgenda
+  var dismissedEvents: Set<String> = []
   var appearance = IslandAppearance.default
   var liveEvent: CalendarEvent?
   var volume: Double = 0
@@ -18,8 +19,11 @@ struct ExpandedContent: View {
     ZStack(alignment: .topLeading) {
       switch view {
       case .duo:
-        DuoView(info: info, agenda: agenda, appearance: appearance, liveEvent: liveEvent, onJoin: onJoin, onAction: onAction)
-          .transition(.viewSwap(timeScale: timeScale))
+        DuoView(
+          info: info, agenda: agenda, dismissedEvents: dismissedEvents, appearance: appearance, liveEvent: liveEvent,
+          onJoin: onJoin, onAction: onAction
+        )
+        .transition(.viewSwap(timeScale: timeScale))
       case .player:
         PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)

@@ -316,6 +316,7 @@ struct IslandRootView: View {
       notchWidth: store.notch.width,
       nowPlaying: store.nowPlaying,
       agenda: store.agenda,
+      dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,
       dragBlurred: store.dragBlurred,
       appearance: store.appearance,
