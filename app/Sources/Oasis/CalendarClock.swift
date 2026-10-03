@@ -112,7 +112,7 @@ final class CalendarClock {
   /// До ближайшей границы, но не дольше 5 минут: agenda могла устареть, а часы — уйти после сна
   private func schedule(after now: Date) {
     timer?.cancel()
-    let next = CalendarSchedule.nextBoundary(in: visible, after: now) ?? now.addingTimeInterval(300)
+    let next = CalendarSchedule.nextBoundary(in: visible, after: now, reminders: remindsBeforeStart) ?? now.addingTimeInterval(300)
     let delay = min(max(next.timeIntervalSince(now), 0.05), 300)
     timer = Task { [weak self] in
       try? await Task.sleep(for: .seconds(delay))

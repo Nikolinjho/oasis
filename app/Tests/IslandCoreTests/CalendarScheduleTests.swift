@@ -43,6 +43,14 @@ struct CalendarScheduleTests {
     #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(1800)) == nil)
   }
 
+  @Test("Напоминания выключены: отметка за 5 минут не будит часы, следующая граница — старт")
+  func nextBoundaryWithoutReminders() {
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-900)) == Self.at(-300))
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-900), reminders: false) == Self.at(0))
+    // окно T−15 остаётся границей и без напоминаний
+    #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(-2000), reminders: false) == Self.at(-900))
+  }
+
   @Test("Пересекающиеся события: окно переходит к начавшемуся позже ровно в момент его старта, после конца — обратно")
   func overlappingLiveEvent() {
     let long = CalendarEvent(

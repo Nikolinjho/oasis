@@ -46,11 +46,12 @@ public enum CalendarSchedule {
     return ticks
   }
 
-  /// Следующая граница — ближайшая из напоминаний, окна T−15, старта и конца: по ней часы просыпаются
-  public static func nextBoundary(in agenda: DayAgenda, after now: Date) -> Date? {
+  /// Следующая граница — ближайшая из напоминаний, окна T−15, старта и конца: по ней часы просыпаются.
+  /// reminders — Before event starts: выключены — отметки напоминаний не будят часы зря
+  public static func nextBoundary(in agenda: DayAgenda, after now: Date, reminders: Bool = true) -> Date? {
     events(agenda)
       .flatMap { event in
-        reminderMinutes.map { reminderMark(event, $0) }
+        (reminders ? reminderMinutes.map { reminderMark(event, $0) } : [])
           + [event.start.addingTimeInterval(-liveLead), event.start, event.end]
       }
       .filter { $0 > now }
