@@ -14,7 +14,8 @@ struct CalendarLiveView: View {
     TimelineView(.periodic(from: event?.start ?? .now, by: 1)) { context in
       if let event {
         ActivityCompactView(
-          layout: ActivityLayouts.calendar(event: event, now: context.date, showsLine: showsLine, withMusic: music != nil),
+          layout: ActivityLayouts.calendar(
+            event: event, now: context.date, showsLine: showsLine, withMusic: music != nil, style: appearance.calendar),
           notchWidth: notchWidth, artwork: music, artworkFlip: appearance.artworkFlip)
       }
     }

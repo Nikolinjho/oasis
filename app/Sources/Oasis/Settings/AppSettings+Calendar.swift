@@ -104,6 +104,16 @@ final class CalendarSettings: ObservableObject {
     return rules
   }
 
+  /// Как остров рисует календарь: IslandAppearance.calendar
+  var appearance: CalendarAppearance {
+    var appearance = CalendarAppearance()
+    appearance.usesCalendarColor = useColor
+    appearance.coloredIndicator = coloredIndicator
+    appearance.monthView = monthView
+    appearance.eventIndicators = eventIndicators
+    return appearance
+  }
+
   /// Окно и напоминание Before event starts: CalendarClock
   var clockSettings: CalendarClock.Settings {
     CalendarClock.Settings(lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart)

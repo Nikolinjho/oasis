@@ -83,6 +83,8 @@ public struct IslandAppearance: Equatable, Sendable {
   public var playerControl = PlayerExtraControl.shuffle
   /// Справа от прогресса: «-m:ss» до конца или длительность целиком (showRemainingTime = 1 у Alcove по умолчанию)
   public var showsRemainingTime = true
+  /// Calendar: цвет компакта, полоска peek, сетка месяца
+  public var calendar = CalendarAppearance()
 
   public init() {}
 

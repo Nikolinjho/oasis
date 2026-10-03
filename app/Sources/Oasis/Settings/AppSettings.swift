@@ -387,6 +387,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     appearance.hidesTitleExtras = hideTitleExtras
     appearance.playerControl = playerControl
     appearance.showsRemainingTime = showRemainingTime
+    appearance.calendar = calendar.appearance
     return appearance
   }
 

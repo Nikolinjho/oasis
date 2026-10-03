@@ -137,4 +137,21 @@ struct CalendarSettingsTests {
     calendar.quickPeek = false
     #expect(!calendar.clockSettings.remindsBeforeStart)
   }
+
+  @Test("Вид календаря доходит до острова через appearance: цвет календаря, сетка месяца и индикаторы")
+  func appearance() {
+    let (name, defaults) = TestDefaults.fresh()
+    defer { TestDefaults.cleanup(name, defaults) }
+    let settings = AppSettings(defaults: defaults)
+    #expect(settings.appearance.calendar == CalendarAppearance())
+    settings.calendar.useColor = true
+    settings.calendar.monthView = true
+    settings.calendar.eventIndicators = true
+    settings.calendar.coloredIndicator = false
+    let calendar = settings.appearance.calendar
+    #expect(calendar.usesCalendarColor)
+    #expect(calendar.monthView)
+    #expect(calendar.eventIndicators)
+    #expect(!calendar.coloredIndicator)
+  }
 }

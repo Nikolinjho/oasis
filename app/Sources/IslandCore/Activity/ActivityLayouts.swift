@@ -17,17 +17,22 @@ public enum ActivityLayouts {
 
   /// Компакт календаря (Alcove 1.7.9, 29.09). До начала — минуты вверх («9m»), с музыкой и без (решение
   /// пользователя 30.09), последняя минута — секунды. Кольцо — только ход идущего события.
-  /// withMusic: иконка — обложка трека с бейджем часов. С showsLine — строка peek на старте
-  public static func calendar(event: CalendarEvent, now: Date, showsLine: Bool, withMusic: Bool = false) -> ActivityLayout {
+  /// withMusic: иконка — обложка трека с бейджем часов. С showsLine — строка peek на старте.
+  /// style: Use calendar color (иконка, минуты и кольцо) и Use colored calendar indicator (полоска peek)
+  public static func calendar(
+    event: CalendarEvent, now: Date, showsLine: Bool, withMusic: Bool = false, style: CalendarAppearance = .init()
+  ) -> ActivityLayout {
+    let tint = style.usesCalendarColor ? event.color : calendarRed
+    let track = style.usesCalendarColor ? dimmed(event.color) : calendarTrack
     let untilStart = event.start.timeIntervalSince(now)
     let indicator: ActivityLayout.Indicator
     if untilStart > 60 {
-      indicator = .text("\(Int((untilStart / 60).rounded(.up)))m", color: calendarRed)
+      indicator = .text("\(Int((untilStart / 60).rounded(.up)))m", color: tint)
     } else if untilStart > 0 {
-      indicator = .text("\(Int(untilStart.rounded(.up)))s", color: calendarRed)
+      indicator = .text("\(Int(untilStart.rounded(.up)))s", color: tint)
     } else {
       let length = max(event.end.timeIntervalSince(event.start), 1)
-      indicator = .ring(progress: -untilStart / length, color: calendarRed, track: calendarTrack)
+      indicator = .ring(progress: -untilStart / length, color: tint, track: track)
     }
     let line =
       showsLine
@@ -37,8 +42,13 @@ public enum ActivityLayouts {
       : nil
     // бейдж на обложке — часы на красном круге (кадр пользователя 29.09); без музыки — прежняя иконка
     return ActivityLayout(
-      symbol: withMusic ? "clock" : "calendar.badge.clock", symbolColor: calendarRed,
+      symbol: withMusic ? "clock" : "calendar.badge.clock", symbolColor: tint,
       indicator: indicator, line: line, showsArtwork: withMusic)
+  }
+
+  /// Трек кольца в цвете календаря: тот же цвет, приглушённый как calendarTrack от calendarRed (~0.35)
+  static func dimmed(_ color: RGB) -> RGB {
+    RGB(red: color.red * 0.35, green: color.green * 0.35, blue: color.blue * 0.35)
   }
 
   /// Напоминание за N минут: тот же вид, что peek календаря, но вместо кольца — минуты до начала.
