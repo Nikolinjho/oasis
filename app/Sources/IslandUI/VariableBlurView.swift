@@ -35,7 +35,7 @@ struct VariableBlurFactory {
   /// и меняем гауссов блюр материала на variableBlur
   @MainActor static let system = VariableBlurFactory(
     makeEffectView: {
-      let view = NSVisualEffectView()
+      let view = BlurEffectView()
       view.blendingMode = .behindWindow
       view.state = .active
       view.material = .hudWindow
@@ -71,6 +71,27 @@ enum VariableBlurLog {
   }
 }
 
+/// Материал, который сообщает о своей раскладке: после неё его backdrop-слой уже есть
+final class BlurEffectView: NSVisualEffectView {
+  var onLayout: () -> Void = {}
+
+  override func layout() {
+    super.layout()
+    onLayout()
+  }
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    // слои материала появляются в той же транзакции, что и окно: следующий проход главной очереди
+    DispatchQueue.main.async { [weak self] in self?.onLayout() }
+  }
+
+  override func updateLayer() {
+    super.updateLayer()
+    onLayout()
+  }
+}
+
 /// Хост подложки. Маска строится сверху вниз (строки CGImage), как координаты SwiftUI
 final class VariableBlurHostView: NSView {
   private var effectView: NSView?
@@ -96,6 +117,8 @@ final class VariableBlurHostView: NSView {
       effectView = made.view
       filter = made.filter
       made.view.autoresizingMask = [.width, .height]
+      // материал строит и перестраивает свои слои сам, уже после нашей раскладки: подмена после каждой его
+      (made.view as? BlurEffectView)?.onLayout = { [weak self] in self?.installFilter() }
       addSubview(made.view)
     }
   }
@@ -127,7 +150,7 @@ final class VariableBlurHostView: NSView {
     installFilter()
   }
 
-  private func installFilter() {
+  fileprivate func installFilter() {
     guard let effectView, let filter, bounds.size != .zero else { return }
     let key = MaskKey(size: bounds.size, shape: shape, fade: fade)
     if key != maskKey {

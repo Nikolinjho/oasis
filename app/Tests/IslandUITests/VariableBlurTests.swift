@@ -122,4 +122,13 @@ struct VariableBlurTests {
     #expect(abs(rect.minX - 121.2) < 1e-9 && abs(rect.width - 381.6) < 1e-9)
     #expect(rect.minY == 0 && rect.height == 175)
   }
+
+  @Test("Вид блюра есть только у раскрытого и только при включённой настройке")
+  func blurOnlyWhenExpanded() {
+    #expect(IslandView.showsBlur(surface: .expanded, enabled: true))
+    #expect(!IslandView.showsBlur(surface: .expanded, enabled: false))
+    for surface in [Surface.idle, .compact, .peek, .hover, .calendar] {
+      #expect(!IslandView.showsBlur(surface: surface, enabled: true), "\(surface)")
+    }
+  }
 }
