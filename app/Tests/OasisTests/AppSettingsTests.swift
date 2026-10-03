@@ -306,6 +306,20 @@ struct AppSettingsTests {
     #expect(!AppSettings(defaults: defaults).showRemainingTime)
   }
 
+  @Test("Behaviour: Contrast outline вкл и Progressive blur выкл по умолчанию, доходят до вида и переживают перезапуск")
+  func outlineAndBlur() {
+    let (name, defaults) = Self.freshDefaults()
+    defer { Self.cleanup(name, defaults) }
+    let settings = AppSettings(defaults: defaults)
+    #expect(settings.contrastOutline && !settings.progressiveBlur)
+    #expect(settings.appearance.contrastOutline && !settings.appearance.progressiveBlur)
+    settings.contrastOutline = false
+    settings.progressiveBlur = true
+    #expect(!settings.appearance.contrastOutline && settings.appearance.progressiveBlur)
+    let reloaded = AppSettings(defaults: defaults)
+    #expect(!reloaded.contrastOutline && reloaded.progressiveBlur)
+  }
+
   @Test("Idle Activity: по умолчанию Duo, Most Recent выкл, Force enable вкл, правила уходят в машину")
   func idleActivity() {
     let (name, defaults) = Self.freshDefaults()

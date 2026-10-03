@@ -161,9 +161,10 @@ struct GeometryTests {
     }
   }
 
-  @Test("Окно прижато к верху экрана по центру выреза")
+  @Test("Окно 624×320, как у Alcove, прижато к верху экрана по центру выреза")
   func windowFrame() {
-    #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 624, y: 861, width: 480, height: 256))
+    #expect(IslandGeometry.windowSize == CGSize(width: 624, height: 320))
+    #expect(IslandGeometry.windowFrame(for: Self.mbp16) == CGRect(x: 552, y: 797, width: 624, height: 320))
   }
 
   @Test("Строка громкости: плеер 345×207, углы как у 175 (Alcove 1.7.9, 28.09)")

@@ -14,7 +14,7 @@ final class CalendarBridge {
   private var source: EventKitCalendarSource?
   private var task: Task<Void, Never>?
 
-  /// Создаётся до первой ссылки: холодный запуск по calendar.remind закрепляет повестку ещё до didFinishLaunching
+  /// Создаётся в init AppDelegate: настройки календаря применяются в applicationWillFinishLaunching, до первого окна
   init(store: IslandStore, settings: CalendarSettings) {
     self.store = store
     self.settings = settings
@@ -33,10 +33,14 @@ final class CalendarBridge {
     task?.cancel()
   }
 
-  func start() {
+  /// onLoaded — после каждой применённой порции событий: по первой AppDelegate выполняет ссылки запуска
+  func start(onLoaded: @escaping @MainActor () -> Void = {}) {
     let source = EventKitCalendarSource()
     task = Task { [store] in
-      for await events in source.changes { store.apply(events: events) }
+      for await events in source.changes {
+        store.apply(events: events)
+        onLoaded()
+      }
     }
     source.start()
     self.source = source

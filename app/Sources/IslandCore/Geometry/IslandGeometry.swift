@@ -174,12 +174,11 @@ public enum IslandGeometry {
     public static let reach: CGFloat = radius * 2.4
   }
 
-  /// Окно под самое большое состояние с перелётом, ушками и тенью. Раскрытие кликом из покоя (175/16,
-  /// перелёт 9.2%): тело 345 → пик 359.6, ушко 18.3 → 19.5, форма 398.6 × 188.1.
-  /// Плюс тень: по 36 pt с боков, 36 + 5 снизу → 470.6 × 229.1. По высоте выше всех плеер со строкой
-  /// громкости, растянутый свайпом до потолка (SwipeTracker.stretchCeiling, перелёта у .volumeRow нет):
-  /// 207 + 7 + 41 тени = 255, округлено вверх до 256
-  public static let windowSize = CGSize(width: 480, height: 256)
+  /// Окно как у Alcove 1.7.9 (осмотр 03.10): 624 × 320. Под ним Progressive blur, который сходит на нет
+  /// за 80 pt от формы: раскрытый 381.6 с ушками + 2 × 80 = 541.6 в ширину, 175 + 80 = 255 в высоту.
+  /// Прежние 480 × 256 вмещали только пик перелёта с тенью (398.6 × 188.1 + 36 pt тени) и плеер
+  /// со строкой громкости, растянутый свайпом (207 + 7 + 41 тени = 255)
+  public static let windowSize = CGSize(width: 624, height: 320)
 
   /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
   /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
@@ -299,9 +298,14 @@ public enum IslandGeometry {
   /// Курсор над островом с гистерезисом. Вход только над видимым телом (без ушек и зон вокруг):
   /// по живой проверке запас вокруг выреза открывал hover, не доходя до острова.
   /// Пока hover открыт (openedFrom не nil), он держится над объединением текущей формы с ушками и тела,
-  /// из которого открылся: hover уже компакта, и без этого у краёв компакта hover мигал бы
-  public static func pointerInside(_ point: CGPoint, body: CGRect, island: CGRect, openedFrom: CGRect?) -> Bool {
-    let area = openedFrom.map(island.union) ?? body
+  /// из которого открылся: hover уже компакта, и без этого у краёв компакта hover мигал бы.
+  /// expandedSafeZone — только у раскрытого: держит его и в зоне вокруг формы, но не открывает
+  public static func pointerInside(
+    _ point: CGPoint, body: CGRect, island: CGRect, openedFrom: CGRect?, expandedSafeZone: SafeZone? = nil
+  ) -> Bool {
+    guard let openedFrom else { return reachingScreenTop(body).contains(point) }
+    var area = island.union(openedFrom)
+    if let expandedSafeZone { area = expandedSafeZone.expanding(area) }
     return reachingScreenTop(area).contains(point)
   }
 

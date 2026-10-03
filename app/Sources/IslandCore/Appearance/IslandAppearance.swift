@@ -85,6 +85,10 @@ public struct IslandAppearance: Equatable, Sendable {
   public var showsRemainingTime = true
   /// Calendar: цвет компакта, полоска peek, сетка месяца
   public var calendar = CalendarAppearance()
+  /// General → Behaviour → Contrast outline: кант раскрытого над тёмным фоном, по умолчанию вкл
+  public var contrastOutline = true
+  /// General → Behaviour → Progressive blur: блюр под раскрытым и шире безопасная зона hover, по умолчанию выкл
+  public var progressiveBlur = false
 
   public init() {}
 

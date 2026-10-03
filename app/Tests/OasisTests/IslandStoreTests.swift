@@ -205,4 +205,17 @@ struct IslandStoreTests {
     store.playerActionSent(.media(.nextTrack))
     #expect(store.nowPlaying?.shuffleMode == 1 && store.nowPlaying?.repeatMode == nil)
   }
+
+  @Test("Смена Contrast outline зовёт onContrastOutlineChange, другие поля вида — нет")
+  func contrastOutlineChangeNotifies() {
+    let store = IslandStore()
+    var calls = 0
+    store.onContrastOutlineChange = { calls += 1 }
+    store.appearance.waveform = .gradient
+    #expect(calls == 0)
+    store.appearance.contrastOutline = false
+    #expect(calls == 1)
+    store.appearance.contrastOutline = false
+    #expect(calls == 1)
+  }
 }

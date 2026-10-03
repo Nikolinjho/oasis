@@ -49,7 +49,11 @@ final class IslandStore {
   /// Вырез этой машины по API до первой расстановки окна (лог window 28.09)
   var notch = CGSize(width: 185, height: 32)
   /// Вид страниц настроек, которые не меняют поведение машины: Battery и т.д. (IslandAppearance)
-  var appearance = IslandAppearance.default
+  var appearance = IslandAppearance.default {
+    didSet { if appearance.contrastOutline != oldValue.contrastOutline { onContrastOutlineChange() } }
+  }
+  /// Фон под раскрытым тёмный (BackdropMonitor): Contrast outline виден только над ним
+  var backdropDark = true
   /// Уровень текущего выхода 0…1: строка громкости плеера читает его, AppDelegate обновляет
   var volumeLevel: Double = 0
 
@@ -60,6 +64,8 @@ final class IslandStore {
   @ObservationIgnored var onJoin: (URL) -> Void = { _ in }
   /// Вызывается после смены surface: окно пересчитывает hit-testing, даже если мышь стоит на месте
   @ObservationIgnored var onSurfaceChange: () -> Void = {}
+  /// Contrast outline включили или выключили: окно начинает или прекращает замер фона, не дожидаясь раскрытия
+  @ObservationIgnored var onContrastOutlineChange: () -> Void = {}
   /// Остров закрыт свайпом вверх: окно не досылает hoverEntered, пока курсор не уйдёт с острова
   @ObservationIgnored var onSwipeClose: () -> Void = {}
   /// Повестка сменилась (живой источник, отладочная повестка, возврат к реальной, фильтр): live-повестка
