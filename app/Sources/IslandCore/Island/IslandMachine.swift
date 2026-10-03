@@ -229,7 +229,9 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .volumeRowToggled: volumeRowToggled(&model)
     case .tuningHintChanged(let hint): tuningHintChanged(&model, hint)
     case .hoverEntered:
-      model.config.hoverOpensPlayer ? nudge(&model) : open(&model, to: .hover, with: .hoverOpen)
+      // мини-hover режима Alcove — ступень к раскрытию: при Idle Activity None раскрывать нечего, его нет
+      model.config.hoverOpensPlayer
+        ? nudge(&model) : openingView(model) == nil ? [] : open(&model, to: .hover, with: .hoverOpen)
     case .clicked: open(&model, to: .expanded, with: .expand)
     case .hoverExited: model.config.hoverOpensPlayer ? leave(&model) : close(&model)
     case .clickedOutside: close(&model)

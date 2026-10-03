@@ -69,6 +69,15 @@ struct IslandMachineIdleActivityTests {
     #expect(alcove.surface == .compact)
   }
 
+  @Test("None в режиме Alcove: hover не открывает мини-hover, остров остаётся в покое")
+  func noneAlcoveHover() {
+    var m = Self.model(Self.rules(.none), config: .alcove)
+    #expect(IslandMachine.reduce(&m, .hoverEntered).isEmpty)
+    #expect(m.surface == .compact)
+    #expect(IslandMachine.reduce(&m, .hoverExited).isEmpty)
+    #expect(m.surface == .compact)
+  }
+
   @Test("Hover duration > 0: сначала отклик, раскрытие по таймеру hoverOpen — выбранный вид")
   func hoverDelayOpensChosenView() {
     let config = IslandMachine.Config.user.applying(expandOnHover: true, hoverDuration: 0.3)
