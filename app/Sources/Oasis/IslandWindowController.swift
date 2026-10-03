@@ -236,7 +236,11 @@ final class IslandWindowController {
     panel.ignoresMouseEvents = !IslandGeometry.reachingScreenTop(island).contains(point)
 
     let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
-    let inside = IslandGeometry.pointerInside(point, body: body, island: island, openedFrom: hoverOpenedFrom)
+    // безопасная зона — только у раскрытого: компакт и hover из покоя держатся по форме, как раньше
+    let zone: IslandGeometry.SafeZone? =
+      store.model.surface == .expanded ? (store.appearance.progressiveBlur ? .blurred : .plain) : nil
+    let inside = IslandGeometry.pointerInside(
+      point, body: body, island: island, openedFrom: hoverOpenedFrom, expandedSafeZone: zone)
     guard inside != pointerInside else { return }
     guard inside || Self.shouldSendHoverExit(pointerInside: inside, buttonDown: leftButtonDown, dragStartedInside: dragStartedInside)
     else { return }

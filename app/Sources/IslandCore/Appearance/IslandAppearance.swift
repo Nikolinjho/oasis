@@ -83,6 +83,10 @@ public struct IslandAppearance: Equatable, Sendable {
   public var playerControl = PlayerExtraControl.shuffle
   /// Справа от прогресса: «-m:ss» до конца или длительность целиком (showRemainingTime = 1 у Alcove по умолчанию)
   public var showsRemainingTime = true
+  /// General → Behaviour → Contrast outline: кант раскрытого над тёмным фоном, по умолчанию вкл
+  public var contrastOutline = true
+  /// General → Behaviour → Progressive blur: блюр под раскрытым и шире безопасная зона hover, по умолчанию выкл
+  public var progressiveBlur = false
 
   public init() {}
 
