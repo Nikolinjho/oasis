@@ -42,6 +42,14 @@ public struct PlaybackModeOverride: Equatable, Sendable {
     repeatMode = Self.kept(repeatMode, reported: info.repeatMode, bundleID: info.bundleID, now: now)
   }
 
+  /// Клик или таймер, без нового payload: снять только просроченное. Подтверждение засчитывает лишь
+  /// reconcile — payload после клика. Иначе двойной клик назад к режиму старого payload снял бы override
+  /// сразу, и ответ источника на первый клик мигнул бы на кнопке
+  public mutating func expire(for info: NowPlayingInfo, now: Date) {
+    shuffle = Self.unexpired(shuffle, reported: info.shuffleMode, now: now)
+    repeatMode = Self.unexpired(repeatMode, reported: info.repeatMode, now: now)
+  }
+
   /// Когда снять override по таймауту, если payload так и не подтвердит. nil — таймер не нужен
   public func nextExpiry(for info: NowPlayingInfo) -> Date? {
     [(shuffle, info.shuffleMode), (repeatMode, info.repeatMode)]
@@ -51,6 +59,12 @@ public struct PlaybackModeOverride: Equatable, Sendable {
 
   private static func kept(_ pending: Pending?, reported: Int?, bundleID: String?, now: Date) -> Pending? {
     guard let pending, pending.bundleID == bundleID, reported != pending.mode else { return nil }
+    return unexpired(pending, reported: reported, now: now)
+  }
+
+  /// Источник без поля не подтвердит никогда — его режим не истекает
+  private static func unexpired(_ pending: Pending?, reported: Int?, now: Date) -> Pending? {
+    guard let pending else { return nil }
     if reported == nil { return pending }
     return now.timeIntervalSince(pending.at) < timeout ? pending : nil
   }

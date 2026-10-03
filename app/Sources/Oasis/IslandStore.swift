@@ -296,12 +296,13 @@ final class IslandStore {
     case .cycleRepeat: playbackModes.cycleRepeat(shown, at: now)
     default: return
     }
-    publishNowPlaying(sourceNowPlaying, now: now)
+    // payload тот же, что до клика: подтверждением он не считается (PlaybackModeOverride.expire)
+    publishNowPlaying(sourceNowPlaying, now: now, isPayload: false)
   }
 
-  /// Показанный трек — payload источника с неподтверждёнными режимами поверх. Payload подтвердил режим,
-  /// таймаут вышел или сменился источник — override снят (PlaybackModeOverride.reconcile)
-  private func publishNowPlaying(_ info: NowPlayingInfo?, now: Date) {
+  /// Показанный трек — payload источника с неподтверждёнными режимами поверх. Новый payload подтвердил режим,
+  /// таймаут вышел или сменился источник — override снят (reconcile). Клик и таймер — не payload (expire)
+  private func publishNowPlaying(_ info: NowPlayingInfo?, now: Date, isPayload: Bool = true) {
     sourceNowPlaying = info
     playbackModesTimer?.cancel()
     playbackModesTimer = nil
@@ -309,13 +310,17 @@ final class IslandStore {
       nowPlaying = nil
       return
     }
-    playbackModes.reconcile(with: info, now: now)
+    if isPayload {
+      playbackModes.reconcile(with: info, now: now)
+    } else {
+      playbackModes.expire(for: info, now: now)
+    }
     nowPlaying = playbackModes.applied(to: info)
     guard let expiry = playbackModes.nextExpiry(for: info) else { return }
     playbackModesTimer = Task { [weak self] in
       try? await Task.sleep(for: .seconds(max(expiry.timeIntervalSince(now), 0) + 0.05))
       guard !Task.isCancelled, let self else { return }
-      publishNowPlaying(sourceNowPlaying, now: Date())
+      publishNowPlaying(sourceNowPlaying, now: Date(), isPayload: false)
     }
   }
 

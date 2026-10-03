@@ -160,6 +160,21 @@ struct IslandStoreTests {
     #expect(store.nowPlaying?.isShuffling == false)
   }
 
+  @Test("Двойной клик назад к исходному режиму не мигает: старый payload его не подтверждает, ответ на первый клик — тоже")
+  func doubleClickBackDoesNotFlash() {
+    let store = IslandStore()
+    let now = Date()
+    store.apply(.newTrack(Self.music(shuffle: 1)), now: now)
+    store.playerActionSent(.toggleShuffle, now: now)
+    store.playerActionSent(.toggleShuffle, now: now.addingTimeInterval(0.1))
+    #expect(store.nowPlaying?.isShuffling == false)
+    // ответ источника на первый клик: пользователь уже выключил — не показываем
+    store.apply(.updated(Self.music(shuffle: 3)), now: now.addingTimeInterval(0.3))
+    #expect(store.nowPlaying?.isShuffling == false)
+    store.apply(.updated(Self.music(shuffle: 1)), now: now.addingTimeInterval(0.6))
+    #expect(store.nowPlaying?.isShuffling == false)
+  }
+
   @Test("Источник не подтвердил Shuffle за 2 с — показываем, что он присылает")
   func shuffleOverrideTimesOut() {
     let store = IslandStore()

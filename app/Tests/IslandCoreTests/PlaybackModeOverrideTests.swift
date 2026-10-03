@@ -41,6 +41,18 @@ struct PlaybackModeOverrideTests {
     #expect(override.shuffle == nil)
   }
 
+  @Test("Таймер снимает только просроченное: старый payload, совпавший с кликом, подтверждением не считается")
+  func expireIgnoresStalePayload() {
+    var override = PlaybackModeOverride()
+    let info = music(shuffle: 1)
+    override.toggleShuffle(info, at: now)
+    override.toggleShuffle(override.applied(to: info), at: now.addingTimeInterval(0.1))
+    override.expire(for: info, now: now.addingTimeInterval(0.2))
+    #expect(override.shuffle?.mode == 1)
+    override.expire(for: info, now: now.addingTimeInterval(2.2))
+    #expect(override.shuffle == nil)
+  }
+
   @Test("Payload со старым значением до таймаута override не снимает, после 2 с — снимает")
   func timeout() {
     var override = PlaybackModeOverride()
