@@ -51,8 +51,7 @@ public struct PlayerActionRouter {
     case .stepVolume(let up):
       performer.stepVolume(up: up)
     case .toggleShuffle:
-      // 3 — перемешивать треки, 1 — выкл (MRMediaRemote)
-      performer.setShuffle(nowPlaying?.isShuffling == true ? 1 : 3)
+      performer.setShuffle(nowPlaying?.nextShuffleMode ?? 3)
     case .cycleRepeat:
       performer.setRepeat(NowPlayingInfo.nextRepeatMode(after: nowPlaying?.repeatMode))
     case .toggleTimeDisplay:

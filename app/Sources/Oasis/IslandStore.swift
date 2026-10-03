@@ -10,7 +10,13 @@ import SwiftUI
 @Observable
 final class IslandStore {
   private(set) var model: IslandModel
+  /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
+  /// Последний payload источника как есть
+  @ObservationIgnored private var sourceNowPlaying: NowPlayingInfo?
+  @ObservationIgnored private var playbackModes = PlaybackModeOverride()
+  /// Снимает неподтверждённый режим по таймауту, если payload так и не пришёл
+  @ObservationIgnored private var playbackModesTimer: Task<Void, Never>?
   /// События сегодня и завтра: Duo и календарь
   private(set) var agenda = DayAgenda.empty
   /// Событие окна календаря: его рисуют компакт и peek. Остаётся после конца окна, пока компакт уходит
@@ -249,10 +255,10 @@ final class IslandStore {
     if model.surface != previous { onSurfaceChange() }
   }
 
-  func apply(_ change: NowPlayingChange) {
+  func apply(_ change: NowPlayingChange, now: Date = Date()) {
     switch change {
     case .newTrack(let info):
-      nowPlaying = info
+      publishNowPlaying(info, now: now)
       send(info.isPlaying ? .trackChanged : .pausedTrackChanged)
     case .updated(let info):
       // Без текущего трека (например, после отладочного music.clear, пока парсер адаптера ещё
@@ -260,15 +266,48 @@ final class IslandStore {
       // иначе playbackChanged уйдёт в машину с hasMedia == false и ничего не сделает, и компакт
       // не вернётся, пока источник не пришлёт следующий по-настоящему новый трек
       let hadMedia = nowPlaying != nil && model.hasMedia
-      nowPlaying = info
+      publishNowPlaying(info, now: now)
       if !hadMedia {
         send(info.isPlaying ? .trackChanged : .pausedTrackChanged)
       } else if info.isPlaying != model.isPlaying {
         send(.playbackChanged(info.isPlaying))
       }
     case .cleared:
-      nowPlaying = nil
+      playbackModes = PlaybackModeOverride()
+      publishNowPlaying(nil, now: now)
       send(.mediaCleared)
+    }
+  }
+
+  /// Кнопка плеера ушла источнику: Shuffle и Repeat сразу показывают новый режим, не дожидаясь payload.
+  /// Звать после PlayerActionRouter.perform: оба считают следующий режим от одного, ещё не изменённого nowPlaying
+  func playerActionSent(_ action: PlayerAction, now: Date = Date()) {
+    guard let shown = nowPlaying else { return }
+    switch action {
+    case .toggleShuffle: playbackModes.toggleShuffle(shown, at: now)
+    case .cycleRepeat: playbackModes.cycleRepeat(shown, at: now)
+    default: return
+    }
+    publishNowPlaying(sourceNowPlaying, now: now)
+  }
+
+  /// Показанный трек — payload источника с неподтверждёнными режимами поверх. Payload подтвердил режим,
+  /// таймаут вышел или сменился источник — override снят (PlaybackModeOverride.reconcile)
+  private func publishNowPlaying(_ info: NowPlayingInfo?, now: Date) {
+    sourceNowPlaying = info
+    playbackModesTimer?.cancel()
+    playbackModesTimer = nil
+    guard let info else {
+      nowPlaying = nil
+      return
+    }
+    playbackModes.reconcile(with: info, now: now)
+    nowPlaying = playbackModes.applied(to: info)
+    guard let expiry = playbackModes.nextExpiry(for: info) else { return }
+    playbackModesTimer = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(max(expiry.timeIntervalSince(now), 0) + 0.05))
+      guard !Task.isCancelled, let self else { return }
+      publishNowPlaying(sourceNowPlaying, now: Date())
     }
   }
 

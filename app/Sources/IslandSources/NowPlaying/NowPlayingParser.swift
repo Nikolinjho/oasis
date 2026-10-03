@@ -33,8 +33,18 @@ public struct NowPlayingParser: Sendable {
     let timestampEpochMicros: Double?
     let artworkData: String?
     let prohibitsSkip: Bool?
-    let shuffleMode: Int?
-    let repeatMode: Int?
+    /// Режимы — не главное в строке: чужой тип в них не должен ронять весь payload
+    let shuffleMode: LenientInt?
+    let repeatMode: LenientInt?
+  }
+
+  /// Int или nil при любом другом типе: декодирование не бросает
+  private struct LenientInt: Decodable {
+    let value: Int?
+
+    init(from decoder: any Decoder) throws {
+      value = try? decoder.singleValueContainer().decode(Int.self)
+    }
   }
 
   /// ignoringClear: пустой payload не сбрасывает текущий трек. Для первой строки перезапущенного адаптера:
@@ -68,8 +78,8 @@ public struct NowPlayingParser: Sendable {
       artwork: payload.artworkData.flatMap { Data(base64Encoded: $0) },
       canSkip: !(payload.prohibitsSkip ?? BrowserSources.contains(payload.bundleIdentifier)),
       isBrowser: BrowserSources.contains(payload.bundleIdentifier),
-      shuffleMode: payload.shuffleMode,
-      repeatMode: payload.repeatMode)
+      shuffleMode: payload.shuffleMode?.value,
+      repeatMode: payload.repeatMode?.value)
     let isNewTrack = current?.trackKey != info.trackKey
     current = info
     return isNewTrack ? .newTrack(info) : .updated(info)

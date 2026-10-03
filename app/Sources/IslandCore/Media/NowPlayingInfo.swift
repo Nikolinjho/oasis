@@ -76,6 +76,9 @@ public struct NowPlayingInfo: Equatable, Sendable {
   public var isShuffling: Bool { (shuffleMode ?? 1) > 1 }
   public var isRepeating: Bool { (repeatMode ?? 1) > 1 }
 
+  /// Shuffle переключается: 3 — перемешивать треки, 1 — выкл (MRMediaRemote)
+  public var nextShuffleMode: Int { isShuffling ? 1 : 3 }
+
   /// Repeat по кругу, как в Music: выкл → все → один → выкл
   public static func nextRepeatMode(after mode: Int?) -> Int {
     switch mode {

@@ -124,4 +124,53 @@ struct IslandStoreTests {
     // тот же трек продолжает играть: surface не переигрывает вход заново
     #expect(store.model.surface == .compact)
   }
+
+  static func music(shuffle: Int?) -> NowPlayingInfo {
+    NowPlayingInfo(bundleID: "com.apple.Music", title: "T", isPlaying: true, shuffleMode: shuffle)
+  }
+
+  @Test("Клик Shuffle сразу меняет показанный режим, двойной клик считает от нового")
+  func shuffleIsOptimistic() {
+    let store = IslandStore()
+    let now = Date()
+    store.apply(.newTrack(Self.music(shuffle: 1)), now: now)
+    store.playerActionSent(.toggleShuffle, now: now)
+    #expect(store.nowPlaying?.isShuffling == true)
+    // payload ещё старый: показанное не откатывается
+    store.apply(.updated(Self.music(shuffle: 1)), now: now.addingTimeInterval(0.2))
+    #expect(store.nowPlaying?.isShuffling == true)
+    store.playerActionSent(.toggleShuffle, now: now.addingTimeInterval(0.3))
+    #expect(store.nowPlaying?.isShuffling == false)
+  }
+
+  @Test("Источник не подтвердил Shuffle за 2 с — показываем, что он присылает")
+  func shuffleOverrideTimesOut() {
+    let store = IslandStore()
+    let now = Date()
+    store.apply(.newTrack(Self.music(shuffle: 1)), now: now)
+    store.playerActionSent(.toggleShuffle, now: now)
+    store.apply(.updated(Self.music(shuffle: 1)), now: now.addingTimeInterval(2.1))
+    #expect(store.nowPlaying?.isShuffling == false)
+  }
+
+  @Test("Источник без shuffleMode: кнопка показывает локальное состояние")
+  func shuffleWithoutSourceMode() {
+    let store = IslandStore()
+    let now = Date()
+    store.apply(.newTrack(Self.music(shuffle: nil)), now: now)
+    store.playerActionSent(.toggleShuffle, now: now)
+    store.apply(.updated(Self.music(shuffle: nil)), now: now.addingTimeInterval(5))
+    #expect(store.nowPlaying?.isShuffling == true)
+    store.apply(.cleared)
+    store.apply(.newTrack(Self.music(shuffle: nil)), now: now.addingTimeInterval(6))
+    #expect(store.nowPlaying?.isShuffling == false)
+  }
+
+  @Test("Прочие действия плеера режимы не трогают")
+  func otherActionsKeepModes() {
+    let store = IslandStore()
+    store.apply(.newTrack(Self.music(shuffle: 1)))
+    store.playerActionSent(.media(.nextTrack))
+    #expect(store.nowPlaying?.shuffleMode == 1 && store.nowPlaying?.repeatMode == nil)
+  }
 }

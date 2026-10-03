@@ -110,6 +110,21 @@ struct NowPlayingParserTests {
     #expect(modes?.shuffleMode == 3 && modes?.repeatMode == 2)
   }
 
+  @Test("shuffleMode/repeatMode чужого типа — nil, а не потеря всей строки payload")
+  func lenientModes() {
+    var parser = NowPlayingParser()
+    let line = #"{"type":"data","payload":{"title":"T","playing":true,"shuffleMode":"3","repeatMode":true}}"#
+    guard case .newTrack(let info) = parser.consume(line) else {
+      Issue.record("строка с кривыми режимами потеряна")
+      return
+    }
+    #expect(info.title == "T" && info.isPlaying)
+    #expect(info.shuffleMode == nil && info.repeatMode == nil)
+    let null = #"{"type":"data","payload":{"title":"T","playing":true,"shuffleMode":null}}"#
+    #expect(parser.consume(null) != nil)
+    #expect(parser.current?.shuffleMode == nil)
+  }
+
   @Test("Мусор и чужие типы строк игнорируются")
   func garbage() {
     var parser = NowPlayingParser()

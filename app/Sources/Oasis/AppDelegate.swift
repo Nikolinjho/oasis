@@ -232,6 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
         return
       }
       router.perform(action, nowPlaying: store.nowPlaying)
+      store.playerActionSent(action)
     }
   }
 
