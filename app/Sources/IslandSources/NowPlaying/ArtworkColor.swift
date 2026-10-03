@@ -21,22 +21,25 @@ public enum ArtworkColor {
   }
 
   /// Один decode обложки на трек: сразу accent (среднее по всей обложке) и bottom (низ, для Gradient) —
-  /// то, что нужно AdapterNowPlayingSource.fillAccent на каждый трек (вместо отдельных accent(of:) + gradient(of:))
-  static func accentAndBottom(of data: Data) -> (accent: RGB, bottom: RGB)? {
+  /// то, что нужно AdapterNowPlayingSource.fillAccent на каждый трек (вместо отдельных accent(of:) + gradient(of:)).
+  /// Верх тут не нужен, его не считаем. Не посчитался низ — accent всё равно отдаём, Gradient возьмёт его
+  static func accentAndBottom(of data: Data) -> (accent: RGB, bottom: RGB?)? {
     guard let image = CIImage(data: data), !image.extent.isEmpty,
-      let accentColor = average(image, in: image.extent),
-      let halves = halves(of: image)
+      let accentColor = average(image, in: image.extent)
     else { return nil }
-    return (lifted(accentColor), lifted(halves.bottom))
+    return (lifted(accentColor), average(image, in: bottomHalf(of: image.extent)).map(lifted))
   }
 
   private static func halves(of image: CIImage) -> (top: RGB, bottom: RGB)? {
     let extent = image.extent
     // у CIImage начало снизу: верх обложки — верхняя половина extent
     let top = CGRect(x: extent.minX, y: extent.midY, width: extent.width, height: extent.height / 2)
-    let bottom = CGRect(x: extent.minX, y: extent.minY, width: extent.width, height: extent.height / 2)
-    guard let topColor = average(image, in: top), let bottomColor = average(image, in: bottom) else { return nil }
+    guard let topColor = average(image, in: top), let bottomColor = average(image, in: bottomHalf(of: extent)) else { return nil }
     return (topColor, bottomColor)
+  }
+
+  private static func bottomHalf(of extent: CGRect) -> CGRect {
+    CGRect(x: extent.minX, y: extent.minY, width: extent.width, height: extent.height / 2)
   }
 
   /// Тёмный средний цвет на острове #0C0A09 не виден: тянем к белому до яркости 0.45

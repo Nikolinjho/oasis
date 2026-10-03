@@ -27,7 +27,7 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     var parser = NowPlayingParser()
     var buffer = LineBuffer()
     var backoff = Backoff()
-    var accents: [String: (RGB, RGB?)] = [:]
+    var accents = AccentCache()
     var stopped = false
     /// Номер запуска: колбэки старого процесса сверяют его и не трогают новый
     var generation = 0
@@ -239,14 +239,20 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
   private func fillAccent(_ info: NowPlayingInfo) -> NowPlayingInfo {
     var info = info
     let key = info.trackKey
-    if let cached = state.withLockUnchecked({ $0.accents[key] }) {
-      info.accent = cached.0
-      info.accentBottom = cached.1
-    } else if let artwork = info.artwork, let both = ArtworkColor.accentAndBottom(of: artwork) {
-      // один decode обложки вместо отдельных accent(of:) + gradient(of:)
-      state.withLockUnchecked { $0.accents[key] = (both.accent, both.bottom) }
-      info.accent = both.accent
-      info.accentBottom = both.bottom
+    let artwork = info.artwork
+    switch state.withLockUnchecked({ $0.accents.lookup(key, artwork: artwork) }) {
+    case .hit(let colors):
+      info.accent = colors.accent
+      info.accentBottom = colors.bottom
+    case .knownFailure:
+      break
+    case .miss:
+      guard let artwork else { break }
+      // decode вне лока: один на обложку, сразу accent и низ для Gradient
+      let colors = ArtworkColor.accentAndBottom(of: artwork).map { AccentCache.Colors(accent: $0.accent, bottom: $0.bottom) }
+      state.withLockUnchecked { $0.accents.store(key, colors: colors, artwork: artwork) }
+      info.accent = colors?.accent
+      info.accentBottom = colors?.bottom
     }
     return info
   }

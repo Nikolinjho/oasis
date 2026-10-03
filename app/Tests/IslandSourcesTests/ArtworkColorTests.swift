@@ -63,3 +63,19 @@ struct ArtworkColorTests {
     #expect(colors.bottom.blue > colors.bottom.red)
   }
 }
+
+extension ArtworkColorTests {
+  @Test("accentAndBottom: accent по всей обложке, bottom — по нижней половине")
+  func accentAndBottom() throws {
+    let colors = try #require(ArtworkColor.accentAndBottom(of: Self.splitPNG()))
+    let bottom = try #require(colors.bottom)
+    #expect(bottom.blue > bottom.red)
+    // среднее красного и синего: оба канала заметны
+    #expect(colors.accent.red > 0.3 && colors.accent.blue > 0.3)
+  }
+
+  @Test("accentAndBottom: битые данные — nil")
+  func accentAndBottomGarbage() {
+    #expect(ArtworkColor.accentAndBottom(of: Data("not an image".utf8)) == nil)
+  }
+}
