@@ -64,4 +64,31 @@ struct CalendarClockSettingsTests {
     let reminder = CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: ActivityLayouts.calendarRed)
     #expect((store.model.pending ?? store.model.surface) == .alert(.calendarReminder(reminder)))
   }
+
+  @Test("Disable activity during events: peek на старте показывается, после него компакта нет — покой")
+  func hiddenDuringEvent() {
+    let store = IslandStore(config: .alcove)
+    let clock = CalendarClock(store: store, start: Self.at(-60), settings: .init(hidingAfterStart: 4.2))
+    clock.update(agenda: Self.agenda, now: Self.at(-60))
+    #expect(store.model.surface == .calendar)
+    clock.tick(now: Self.at(0))
+    #expect(store.model.surface == .calendarPeek)
+    clock.tick(now: Self.at(4.2))
+    #expect(!store.model.calendarLive)
+    #expect(store.model.surface == .idle)
+    // пункты меню по идущему событию остаются: тумблер убирает только активность
+    #expect(clock.menuModel(now: Self.at(10))?.event == Self.event)
+  }
+
+  @Test("Настройка: Disable activity during events держит компакт на время peek, без peek на старте — ноль")
+  func hidingSettings() {
+    let (name, defaults) = TestDefaults.fresh()
+    defer { TestDefaults.cleanup(name, defaults) }
+    let calendar = AppSettings(defaults: defaults).calendar
+    #expect(calendar.clockSettings.hidingAfterStart == nil)
+    calendar.disableDuringEvents = true
+    #expect(calendar.clockSettings.hidingAfterStart == 4.2)
+    calendar.peekOnStart = false
+    #expect(calendar.clockSettings.hidingAfterStart == 0)
+  }
 }

@@ -15,6 +15,9 @@ final class CalendarClock {
     var remindsBeforeStart = false
     /// Use colored calendar indicator: полоска напоминания в цвете календаря, выкл — красная, как у peek на старте
     var coloredIndicator = true
+    /// Disable activity during events: через столько секунд после старта компакта нет (успевает peek на старте),
+    /// nil — тумблер выключен
+    var hidingAfterStart: TimeInterval?
   }
 
   private let store: IslandStore
@@ -81,7 +84,8 @@ final class CalendarClock {
   func tick(now: Date = Date()) {
     // окно раньше отметок: проснулись после начала — сначала компакт календаря, и только поверх него
     // calendarStarted откроет peek старта. В обратном порядке из формы выреза был бы только звук
-    let live = CalendarSchedule.liveEvent(in: visible, at: now, lead: settings.lead)
+    let live = CalendarSchedule.liveEvent(
+      in: visible, at: now, lead: settings.lead, hidingAfterStart: settings.hidingAfterStart)
     if live != self.live {
       self.live = live
       store.setCalendarLive(live)
@@ -140,7 +144,11 @@ final class CalendarClock {
   /// До ближайшей границы, но не дольше 5 минут: agenda могла устареть, а часы — уйти после сна
   private func schedule(after now: Date) {
     timer?.cancel()
-    let next = CalendarSchedule.nextBoundary(in: visible, after: now, lead: settings.lead) ?? now.addingTimeInterval(300)
+    let hiding = settings.hidingAfterStart
+    let next =
+      CalendarSchedule.nextBoundary(
+        in: visible, after: now, lead: settings.lead,
+        extra: { event in hiding.map { [event.start.addingTimeInterval($0)] } ?? [] }) ?? now.addingTimeInterval(300)
     let delay = min(max(next.timeIntervalSince(now), 0.05), 300)
     timer = Task { [weak self] in
       try? await Task.sleep(for: .seconds(delay))

@@ -116,8 +116,11 @@ final class CalendarSettings: ObservableObject {
 
   /// Окно и напоминание Before event starts: CalendarClock
   var clockSettings: CalendarClock.Settings {
-    CalendarClock.Settings(
-      lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart, coloredIndicator: coloredIndicator)
+    // Disable activity during events: компакт уходит после peek на старте, а без peek — в момент старта
+    let peek = rules.peeksOnStart ? peekSeconds + 0.2 : 0
+    return CalendarClock.Settings(
+      lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart, coloredIndicator: coloredIndicator,
+      hidingAfterStart: disableDuringEvents ? peek : nil)
   }
 
   func mode(for calendarID: String) -> CalendarDisplayMode { filter.mode(for: calendarID) }

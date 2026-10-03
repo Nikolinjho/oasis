@@ -94,4 +94,24 @@ struct CalendarScheduleTests {
     #expect(CalendarSchedule.nextBoundary(in: agenda, after: Self.at(-2000)) == Self.at(-900))
     #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(-30)) == Self.event)
   }
+
+  @Test("Disable activity during events: окно до начала как обычно, после старта и peek (hold) — нет")
+  func hiddenDuringEvent() {
+    let hold: TimeInterval = 4.2
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(-900), hidingAfterStart: hold) == Self.event)
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(4), hidingAfterStart: hold) == Self.event)
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(4.2), hidingAfterStart: hold) == nil)
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(1000), hidingAfterStart: hold) == nil)
+    // без peek на старте компакт уходит в момент старта
+    #expect(CalendarSchedule.liveEvent(in: Self.agenda, at: Self.at(0), hidingAfterStart: 0) == nil)
+  }
+
+  @Test("Disable activity during events: во время идущего события окно следующего открывается как обычно")
+  func nextWindowDuringHiddenEvent() {
+    let next = CalendarEvent(
+      id: "next", title: "Следующее", start: Self.at(1500), end: Self.at(2400), isAllDay: false, color: Self.event.color)
+    let agenda = DayAgenda.make(events: [Self.event, next], now: Self.at(-100))
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(599), hidingAfterStart: 4) == nil)
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(600), hidingAfterStart: 4) == next)
+  }
 }
