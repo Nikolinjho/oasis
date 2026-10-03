@@ -98,6 +98,7 @@ final class VariableBlurHostView: NSView {
   private var filter: NSObject?
   /// Найденный backdrop-слой материала: nil, пока вид не в окне или подменить не удалось
   private(set) var blurLayer: CALayer?
+  private var checkScheduled = false
   private var shape: CGRect = .zero
   private var fade: CGFloat = VariableBlurMask.fade
   private var mask: CGImage?
@@ -162,7 +163,14 @@ final class VariableBlurHostView: NSView {
     let current = filter.copy() as? NSObject ?? filter
     current.setValue(mask, forKey: "inputMaskImage")
     blurLayer = Self.adopt(root: root, filters: [current])
-    if blurLayer == nil, window != nil { VariableBlurLog.unavailable("no backdrop layer in the effect view") }
+    if blurLayer == nil, window != nil, !checkScheduled {
+      // первые проходы идут раньше, чем материал создаст backdrop-слой: ошибка — только если его нет и через секунду
+      checkScheduled = true
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+        guard let self, blurLayer == nil, window != nil else { return }
+        VariableBlurLog.unavailable("no backdrop layer in the effect view")
+      }
+    }
   }
 
   /// Ищет в дереве слоёв материала backdrop-слой (класс CABackdropLayer и родня), ставит ему фильтры, а слои
