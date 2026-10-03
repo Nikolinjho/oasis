@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private var lastPower: PowerState?
   private var tasks: [Task<Void, Never>] = []
   private var debugSections: [DebugSection] = []
+  private lazy var links = LaunchLinkQueue { [weak self] url in DebugURL.perform(url, in: self?.debugSections ?? []) }
   /// Строка громкости плеера: пока её двигают, изменения громкости HUD не показывают (у Alcove HUD
   /// от строки не появляется, 28.09). 0.5 с после последнего сдвига — оценка: CoreAudio отвечает за десятки мс
   private var rowQuietUntil = Date.distantPast
@@ -94,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       // громкости/яркости), startKeyTap
       log.info("demo mode after \(delay, privacy: .public) s")
       DemoSequence.run(store: store, after: delay)
+      links.markReady()
       return
     }
     startFullscreenMonitor()
@@ -143,20 +145,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     return false
   }
 
-  /// oasis://debug/<id>: то же действие, что пункт меню Debug
-  func application(_ application: NSApplication, open urls: [URL]) {
-    for url in urls {
-      guard let id = DebugURL.actionID(from: url) else {
-        DebugAction.log.error("unknown url \(url.absoluteString, privacy: .public)")
-        continue
-      }
-      guard let action = debugSections.lazy.flatMap(\.actions).first(where: { $0.id == id }) else {
-        DebugAction.log.error("unknown id \(id, privacy: .public)")
-        continue
-      }
-      action.perform()
-    }
-  }
+  /// oasis://debug/<id>: при холодном запуске ждёт готовности острова и первой загрузки календаря
+  func application(_ application: NSApplication, open urls: [URL]) { links.open(urls) }
 
   /// Полноэкранное приложение на экране с вырезом прячет компакт музыки
   private func startFullscreenMonitor() {
@@ -240,11 +230,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     }
   }
 
+  /// Ссылки запуска ждут первую загрузку календаря (иначе она затрёт фейковое событие), без доступа — 3 с
   private func startCalendar() {
     let source = EventKitCalendarSource()
     tasks.append(
-      Task { [store] in
-        for await events in source.changes { store.apply(events: events) }
+      Task { [store, weak self] in
+        for await events in source.changes {
+          store.apply(events: events)
+          self?.links.markReady()
+        }
+      })
+    tasks.append(
+      Task { [weak self] in
+        try? await Task.sleep(for: .seconds(3))
+        self?.links.markReady()
       })
     source.start()
     calendar = source
