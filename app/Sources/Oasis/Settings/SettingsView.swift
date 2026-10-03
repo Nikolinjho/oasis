@@ -13,8 +13,11 @@ struct SettingsView: View {
 
   var body: some View {
     HStack(spacing: 0) {
-      SettingsSidebar(selection: $page)
-        .frame(width: 200)
+      // С группой Modules 14 строк не влезают в 659 pt: сайдбар прокручивается, высоту окна держим по Alcove
+      ScrollView(.vertical, showsIndicators: false) {
+        SettingsSidebar(selection: $page)
+      }
+      .frame(width: 200)
       Divider()
       ScrollView {
         pageContent
@@ -74,8 +77,9 @@ struct SidebarRow: View {
   var body: some View {
     HStack(spacing: 8) {
       SettingsIcon(page: page, side: 22)
-      Text(page.title).font(.system(size: 13))
-      Spacer()
+      // «Claude Code» рядом с бейджем Soon впритык: заголовок не уступает место отступу
+      Text(page.title).font(.system(size: 13)).lineLimit(1).layoutPriority(1)
+      Spacer(minLength: 0)
       if !page.isAvailable {
         Text("Soon")
           .font(.system(size: 10, weight: .semibold))

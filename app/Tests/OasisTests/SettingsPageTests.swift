@@ -9,12 +9,13 @@ struct SettingsPageTests {
     #expect(
       SettingsPage.allCases.map(\.title) == [
         "General", "Battery", "Connectivity", "Focus", "Display", "Sound",
-        "Now Playing", "Calendar", "File Tray", "Lock Screen", "About",
+        "Now Playing", "Calendar", "File Tray", "Lock Screen", "Claude Code", "Pomodoro", "Soon", "About",
       ])
     #expect(SettingsPage.allCases.filter(\.isAvailable) == [.general, .battery, .connectivity, .display, .sound, .nowPlaying])
     #expect(SettingsPage.battery.group == "Notifications")
     #expect(SettingsPage.lockScreen.group == "Live Activities")
     #expect(SettingsPage.about.group == "Oasis")
+    #expect([SettingsPage.claudeCode, .pomodoro, .soon].allSatisfy { $0.group == "Modules" && !$0.isAvailable })
     #expect(SettingsPage.general.group == nil)
   }
 
