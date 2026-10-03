@@ -7,6 +7,8 @@ import IslandSources
 @MainActor
 final class CalendarBridge {
   let clock: CalendarClock
+  /// Play hourly chime: звук идёт через store.onSound — как все звуки, при General → Play sounds
+  let chime: HourlyChimeTimer
   private let store: IslandStore
   private let settings: CalendarSettings
   private var source: EventKitCalendarSource?
@@ -17,6 +19,8 @@ final class CalendarBridge {
     self.store = store
     self.settings = settings
     clock = CalendarClock(store: store, settings: settings.clockSettings)
+    chime = HourlyChimeTimer { [weak store] in store?.onSound(.chime) }
+    chime.isEnabled = settings.isEnabled && settings.hourlyChime
     // повестка раскрытого к этому моменту уже в store.agenda: меню часов берёт пункты из неё
     store.onAgendaChange = { [weak clock, weak store] live in
       guard let clock, let store else { return }
@@ -42,5 +46,6 @@ final class CalendarBridge {
   func apply() {
     store.setCalendarFilter(settings.filter)
     clock.apply(settings.clockSettings)
+    chime.isEnabled = settings.isEnabled && settings.hourlyChime
   }
 }
