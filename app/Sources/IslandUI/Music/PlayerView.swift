@@ -74,6 +74,10 @@ struct PlayerView: View {
 struct VolumeRow: View {
   let level: Double
   let onAction: (PlayerAction) -> Void
+  /// Пока палец на полоске — уровень под ним: полоска идёт за пальцем, даже когда система получает его реже
+  @GestureState private var dragLevel: Double?
+  /// setVolume не чаще 30 раз в секунду (оценка): каждый кадр жеста — лишний вызов CoreAudio и уведомление
+  @State private var throttle = ValueThrottle<Double>(interval: 1.0 / 30)
 
   var body: some View {
     HStack(spacing: 10) {
@@ -88,15 +92,25 @@ struct VolumeRow: View {
           Capsule().fill(IslandPalette.foreground.opacity(0.2))
           Capsule()
             .fill(IslandPalette.secondary)
-            .frame(width: proxy.size.width * min(max(level, 0), 1))
+            .frame(width: proxy.size.width * min(max(dragLevel ?? level, 0), 1))
         }
         .frame(height: 5)
         .frame(maxHeight: .infinity)
         .contentShape(Rectangle())
         .gesture(
-          DragGesture(minimumDistance: 0).onChanged { value in
-            onAction(.setVolume(Self.level(at: value.location.x, width: proxy.size.width)))
-          })
+          DragGesture(minimumDistance: 0)
+            .updating($dragLevel) { value, state, _ in
+              state = Self.level(at: value.location.x, width: proxy.size.width)
+            }
+            .onChanged { value in
+              let level = Self.level(at: value.location.x, width: proxy.size.width)
+              if let sent = throttle.offer(level, at: Date()) { onAction(.setVolume(sent)) }
+            }
+            // последний уровень доходит всегда, даже если его придержал троттлинг
+            .onEnded { value in
+              let level = Self.level(at: value.location.x, width: proxy.size.width)
+              if let sent = throttle.finish(level) { onAction(.setVolume(sent)) }
+            })
       }
       Button {
         onAction(.stepVolume(up: true))
