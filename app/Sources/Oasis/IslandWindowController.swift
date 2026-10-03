@@ -46,6 +46,7 @@ final class IslandWindowController {
     placeOnNotchScreen()
     installMonitors()
     store.onSurfaceChange = { [weak self] in self?.surfaceChanged() }
+    store.onContrastOutlineChange = { [weak self] in self?.backdrop.update(panel: self?.panel) }
     store.onSwipeClose = { [weak self] in self?.closedBySwipe = true }
   }
 
