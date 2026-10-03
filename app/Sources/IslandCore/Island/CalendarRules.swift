@@ -10,6 +10,12 @@ public struct CalendarRules: Equatable, Sendable {
 
   public init() {}
 
+  /// peekDuration в секундах: Disable activity during events держит компакт ровно на время peek
+  public var peekInterval: Double {
+    let parts = peekDuration.components
+    return Double(parts.seconds) + Double(parts.attoseconds) / 1e18
+  }
+
   /// Peek duration 4 с держится 4.2 с (замер ui-inspection 3.5): к настройке прибавляем 0.2 с
   public static func peekDuration(seconds: Double) -> Duration {
     .milliseconds(Int((seconds * 1000).rounded()) + 200)

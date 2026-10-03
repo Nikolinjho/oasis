@@ -87,7 +87,8 @@ struct CalendarClockSettingsTests {
     let calendar = AppSettings(defaults: defaults).calendar
     #expect(calendar.clockSettings.hidingAfterStart == nil)
     calendar.disableDuringEvents = true
-    #expect(calendar.clockSettings.hidingAfterStart == 4.2)
+    #expect(calendar.clockSettings.hidingAfterStart == calendar.rules.peekInterval)
+    #expect(abs((calendar.clockSettings.hidingAfterStart ?? 0) - 4.2) < 1e-9)
     calendar.peekOnStart = false
     #expect(calendar.clockSettings.hidingAfterStart == 0)
   }

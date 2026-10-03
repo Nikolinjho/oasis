@@ -23,6 +23,14 @@ struct CalendarRulesTests {
     #expect(CalendarRules.peekDuration(seconds: 1) == .milliseconds(1200))
   }
 
+  @Test("Длительность peek в секундах — для часов, которые держат компакт на время peek")
+  func peekInterval() {
+    var rules = CalendarRules()
+    #expect(abs(rules.peekInterval - 4.2) < 1e-9)
+    rules.peekDuration = CalendarRules.peekDuration(seconds: 1)
+    #expect(abs(rules.peekInterval - 1.2) < 1e-9)
+  }
+
   @Test("Peek на старте держится Peek duration из настроек")
   func peekUsesDuration() {
     var rules = CalendarRules()

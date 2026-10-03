@@ -117,7 +117,8 @@ final class CalendarSettings: ObservableObject {
   /// Окно и напоминание Before event starts: CalendarClock
   var clockSettings: CalendarClock.Settings {
     // Disable activity during events: компакт уходит после peek на старте, а без peek — в момент старта
-    let peek = rules.peeksOnStart ? peekSeconds + 0.2 : 0
+    let rules = rules
+    let peek = rules.peeksOnStart ? rules.peekInterval : 0
     return CalendarClock.Settings(
       lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart, coloredIndicator: coloredIndicator,
       hidingAfterStart: disableDuringEvents ? peek : nil)
