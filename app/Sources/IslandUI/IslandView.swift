@@ -52,6 +52,15 @@ public struct IslandView: View {
 
   public var body: some View {
     ZStack(alignment: .top) {
+      // Progressive blur — под тенью и формой, у раскрытого. Проявляется той же анимацией, что тень:
+      // прозрачность меняется вместе с моделью внутри withAnimation
+      if appearance.progressiveBlur {
+        GeometryReader { proxy in
+          VariableBlurView(shape: Self.blurShape(spec, width: proxy.size.width))
+        }
+        .opacity(model.surface == .expanded ? 1 : 0)
+        .allowsHitTesting(false)
+      }
       IslandShape(spec: spec)
         // подложка подгонки выреза красная, а не чёрная, как обычно (Task 17t, Alcove 1.7.9, 29.09)
         .fill(isTuningHint ? IslandPalette.tuning : IslandPalette.background)
@@ -132,6 +141,12 @@ public struct IslandView: View {
     case .idle, .hover, .shrink, .hoverNudge:
       Color.clear
     }
+  }
+
+  /// Форма с ушками в координатах окна: по центру, верх у края экрана (как IslandShape)
+  static func blurShape(_ spec: IslandShapeSpec, width: CGFloat) -> CGRect {
+    let shapeWidth = spec.size.width + 2 * spec.shoulder
+    return CGRect(x: (width - shapeWidth) / 2, y: 0, width: shapeWidth, height: spec.size.height)
   }
 
   /// Подложка подгонки выреза (Task 17t) — заливка формы красная, а не обычная чёрная
