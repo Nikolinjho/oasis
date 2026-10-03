@@ -66,7 +66,21 @@ public final class EventKitCalendarSource {
       color: rgb(event.calendar?.cgColor),
       url: event.url,
       location: event.location,
-      notes: event.notes)
+      notes: event.notes,
+      calendarID: event.calendar?.calendarIdentifier)
+  }
+
+  /// Календари для списка Calendars на странице настроек: свой store, доступ к событиям уже выдан источнику.
+  /// Порядок — по аккаунту, внутри по названию
+  public static func calendars() -> [CalendarInfo] {
+    guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else { return [] }
+    return EKEventStore().calendars(for: .event)
+      .sorted { ($0.source?.title ?? "", $0.title) < ($1.source?.title ?? "", $1.title) }
+      .map { calendar in
+        CalendarInfo(
+          id: calendar.calendarIdentifier, title: calendar.title, color: rgb(calendar.cgColor),
+          kind: calendar.type == .birthday ? .birthdays : calendar.type == .subscription ? .subscription : .regular)
+      }
   }
 
   /// Цвет календаря в sRGB. Без цвета — красный календарный, как иконка Calendar

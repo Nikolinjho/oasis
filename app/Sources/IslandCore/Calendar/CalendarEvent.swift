@@ -14,10 +14,13 @@ public struct CalendarEvent: Equatable, Sendable, Identifiable {
   public var url: URL?
   public var location: String?
   public var notes: String?
+  /// calendarIdentifier календаря EventKit: по нему страница Calendar выключает календари и выбирает режим.
+  /// У отладочных событий nil — их фильтр пропускает всегда
+  public var calendarID: String?
 
   public init(
     id: String, title: String, start: Date, end: Date, isAllDay: Bool, color: RGB,
-    url: URL? = nil, location: String? = nil, notes: String? = nil
+    url: URL? = nil, location: String? = nil, notes: String? = nil, calendarID: String? = nil
   ) {
     self.id = id
     self.title = title
@@ -28,6 +31,7 @@ public struct CalendarEvent: Equatable, Sendable, Identifiable {
     self.url = url
     self.location = location
     self.notes = notes
+    self.calendarID = calendarID
   }
 }
 

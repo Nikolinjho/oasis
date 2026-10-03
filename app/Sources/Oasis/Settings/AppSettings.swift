@@ -75,6 +75,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   private var isDraggingWidth = false
   private var isDraggingHeight = false
   private let defaults: UserDefaults
+  /// Страница Calendar: свой объект в AppSettings+Calendar.swift, изменения идут в onChange
+  let calendar: CalendarSettings
 
   /// General → Expand on hover, по умолчанию вкл
   @Published var expandOnHover: Bool {
@@ -273,6 +275,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   // swiftlint:disable:next function_body_length - чтение каждой настройки из UserDefaults, по строке на ключ
   init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
+    calendar = CalendarSettings(defaults: defaults)
     expandOnHover = defaults.object(forKey: Key.expandOnHover) as? Bool ?? true
     hoverDuration = defaults.object(forKey: Key.hoverDuration) as? Double ?? 0
     forceSimulatedNotch = defaults.bool(forKey: Key.forceSimulatedNotch)
@@ -326,6 +329,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     forceEnableActivity = Self.read(defaults, Key.forceEnableActivity, true)
     swipeToDismiss = Self.read(defaults, Key.swipeToDismiss, true)
     naturalMovement = Self.read(defaults, Key.naturalMovement, true)
+    // onChange читается в момент изменения: AppDelegate подключает его позже init
+    calendar.onChange = { [weak self] in self?.onChange() }
   }
 
   /// Запись настройки: одинаковое значение не пишется и не зовёт onChange
