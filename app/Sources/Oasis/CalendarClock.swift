@@ -13,6 +13,8 @@ final class CalendarClock {
     var lead: TimeInterval = CalendarSchedule.defaultLead
     /// Quick Peek и Before event starts: напоминание-peek в начале окна. У Alcove по умолчанию выключено (ui-inspection 1.9)
     var remindsBeforeStart = false
+    /// Use colored calendar indicator: полоска напоминания в цвете календаря, выкл — красная, как у peek на старте
+    var coloredIndicator = true
   }
 
   private let store: IslandStore
@@ -94,7 +96,8 @@ final class CalendarClock {
           .alertArrived(
             .calendarReminder(
               CalendarReminder(
-                eventID: event.id, title: event.title, minutes: minutes, color: event.color))))
+                eventID: event.id, title: event.title, minutes: minutes,
+                color: settings.coloredIndicator ? event.color : ActivityLayouts.calendarRed))))
       case .started where !started:
         started = true
         store.send(.calendarStarted)

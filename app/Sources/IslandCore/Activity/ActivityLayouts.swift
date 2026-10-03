@@ -37,7 +37,7 @@ public enum ActivityLayouts {
     let line =
       showsLine
       ? ActivityLayout.Line(
-        bar: event.color, title: event.title, trailingSymbol: "hourglass",
+        bar: style.coloredIndicator ? event.color : calendarRed, title: event.title, trailingSymbol: "hourglass",
         trailing: remaining(event.end.timeIntervalSince(now)))
       : nil
     // бейдж на обложке — часы на красном круге (кадр пользователя 29.09); без музыки — прежняя иконка

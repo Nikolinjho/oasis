@@ -54,4 +54,14 @@ struct CalendarClockSettingsTests {
     clock.update(agenda: Self.agenda, now: Self.at(-1700))
     #expect(clock.menuModel(now: Self.at(-1700))?.event == Self.event)
   }
+
+  @Test("Use colored calendar indicator выкл: полоска напоминания красная, а не в цвете календаря")
+  func reminderIndicatorColor() {
+    let store = IslandStore(config: .alcove)
+    let settings = CalendarClock.Settings(remindsBeforeStart: true, coloredIndicator: false)
+    let clock = CalendarClock(store: store, start: Self.at(-901), settings: settings)
+    clock.update(agenda: Self.agenda, now: Self.at(-900))
+    let reminder = CalendarReminder(eventID: "call", title: "Созвон", minutes: 15, color: ActivityLayouts.calendarRed)
+    #expect((store.model.pending ?? store.model.surface) == .alert(.calendarReminder(reminder)))
+  }
 }

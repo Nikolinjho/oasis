@@ -136,6 +136,8 @@ struct CalendarSettingsTests {
     #expect(calendar.clockSettings == CalendarClock.Settings(lead: 600, remindsBeforeStart: true))
     calendar.quickPeek = false
     #expect(!calendar.clockSettings.remindsBeforeStart)
+    calendar.coloredIndicator = false
+    #expect(!calendar.clockSettings.coloredIndicator)
   }
 
   @Test("Вид календаря доходит до острова через appearance: цвет календаря, сетка месяца и индикаторы")

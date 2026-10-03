@@ -116,7 +116,8 @@ final class CalendarSettings: ObservableObject {
 
   /// Окно и напоминание Before event starts: CalendarClock
   var clockSettings: CalendarClock.Settings {
-    CalendarClock.Settings(lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart)
+    CalendarClock.Settings(
+      lead: lead, remindsBeforeStart: quickPeek && peekBeforeStart, coloredIndicator: coloredIndicator)
   }
 
   func mode(for calendarID: String) -> CalendarDisplayMode { filter.mode(for: calendarID) }

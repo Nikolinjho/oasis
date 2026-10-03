@@ -42,4 +42,14 @@ struct CalendarAppearanceTests {
     #expect(layout.symbolColor == ActivityLayouts.calendarRed)
     #expect(layout == ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: false))
   }
+
+  @Test("Use colored calendar indicator: полоска в peek в цвете календаря, выкл — красная")
+  func coloredIndicator() {
+    var style = CalendarAppearance()
+    #expect(ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: true, style: style).line?.bar == Self.event.color)
+    style.coloredIndicator = false
+    #expect(
+      ActivityLayouts.calendar(event: Self.event, now: Self.start, showsLine: true, style: style).line?.bar
+        == ActivityLayouts.calendarRed)
+  }
 }
