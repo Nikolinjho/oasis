@@ -47,3 +47,30 @@ struct TitleCleanerTests {
     #expect(TitleCleaner.clean("Песня - Официальный клип") == "Песня")
   }
 }
+
+extension TitleCleanerTests {
+  @Test("Модификаторы (Live, Animated, Version, in…) срезаются только вместе с настоящей меткой")
+  func modifiersNextToTag() {
+    #expect(TitleCleaner.clean("Song (Official Live Video)") == "Song")
+    #expect(TitleCleaner.clean("Song (Official Animated Video)") == "Song")
+    #expect(TitleCleaner.clean("Song (Official Performance Video)") == "Song")
+    #expect(TitleCleaner.clean("Song (Remastered Version)") == "Song")
+    #expect(TitleCleaner.clean("Song (Official Music Video - Explicit)") == "Song")
+    #expect(TitleCleaner.clean("Song (Official Video 4K60)") == "Song")
+    #expect(TitleCleaner.clean("Song (Official Music Video) [Remastered in 4K]") == "Song")
+    #expect(TitleCleaner.clean("Song (Live)") == "Song (Live)")
+    #expect(TitleCleaner.clean("Song (Live in HD Arena)") == "Song (Live in HD Arena)")
+  }
+
+  @Test("Одно голое служебное слово после дефиса — часть названия")
+  func singleWordDashTail() {
+    #expect(TitleCleaner.clean("India.Arie - Video") == "India.Arie - Video")
+    #expect(TitleCleaner.clean("Artist – Clip") == "Artist – Clip")
+  }
+
+  @Test("Служебный сегмент между « | » срезается вместе со всем после него")
+  func pipeSegment() {
+    #expect(TitleCleaner.clean("Song | Official Video | Artist") == "Song")
+    #expect(TitleCleaner.clean("Song | Artist | Official Audio") == "Song | Artist")
+  }
+}
