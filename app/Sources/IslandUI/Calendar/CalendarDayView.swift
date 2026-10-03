@@ -5,6 +5,10 @@ import SwiftUI
 /// AX-фреймов этого вида нет: колонки и отступы по кадру gest-cycle.jpg, те же, что у Duo, оценка
 struct CalendarDayView: View {
   let agenda: DayAgenda
+  /// Событие открытого окна календаря: первая карточка сегодня и её Join — о нём, как у Duo, компакта и меню
+  var liveEvent: CalendarEvent?
+  /// Отклонённые через Dismiss Event: их нет, как в стопке Duo
+  var dismissedEvents: Set<String> = []
   var now: Date?
   let onJoin: (URL) -> Void
 
@@ -19,7 +23,7 @@ struct CalendarDayView: View {
   }
 
   private func content(_ now: Date) -> some View {
-    let today = agenda.today.filter { $0.end > now }
+    let today = Self.today(agenda, now: now, live: liveEvent, dismissed: dismissedEvents)
     return ZStack(alignment: .topLeading) {
       VStack(alignment: .leading, spacing: -3) {
         Text(DateBadge.weekday(now))
@@ -61,6 +65,14 @@ struct CalendarDayView: View {
       .offset(x: DuoLayout.eventOrigin.x, y: 18)
     }
     .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)
+  }
+
+  /// Колонка «сегодня» по тому же правилу, что стопка Duo (DayAgenda.upcoming). Без окна и отклонённых —
+  /// незакончившиеся по началу, как раньше
+  nonisolated static func today(
+    _ agenda: DayAgenda, now: Date, live: CalendarEvent? = nil, dismissed: Set<String> = []
+  ) -> [CalendarEvent] {
+    agenda.upcoming(at: now, live: live, dismissed: dismissed)
   }
 
   nonisolated static func more(total: Int, shown: Int) -> String? {

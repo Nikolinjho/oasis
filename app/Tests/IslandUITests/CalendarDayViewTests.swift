@@ -21,6 +21,22 @@ struct CalendarDayViewTests {
     #expect(CalendarDayView.more(total: 2, shown: 2) == nil)
   }
 
+  @Test("Сегодня: первым событие окна календаря, как у Duo и компакта, отклонённых нет")
+  func todayFollowsLive() {
+    let long = CalendarEvent(
+      id: "long", title: "long", start: Self.base, end: Self.base.addingTimeInterval(3 * 3600), isAllDay: false,
+      color: RGB(red: 1, green: 0, blue: 0))
+    let inner = Self.event("inner", 1)
+    let later = Self.event("later", 2)
+    let agenda = DayAgenda(today: [long, inner, later], tomorrow: [])
+    let now = Self.base.addingTimeInterval(3600 + 60)
+    // окна нет: по началу, как раньше
+    #expect(CalendarDayView.today(agenda, now: now).map(\.id) == ["long", "inner", "later"])
+    // окно у inner: карточка сверху и её Join — о том же событии, что компакт
+    #expect(CalendarDayView.today(agenda, now: now, live: inner).map(\.id) == ["inner", "later"])
+    #expect(CalendarDayView.today(agenda, now: now, live: inner, dismissed: ["later"]).map(\.id) == ["inner"])
+  }
+
   @MainActor
   @Test("Снимок календарного вида: сегодня и завтра")
   func snapshot() throws {
