@@ -9,6 +9,7 @@ public protocol PlayerActionPerforming: AnyObject {
   func favoriteInMusic()
   func activateApp(bundleID: String)
   func setVolume(_ level: Double)
+  func stepVolume(up: Bool)
   func setShuffle(_ mode: Int)
   func setRepeat(_ mode: Int)
   func seek(to position: TimeInterval)
@@ -47,6 +48,8 @@ public struct PlayerActionRouter {
       log.info("toggle volume row reached the router")
     case .setVolume(let level):
       performer.setVolume(level)
+    case .stepVolume(let up):
+      performer.stepVolume(up: up)
     case .toggleShuffle:
       // 3 — перемешивать треки, 1 — выкл (MRMediaRemote)
       performer.setShuffle(nowPlaying?.isShuffling == true ? 1 : 3)

@@ -205,18 +205,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     nowPlaying = source
   }
 
-  /// Строка громкости плеера: изменение уровня, HUD подавлен на rowQuietUntil.
-  /// setVolumeUnmuted снимает mute — иначе VolumeState.level снаружи остался бы 0, и store.volumeLevel
-  /// тут же откатился бы к нулю на первом же уведомлении CoreAudio о смене громкости
-  private func setVolumeFromRow(_ level: Double) {
+  /// Строка громкости плеера сменила уровень (PlayerActions уже отдал его системе): HUD подавлен на rowQuietUntil
+  private func volumeChangedFromRow(_ level: Double) {
     rowQuietUntil = Date().addingTimeInterval(0.5)
-    volume?.setVolumeUnmuted(level)
     store.volumeLevel = level
   }
 
   /// Кнопки плеера. Без адаптера медиакоманды пропадают, остальные кнопки работают
   private func startPlayerActions() {
-    let performer = PlayerActions(source: nowPlaying) { [weak self] level in self?.setVolumeFromRow(level) }
+    let performer = PlayerActions(
+      source: nowPlaying, volume: { [weak self] in self?.volume },
+      onRowVolume: { [weak self] level in self?.volumeChangedFromRow(level) })
     let router = PlayerActionRouter(performer: performer)
     store.onAction = { [weak self, weak store, log] action in
       guard let store else { return }

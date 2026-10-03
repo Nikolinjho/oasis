@@ -56,7 +56,7 @@ struct PlayerView: View {
         }
       }
       if showsVolumeRow {
-        VolumeRow(level: volume) { onAction(.setVolume($0)) }
+        VolumeRow(level: volume, onAction: onAction)
           .padding(.horizontal, 4)
           // строка открывается маской растущей формы, как контент при раскрытии
           .transition(.opacity)
@@ -69,15 +69,16 @@ struct PlayerView: View {
 }
 
 /// Строка громкости под кнопками плеера (Alcove 1.7.9, 28.09): 🔈 и 🔊 — шаг 10%, полоска — уровень по месту.
+/// Шаг считает система от сохранённого уровня (VolumeControl.rowStep): при mute level тут 0, а шагать надо не от него.
 /// Цвет полоски — серый, как на кадре player-volume-row.jpg; толщина и кегль — оценка
 struct VolumeRow: View {
   let level: Double
-  let onChange: (Double) -> Void
+  let onAction: (PlayerAction) -> Void
 
   var body: some View {
     HStack(spacing: 10) {
       Button {
-        onChange(Self.stepped(level, up: false))
+        onAction(.stepVolume(up: false))
       } label: {
         Image(systemName: "speaker.fill")
       }
@@ -94,11 +95,11 @@ struct VolumeRow: View {
         .contentShape(Rectangle())
         .gesture(
           DragGesture(minimumDistance: 0).onChanged { value in
-            onChange(Self.level(at: value.location.x, width: proxy.size.width))
+            onAction(.setVolume(Self.level(at: value.location.x, width: proxy.size.width)))
           })
       }
       Button {
-        onChange(Self.stepped(level, up: true))
+        onAction(.stepVolume(up: true))
       } label: {
         Image(systemName: "speaker.wave.2.fill")
       }
@@ -112,11 +113,6 @@ struct VolumeRow: View {
   nonisolated static func level(at x: CGFloat, width: CGFloat) -> Double {
     guard width > 0 else { return 0 }
     return Double(min(max(x / width, 0), 1))
-  }
-
-  /// 🔈 и 🔊: ±10% (у Alcove 56 → 46 → 56)
-  nonisolated static func stepped(_ level: Double, up: Bool) -> Double {
-    min(max(level + (up ? 0.1 : -0.1), 0), 1)
   }
 }
 

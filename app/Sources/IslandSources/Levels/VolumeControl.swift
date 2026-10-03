@@ -11,6 +11,12 @@ struct VolumeState: Equatable {
 
   /// Уровень для HUD: при mute — 0
   var level: Double { muted ? 0 : volume ?? 0 }
+
+  /// 🔈/🔊 строки громкости: ±10% (у Alcove 56 → 46 → 56). Шаг — от сохранённого уровня и при mute,
+  /// как у клавиши громкости (step): от level, который при mute 0, кнопка снимала бы mute на 10%
+  func rowStepped(up: Bool) -> Double {
+    min(max((volume ?? 0) + (up ? 0.1 : -0.1), 0), 1)
+  }
 }
 
 /// Устройство, на котором висят слушатели громкости и mute, и последнее показанное состояние
@@ -95,6 +101,14 @@ public final class VolumeControl: @unchecked Sendable {
   public func setVolumeUnmuted(_ level: Double) {
     if Self.isMuted(Self.defaultDevice()) { setMuted(false) }
     setVolume(level)
+  }
+
+  /// Шаг 🔈/🔊 строки громкости: снимает mute и шагает от сохранённого уровня. Возвращает новый уровень
+  @discardableResult
+  public func rowStep(up: Bool) -> Double {
+    let level = Self.currentState().rowStepped(up: up)
+    setVolumeUnmuted(level)
+    return level
   }
 
   /// Шаг клавиши; при mute сначала снимает его

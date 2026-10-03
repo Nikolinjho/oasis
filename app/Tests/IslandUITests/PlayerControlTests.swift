@@ -118,15 +118,12 @@ struct PlayerControlTests {
 }
 
 struct VolumeRowTests {
-  @Test("Строка громкости: уровень по точке касания и шаг ±10% у иконок, за краями зажат")
+  @Test("Строка громкости: уровень по точке касания, за краями зажат")
   func volumeRowLevel() {
     #expect(VolumeRow.level(at: 30, width: 120) == 0.25)
     #expect(VolumeRow.level(at: -10, width: 120) == 0)
     #expect(VolumeRow.level(at: 500, width: 120) == 1)
     #expect(VolumeRow.level(at: 10, width: 0) == 0)
-    #expect(abs(VolumeRow.stepped(0.56, up: false) - 0.46) < 1e-9)
-    #expect(VolumeRow.stepped(0.95, up: true) == 1)
-    #expect(VolumeRow.stepped(0.04, up: false) == 0)
   }
 }
 

@@ -32,6 +32,8 @@ public enum PlayerAction: Equatable, Sendable {
   case toggleVolumeRow
   /// Строка громкости: уровень 0…1 текущего выхода
   case setVolume(Double)
+  /// 🔈/🔊 строки громкости: шаг ±10% от сохранённого уровня, при mute тоже (его знает только система)
+  case stepVolume(up: Bool)
   /// Доп. кнопка Shuffle: включить или выключить перемешивание
   case toggleShuffle
   /// Доп. кнопка Repeat: следующий режим по кругу

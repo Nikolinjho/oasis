@@ -66,4 +66,18 @@ struct ListenedDeviceTests {
     #expect(VolumeState(volume: nil, muted: false).level == 0)
     #expect(VolumeState(volume: 0.5, muted: false).level == 0.5)
   }
+
+  @Test("Шаг 🔈/🔊 строки громкости: ±10% от уровня, за краями зажат")
+  func rowStep() {
+    #expect(abs(VolumeState(volume: 0.56, muted: false).rowStepped(up: false) - 0.46) < 1e-9)
+    #expect(VolumeState(volume: 0.95, muted: false).rowStepped(up: true) == 1)
+    #expect(VolumeState(volume: 0.04, muted: false).rowStepped(up: false) == 0)
+  }
+
+  @Test("Шаг при mute — от сохранённого уровня, а не от нуля: как у клавиши громкости")
+  func rowStepWhenMuted() {
+    #expect(abs(VolumeState(volume: 0.56, muted: true).rowStepped(up: true) - 0.66) < 1e-9)
+    #expect(abs(VolumeState(volume: 0.56, muted: true).rowStepped(up: false) - 0.46) < 1e-9)
+    #expect(abs(VolumeState(volume: nil, muted: true).rowStepped(up: true) - 0.1) < 1e-9)
+  }
 }

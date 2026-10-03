@@ -12,6 +12,7 @@ final class FakePerformer: PlayerActionPerforming {
     case favorite
     case activate(String)
     case volume(Double)
+    case stepVolume(up: Bool)
     case shuffle(Int)
     case repeatMode(Int)
     case seek(TimeInterval)
@@ -23,6 +24,7 @@ final class FakePerformer: PlayerActionPerforming {
   func favoriteInMusic() { calls.append(.favorite) }
   func activateApp(bundleID: String) { calls.append(.activate(bundleID)) }
   func setVolume(_ level: Double) { calls.append(.volume(level)) }
+  func stepVolume(up: Bool) { calls.append(.stepVolume(up: up)) }
   func setShuffle(_ mode: Int) { calls.append(.shuffle(mode)) }
   func setRepeat(_ mode: Int) { calls.append(.repeatMode(mode)) }
   func seek(to position: TimeInterval) { calls.append(.seek(position)) }
@@ -81,6 +83,15 @@ struct PlayerActionRouterTests {
     let fake = FakePerformer()
     PlayerActionRouter(performer: fake).perform(.setVolume(0.4), nowPlaying: nil)
     #expect(fake.calls == [.volume(0.4)])
+  }
+
+  @Test("🔈/🔊 строки громкости уходят исполнителю шагом: от какого уровня шагать, знает он")
+  func stepVolume() {
+    let fake = FakePerformer()
+    let router = PlayerActionRouter(performer: fake)
+    router.perform(.stepVolume(up: true), nowPlaying: nil)
+    router.perform(.stepVolume(up: false), nowPlaying: nil)
+    #expect(fake.calls == [.stepVolume(up: true), .stepVolume(up: false)])
   }
 
   @Test("Shuffle переключается от текущего режима: выкл → треки, вкл → выкл")

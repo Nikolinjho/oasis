@@ -8,12 +8,18 @@ import os
 final class PlayerActions: PlayerActionPerforming {
   private weak var source: (any NowPlayingSource)?
   private let favorite = MusicFavorite()
-  private let setVolumeLevel: (Double) -> Void
+  /// Громкость появляется позже кнопок (startLevels после startPlayerActions): берём её в момент нажатия
+  private let volume: () -> VolumeControl?
+  /// Строка громкости сменила уровень: AppDelegate кладёт его в store и глушит HUD
+  private let onRowVolume: (Double) -> Void
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "player")
 
-  init(source: (any NowPlayingSource)?, setVolume: @escaping (Double) -> Void) {
+  init(
+    source: (any NowPlayingSource)?, volume: @escaping () -> VolumeControl?, onRowVolume: @escaping (Double) -> Void
+  ) {
     self.source = source
-    self.setVolumeLevel = setVolume
+    self.volume = volume
+    self.onRowVolume = onRowVolume
   }
 
   func send(_ command: MediaCommand) {
@@ -33,8 +39,18 @@ final class PlayerActions: PlayerActionPerforming {
     AppActivator.activate(bundleID: bundleID)
   }
 
+  /// Уровень по месту на строке. setVolumeUnmuted снимает mute — иначе VolumeState.level снаружи остался бы 0,
+  /// и store.volumeLevel тут же откатился бы к нулю на первом же уведомлении CoreAudio о смене громкости
   func setVolume(_ level: Double) {
-    setVolumeLevel(level)
+    guard let volume = volume() else { return }
+    volume.setVolumeUnmuted(level)
+    onRowVolume(level)
+  }
+
+  /// 🔈/🔊: шаг от сохранённого уровня и при mute, как у клавиши (VolumeControl.rowStep)
+  func stepVolume(up: Bool) {
+    guard let volume = volume() else { return }
+    onRowVolume(volume.rowStep(up: up))
   }
 
   func setShuffle(_ mode: Int) {
