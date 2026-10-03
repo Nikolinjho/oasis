@@ -115,6 +115,34 @@ struct PlayerControlTests {
       ProgressRow.displayPosition(
         dragFraction: nil, pendingSeek: nil, sourcePosition: 5, duration: 100, isPlaying: true, now: now) == 5)
   }
+
+  @Test("Позиция зажата в 0…duration: у конца трека отложенный seek не уходит за длительность")
+  func displayPositionClamped() {
+    let now = Date()
+    #expect(
+      ProgressRow.displayPosition(
+        dragFraction: nil, pendingSeek: (99, now.addingTimeInterval(-2)), sourcePosition: 5, duration: 100,
+        isPlaying: true, now: now) == 100)
+    #expect(
+      ProgressRow.displayPosition(
+        dragFraction: nil, pendingSeek: nil, sourcePosition: -1, duration: 100, isPlaying: true, now: now) == 0)
+    // длительность неизвестна — зажимать сверху не по чему
+    #expect(
+      ProgressRow.displayPosition(
+        dragFraction: nil, pendingSeek: nil, sourcePosition: 42, duration: 0, isPlaying: true, now: now) == 42)
+  }
+
+  @Test("Удержание seek: источник прислал старую позицию — держим цель, близкую к цели — отпускаем")
+  func holdsSeek() {
+    let sent = Date()
+    // YouTube переопубликовал позицию до перемотки
+    #expect(ProgressRow.holdsSeek(target: 120, sourcePosition: 30, sentAt: sent, now: sent.addingTimeInterval(0.4)))
+    // источник подтвердил: позиция в пределах 1.5 с от цели
+    #expect(!ProgressRow.holdsSeek(target: 120, sourcePosition: 121.2, sentAt: sent, now: sent.addingTimeInterval(0.4)))
+    #expect(!ProgressRow.holdsSeek(target: 120, sourcePosition: 119, sentAt: sent, now: sent.addingTimeInterval(0.4)))
+    // за 3 с не подтвердил — дальше верим источнику
+    #expect(!ProgressRow.holdsSeek(target: 120, sourcePosition: 30, sentAt: sent, now: sent.addingTimeInterval(3.1)))
+  }
 }
 
 struct VolumeRowTests {
