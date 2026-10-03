@@ -1,12 +1,7 @@
 import IslandCore
 import SwiftUI
 
-/// Цвет волны из обложки или нейтральный, если обложки нет
-func accentColor(_ info: NowPlayingInfo?) -> Color {
-  coloredFill(info?.accent)
-}
-
-/// Цвет стиля Colored по уже выбранному цвету обложки; без него — серый
+/// Цвет стиля Colored по уже выбранному цвету обложки; без обложки — серый
 func coloredFill(_ accent: RGB?) -> Color {
   accent.map(Color.init) ?? IslandPalette.secondary
 }
