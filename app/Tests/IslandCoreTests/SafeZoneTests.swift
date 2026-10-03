@@ -35,8 +35,10 @@ struct SafeZoneTests {
     #expect(!inside(below34, .plain))
     #expect(inside(below34, .blurred))
     #expect(!inside(CGPoint(x: expanded.island.midX, y: expanded.island.minY - 36), .blurred))
-    let side14 = CGPoint(x: expanded.island.minX - 14, y: 1100)
-    let side16 = CGPoint(x: expanded.island.minX - 16, y: 1100)
+    // в стороны зона от тела, а не от ушек (ушки — только сверху): на середине высоты за ушками уже снаружи
+    let side14 = CGPoint(x: expanded.body.minX - 14, y: expanded.body.midY)
+    let side16 = CGPoint(x: expanded.body.minX - 16, y: expanded.body.midY)
+    #expect(!inside(CGPoint(x: expanded.island.minX - 14, y: expanded.body.midY), .plain))
     #expect(inside(side14, .plain))
     #expect(!inside(side16, .plain))
     #expect(inside(side16, .blurred))

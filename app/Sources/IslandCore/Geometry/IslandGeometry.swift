@@ -299,14 +299,18 @@ public enum IslandGeometry {
   /// по живой проверке запас вокруг выреза открывал hover, не доходя до острова.
   /// Пока hover открыт (openedFrom не nil), он держится над объединением текущей формы с ушками и тела,
   /// из которого открылся: hover уже компакта, и без этого у краёв компакта hover мигал бы.
-  /// expandedSafeZone — только у раскрытого: держит его и в зоне вокруг формы, но не открывает
+  /// expandedSafeZone — только у раскрытого: держит его и в зоне вокруг тела, но не открывает
   public static func pointerInside(
     _ point: CGPoint, body: CGRect, island: CGRect, openedFrom: CGRect?, expandedSafeZone: SafeZone? = nil
   ) -> Bool {
     guard let openedFrom else { return reachingScreenTop(body).contains(point) }
-    var area = island.union(openedFrom)
-    if let expandedSafeZone { area = expandedSafeZone.expanding(area) }
-    return reachingScreenTop(area).contains(point)
+    guard let expandedSafeZone else { return reachingScreenTop(island.union(openedFrom)).contains(point) }
+    // зона Alcove считается от тела (замер 03.10). Ушки — только верхняя полоса высотой с ушко: прямоугольник
+    // формы с ушками по всей высоте держал бы курсор сбоку дальше зоны
+    let ear = (island.width - body.width) / 2
+    let ears = CGRect(x: island.minX, y: island.maxY - ear, width: island.width, height: ear)
+    // по отдельности: union прямоугольников снова растянул бы ушки на всю высоту
+    return [expandedSafeZone.expanding(body), ears, openedFrom].contains { reachingScreenTop($0).contains(point) }
   }
 
   /// Прямоугольник, растянутый вверх на 1 pt. NSRect.contains не включает maxY, а курсор,
