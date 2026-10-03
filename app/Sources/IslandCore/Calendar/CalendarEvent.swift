@@ -17,10 +17,13 @@ public struct CalendarEvent: Equatable, Sendable, Identifiable {
   /// calendarIdentifier календаря EventKit: по нему страница Calendar выключает календари и выбирает режим.
   /// У отладочных событий nil — их фильтр пропускает всегда
   public var calendarID: String?
+  /// Вид календаря: у событий на весь день из подписок (праздники) карточка со звёздочкой вместо полоски
+  public var calendarKind: CalendarInfo.Kind
 
   public init(
     id: String, title: String, start: Date, end: Date, isAllDay: Bool, color: RGB,
-    url: URL? = nil, location: String? = nil, notes: String? = nil, calendarID: String? = nil
+    url: URL? = nil, location: String? = nil, notes: String? = nil, calendarID: String? = nil,
+    calendarKind: CalendarInfo.Kind = .regular
   ) {
     self.id = id
     self.title = title
@@ -32,6 +35,7 @@ public struct CalendarEvent: Equatable, Sendable, Identifiable {
     self.location = location
     self.notes = notes
     self.calendarID = calendarID
+    self.calendarKind = calendarKind
   }
 }
 

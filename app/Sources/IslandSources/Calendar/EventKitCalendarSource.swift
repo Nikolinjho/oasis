@@ -74,7 +74,8 @@ public final class EventKitCalendarSource {
       url: event.url,
       location: event.location,
       notes: event.notes,
-      calendarID: event.calendar?.calendarIdentifier)
+      calendarID: event.calendar?.calendarIdentifier,
+      calendarKind: kind(event.calendar))
   }
 
   /// Календари для списка Calendars на странице настроек — из store источника, без второго EKEventStore.
@@ -86,8 +87,16 @@ public final class EventKitCalendarSource {
       .map { calendar in
         CalendarInfo(
           id: calendar.calendarIdentifier, title: calendar.title, color: Self.rgb(calendar.cgColor),
-          kind: calendar.type == .birthday ? .birthdays : calendar.type == .subscription ? .subscription : .regular)
+          kind: Self.kind(calendar))
       }
+  }
+
+  nonisolated static func kind(_ calendar: EKCalendar?) -> CalendarInfo.Kind {
+    switch calendar?.type {
+    case .birthday: .birthdays
+    case .subscription: .subscription
+    default: .regular
+    }
   }
 
   /// Цвет календаря в sRGB. Без цвета — красный календарный, как иконка Calendar

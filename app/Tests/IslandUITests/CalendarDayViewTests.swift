@@ -52,7 +52,17 @@ struct CalendarDayViewTests {
   {
     CalendarEvent(
       id: id, title: id, start: october(day, hour), end: october(day, hour + hours), isAllDay: allDay, color: color,
-      calendarID: calendar)
+      calendarID: calendar, calendarKind: calendar == "holidays" ? .subscription : .regular)
+  }
+
+  @Test("Звёздочка — только у событий на весь день из подписок-праздников, остальные с полоской")
+  func star() {
+    let holiday = Self.october("Праздник", 5, 0, hours: 24, allDay: true, color: Self.blue, calendar: "holidays")
+    let vacation = Self.october("Отпуск", 5, 0, hours: 24, allDay: true, color: Self.blue, calendar: "home")
+    let timed = Self.october("Подписка", 5, 10, color: Self.blue, calendar: "holidays")
+    #expect(EventCard.showsStar(holiday))
+    #expect(!EventCard.showsStar(vacation))
+    #expect(!EventCard.showsStar(timed))
   }
 
   static let orange = RGB(red: 0.93, green: 0.55, blue: 0.35)

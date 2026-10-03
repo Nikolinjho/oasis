@@ -195,9 +195,15 @@ struct EventCard: View {
   var body: some View {
     let color = Color(event.color)
     HStack(spacing: 5) {
-      Capsule()
-        .fill(color)
-        .frame(width: 3)
+      if Self.showsStar(event) {
+        Image(systemName: "star.circle.fill")
+          .font(.system(size: 12))
+          .foregroundStyle(color)
+      } else {
+        Capsule()
+          .fill(color)
+          .frame(width: 3)
+      }
       VStack(alignment: .leading, spacing: 0) {
         Text(event.title)
           .font(.system(size: 11, weight: .semibold))
@@ -264,6 +270,12 @@ struct EventCard: View {
       return nil
     }
     return location
+  }
+
+  /// Событие на весь день из календаря-подписки (праздники): у Alcove перед названием звёздочка, а не полоска
+  /// (cv-sheet.png, «День учителя»). Прочие события на весь день — с полоской
+  nonisolated static func showsStar(_ event: CalendarEvent) -> Bool {
+    event.isAllDay && event.calendarKind == .subscription
   }
 
   nonisolated static func height(for event: CalendarEvent) -> CGFloat {
