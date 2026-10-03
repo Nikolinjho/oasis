@@ -115,5 +115,12 @@ struct IslandMachineNowPlayingTests {
     m.config.nowPlaying.isEnabled = false
     #expect(IslandMachine.reduce(&m, .baseChanged(from: old)) == [.animate(.compactOut)])
     #expect(m.surface == .idle)
+
+    // то же через настройки целиком (configChanged): машина сама видит смену покоя
+    var viaConfig = Self.model()
+    var off = viaConfig.config
+    off.nowPlaying.isEnabled = false
+    #expect(IslandMachine.reduce(&viaConfig, .configChanged(off)) == [.animate(.compactOut)])
+    #expect(viaConfig.surface == .idle)
   }
 }

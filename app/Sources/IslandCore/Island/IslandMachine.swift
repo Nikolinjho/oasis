@@ -48,6 +48,8 @@ public enum IslandEvent: Equatable, Sendable {
   case sourceActiveChanged(Bool)
   /// Покой мог смениться без события машины (настройки): from — покой до смены
   case baseChanged(from: Surface)
+  /// Новые настройки машины: смена покоя и перестройка компакта календаря под музыку идут пружиной, как от событий
+  case configChanged(IslandMachine.Config)
   case timerFired(TimerID)
 }
 
@@ -203,8 +205,9 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     if model.surface != .expanded || model.expandedView != .player { model.volumeRowShown = false }
     // музыка появилась или пропала во время окна календаря, а обработчик события не менял surface
     // (calendarLiveChanged ждёт смены base, а calendar приоритетнее музыки в base независимо от неё):
-    // компакт/peek меняют размер на месте, без этого — мгновенный скачок ширины без анимации
-    if model.surface == .calendar || model.surface == .calendarPeek, showedMedia != model.showsMedia,
+    // компакт/peek меняют размер на месте, без этого — мгновенный скачок ширины без анимации.
+    // Отклик hover над компактом календаря рисует тот же компакт, только шире: туда же
+    if isCalendarRest(unwrapHoverNudge(model.surface)), showedMedia != model.showsMedia,
       !effects.contains(where: { if case .animate = $0 { true } else { false } })
     {
       effects.append(.animate(.calendarRestyle))
@@ -239,8 +242,14 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .playbackChanged(let playing): playbackChanged(&model, playing)
     case .sourceActiveChanged(let active): sourceActiveChanged(&model, active)
     case .baseChanged(let old): baseChanged(&model, from: old)
+    case .configChanged(let config): configChanged(&model, config)
     case .timerFired(let id): timerFired(&model, id)
     }
+  }
+
+  /// Компакт или peek календаря: их размер зависит от музыки (calendarWithMusic)
+  private static func isCalendarRest(_ surface: Surface) -> Bool {
+    surface == .calendar || surface == .calendarPeek
   }
 
   /// Покой: форма выреза, компакт музыки или календаря. После сжатия к покою цель пересчитывается по base
@@ -374,6 +383,14 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     default:
       return []
     }
+  }
+
+  /// Новые настройки: покой мог смениться (Now Playing выключен) — как baseChanged. Компакт календаря,
+  /// у которого сменилась только музыка, перестраивает reduce (calendarRestyle)
+  private static func configChanged(_ m: inout IslandModel, _ config: Config) -> [IslandEffect] {
+    let old = m.base
+    m.config = config
+    return baseChanged(&m, from: old)
   }
 
   // swiftlint:disable:next cyclomatic_complexity - по case на поверхность, разбивка спрячет порядок проверок

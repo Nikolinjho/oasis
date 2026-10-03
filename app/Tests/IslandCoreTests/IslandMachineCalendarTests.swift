@@ -78,6 +78,29 @@ struct IslandMachineCalendarTests {
     #expect(m.surface == .calendar)
   }
 
+  @Test("Настройки Now Playing во время окна календаря: компакт перестраивается пружиной, а не скачком")
+  func settingsDuringLive() {
+    var m = Self.model(.calendar, media: true, live: true)
+    var off = m.config
+    off.nowPlaying.isEnabled = false
+    #expect(IslandMachine.reduce(&m, .configChanged(off)) == [.animate(.calendarRestyle)])
+    #expect(m.config == off && m.surface == .calendar && !m.showsMedia)
+
+    // Hide while source app is active включили, когда источник уже впереди
+    var hide = Self.model(.calendarPeek, media: true, live: true)
+    hide.sourceActive = true
+    var rules = hide.config
+    rules.nowPlaying.hidesWhileSourceActive = true
+    #expect(IslandMachine.reduce(&hide, .configChanged(rules)) == [.animate(.calendarRestyle)])
+  }
+
+  @Test("Отклик hover над компактом календаря тоже перестраивается под музыку пружиной")
+  func restyleDuringHoverNudge() {
+    var m = Self.model(.hoverNudge(from: .calendar), live: true, config: .user)
+    #expect(IslandMachine.reduce(&m, .trackChanged) == [.animate(.calendarRestyle)])
+    #expect(m.surface == .hoverNudge(from: .calendar))
+  }
+
   @Test("HUD, уведомление и раскрытый возвращаются в компакт календаря, сжатие — пружиной источника")
   func returnsToCalendar() {
     var hud = Self.model(.hud(.volume, level: 0.5), media: true, live: true)

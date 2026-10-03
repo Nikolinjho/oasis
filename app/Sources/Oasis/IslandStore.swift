@@ -69,14 +69,11 @@ final class IslandStore {
   }
 
   /// Режим машины. Demo-прогон переключает на .alcove: эталон сверки записан с поведением Alcove.
-  /// Настройки могут сменить покой (Now Playing выключен): машина переводит остров сама
+  /// Настройки могут сменить покой (Now Playing выключен) или вид компакта календаря: машина переводит
+  /// остров сама, пружиной, как при событиях (configChanged)
   var config: IslandMachine.Config {
     get { model.config }
-    set {
-      let old = model.base
-      model.config = newValue
-      if model.base != old { send(.baseChanged(from: old)) }
-    }
+    set { send(.configChanged(newValue)) }
   }
 
   var spec: IslandShapeSpec {
