@@ -28,7 +28,7 @@ private final class SettingsWindow: NSWindow {
 
 /// Окно настроек 620×687: не ресайзится, активна только кнопка закрытия, заголовок — название страницы
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
   private let settings: AppSettings
   private let playSound: (IslandSound) -> Void
   /// Календари EventKit для страницы Calendar: AppDelegate берёт их у источника календаря
@@ -43,14 +43,28 @@ final class SettingsWindowController {
     self.settings = settings
     self.calendars = calendars
     self.playSound = playSound
+    super.init()
   }
 
   func show() {
     let window = self.window ?? makeWindow()
     self.window = window
-    // приложение без Dock-иконки: без активации окно откроется под активным приложением
-    NSApp.activate()
+    // Dock-иконка живёт, пока открыты настройки; клик по ней вызывает applicationShouldHandleReopen
+    NSApp.setActivationPolicy(.regular)
+    NSApp.activate(ignoringOtherApps: true)
     window.makeKeyAndOrderFront(nil)
+    window.orderFrontRegardless()
+    // Смена accessory → regular и закрытие меню могут завершиться после show и снова убрать окно
+    DispatchQueue.main.async { [weak self, weak window] in
+      guard let self, let window, self.window === window, NSApp.activationPolicy() == .regular else { return }
+      NSApp.activate(ignoringOtherApps: true)
+      window.makeKeyAndOrderFront(nil)
+      window.orderFrontRegardless()
+    }
+  }
+
+  func windowWillClose(_ notification: Notification) {
+    NSApp.setActivationPolicy(.accessory)
   }
 
   private func makeWindow() -> NSWindow {
@@ -59,6 +73,7 @@ final class SettingsWindowController {
       styleMask: [.titled, .closable], backing: .buffered, defer: false)
     window.title = SettingsPage.general.title
     window.isReleasedWhenClosed = false
+    window.delegate = self
     window.contentView = NSHostingView(
       rootView: SettingsView(
         settings: settings, playSound: playSound, calendars: calendars,
