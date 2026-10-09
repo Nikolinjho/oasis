@@ -177,22 +177,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     // kill -9 и падение не дают выйти штатно: сироты прошлых запусков гасим здесь
     let stale = StaleAdapters.terminate()
     if stale > 0 { log.info("terminated \(stale) stale adapter(s)") }
-    guard let paths = AdapterPaths.locate() else {
-      log.error("mediaremote-adapter not found in bundle resources")
-      return
-    }
-    // Source (Now Playing): пока источник один. Яндекс Музыка — свой NowPlayingSource в этом switch.
-    // .yandexMusic сюда не доходит, пока его нет: effectiveMediaSource у AppSettings сводит
-    // недоступный источник к .system (MediaSourceChoice.isAvailable для неё false)
+    let factory = NowPlayingSourceFactory()
     let switcher = NowPlayingSourceSwitcher(
-      make: { choice in
-        switch choice {
-        case .system, .yandexMusic: AdapterNowPlayingSource(paths: paths)
-        }
-      },
+      make: factory.make,
       onChange: { [weak self, store] change in
         store.apply(change)
         self?.updateSourceActive()
+      },
+      onState: { [weak self, store] state in
+        self?.settings.yandexConnection.receive(state)
+        if case .commandFailed(let action, _) = state { store.playerActionFailed(action) }
       })
     // смена Source в настройках доходит сюда через applySettings, без перезапуска
     switcher.apply(settings.effectiveMediaSource)
@@ -208,7 +202,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// Кнопки плеера. Без адаптера медиакоманды пропадают, остальные кнопки работают
   private func startPlayerActions() {
     let performer = PlayerActions(
-      source: { [weak self] in self?.nowPlaying?.source }, volume: { [weak self] in self?.volume },
+      source: { [weak self] in self?.nowPlaying?.source }, nowPlaying: { [weak store] in store?.nowPlaying },
+      volume: { [weak self] in self?.volume },
       onRowVolume: { [weak self] level in self?.volumeChangedFromRow(level) })
     let router = PlayerActionRouter(performer: performer)
     store.onAction = { [weak self, weak store, log] action in
@@ -225,8 +220,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
         self?.settings.showRemainingTime.toggle()
         return
       }
-      router.perform(action, nowPlaying: store.nowPlaying)
-      store.playerActionSent(action)
+      if router.perform(action, nowPlaying: store.nowPlaying) { store.playerActionSent(action) }
     }
   }
 

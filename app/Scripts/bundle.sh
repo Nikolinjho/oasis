@@ -16,12 +16,13 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Oasis"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 # иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
+cp -R Resources/YandexMusic "$APP/Contents/Resources/"
 cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png "$APP/Contents/Resources/"
 
 if [ -d "$ADAPTER" ]; then
     cp -R "$ADAPTER/MediaRemoteAdapter.framework" "$ADAPTER/mediaremote-adapter.pl" "$APP/Contents/Resources/"
 else
-    echo "Нет $ADAPTER: музыки не будет, запусти Scripts/fetch-adapter.sh" >&2
+    echo "Нет $ADAPTER: источник System недоступен, запусти Scripts/fetch-adapter.sh" >&2
 fi
 
 # звуки Alcove: только для локальной сборки, в git их нет (assets/ в .gitignore)

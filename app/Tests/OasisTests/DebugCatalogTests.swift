@@ -162,7 +162,10 @@ struct DebugCatalogTests {
     live.set(event, on: store, now: now)
     #expect(store.model.calendarLive)
 
-    try await Task.sleep(for: .milliseconds(200))
+    let deadline = ContinuousClock.now + .seconds(1)
+    while store.model.calendarLive, ContinuousClock.now < deadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
     #expect(!store.model.calendarLive, "окно должно закрыться само по концу события")
   }
 

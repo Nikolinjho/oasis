@@ -280,8 +280,7 @@ struct AppSettingsTests {
     settings.mediaSource = .yandexMusic
     #expect(settings.appearance.waveform == .gradient)
     #expect(!settings.appearance.compactWaveform && !settings.appearance.artworkFlip && settings.appearance.hidesTitleExtras)
-    // Яндекс Музыки пока нет: выбранный недоступный источник читается как System
-    #expect(settings.effectiveMediaSource == .system)
+    #expect(settings.effectiveMediaSource == .yandexMusic)
   }
 
   @Test("Доп. кнопка плеера: по умолчанию Shuffle, как controlChoice у Alcove")
@@ -343,4 +342,17 @@ struct AppSettingsTests {
     settings.lastExpandedView = .calendar
     #expect(AppSettings(defaults: defaults).lastExpandedView == .calendar)
   }
+  @Test("Ручной Яндекс сохраняется после перезапуска настроек, Automatic возвращает System")
+  func yandexSelectionReloads() {
+    let (name, defaults) = Self.freshDefaults()
+    defer { Self.cleanup(name, defaults) }
+    let settings = AppSettings(defaults: defaults)
+    settings.automaticMediaSource = false
+    settings.mediaSource = .yandexMusic
+    let restored = AppSettings(defaults: defaults)
+    #expect(restored.mediaSource == .yandexMusic && restored.effectiveMediaSource == .yandexMusic)
+    restored.automaticMediaSource = true
+    #expect(restored.effectiveMediaSource == .system && restored.mediaSource == .yandexMusic)
+  }
+
 }

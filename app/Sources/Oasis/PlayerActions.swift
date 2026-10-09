@@ -10,6 +10,7 @@ final class PlayerActions: PlayerActionPerforming {
   private let currentSource: () -> (any NowPlayingSource)?
   private var source: (any NowPlayingSource)? { currentSource() }
   private let favorite = MusicFavorite()
+  private let nowPlaying: () -> NowPlayingInfo?
   /// Громкость появляется позже кнопок (startLevels после startPlayerActions): берём её в момент нажатия
   private let volume: () -> VolumeControl?
   /// Строка громкости сменила уровень: AppDelegate кладёт его в store и глушит HUD
@@ -17,9 +18,11 @@ final class PlayerActions: PlayerActionPerforming {
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "player")
 
   init(
-    source: @escaping () -> (any NowPlayingSource)?, volume: @escaping () -> VolumeControl?, onRowVolume: @escaping (Double) -> Void
+    source: @escaping () -> (any NowPlayingSource)?, nowPlaying: @escaping () -> NowPlayingInfo?, volume: @escaping () -> VolumeControl?,
+    onRowVolume: @escaping (Double) -> Void
   ) {
     currentSource = source
+    self.nowPlaying = nowPlaying
     self.volume = volume
     self.onRowVolume = onRowVolume
   }
@@ -34,6 +37,22 @@ final class PlayerActions: PlayerActionPerforming {
 
   func favoriteInMusic() {
     favorite.favoriteCurrentTrack()
+  }
+
+  func setFavorite(to favorite: Bool, expectedTrackID: String) {
+    guard let source = source as? any YandexSourceControlling,
+      nowPlaying()?.bundleID == YandexMusicClient.bundleID,
+      nowPlaying()?.sourceTrackID == expectedTrackID
+    else { return }
+    source.setFavorite(to: favorite, expectedTrackID: expectedTrackID)
+  }
+
+  func seek(to position: TimeInterval, expectedTrackID: String) {
+    guard let source = source as? any YandexSourceControlling,
+      nowPlaying()?.bundleID == YandexMusicClient.bundleID,
+      nowPlaying()?.sourceTrackID == expectedTrackID
+    else { return }
+    source.seek(to: position, expectedTrackID: expectedTrackID)
   }
 
   func activateApp(bundleID: String) {

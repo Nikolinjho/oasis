@@ -1,64 +1,81 @@
 import Foundation
 import IslandCore
-import os
 
 /// Исполнители кнопок плеера. Системные вызовы за этим протоколом, в тестах — фейк
 @MainActor
 public protocol PlayerActionPerforming: AnyObject {
   func send(_ command: MediaCommand)
   func favoriteInMusic()
+  func setFavorite(to favorite: Bool, expectedTrackID: String)
   func activateApp(bundleID: String)
   func setVolume(_ level: Double)
   func stepVolume(up: Bool)
   func setShuffle(_ mode: Int)
   func setRepeat(_ mode: Int)
   func seek(to position: TimeInterval)
+  func seek(to position: TimeInterval, expectedTrackID: String)
 }
 
 /// Решает, кому и с чем отдать действие кнопки плеера
 @MainActor
 public struct PlayerActionRouter {
   private let performer: any PlayerActionPerforming
-  private let log = SourceLog.logger("player")
 
-  public init(performer: any PlayerActionPerforming) {
-    self.performer = performer
-  }
+  public init(performer: any PlayerActionPerforming) { self.performer = performer }
 
-  // swiftlint:disable:next cyclomatic_complexity - плоская таблица действие → вызов, по case на действие
-  public func perform(_ action: PlayerAction, nowPlaying: NowPlayingInfo?) {
+  /// false — команда недоступна, оптимистичное состояние менять нельзя
+  @discardableResult
+  // swiftlint:disable:next cyclomatic_complexity - таблица команд с отдельными проверками возможностей
+  public func perform(_ action: PlayerAction, nowPlaying info: NowPlayingInfo?) -> Bool {
     switch action {
     case .media(let command):
+      if let capabilities = info?.capabilities {
+        let supported =
+          switch command {
+          case .play, .pause, .togglePlayPause: capabilities.canPlayPause
+          case .nextTrack: capabilities.canNext
+          case .previousTrack: capabilities.canPrevious
+          }
+        guard supported else { return false }
+      }
       performer.send(command)
     case .favorite:
-      // AppleScript бьёт в Music: при другом источнике отметили бы чужой трек или запустили Music
-      guard nowPlaying?.bundleID == NowPlayingInfo.musicBundleID else {
-        log.info("favorite skipped: source is \(nowPlaying?.bundleID ?? "none", privacy: .public)")
-        return
+      guard let info, info.capabilities.canFavorite else { return false }
+      if info.bundleID == YandexMusicClient.bundleID {
+        guard let id = info.sourceTrackID, let favorite = info.isFavorite else { return false }
+        performer.setFavorite(to: !favorite, expectedTrackID: id)
+      } else {
+        guard info.bundleID == NowPlayingInfo.musicBundleID else { return false }
+        performer.favoriteInMusic()
       }
-      performer.favoriteInMusic()
     case .openSource:
-      guard let bundleID = nowPlaying?.bundleID else {
-        log.info("open source skipped: no bundle id")
-        return
-      }
+      guard let bundleID = info?.bundleID else { return false }
       performer.activateApp(bundleID: bundleID)
-    case .toggleVolumeRow:
-      // это состояние острова, а не система: его перехватывает AppDelegate и шлёт в store
-      log.info("toggle volume row reached the router")
-    case .setVolume(let level):
-      performer.setVolume(level)
-    case .stepVolume(let up):
-      performer.stepVolume(up: up)
+    case .toggleVolumeRow, .toggleTimeDisplay:
+      return false
+    case .setVolume(let level): performer.setVolume(level)
+    case .stepVolume(let up): performer.stepVolume(up: up)
     case .toggleShuffle:
-      performer.setShuffle(nowPlaying?.nextShuffleMode ?? 3)
+      guard let mode = info?.nextSupportedShuffleMode else { return false }
+      performer.setShuffle(mode)
     case .cycleRepeat:
-      performer.setRepeat(NowPlayingInfo.nextRepeatMode(after: nowPlaying?.repeatMode))
-    case .toggleTimeDisplay:
-      // настройка приложения, её перехватывает AppDelegate
-      log.info("time display toggle reached the router")
+      guard let mode = info?.nextSupportedRepeatMode else { return false }
+      performer.setRepeat(mode)
+    case .seekTrack(let position, let expectedTrackID):
+      guard position.isFinite, let info, info.capabilities.canSeek,
+        info.bundleID == YandexMusicClient.bundleID,
+        info.sourceTrackID == expectedTrackID
+      else { return false }
+      performer.seek(to: position, expectedTrackID: expectedTrackID)
     case .seek(let position):
-      performer.seek(to: position)
+      guard position.isFinite, info?.capabilities.canSeek != false else { return false }
+      if info?.bundleID == YandexMusicClient.bundleID {
+        guard let id = info?.sourceTrackID else { return false }
+        performer.seek(to: position, expectedTrackID: id)
+      } else {
+        performer.seek(to: position)
+      }
     }
+    return true
   }
 }

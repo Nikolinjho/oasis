@@ -114,14 +114,6 @@ final class IslandStore {
     send(.calendarLiveChanged(event != nil))
   }
 
-  /// Покой, по которому свайп убирает и возвращает активность
-  nonisolated static func isRestSwipeSurface(_ surface: Surface) -> Bool {
-    switch surface {
-    case .idle, .compact, .peek, .calendar, .calendarPeek, .hoverNudge: true
-    default: false
-    }
-  }
-
   /// Свайп трекпада: раскрытый листает/закрывается, покой убирает/возвращает активность. Кто ведёт жест,
   /// решается на .began и не меняется до конца жеста (swipeOwner) — surface может смениться посреди
   /// жеста (close раскрытого уводит его в компакт), но остаток тех же пальцев не должен достаться
@@ -311,6 +303,11 @@ final class IslandStore {
     publishNowPlaying(sourceNowPlaying, now: now, isPayload: false)
   }
 
+  func playerActionFailed(_ action: PlayerAction, now: Date = Date()) {
+    playbackModes.clear(action)
+    publishNowPlaying(sourceNowPlaying, now: now, isPayload: false)
+  }
+
   /// Показанный трек — payload источника с неподтверждёнными режимами поверх. Новый payload подтвердил режим,
   /// таймаут вышел или сменился источник — override снят (reconcile). Клик и таймер — не payload (expire)
   private func publishNowPlaying(_ info: NowPlayingInfo?, now: Date, isPayload: Bool = true) {
@@ -370,4 +367,15 @@ final class IslandStore {
     agenda = DayAgenda.make(events: calendarFilter.expanded(events), now: now)
     onAgendaChange(DayAgenda.make(events: calendarFilter.live(events), now: now))
   }
+}
+
+extension IslandStore {
+  /// Покой, по которому свайп убирает и возвращает активность
+  nonisolated static func isRestSwipeSurface(_ surface: Surface) -> Bool {
+    switch surface {
+    case .idle, .compact, .peek, .calendar, .calendarPeek, .hoverNudge: true
+    default: false
+    }
+  }
+
 }

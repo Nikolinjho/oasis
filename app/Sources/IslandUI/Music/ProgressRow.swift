@@ -12,13 +12,14 @@ struct ProgressRow: View {
   @GestureState private var dragFraction: Double?
   /// После отпускания — отправленный seek и момент отправки, пока источник не пришёл к цели (holdsSeek).
   /// Без этого полоска на 0.3–0.6 с отскакивала назад к старой info.position, а потом прыгала вперёд
+  @State private var seekGesture = SeekGesture()
   @State private var pendingSeek: (position: TimeInterval, at: Date)?
 
   var body: some View {
     TimelineView(.periodic(from: .now, by: 0.5)) { context in
       let duration = info?.duration ?? 0
       let position = Self.displayPosition(
-        dragFraction: dragFraction, pendingSeek: pendingSeek,
+        dragFraction: seekGesture.belongs(to: info) ? dragFraction : nil, pendingSeek: pendingSeek,
         sourcePosition: info?.position(at: context.date) ?? 0, duration: duration,
         isPlaying: info?.isPlaying ?? false, now: context.date)
       HStack(spacing: 8) {
@@ -36,15 +37,17 @@ struct ProgressRow: View {
           .gesture(
             DragGesture(minimumDistance: 0)
               .updating($dragFraction) { value, fraction, _ in
-                guard duration > 0 else { return }
+                guard Self.canSeek(info), duration > 0 else { return }
                 fraction = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration) / duration
               }
+              .onChanged { _ in seekGesture.begin(info) }
               .onEnded { value in
-                guard duration > 0 else { return }
+                guard Self.canSeek(info), duration > 0 else { return }
                 let seeked = Self.seekPosition(at: value.location.x, width: proxy.size.width, duration: duration)
-                pendingSeek = (seeked, Date())
-                onAction(.seek(seeked))
-              })
+                guard let action = seekGesture.finish(at: seeked, current: info) else { return }
+                pendingSeek = Self.holdsPendingSeek(info) ? (seeked, Date()) : nil
+                onAction(action)
+              }, including: Self.canSeek(info) ? .all : .none)
         }
         .frame(height: 14)
         Text(Self.trailing(position: position, duration: duration, remaining: showsRemaining))
@@ -70,6 +73,9 @@ struct ProgressRow: View {
       }
       // сменился трек — отложенный seek был про прошлый
       .onChange(of: info?.trackKey) { _, _ in pendingSeek = nil }
+      .onChange(of: dragFraction == nil) { _, ended in
+        if ended { seekGesture = SeekGesture() }
+      }
     }
     // источник так и не подтвердил — не держим цель вечно (holdsSeek, тот же таймаут)
     .task(id: pendingSeek?.at) {
@@ -78,6 +84,14 @@ struct ProgressRow: View {
       guard !Task.isCancelled, pendingSeek?.at == sentAt else { return }
       pendingSeek = nil
     }
+  }
+
+  nonisolated static func canSeek(_ info: NowPlayingInfo?) -> Bool {
+    info?.capabilities.canSeek == true && (info?.duration ?? 0) > 0
+  }
+
+  nonisolated static func holdsPendingSeek(_ info: NowPlayingInfo?) -> Bool {
+    canSeek(info) && info?.capabilities.requiresConfirmation != true
   }
 
   /// Допуск, в котором позиция источника считается подтверждением seek, и сколько ждать подтверждения (оценки)
@@ -133,5 +147,33 @@ struct ProgressRow: View {
         sourcePosition
       }
     return duration > 0 ? min(max(position, 0), duration) : max(position, 0)
+  }
+}
+
+/// Жест перемотки относится к треку, на котором начался
+struct SeekGesture {
+  private var originKey: String?
+  private var originTrackID: String?
+  private var isYandex = false
+
+  mutating func begin(_ info: NowPlayingInfo?) {
+    guard originKey == nil, let info else { return }
+    originKey = info.trackKey
+    originTrackID = info.sourceTrackID
+    isYandex = info.bundleID == "ru.yandex.desktop.music"
+  }
+
+  func belongs(to info: NowPlayingInfo?) -> Bool {
+    originKey != nil && originKey == info?.trackKey
+  }
+
+  mutating func finish(at position: TimeInterval, current info: NowPlayingInfo?) -> PlayerAction? {
+    defer { self = SeekGesture() }
+    guard belongs(to: info), info?.capabilities.canSeek == true else { return nil }
+    if isYandex {
+      guard let id = originTrackID else { return nil }
+      return .seekTrack(position, expectedTrackID: id)
+    }
+    return .seek(position)
   }
 }

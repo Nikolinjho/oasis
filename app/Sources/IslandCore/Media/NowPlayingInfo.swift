@@ -21,10 +21,10 @@ public enum MediaCommand: Int, Sendable {
   case previousTrack = 5
 }
 
-/// Действие кнопки раскрытого плеера. Медиакоманды уходят в адаптер, остальное исполняет приложение
+/// Действие кнопки раскрытого плеера. Команды уходят выбранному источнику, настройки исполняет приложение
 public enum PlayerAction: Equatable, Sendable {
   case media(MediaCommand)
-  /// Доп. кнопка у Apple Music, выбор Favorite: ⭐ «в избранное»
+  /// Звезда Apple Music или сердце Яндекс Музыки: изменить избранное у текущего источника
   case favorite
   /// Клик по обложке или названию: вывести источник на передний план (Alcove 1.7.9, 28.09)
   case openSource
@@ -42,6 +42,8 @@ public enum PlayerAction: Equatable, Sendable {
   case toggleTimeDisplay
   /// Клик или перетаскивание по прогрессу: позиция в секундах
   case seek(TimeInterval)
+  /// Перемотка по жесту принадлежит треку, на котором жест начался
+  case seekTrack(TimeInterval, expectedTrackID: String)
 }
 
 public struct NowPlayingInfo: Equatable, Sendable {
@@ -70,7 +72,23 @@ public struct NowPlayingInfo: Equatable, Sendable {
   /// 1 — выкл, 2 — один трек, 3 — все (пример адаптера: «repeat 3 — playlist»)
   public var repeatMode: Int?
 
-  /// Favorite работает через AppleScript к Music: у других источников кнопки нет
+  public var sourceTrackID: String?
+  public var isFavorite: Bool?
+  private var explicitCapabilities: PlayerCapabilities?
+
+  /// System сохраняет прежние возможности, пока источник не прислал явные
+  public var capabilities: PlayerCapabilities {
+    get {
+      explicitCapabilities
+        ?? PlayerCapabilities(
+          canPlayPause: true, canNext: canSkip, canPrevious: canSkip, canSeek: true,
+          canFavorite: !isBrowser && bundleID == Self.musicBundleID,
+          shuffleModes: isBrowser ? [] : [1, 3], repeatModes: isBrowser ? [] : [1, 3, 2])
+    }
+    set { explicitCapabilities = newValue }
+  }
+
+  /// System с Apple Music меняет избранное через AppleScript
   public static let musicBundleID = "com.apple.Music"
 
   public var isShuffling: Bool { (shuffleMode ?? 1) > 1 }
@@ -88,11 +106,30 @@ public struct NowPlayingInfo: Equatable, Sendable {
     }
   }
 
+  public var nextSupportedShuffleMode: Int? {
+    guard !capabilities.shuffleModes.isEmpty else { return nil }
+    if explicitCapabilities == nil { return nextShuffleMode }
+    return Self.nextSupportedMode(after: shuffleMode, modes: capabilities.shuffleModes)
+  }
+
+  public var nextSupportedRepeatMode: Int? {
+    guard !capabilities.repeatModes.isEmpty else { return nil }
+    if explicitCapabilities == nil { return Self.nextRepeatMode(after: repeatMode) }
+    return Self.nextSupportedMode(after: repeatMode, modes: capabilities.repeatModes)
+  }
+
+  private static func nextSupportedMode(after mode: Int?, modes: [Int]) -> Int? {
+    guard modes.count > 1 else { return nil }
+    guard let index = modes.firstIndex(of: mode ?? 1) else { return modes.first }
+    return modes[(index + 1) % modes.count]
+  }
+
   public init(
     bundleID: String? = nil, title: String, artist: String? = nil, album: String? = nil,
     isPlaying: Bool, duration: TimeInterval? = nil, elapsed: TimeInterval? = nil,
     elapsedAt: Date = Date(), artwork: Data? = nil, accent: RGB? = nil, accentBottom: RGB? = nil,
-    canSkip: Bool = true, isBrowser: Bool = false, shuffleMode: Int? = nil, repeatMode: Int? = nil
+    canSkip: Bool = true, isBrowser: Bool = false, shuffleMode: Int? = nil, repeatMode: Int? = nil,
+    capabilities: PlayerCapabilities? = nil, sourceTrackID: String? = nil, isFavorite: Bool? = nil
   ) {
     self.bundleID = bundleID
     self.title = title
@@ -109,10 +146,16 @@ public struct NowPlayingInfo: Equatable, Sendable {
     self.isBrowser = isBrowser
     self.shuffleMode = shuffleMode
     self.repeatMode = repeatMode
+    self.explicitCapabilities = capabilities
+    self.sourceTrackID = sourceTrackID
+    self.isFavorite = isFavorite
   }
 
   /// По нему решаем, сменился ли трек (переворот обложки, peek)
-  public var trackKey: String { [title, artist ?? "", album ?? ""].joined(separator: "|") }
+  public var trackKey: String {
+    if let sourceTrackID { return [bundleID ?? "", sourceTrackID].joined(separator: "|") }
+    return [title, artist ?? "", album ?? ""].joined(separator: "|")
+  }
 
   /// Текущая позиция с учётом времени, прошедшего с elapsedAt
   public func position(at now: Date) -> TimeInterval? {

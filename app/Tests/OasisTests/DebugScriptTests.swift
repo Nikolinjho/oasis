@@ -12,9 +12,10 @@ struct DebugScriptTests {
   func overlappingRunsCancelPrevious() async throws {
     final class Log { var events: [String] = [] }
     let log = Log()
-    DebugScript.run([(at: 0.05, run: { log.events.append("first") })])
-    DebugScript.run([(at: 0.05, run: { log.events.append("second") })])
-    try await Task.sleep(for: .milliseconds(200))
+    let first = DebugScript.run([(at: 0.05, run: { log.events.append("first") })])
+    let second = DebugScript.run([(at: 0.05, run: { log.events.append("second") })])
+    await first.value
+    await second.value
     #expect(log.events == ["second"])
   }
 

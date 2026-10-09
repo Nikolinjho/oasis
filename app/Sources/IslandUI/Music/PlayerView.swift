@@ -165,19 +165,25 @@ struct PlayerControl: Equatable {
   /// Shuffle или Repeat включён: подложка и точка под иконкой (Alcove 1.7.9, Shuffle у Music, 28.09)
   var isActive = false
 
-  /// Доп. кнопка слева. nil — слот пустой: браузер, Copy (ссылки нет) и Favorite не у Music (AppleScript бьёт в Music)
+  /// Доп. кнопка слева. Недоступная команда оставляет пустой слот
   static func extra(_ info: NowPlayingInfo?, choice: PlayerExtraControl) -> PlayerControl? {
-    guard let info, !info.isBrowser else { return nil }
+    guard let info else { return nil }
     switch choice {
     case .shuffle:
+      guard info.nextSupportedShuffleMode != nil else { return nil }
       return PlayerControl(symbol: "shuffle", action: .toggleShuffle, isSide: true, isActive: info.isShuffling)
     case .repeat:
+      guard info.nextSupportedRepeatMode != nil else { return nil }
       return PlayerControl(
         symbol: info.repeatMode == 2 ? "repeat.1" : "repeat", action: .cycleRepeat, isSide: true,
         isActive: info.isRepeating)
     case .favorite:
-      return info.bundleID == NowPlayingInfo.musicBundleID
-        ? PlayerControl(symbol: "star.fill", action: .favorite, isSide: true) : nil
+      guard info.capabilities.canFavorite else { return nil }
+      if info.bundleID == NowPlayingInfo.musicBundleID {
+        return PlayerControl(symbol: "star.fill", action: .favorite, isSide: true)
+      }
+      guard info.bundleID == "ru.yandex.desktop.music", info.sourceTrackID != nil, let favorite = info.isFavorite else { return nil }
+      return PlayerControl(symbol: favorite ? "heart.fill" : "heart", action: .favorite, isSide: true)
     case .copy:
       return nil
     }
@@ -188,14 +194,14 @@ struct PlayerControl: Equatable {
     _ info: NowPlayingInfo?, extra choice: PlayerExtraControl = .shuffle,
     outputSymbol: String = OutputDeviceKind.speakers.symbol
   ) -> [PlayerControl?] {
-    let canSkip = info?.canSkip ?? true
+    let capabilities = info?.capabilities
     return [
       extra(info, choice: choice),
-      PlayerControl(symbol: "backward.fill", action: .media(.previousTrack), isSide: false, isEnabled: canSkip),
+      PlayerControl(symbol: "backward.fill", action: .media(.previousTrack), isSide: false, isEnabled: capabilities?.canPrevious ?? true),
       PlayerControl(
         symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
-        action: .media(.togglePlayPause), isSide: false),
-      PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false, isEnabled: canSkip),
+        action: .media(.togglePlayPause), isSide: false, isEnabled: capabilities?.canPlayPause ?? true),
+      PlayerControl(symbol: "forward.fill", action: .media(.nextTrack), isSide: false, isEnabled: capabilities?.canNext ?? true),
       PlayerControl(symbol: outputSymbol, action: .toggleVolumeRow, isSide: true),
     ]
   }

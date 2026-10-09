@@ -47,9 +47,7 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     launch()
   }
 
-  /// Гасит адаптер и ждёт его выхода до 0.5 с. Если perl не завершился по SIGTERM — SIGKILL.
-  /// Зовётся на выходе и при смене Source в настройках. Ожидание блокирует вызывающий поток (MainActor):
-  /// со вторым источником смену стоит увести с главного потока
+  /// Отмечает остановку сразу, ожидание завершения процесса выполняется вне главного потока
   public func stop() {
     let process = state.withLockUnchecked { s -> Process? in
       s.stopped = true
@@ -57,9 +55,11 @@ public final class AdapterNowPlayingSource: NowPlayingSource, @unchecked Sendabl
     }
     guard let process, process.isRunning else { return }
     process.terminate()
-    let deadline = Date().addingTimeInterval(0.5)
-    while process.isRunning, Date() < deadline { usleep(10_000) }
-    if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+    Task.detached {
+      let deadline = Date().addingTimeInterval(0.5)
+      while process.isRunning, Date() < deadline { usleep(10_000) }
+      if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+    }
   }
 
   public func send(_ command: MediaCommand) {

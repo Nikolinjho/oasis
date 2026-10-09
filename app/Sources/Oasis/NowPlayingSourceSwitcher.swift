@@ -1,49 +1,65 @@
 import IslandCore
 import IslandSources
 
-/// Источник Now Playing по настройке Source: смена выбора применяется на лету, без перезапуска приложения.
-/// Старый источник гасится, его трек снимается (.cleared), события из его потока больше не доходят
+/// Смена источника снимает прежний трек и отвергает запоздавшие события его сессии
 @MainActor
 final class NowPlayingSourceSwitcher {
   private(set) var source: (any NowPlayingSource)?
   private var choice: MediaSourceChoice?
   private var task: Task<Void, Never>?
-  /// nil — источник не создать (нет адаптера в бандле): выбор всё равно запоминается, ретраев нет
+  private var statusTask: Task<Void, Never>?
+  private var session = 0
   private let make: (MediaSourceChoice) -> (any NowPlayingSource)?
   private let onChange: (NowPlayingChange) -> Void
+  private let onState: (NowPlayingSourceState) -> Void
 
-  init(make: @escaping (MediaSourceChoice) -> (any NowPlayingSource)?, onChange: @escaping (NowPlayingChange) -> Void) {
+  init(
+    make: @escaping (MediaSourceChoice) -> (any NowPlayingSource)?,
+    onChange: @escaping (NowPlayingChange) -> Void,
+    onState: @escaping (NowPlayingSourceState) -> Void = { _ in }
+  ) {
     self.make = make
     self.onChange = onChange
+    self.onState = onState
   }
 
-  /// Зовётся при запуске и на каждое изменение настроек: тот же выбор источник не трогает
   func apply(_ choice: MediaSourceChoice) {
     guard choice != self.choice else { return }
     let hadSource = source != nil
     stop()
-    // трек прежнего источника не должен остаться на острове, пока новый молчит
     if hadSource { onChange(.cleared) }
     self.choice = choice
     guard let source = make(choice) else {
-      self.source = nil
+      if choice == .yandexMusic { onState(.failed("Yandex Music bridge is missing from the application bundle.")) }
       return
     }
-    let onChange = onChange
-    task = Task {
+    self.source = source
+    let current = session
+    task = Task { [weak self] in
       for await change in source.changes {
-        // буфер потока мог отдать событие уже после смены источника
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, let self, session == current else { return }
         onChange(change)
       }
     }
+    if let yandex = source as? any YandexSourceControlling {
+      statusTask = Task { [weak self] in
+        for await state in yandex.statuses {
+          guard !Task.isCancelled, let self, session == current else { return }
+          onState(state)
+        }
+      }
+    }
     source.start()
-    self.source = source
   }
 
   func stop() {
+    session += 1
     task?.cancel()
+    statusTask?.cancel()
     task = nil
+    statusTask = nil
     source?.stop()
+    source = nil
+    choice = nil
   }
 }

@@ -69,6 +69,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     static let progressiveBlur = "progressiveBlur"
   }
 
+  let yandexConnection = YandexMusicConnection()
   var onChange: () -> Void = {}
   /// Ползунок Notch width/height зажат (значение) или отпущен (nil): Task 17t, остров показывает
   /// красную подложку-подсказку. AppDelegate шлёт это напрямую в store.send(.tuningHintChanged(...))

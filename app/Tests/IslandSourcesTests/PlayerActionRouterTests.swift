@@ -10,6 +10,8 @@ final class FakePerformer: PlayerActionPerforming {
   enum Call: Equatable {
     case media(MediaCommand)
     case favorite
+    case yandexFavorite(Bool, String)
+    case yandexSeek(TimeInterval, String)
     case activate(String)
     case volume(Double)
     case stepVolume(up: Bool)
@@ -22,6 +24,8 @@ final class FakePerformer: PlayerActionPerforming {
 
   func send(_ command: MediaCommand) { calls.append(.media(command)) }
   func favoriteInMusic() { calls.append(.favorite) }
+  func setFavorite(to favorite: Bool, expectedTrackID: String) { calls.append(.yandexFavorite(favorite, expectedTrackID)) }
+  func seek(to position: TimeInterval, expectedTrackID: String) { calls.append(.yandexSeek(position, expectedTrackID)) }
   func activateApp(bundleID: String) { calls.append(.activate(bundleID)) }
   func setVolume(_ level: Double) { calls.append(.volume(level)) }
   func stepVolume(up: Bool) { calls.append(.stepVolume(up: up)) }
@@ -123,4 +127,57 @@ struct PlayerActionRouterTests {
     PlayerActionRouter(performer: fake).perform(.seek(42), nowPlaying: nil)
     #expect(fake.calls == [.seek(42)])
   }
+
+  @Test("Недоступные команды источника не отправляются")
+  func unsupportedCommands() {
+    let fake = FakePerformer()
+    let router = PlayerActionRouter(performer: fake)
+    let info = NowPlayingInfo(
+      title: "A", isPlaying: true,
+      capabilities: PlayerCapabilities(
+        canPlayPause: false, canNext: false, canPrevious: false,
+        canSeek: false, canFavorite: false, shuffleModes: [], repeatModes: []))
+    for action in [
+      PlayerAction.media(.togglePlayPause), .media(.nextTrack), .media(.previousTrack),
+      .favorite, .seek(42), .toggleShuffle, .cycleRepeat,
+    ] {
+      router.perform(action, nowPlaying: info)
+    }
+    #expect(fake.calls.isEmpty)
+  }
+  @Test("Лайк и перемотка Яндекса адресуют текущий трек, Music не вызывается")
+  func yandexTrackCommands() {
+    let fake = FakePerformer()
+    let router = PlayerActionRouter(performer: fake)
+    var info = NowPlayingInfo(
+      bundleID: YandexMusicClient.bundleID, title: "A", isPlaying: true,
+      capabilities: PlayerCapabilities(
+        canPlayPause: true, canNext: true, canPrevious: false,
+        canSeek: true, canFavorite: true, shuffleModes: [], repeatModes: [1, 2], requiresConfirmation: true),
+      sourceTrackID: "one", isFavorite: false)
+    #expect(router.perform(.favorite, nowPlaying: info))
+    #expect(router.perform(.seek(0), nowPlaying: info))
+    #expect(!router.perform(.media(.previousTrack), nowPlaying: info))
+    #expect(!router.perform(.toggleShuffle, nowPlaying: info))
+    #expect(router.perform(.cycleRepeat, nowPlaying: info))
+    info.sourceTrackID = nil
+    #expect(!router.perform(.favorite, nowPlaying: info))
+    #expect(!router.perform(.seek(9), nowPlaying: info))
+    info.sourceTrackID = "two"
+    info.isFavorite = nil
+    #expect(!router.perform(.favorite, nowPlaying: info))
+    #expect(fake.calls == [.yandexFavorite(true, "one"), .yandexSeek(0, "one"), .repeatMode(2)])
+  }
+
+  @Test("Отложенная перемотка старого трека не адресуется новому треку")
+  func rejectsGestureFromPreviousTrack() {
+    let fake = FakePerformer()
+    let router = PlayerActionRouter(performer: fake)
+    var info = NowPlayingInfo(bundleID: YandexMusicClient.bundleID, title: "A", isPlaying: true, sourceTrackID: "one")
+    #expect(router.perform(.seekTrack(0, expectedTrackID: "one"), nowPlaying: info))
+    info.sourceTrackID = "two"
+    #expect(!router.perform(.seekTrack(40, expectedTrackID: "one"), nowPlaying: info))
+    #expect(fake.calls == [.yandexSeek(0, "one")])
+  }
+
 }

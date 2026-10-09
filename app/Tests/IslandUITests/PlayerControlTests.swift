@@ -165,4 +165,60 @@ struct PausedArtworkTests {
     #expect(paused.saturation < 1)
     #expect(paused.opacity < 1)
   }
+
+}
+
+@MainActor
+struct YandexPlayerControlTests {
+  @Test("Возможности Яндекса независимы, сердце показывает лайк, прогресс ждёт фактическую позицию")
+  func yandexCapabilities() {
+    var info = NowPlayingInfo(
+      bundleID: "ru.yandex.desktop.music", title: "A", isPlaying: true, duration: 100,
+      capabilities: PlayerCapabilities(
+        canPlayPause: false, canNext: true, canPrevious: false,
+        canSeek: true, canFavorite: true, shuffleModes: [], repeatModes: [1, 2], requiresConfirmation: true),
+      sourceTrackID: "one", isFavorite: false)
+    #expect(PlayerControl.row(info).dropFirst().map { $0?.isEnabled } == [false, false, true, true])
+    #expect(DuoControl.row(info).map(\.isEnabled) == [false, false, true])
+    #expect(PlayerControl.extra(info, choice: .shuffle) == nil)
+    #expect(PlayerControl.extra(info, choice: .favorite)?.symbol == "heart")
+    info.isFavorite = true
+    #expect(PlayerControl.extra(info, choice: .favorite)?.symbol == "heart.fill")
+    info.isFavorite = nil
+    #expect(PlayerControl.extra(info, choice: .favorite) == nil)
+    #expect(ProgressRow.canSeek(info))
+    #expect(!ProgressRow.holdsPendingSeek(info))
+    info.capabilities.canSeek = false
+    #expect(!ProgressRow.canSeek(info))
+    #expect(ProgressRow.holdsPendingSeek(PlayerControlTests.music { $0.duration = 100 }))
+  }
+}
+
+struct SeekGestureTests {
+  @Test("Смена трека во время перетаскивания отменяет перемотку")
+  func trackChangesWhileDragging() {
+    let first = NowPlayingInfo(bundleID: "ru.yandex.desktop.music", title: "A", isPlaying: true, sourceTrackID: "one")
+    let second = NowPlayingInfo(bundleID: "ru.yandex.desktop.music", title: "B", isPlaying: true, sourceTrackID: "two")
+    var gesture = SeekGesture()
+    gesture.begin(first)
+    gesture.begin(second)
+    #expect(gesture.finish(at: 40, current: second) == nil)
+  }
+
+  @Test("Команда жеста сохраняет исходный ID, даже если источник сменился перед маршрутизацией")
+  func capturesOriginalTrackID() {
+    let info = NowPlayingInfo(bundleID: "ru.yandex.desktop.music", title: "A", isPlaying: true, sourceTrackID: "one")
+    var gesture = SeekGesture()
+    gesture.begin(info)
+    #expect(gesture.finish(at: 0, current: info) == .seekTrack(0, expectedTrackID: "one"))
+  }
+  @Test("Жест System сохраняет прежнюю команду перемотки")
+  func systemSeek() {
+    let info = NowPlayingInfo(bundleID: "com.apple.Music", title: "A", isPlaying: true)
+    var gesture = SeekGesture()
+    gesture.begin(info)
+    #expect(gesture.finish(at: 20, current: info) == .seek(20))
+    #expect(gesture.finish(at: 30, current: info) == nil)
+  }
+
 }

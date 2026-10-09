@@ -93,4 +93,94 @@ struct PlaybackModeOverrideTests {
     #expect(override.nextExpiry(for: music()) == now.addingTimeInterval(PlaybackModeOverride.timeout))
     #expect(override.nextExpiry(for: music(shuffle: nil)) == nil)
   }
+
+  func yandex(shuffle: Int? = nil, repeatMode: Int? = nil, modes: [Int] = [1, 2]) -> NowPlayingInfo {
+    NowPlayingInfo(
+      bundleID: "ru.yandex.desktop.music", title: "A", isPlaying: true,
+      shuffleMode: shuffle, repeatMode: repeatMode,
+      capabilities: PlayerCapabilities(
+        canPlayPause: true, canNext: true, canPrevious: false, canSeek: true,
+        canFavorite: true, shuffleModes: [1, 3], repeatModes: modes, requiresConfirmation: true))
+  }
+
+  @Test("Неподдержанные режимы не создают оптимистичного состояния")
+  func unsupportedModes() {
+    var override = PlaybackModeOverride()
+    let browser = NowPlayingInfo(title: "A", isPlaying: true, isBrowser: true)
+    override.toggleShuffle(browser, at: now)
+    override.cycleRepeat(browser, at: now)
+    #expect(override.shuffle == nil)
+    #expect(override.repeatMode == nil)
+    override.cycleRepeat(yandex(modes: [1]), at: now)
+    #expect(override.repeatMode == nil)
+  }
+
+  @Test("Оптимистичный повтор использует цикл возможностей источника")
+  func supportedRepeatModes() {
+    var override = PlaybackModeOverride()
+    let info = yandex()
+    override.cycleRepeat(info, at: now)
+    #expect(override.repeatMode?.mode == 2)
+    override.cycleRepeat(override.applied(to: info), at: now)
+    #expect(override.repeatMode?.mode == 1)
+  }
+
+  @Test("Яндекс без полей режимов требует подтверждения и назначает таймер")
+  func missingConfirmationExpiry() {
+    var override = PlaybackModeOverride()
+    let info = yandex()
+    override.toggleShuffle(info, at: now)
+    override.cycleRepeat(info, at: now.addingTimeInterval(0.1))
+    #expect(override.nextExpiry(for: info) == now.addingTimeInterval(PlaybackModeOverride.timeout))
+    override.expire(for: info, now: now.addingTimeInterval(2))
+    #expect(override.shuffle == nil)
+    #expect(override.repeatMode != nil)
+    override.expire(for: info, now: now.addingTimeInterval(2.1))
+    #expect(override.repeatMode == nil)
+  }
+
+  @Test("Payload без подтверждения снимает ожидание Яндекса по таймауту")
+  func missingConfirmationReconcile() {
+    var override = PlaybackModeOverride()
+    let info = yandex()
+    override.toggleShuffle(info, at: now)
+    override.cycleRepeat(info, at: now)
+    override.reconcile(with: info, now: now.addingTimeInterval(0.5))
+    #expect(override.shuffle != nil)
+    #expect(override.repeatMode != nil)
+    override.reconcile(with: info, now: now.addingTimeInterval(2))
+    #expect(override.shuffle == nil)
+    #expect(override.repeatMode == nil)
+  }
+
+  @Test("Отказ команды снимает только ожидание соответствующего режима")
+  func rejectedCommandClearsOnlyItsMode() {
+    var override = PlaybackModeOverride()
+    let info = yandex()
+    override.toggleShuffle(info, at: now)
+    override.cycleRepeat(info, at: now)
+    override.clear(.toggleShuffle)
+    #expect(override.shuffle == nil)
+    #expect(override.repeatMode != nil)
+    override.clear(.favorite)
+    #expect(override.repeatMode != nil)
+    override.clear(.cycleRepeat)
+    #expect(override.repeatMode == nil)
+  }
+
+  @Test("Исчезнувшая возможность снимает оптимистичный режим")
+  func removedCapability() {
+    var override = PlaybackModeOverride()
+    var info = yandex()
+    override.toggleShuffle(info, at: now)
+    override.cycleRepeat(info, at: now)
+    info.capabilities.shuffleModes = []
+    info.capabilities.repeatModes = []
+    #expect(override.applied(to: info).shuffleMode == nil)
+    #expect(override.applied(to: info).repeatMode == nil)
+    override.reconcile(with: info, now: now.addingTimeInterval(0.1))
+    #expect(override.shuffle == nil)
+    #expect(override.repeatMode == nil)
+  }
+
 }

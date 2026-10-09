@@ -1,5 +1,4 @@
-/// Now Playing → Source (ui-inspection 1.8). Сейчас источник один — MediaRemote через адаптер, у Alcove это System.
-/// Заготовка под свои источники (решение 28.09): Яндекс Музыка придёт своим NowPlayingSource, до тех пор — Soon
+/// Ручной выбор источника Now Playing: системный адаптер или Яндекс Музыка
 public enum MediaSourceChoice: String, CaseIterable, Sendable {
   case system
   case yandexMusic
@@ -11,5 +10,5 @@ public enum MediaSourceChoice: String, CaseIterable, Sendable {
     }
   }
 
-  public var isAvailable: Bool { self == .system }
+  public var isAvailable: Bool { true }
 }

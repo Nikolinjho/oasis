@@ -101,13 +101,13 @@ struct DuoControl: Equatable {
   var highlightsOnHover: Bool { action == .media(.togglePlayPause) }
 
   static func row(_ info: NowPlayingInfo?) -> [DuoControl] {
-    let canSkip = info?.canSkip ?? true
+    let capabilities = info?.capabilities
     return [
-      DuoControl(symbol: "backward.fill", action: .media(.previousTrack), size: 18, isEnabled: canSkip),
+      DuoControl(symbol: "backward.fill", action: .media(.previousTrack), size: 18, isEnabled: capabilities?.canPrevious ?? true),
       DuoControl(
         symbol: info?.isPlaying == true ? "pause.fill" : "play.fill",
-        action: .media(.togglePlayPause), size: 24),
-      DuoControl(symbol: "forward.fill", action: .media(.nextTrack), size: 18, isEnabled: canSkip),
+        action: .media(.togglePlayPause), size: 24, isEnabled: capabilities?.canPlayPause ?? true),
+      DuoControl(symbol: "forward.fill", action: .media(.nextTrack), size: 18, isEnabled: capabilities?.canNext ?? true),
     ]
   }
 }

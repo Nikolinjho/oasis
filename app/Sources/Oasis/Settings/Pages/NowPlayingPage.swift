@@ -54,6 +54,9 @@ struct NowPlayingPage: View {
               }, selection: $settings.mediaSource, height: 56)
           }
         }
+        if settings.effectiveMediaSource == .yandexMusic {
+          YandexConnectionCard(connection: settings.yandexConnection)
+        }
         SettingsCard(title: "Extension") {
           ToggleRow(title: "Quick Peek", isOn: $settings.quickPeek)
           if settings.quickPeek {
