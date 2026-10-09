@@ -125,6 +125,7 @@ public enum IslandGeometry {
     // напоминание не снималось: размер peek календаря (ui-inspection 3.5), тот же вид строки
     case .calendarReminder: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
     case .airpods: airpodsSize(notch: notch)
+    case .claude: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
     }
   }
 

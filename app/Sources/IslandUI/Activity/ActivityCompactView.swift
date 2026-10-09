@@ -57,9 +57,7 @@ struct ActivityCompactView: View {
             .offset(x: 4, y: 4)
         }
     } else {
-      Image(systemName: layout.symbol)
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(Color(layout.symbolColor))
+      ActivityIcon(layout: layout)
     }
   }
 

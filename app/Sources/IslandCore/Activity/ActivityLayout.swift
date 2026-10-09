@@ -33,13 +33,18 @@ public struct ActivityLayout: Equatable, Sendable {
   public var line: Line?
   /// Иконка — обложка трека, symbol — бейдж в её правом нижнем углу: календарь при музыке (Alcove 1.7.9, 29.09)
   public var showsArtwork: Bool
+  /// Шаблонная картинка из Resources/Icons. Если её нет, используется SF Symbol.
+  public var imageName: String?
 
-  public init(symbol: String, symbolColor: RGB, indicator: Indicator, line: Line? = nil, showsArtwork: Bool = false) {
+  public init(
+    symbol: String, symbolColor: RGB, indicator: Indicator, line: Line? = nil, showsArtwork: Bool = false, imageName: String? = nil
+  ) {
     self.symbol = symbol
     self.symbolColor = symbolColor
     self.indicator = indicator
     self.line = line
     self.showsArtwork = showsArtwork
+    self.imageName = imageName
   }
 
   /// Паддинг компакта активности с каждой стороны выреза. Оценка по кадрам

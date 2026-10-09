@@ -35,6 +35,18 @@ else
     echo "Нет $SOUNDS: уведомления будут без звука" >&2
 fi
 
+# знак Claude из установленного приложения, в git чужой логотип не хранится
+CLAUDE_ICON="${ALCOVE_CLAUDE_ICON:-/Applications/Claude.app/Contents/Resources/TrayIconTemplate@3x.png}"
+mkdir -p "$APP/Contents/Resources/Icons"
+if [ -f "$CLAUDE_ICON" ]; then
+    cp "$CLAUDE_ICON" "$APP/Contents/Resources/Icons/claude.png"
+else
+    echo "Нет $CLAUDE_ICON: у Claude будет SF Symbol sparkle" >&2
+fi
+
+# явное подключение из настроек копирует скрипт в Application Support
+cp Scripts/claude-statusline.py "$APP/Contents/Resources/claude-statusline.py"
+
 # иконка Meet для пункта Join в меню: из бандла Alcove (assets/images), в git её нет
 IMAGES="${ALCOVE_ASSETS:-$HOME/oasis/assets}/images"
 if [ -f "$IMAGES/GoogleMeetAppIcon18x18.png" ]; then

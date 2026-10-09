@@ -32,7 +32,7 @@ final class DebugCalendarLive {
 @MainActor
 enum DebugCatalog {  // swiftlint:disable:this type_body_length - каталог отладочных пунктов
   static func sections(
-    store: IslandStore, settings: AppSettings? = nil, sounds: SoundPlayer = SoundPlayer()
+    store: IslandStore, settings: AppSettings? = nil, sounds: SoundPlayer = SoundPlayer(), claude: ClaudeModule? = nil
   ) -> [DebugSection] {
     let tracks = DemoTrackCursor()
     return [
@@ -45,7 +45,7 @@ enum DebugCatalog {  // swiftlint:disable:this type_body_length - каталог
       island(store, settings),
       scenarios(store, tracks),
       timing(store, settings),
-    ]
+    ] + (claude.map { [DebugClaude.section(store, $0)] } ?? [])
   }
 
   private static func music(_ store: IslandStore, _ tracks: DemoTrackCursor) -> DebugSection {

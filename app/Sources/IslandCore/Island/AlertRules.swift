@@ -19,6 +19,7 @@ public struct AlertRules: Equatable, Sendable {
     case .charging, .lowBattery, .lowPower: batteryDuration
     case .airpods: connectivityDuration
     case .calendarReminder: calendar.peekDuration
+    case .claude: alert.duration
     }
   }
 
@@ -28,6 +29,7 @@ public struct AlertRules: Equatable, Sendable {
     case .airpods: headphonesLowBatterySound ? alert.sound : nil
     case .calendarReminder: calendar.sound ? alert.sound : nil
     case .charging, .lowPower: alert.sound
+    case .claude: alert.sound
     }
   }
 }

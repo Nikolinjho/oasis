@@ -12,6 +12,7 @@ final class IslandStore {
   private(set) var model: IslandModel
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
+  private(set) var claudePanel: ClaudePanel?
   /// Последний payload источника как есть
   @ObservationIgnored private var sourceNowPlaying: NowPlayingInfo?
   @ObservationIgnored private var playbackModes = PlaybackModeOverride()
@@ -370,6 +371,12 @@ final class IslandStore {
 }
 
 extension IslandStore {
+  /// Без данных Claude выпадает из цикла раскрытых видов.
+  func applyClaude(_ panel: ClaudePanel?) {
+    claudePanel = panel
+    send(.claudeViewAvailable(panel != nil))
+  }
+
   /// Покой, по которому свайп убирает и возвращает активность
   nonisolated static func isRestSwipeSurface(_ surface: Surface) -> Bool {
     switch surface {

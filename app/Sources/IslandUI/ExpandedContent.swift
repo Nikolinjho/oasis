@@ -6,6 +6,7 @@ struct ExpandedContent: View {
   let view: ExpandedView
   let info: NowPlayingInfo?
   let agenda: DayAgenda
+  var claude: ClaudePanel?
   var dismissedEvents: Set<String> = []
   var appearance = IslandAppearance.default
   var liveEvent: CalendarEvent?
@@ -28,6 +29,11 @@ struct ExpandedContent: View {
         PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
           .transition(.viewSwap(timeScale: timeScale))
+      case .claude:
+        if let claude {
+          ClaudeLimitsView(panel: claude)
+            .transition(.viewSwap(timeScale: timeScale))
+        }
       case .calendar:
         CalendarDayView(agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, onJoin: onJoin)
           .transition(.viewSwap(timeScale: timeScale))

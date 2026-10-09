@@ -12,8 +12,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     return AppSettings()
   }()
   private let sounds = SoundPlayer()
+  private let claudeConnection = ClaudeConnection(installer: .live)
+  private let claudeLifecycle = ClaudeModuleLifecycle()
+  private var liveSourcesEnabled = false
+  private lazy var claude = ClaudeModule(
+    store: store, settings: settings,
+    directory: ClaudeFiles.directory(home: FileManager.default.homeDirectoryForCurrentUser))
   private lazy var settingsWindow = SettingsWindowController(
-    settings: settings, calendars: { [weak self] in self?.calendar.calendars() ?? [] },
+    settings: settings, claudeConnection: claudeConnection, calendars: { [weak self] in self?.calendar.calendars() ?? [] },
     playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
   private var statusItem: StatusItemController?
@@ -45,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// При холодном запуске по ссылке (`open -g -a … "oasis://…"`) AppKit доставляет
   /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
   func applicationWillFinishLaunching(_ notification: Notification) {
-    debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds)
+    debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude)
     // здесь, а не в applicationDidFinishLaunching: холодный запуск по ссылке calendar.remind закрепляет повестку раньше
     calendar.apply()
     store.onSound = { [weak self] sound in
@@ -89,14 +95,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     store.swipeToDismiss = settings.swipeToDismiss
     window?.naturalMovement = settings.naturalMovement
     if let delay = DemoSequence.launchDelay(arguments: CommandLine.arguments) {
-      // живые источники мешали бы записи: не стартуют startFullscreenMonitor, startSourceActivity, startNowPlaying
-      // (адаптер медиа), startPlayerActions, startCalendar, startPower, startBluetooth, startLevels (CoreAudio HUD
-      // громкости/яркости), startKeyTap
+      // Живые источники, включая Claude, мешали бы записи: в demo они не запускаются.
       log.info("demo mode after \(delay, privacy: .public) s")
       DemoSequence.run(store: store, after: delay)
       links.markReady()
       return
     }
+    liveSourcesEnabled = true
+    applyClaudeSettings()
     startFullscreenMonitor()
     startSourceActivity()
     startNowPlaying()
@@ -109,14 +115,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    claudeLifecycle.stop()
+    claude.stop()
     nowPlaying?.stop()
     power?.stop()
     bluetooth?.stop()
     headphonesMonitor?.stop()
   }
 
-  /// Настройки меняются на лету из окна настроек и меню: машина подхватывает их сразу.
-  /// Выбор экрана (DisplayChoice) пока не влияет на окно — это отдельная задача
+  /// Настройки из окна и меню применяются сразу. DisplayChoice пока не влияет на окно.
   private func applySettings() {
     store.config = settings.machineConfig(from: store.config)
     applyAppearance()
@@ -128,6 +135,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     window?.naturalMovement = settings.naturalMovement
     nowPlaying?.apply(settings.effectiveMediaSource)
     calendar.apply()
+    if liveSourcesEnabled {
+      applyClaudeSettings()
+      claudeConnection.setText(settings.claude.statuslineText)
+    }
+  }
+
+  private func applyClaudeSettings() {
+    claude.applySettings()
+    if claude.isRunning { claudeLifecycle.start(claude) } else { claudeLifecycle.stop() }
   }
 
   /// Вид острова: настройки плюс текущее устройство вывода

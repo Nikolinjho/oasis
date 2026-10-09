@@ -5,6 +5,7 @@ import SwiftUI
 /// Окно настроек: сайдбар 200 pt и прокрутка контента (ui-inspection 1.1)
 struct SettingsView: View {
   @ObservedObject var settings: AppSettings
+  var claudeConnection: ClaudeConnection?
   /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
   var playSound: (IslandSound) -> Void = { _ in }
   /// Календари EventKit для страницы Calendar
@@ -42,6 +43,10 @@ struct SettingsView: View {
     case .display: HUDPage(settings: settings, kind: .brightness)
     case .sound: HUDPage(settings: settings, kind: .volume)
     case .nowPlaying: NowPlayingPage(settings: settings)
+    case .claudeCode:
+      if let claudeConnection {
+        ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, preview: playSound)
+      }
     case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
     default: EmptyView()
     }

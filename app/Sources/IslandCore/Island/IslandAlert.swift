@@ -11,6 +11,8 @@ public enum IslandAlert: Equatable, Sendable {
   case calendarReminder(CalendarReminder)
   /// Подключились наушники (Connectivity)
   case airpods(AirPodsInfo)
+  /// Порог лимита Claude Code, прогноз исчерпания или сброс окна.
+  case claude(ClaudeNotice)
 
   /// Вид: повтор того же вида в очереди заменяет ждущее, а поверх показанного обновляет его.
   /// Напоминания одного вида — только об одном событии: «за 5» заменяет «за 15» того же события,
@@ -19,6 +21,7 @@ public enum IslandAlert: Equatable, Sendable {
     case charging, lowBattery, lowPower
     case calendarReminder(eventID: String)
     case airpods
+    case claude
   }
 
   public var kind: Kind {
@@ -28,6 +31,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .lowPower: .lowPower
     case .calendarReminder(let reminder): .calendarReminder(eventID: reminder.eventID)
     case .airpods: .airpods
+    case .claude: .claude
     }
   }
 
@@ -37,6 +41,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .lowBattery, .calendarReminder: 2
     case .lowPower, .airpods: 1
     case .charging: 0
+    case .claude(let notice): notice.urgent ? 2 : notice.reason == .reset ? 0 : 1
     }
   }
 
@@ -46,6 +51,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .charging, .lowBattery, .lowPower, .airpods: IslandTiming.alertVisible
     // как peek календаря на старте: Peek duration 4 с (ui-inspection 3.5)
     case .calendarReminder: IslandTiming.calendarPeek
+    case .claude: IslandTiming.calendarPeek
     }
   }
 
@@ -59,6 +65,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .lowPower: .lowPower
     // допущение плана P1: звук события и на напоминаниях, не только на старте
     case .calendarReminder: .event
+    case .claude(let notice): notice.sound
     }
   }
 }

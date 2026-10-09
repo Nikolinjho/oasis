@@ -8,6 +8,7 @@ public struct IslandView: View {
   let notchWidth: CGFloat
   let nowPlaying: NowPlayingInfo?
   let agenda: DayAgenda
+  let claude: ClaudePanel?
   /// Отклонённые через Dismiss Event: стопка Duo их не показывает
   let dismissedEvents: Set<String>
   let calendarEvent: CalendarEvent?
@@ -25,6 +26,7 @@ public struct IslandView: View {
   public init(
     model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
     agenda: DayAgenda = .empty,
+    claude: ClaudePanel? = nil,
     dismissedEvents: Set<String> = [],
     calendarEvent: CalendarEvent? = nil,
     dragBlurred: Bool = false,
@@ -39,6 +41,7 @@ public struct IslandView: View {
     self.notchWidth = notchWidth
     self.nowPlaying = nowPlaying
     self.agenda = agenda
+    self.claude = claude
     self.dismissedEvents = dismissedEvents
     self.calendarEvent = calendarEvent
     self.dragBlurred = dragBlurred
@@ -114,7 +117,8 @@ public struct IslandView: View {
       // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
       // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
       ExpandedContent(
-        view: model.expandedView, info: nowPlaying, agenda: agenda, dismissedEvents: dismissedEvents, appearance: appearance,
+        view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude, dismissedEvents: dismissedEvents,
+        appearance: appearance,
         liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
         showsVolumeRow: model.volumeRowShown, onAction: onAction, onJoin: onJoin,
         timeScale: model.config.timeScale
