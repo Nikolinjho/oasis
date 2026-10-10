@@ -30,6 +30,8 @@ public enum IslandEvent: Equatable, Sendable {
   /// Свайп вниз по раскрытому: следующий вид
   case expandedViewCycled
   case claudeViewAvailable(Bool)
+  case soonViewAvailable(Bool)
+  case expandedViewRequested(ExpandedView)
   /// Свайп вверх по компакту: активность уходит в форму выреза до смены активности или свайпа вниз
   case activityDismissed
   /// Свайп вниз по форме выреза: убранная активность возвращается
@@ -83,6 +85,7 @@ public struct IslandModel: Equatable, Sendable {
   /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
   public var expandedView: ExpandedView = .duo
   public var claudeViewAvailable = false
+  public var soonViewAvailable = false
   /// Последний просмотренный вид раскрытого: для Most Recent
   public var lastExpandedView: ExpandedView = .duo
   /// Строка громкости под кнопками плеера: остров выше на IslandGeometry.volumeRowHeight.
@@ -169,6 +172,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     public var nowPlaying = NowPlayingRules()
     /// Idle Activity (General): какой вид открывается раскрытием
     public var expanded = ExpandedRules()
+    public var hideSoonPeekInFullscreen = true
     /// Calendar: peek и звук на старте. Хранится в alerts: напоминанию нужны те же длительность и звук
     public var calendar: CalendarRules {
       get { alerts.calendar }
@@ -235,6 +239,8 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .calendarStarted: calendarStarted(&model)
     case .expandedViewCycled: expandedViewCycled(&model)
     case .claudeViewAvailable(let available): claudeViewAvailable(&model, available)
+    case .soonViewAvailable(let available): soonViewAvailable(&model, available)
+    case .expandedViewRequested(let view): expandedViewRequested(&model, view)
     case .activityDismissed: activityDismissed(&model)
     case .activityRestored: activityRestored(&model)
     case .volumeRowToggled: volumeRowToggled(&model)
@@ -317,7 +323,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func fullscreenChanged(_ m: inout IslandModel, _ on: Bool) -> [IslandEffect] {
     guard m.isFullscreen != on else { return [] }
     m.isFullscreen = on
-    let claudeEffects = on ? suppressNormalClaude(&m) : []
+    let claudeEffects = on ? suppressNormalClaude(&m) + suppressSoonInFullscreen(&m) : []
     if let pending = m.pending, isRest(pending) { m.pending = m.base }
     switch m.surface {
     case .compact where on, .peek where on:
@@ -417,7 +423,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func configChanged(_ m: inout IslandModel, _ config: Config) -> [IslandEffect] {
     let old = m.base
     m.config = config
-    return baseChanged(&m, from: old)
+    return suppressSoonInFullscreen(&m) + baseChanged(&m, from: old)
   }
 
   // swiftlint:disable:next cyclomatic_complexity - по case на поверхность, разбивка спрячет порядок проверок
@@ -476,7 +482,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func alertArrived(  // swiftlint:disable:this cyclomatic_complexity - по case на поверхность
     _ m: inout IslandModel, _ alert: IslandAlert
   ) -> [IslandEffect] {
-    guard !m.isFullscreen || !isNormalClaude(alert) else { return [] }
+    guard !m.isFullscreen || (!isNormalClaude(alert) && !(m.config.hideSoonPeekInFullscreen && isSoon(alert))) else { return [] }
     // уведомление — активность, которую свайпом уже не удержать в вырезе
     m.dismissed = false
     // новое уведомление вида, вытесненного HUD, — новый показ со звуком
@@ -622,11 +628,75 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     return m.surface == .expanded ? [.animate(.viewSwap)] : []
   }
 
+  private static func unavailableViews(_ m: IslandModel) -> Set<ExpandedView> {
+    var hidden: Set<ExpandedView> = []
+    if !m.claudeViewAvailable { hidden.insert(.claude) }
+    if !m.soonViewAvailable { hidden.insert(.soon) }
+    return hidden
+  }
+
+  private static func isSoon(_ alert: IslandAlert) -> Bool {
+    if case .soon = alert { return true }
+    return false
+  }
+
+  private static func suppressSoonInFullscreen(_ m: inout IslandModel) -> [IslandEffect] {
+    guard m.isFullscreen, m.config.hideSoonPeekInFullscreen else { return [] }
+    return retractSoonAlerts(&m)
+  }
+
+  private static func retractSoonAlerts(_ m: inout IslandModel) -> [IslandEffect] {
+    m.alertQueue.removeAll(where: isSoon)
+    m.heardAlerts = m.heardAlerts.filter { if case .soon = $0 { false } else { true } }
+    if case .alert(let alert) = m.pending, isSoon(alert) {
+      m.pending = m.dequeueAlert().map(Surface.alert) ?? m.base
+    }
+    if case .alert(let alert) = m.surface, isSoon(alert), m.pending == nil {
+      return [.cancel(.alertHide)] + hideAlert(&m)
+    }
+    return []
+  }
+
+  private static func soonViewAvailable(_ m: inout IslandModel, _ available: Bool) -> [IslandEffect] {
+    m.soonViewAvailable = available
+    guard !available else { return [] }
+    let effects = retractSoonAlerts(&m)
+    if m.lastExpandedView == .soon { m.lastExpandedView = .duo }
+    guard m.expandedView == .soon else { return effects }
+    m.expandedView = .duo
+    return effects + (m.surface == .expanded ? [.animate(.viewSwap)] : [])
+  }
+
+  /// Явный выбор вида работает и при Idle Activity None, в том числе во время peek или сжатия.
+  private static func expandedViewRequested(_ m: inout IslandModel, _ view: ExpandedView) -> [IslandEffect] {
+    guard !unavailableViews(m).contains(view) else { return [] }
+    let source = m.surface
+    // Уведомление ещё не раскрылось: сохраняем его перед более поздними с тем же приоритетом.
+    if case .alert(let alert) = m.pending {
+      m.alertQueue.removeAll { $0.kind == alert.kind }
+      let index = m.alertQueue.firstIndex { $0.priority <= alert.priority } ?? m.alertQueue.endIndex
+      m.alertQueue.insert(alert, at: index)
+    }
+    m.pending = nil
+    m.leaving = false
+    m.expandedView = view
+    m.lastExpandedView = view
+    m.surface = .expanded
+    let transition: IslandTransition
+    switch source {
+    case .expanded: transition = .viewSwap
+    case .hud, .alert, .tuning: transition = .hudMorph
+    default: transition = .expand
+    }
+    return [.cancel(.grow), .cancel(.hudHide), .cancel(.alertHide), .cancel(.hoverOpen), .cancel(.hoverLeave)]
+      + peekCancels(from: source) + [.animate(transition)]
+  }
+
   /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент.
   /// Плеер в цикле и без музыки: пропускает ли его Alcove, эталона нет (ui-inspection 3.7, «Не проверено»)
   private static func expandedViewCycled(_ m: inout IslandModel) -> [IslandEffect] {
     guard m.surface == .expanded else { return [] }
-    m.expandedView = m.expandedView.next(skipping: m.claudeViewAvailable ? [] : [.claude])
+    m.expandedView = m.expandedView.next(skipping: unavailableViews(m))
     m.lastExpandedView = m.expandedView
     return [.animate(.viewSwap)]
   }
@@ -744,7 +814,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   /// Вид при раскрытии по Idle Activity. nil — None, раскрывать нечего
   private static func openingView(_ m: IslandModel) -> ExpandedView? {
     guard let view = m.config.expanded.openingView(last: m.lastExpandedView, hasMedia: m.hasMedia) else { return nil }
-    return view == .claude && !m.claudeViewAvailable ? .duo : view
+    return unavailableViews(m).contains(view) ? .duo : view
   }
 
   private static func open(_ m: inout IslandModel, to target: Surface, with transition: IslandTransition) -> [IslandEffect] {
@@ -833,12 +903,14 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
 
   private static func close(_ m: inout IslandModel) -> [IslandEffect] {
     guard m.surface == .hover || m.surface == .expanded else { return [] }
-    m.surface = m.base
-    if m.leaving {
-      m.leaving = false
-      return [.cancel(.hoverLeave), .animate(.collapse)]
+    let cancels: [IslandEffect] = m.leaving ? [.cancel(.hoverLeave)] : []
+    m.leaving = false
+    if let alert = m.dequeueAlert() {
+      m.surface = .alert(alert)
+      return cancels + [.animate(.hudMorph)] + shown(&m, alert)
     }
-    return [.animate(.collapse)]
+    m.surface = m.base
+    return cancels + [.animate(.collapse)]
   }
 
   // swiftlint:disable:next cyclomatic_complexity - по case на таймер, разбивка спрячет порядок проверок

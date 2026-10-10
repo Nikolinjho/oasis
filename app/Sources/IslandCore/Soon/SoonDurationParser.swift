@@ -26,15 +26,7 @@ public enum SoonDurationParser {
     skipWhitespace(scalars, index: &index)
     guard index < scalars.count else { throw SoonDurationError.empty }
     while index < scalars.count {
-      guard isDigit(scalars[index]) else { throw SoonDurationError.invalidFormat }
-      var value = 0
-      while index < scalars.count, isDigit(scalars[index]) {
-        let multiplied = value.multipliedReportingOverflow(by: 10)
-        let added = multiplied.partialValue.addingReportingOverflow(Int(scalars[index].value - 48))
-        guard !multiplied.overflow, !added.overflow else { throw SoonDurationError.outOfRange }
-        value = added.partialValue
-        index += 1
-      }
+      let value = try number(scalars, index: &index)
       skipWhitespace(scalars, index: &index)
       if index == scalars.count {
         guard components.isEmpty else { throw SoonDurationError.invalidFormat }
@@ -57,6 +49,19 @@ public enum SoonDurationParser {
       skipWhitespace(scalars, index: &index)
     }
     return try total(components)
+  }
+
+  private static func number(_ scalars: [Unicode.Scalar], index: inout Int) throws -> Int {
+    guard index < scalars.count, isDigit(scalars[index]) else { throw SoonDurationError.invalidFormat }
+    var value = 0
+    while index < scalars.count, isDigit(scalars[index]) {
+      let multiplied = value.multipliedReportingOverflow(by: 10)
+      let added = multiplied.partialValue.addingReportingOverflow(Int(scalars[index].value - 48))
+      guard !multiplied.overflow, !added.overflow else { throw SoonDurationError.outOfRange }
+      value = added.partialValue
+      index += 1
+    }
+    return value
   }
 
   private static func total(_ components: [Component]) throws -> Int {

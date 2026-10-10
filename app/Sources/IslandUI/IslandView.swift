@@ -9,6 +9,8 @@ public struct IslandView: View {
   let nowPlaying: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
+  let soon: SoonPanel?
+  let onSoonAction: (SoonAction) -> Void
   /// Отклонённые через Dismiss Event: стопка Duo их не показывает
   let dismissedEvents: Set<String>
   let calendarEvent: CalendarEvent?
@@ -27,6 +29,7 @@ public struct IslandView: View {
     model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
     agenda: DayAgenda = .empty,
     claude: ClaudePanel? = nil,
+    soon: SoonPanel? = nil,
     dismissedEvents: Set<String> = [],
     calendarEvent: CalendarEvent? = nil,
     dragBlurred: Bool = false,
@@ -34,7 +37,8 @@ public struct IslandView: View {
     backdropDark: Bool = true,
     volume: Double = 0,
     onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
-    onJoin: @escaping (URL) -> Void = { _ in }
+    onJoin: @escaping (URL) -> Void = { _ in },
+    onSoonAction: @escaping (SoonAction) -> Void = { _ in }
   ) {
     self.model = model
     self.spec = spec
@@ -42,6 +46,8 @@ public struct IslandView: View {
     self.nowPlaying = nowPlaying
     self.agenda = agenda
     self.claude = claude
+    self.soon = soon
+    self.onSoonAction = onSoonAction
     self.dismissedEvents = dismissedEvents
     self.calendarEvent = calendarEvent
     self.dragBlurred = dragBlurred
@@ -89,7 +95,7 @@ public struct IslandView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .contentShape(IslandShape(spec: spec))
-    .onTapGesture(perform: onClick)
+    .onTapGesture(perform: islandClicked)
   }
 
   @ViewBuilder
@@ -117,7 +123,8 @@ public struct IslandView: View {
       // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
       // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
       ExpandedContent(
-        view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude, dismissedEvents: dismissedEvents,
+        view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude,
+        soon: soon, onSoonAction: onSoonAction, dismissedEvents: dismissedEvents,
         appearance: appearance,
         liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
         showsVolumeRow: model.volumeRowShown, onAction: onAction, onJoin: onJoin,
@@ -145,6 +152,21 @@ public struct IslandView: View {
     case .idle, .hover, .shrink, .hoverNudge:
       Color.clear
     }
+  }
+
+  private func islandClicked() {
+    if model.surface == .expanded, model.expandedView == .soon { return }
+    if case .alert(.soon(let notice)) = model.surface {
+      guard notice.reminderIDs.count == 1,
+        let reminder = soon?.reminders.first(where: { $0.occurrenceID == notice.occurrenceID })
+      else {
+        onSoonAction(.showList)
+        return
+      }
+      onSoonAction(.open(id: reminder.id, revision: reminder.revision))
+      return
+    }
+    onClick()
   }
 
   static func showsBlur(surface: Surface, enabled: Bool) -> Bool {

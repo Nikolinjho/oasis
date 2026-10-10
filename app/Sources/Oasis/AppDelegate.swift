@@ -18,8 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private lazy var claude = ClaudeModule(
     store: store, settings: settings,
     directory: ClaudeFiles.directory(home: FileManager.default.homeDirectoryForCurrentUser))
+  private lazy var soon = SoonAppIntegration(store: store, settings: settings)
   private lazy var settingsWindow = SettingsWindowController(
-    settings: settings, claudeConnection: claudeConnection, calendars: { [weak self] in self?.calendar.calendars() ?? [] },
+    settings: settings, claudeConnection: claudeConnection, soonModule: soon.module,
+    calendars: { [weak self] in self?.calendar.calendars() ?? [] },
     playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
   private var statusItem: StatusItemController?
@@ -51,7 +53,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// При холодном запуске по ссылке (`open -g -a … "oasis://…"`) AppKit доставляет
   /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
   func applicationWillFinishLaunching(_ notification: Notification) {
-    debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude)
+    soon.install()
+    debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude, soon: soon.module)
     // здесь, а не в applicationDidFinishLaunching: холодный запуск по ссылке calendar.remind закрепляет повестку раньше
     calendar.apply()
     store.onSound = { [weak self] sound in
@@ -73,7 +76,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     settings.onChange = { [weak self] in self?.applySettings() }
     // Notch width/height зажаты в Tuning: подсказка острова (Task 17t)
     settings.onTuningHint = { [weak self] hint in self?.store.send(.tuningHintChanged(hint)) }
-    // статус-айтем раньше окна: остров открывает его меню по правому клику
     let statusItem = StatusItemController(
       debugItem: DebugMenu.item(sections: debugSections),
       isTrusted: { Permissions.isAccessibilityTrusted },
@@ -81,12 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       // часы читаются только при открытии меню
       calendarItems: { [weak self] in
         guard let self else { return [] }
-        return CalendarMenuSection.items(
-          for: calendar.clock.menuModel(),
-          actions: .init(
-            join: { [store] url in store.onJoin(url) },
-            open: { CalendarMenuSection.open($0) },
-            dismiss: { [calendar] id in calendar.clock.dismiss(id) }))
+        return soon.menu(calendar: calendar, store: store, enabled: settings.soon.enabled)
       })
     self.statusItem = statusItem
     statusItem.setIconHidden(settings.hideMenuBarIcon)
@@ -102,6 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       return
     }
     liveSourcesEnabled = true
+    soon.start(window: window)
     applyClaudeSettings()
     startFullscreenMonitor()
     startSourceActivity()
@@ -115,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    soon.module.stop()
     claudeLifecycle.stop()
     claude.stop()
     nowPlaying?.stop()
@@ -136,6 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     nowPlaying?.apply(settings.effectiveMediaSource)
     calendar.apply()
     if liveSourcesEnabled {
+      soon.module.applySettings()
       applyClaudeSettings()
       claudeConnection.setText(settings.claude.statuslineText)
     }

@@ -13,6 +13,8 @@ final class IslandStore {
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
   private(set) var claudePanel: ClaudePanel?
+  private(set) var soonPanel: SoonPanel?
+  @ObservationIgnored var soonComposition = SoonCompositionState()
   /// Последний payload источника как есть
   @ObservationIgnored private var sourceNowPlaying: NowPlayingInfo?
   @ObservationIgnored private var playbackModes = PlaybackModeOverride()
@@ -59,6 +61,7 @@ final class IslandStore {
   var volumeLevel: Double = 0
 
   @ObservationIgnored var onAction: (PlayerAction) -> Void = { _ in }
+  @ObservationIgnored var onSoonAction: (SoonAction) -> Void = { _ in }
   /// Звук уведомления: AppDelegate подключает сюда SoundPlayer.play, если в настройках включён Play sounds
   @ObservationIgnored var onSound: (IslandSound) -> Void = { _ in }
   /// Кнопка Join на карточке события: AppDelegate открывает ссылку
@@ -102,11 +105,6 @@ final class IslandStore {
       spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: radiusHeight)
     }
     return spec
-  }
-
-  /// Последний вид раскрытого из настроек на запуске: без него Most Recent после перезапуска открывал бы Duo
-  func restoreLastExpandedView(_ view: ExpandedView) {
-    model.lastExpandedView = view
   }
 
   /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
@@ -215,6 +213,7 @@ final class IslandStore {
 
   // swiftlint:disable:next cyclomatic_complexity - редьюс и по case на эффект, разбивка спрячет порядок применения
   func send(_ event: IslandEvent) {
+    guard !deferSoonComposition(event) else { return }
     var next = model
     let previous = model.surface
     let previousLast = model.lastExpandedView
@@ -371,18 +370,20 @@ final class IslandStore {
 }
 
 extension IslandStore {
+  /// Последний вид раскрытого из настроек на запуске: без него Most Recent после перезапуска открывал бы Duo
+  func restoreLastExpandedView(_ view: ExpandedView) {
+    model.lastExpandedView = view
+  }
+
+  func applySoon(_ panel: SoonPanel?) {
+    pruneDeferredSoon(panel)
+    soonPanel = panel
+    send(.soonViewAvailable(panel != nil))
+  }
   /// Без данных Claude выпадает из цикла раскрытых видов.
   func applyClaude(_ panel: ClaudePanel?) {
     claudePanel = panel
     send(.claudeViewAvailable(panel != nil))
-  }
-
-  /// Покой, по которому свайп убирает и возвращает активность
-  nonisolated static func isRestSwipeSurface(_ surface: Surface) -> Bool {
-    switch surface {
-    case .idle, .compact, .peek, .calendar, .calendarPeek, .hoverNudge: true
-    default: false
-    }
   }
 
 }

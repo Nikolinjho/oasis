@@ -7,6 +7,8 @@ struct ExpandedContent: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var claude: ClaudePanel?
+  var soon: SoonPanel?
+  var onSoonAction: (SoonAction) -> Void = { _ in }
   var dismissedEvents: Set<String> = []
   var appearance = IslandAppearance.default
   var liveEvent: CalendarEvent?
@@ -33,6 +35,17 @@ struct ExpandedContent: View {
         if let claude {
           ClaudeLimitsView(panel: claude)
             .transition(.viewSwap(timeScale: timeScale))
+        }
+      case .soon:
+        if let soon {
+          TimelineView(.periodic(from: .now, by: 1)) { context in
+            if let selected = soon.selected {
+              SoonDetailView(reminder: selected, now: context.date, onAction: onSoonAction)
+            } else {
+              SoonListView(panel: soon, now: context.date, onAction: onSoonAction)
+            }
+          }
+          .transition(.viewSwap(timeScale: timeScale))
         }
       case .calendar:
         CalendarDayView(agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, onJoin: onJoin)

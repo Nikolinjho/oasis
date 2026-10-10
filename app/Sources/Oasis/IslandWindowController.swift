@@ -34,6 +34,8 @@ final class IslandWindowController {
   }
   /// General → Gestures → Natural movement: источник знака dy у свайпа (swipeInput)
   var naturalMovement = true
+  private var composerActive = false
+  var onComposerSurfaceChange: (Surface) -> Void = { _ in }
 
   init(store: IslandStore, menu: NSMenu) {
     self.store = store
@@ -75,7 +77,7 @@ final class IslandWindowController {
     let frame = IslandGeometry.windowFrame(for: metrics)
     let panel = self.panel ?? makePanel(frame: frame)
     panel.setFrame(frame, display: true)
-    panel.orderFrontRegardless()
+    if !composerActive { panel.orderFrontRegardless() }
     self.panel = panel
   }
 
@@ -114,7 +116,7 @@ final class IslandWindowController {
       matching: .leftMouseDown,
       handler: { [weak self] _ in
         MainActor.assumeIsolated {
-          guard let self, !self.menuOpen else { return }
+          guard let self, !self.menuOpen, !self.composerActive else { return }
           self.store.send(.clickedOutside)
         }
       })
@@ -177,6 +179,12 @@ final class IslandWindowController {
   /// застрял бы до следующего жеста. .changed и съедение события (true) — только когда surface наша,
   /// остальное — не наше: скролл уходит дальше как обычно (review Task 15)
   private func handleScroll(_ event: NSEvent) -> Bool {
+    guard !composerActive else { return false }
+    if store.model.surface == .expanded, store.model.expandedView == .soon, let panel,
+      NSEvent.mouseLocation.y < panel.frame.maxY - 54
+    {
+      return false
+    }
     guard let panel, event.window === panel,
       let input = Self.swipeInput(
         phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
@@ -232,7 +240,7 @@ final class IslandWindowController {
   }
 
   private func pointerMoved() {
-    guard let panel, metrics != nil, !menuOpen else { return }
+    guard let panel, metrics != nil, !menuOpen, !composerActive else { return }
     let point = NSEvent.mouseLocation
     let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
     // вне формы клики уходят в menu bar и окна под островом
@@ -281,6 +289,11 @@ final class IslandWindowController {
   /// alert/HUD/shrink съедают исходный hoverEntered (машина в этих состояниях его игнорирует),
   /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
   private func surfaceChanged() {
+    if composerActive {
+      if case .hud = store.model.surface { panel?.orderFrontRegardless() } else { panel?.orderOut(nil) }
+      onComposerSurfaceChange(store.model.surface)
+      return
+    }
     pointerMoved()
     backdrop.update(panel: panel)
     closedBySwipe = Self.keepsClosedBySwipe(closedBySwipe, surface: store.model.surface, pointerInside: pointerInside)
@@ -313,6 +326,23 @@ final class IslandWindowController {
   }
 }
 
+extension IslandWindowController {
+  var composerFrame: CGRect {
+    panel?.frame ?? CGRect(x: 400, y: 400, width: 624, height: 320)
+  }
+
+  func setComposerActive(_ active: Bool) {
+    composerActive = active
+    store.setSoonComposing(active)
+    if active {
+      panel?.orderOut(nil)
+    } else {
+      panel?.orderFrontRegardless()
+      pointerMoved()
+    }
+  }
+}
+
 struct IslandRootView: View {
   let store: IslandStore
 
@@ -324,6 +354,7 @@ struct IslandRootView: View {
       nowPlaying: store.nowPlaying,
       agenda: store.agenda,
       claude: store.claudePanel,
+      soon: store.soonPanel,
       dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,
       dragBlurred: store.dragBlurred,
@@ -332,6 +363,7 @@ struct IslandRootView: View {
       volume: store.volumeLevel,
       onClick: { store.send(.clicked) },
       onAction: { store.onAction($0) },
-      onJoin: { store.onJoin($0) })
+      onJoin: { store.onJoin($0) },
+      onSoonAction: { store.onSoonAction($0) })
   }
 }

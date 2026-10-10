@@ -31,6 +31,7 @@ private final class SettingsWindow: NSWindow {
 final class SettingsWindowController: NSObject, NSWindowDelegate {
   private let settings: AppSettings
   private let claudeConnection: ClaudeConnection?
+  private let soonModule: SoonModule?
   private let playSound: (IslandSound) -> Void
   /// Календари EventKit для страницы Calendar: AppDelegate берёт их у источника календаря
   private let calendars: () -> [CalendarInfo]
@@ -38,11 +39,13 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
   private var closeShortcutMonitor: Any?
 
   init(
-    settings: AppSettings, claudeConnection: ClaudeConnection? = nil, calendars: @escaping () -> [CalendarInfo] = { [] },
+    settings: AppSettings, claudeConnection: ClaudeConnection? = nil, soonModule: SoonModule? = nil,
+    calendars: @escaping () -> [CalendarInfo] = { [] },
     playSound: @escaping (IslandSound) -> Void = { _ in }
   ) {
     self.settings = settings
     self.claudeConnection = claudeConnection
+    self.soonModule = soonModule
     self.calendars = calendars
     self.playSound = playSound
     super.init()
@@ -78,7 +81,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     window.delegate = self
     window.contentView = NSHostingView(
       rootView: SettingsView(
-        settings: settings, claudeConnection: claudeConnection, playSound: playSound, calendars: calendars,
+        settings: settings, claudeConnection: claudeConnection, soonModule: soonModule, playSound: playSound, calendars: calendars,
         onPageChange: { [weak window] page in window?.title = page.title }))
     window.center()
     installCloseShortcut(on: window)

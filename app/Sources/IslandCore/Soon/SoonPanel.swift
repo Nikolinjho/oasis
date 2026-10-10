@@ -39,7 +39,8 @@ public struct SoonPanel: Equatable, Sendable {
   }
 
   public var visibleReminders: [SoonReminder] {
-    SoonSchedule.sorted(reminders, now: now, includeCompleted: showsCompleted)
+    let visible = reminders.filter { showsCompleted ? $0.state == .completed : $0.state != .completed }
+    return SoonSchedule.sorted(visible, now: now, includeCompleted: showsCompleted)
   }
 
   public var selected: SoonReminder? { reminders.first { $0.id == selectedID } }

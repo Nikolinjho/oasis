@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsView: View {
   @ObservedObject var settings: AppSettings
   var claudeConnection: ClaudeConnection?
+  var soonModule: SoonModule?
   /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
   var playSound: (IslandSound) -> Void = { _ in }
   /// Календари EventKit для страницы Calendar
@@ -48,6 +49,8 @@ struct SettingsView: View {
         ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, preview: playSound)
       }
     case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
+    case .soon:
+      if let soonModule { SoonSettingsPage(settings: settings.soon, module: soonModule) }
     default: EmptyView()
     }
   }
@@ -66,10 +69,13 @@ struct SettingsSidebar: View {
             .padding(.top, 10)
             .padding(.leading, 10)
         }
-        SidebarRow(page: page, isSelected: page == selection)
-          .onTapGesture {
-            if page.isAvailable { selection = page }
-          }
+        Button {
+          selection = page
+        } label: {
+          SidebarRow(page: page, isSelected: page == selection)
+        }
+        .buttonStyle(.plain)
+        .disabled(!page.isAvailable)
       }
       Spacer()
     }

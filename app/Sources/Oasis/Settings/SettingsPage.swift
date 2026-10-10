@@ -81,6 +81,6 @@ enum SettingsPage: String, CaseIterable, Identifiable {
   var isAvailable: Bool { Self.available.contains(self) }
 
   private static let available: Set<SettingsPage> = [
-    .general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar, .claudeCode,
+    .general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar, .claudeCode, .soon,
   ]
 }
