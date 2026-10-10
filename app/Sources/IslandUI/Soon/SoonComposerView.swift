@@ -31,7 +31,7 @@ public struct SoonComposerView: View {
       HStack {
         Text(heading).font(.system(size: 12, weight: .semibold)).lineLimit(1)
         Spacer(minLength: 6)
-        Button("Закрыть", action: onClose).foregroundStyle(IslandPalette.secondary)
+        Button("Закрыть", action: onClose)
       }
       .frame(height: 16)
       .padding(.top, 34)
@@ -59,7 +59,6 @@ public struct SoonComposerView: View {
             duration = preset
             focused = .duration
           }
-          .foregroundStyle(IslandPalette.secondary)
         }
       }
       .frame(height: 16)
@@ -73,7 +72,6 @@ public struct SoonComposerView: View {
           .accessibilityLabel(error ?? deadlineText)
         Spacer(minLength: 0)
         Button(submitting ? "Сохраняю…" : "Напомнить", action: onSubmit)
-          .foregroundStyle(accent)
           .disabled(submitting)
       }
       .frame(height: 16)
@@ -84,7 +82,7 @@ public struct SoonComposerView: View {
     .frame(width: 345, height: 175, alignment: .top)
     .foregroundStyle(IslandPalette.foreground)
     .font(.system(size: 11))
-    .buttonStyle(.plain)
+    .buttonStyle(SoonTextButtonStyle())
     .environment(\.colorScheme, .dark)
     .tint(accent)
     .onAppear { focused = .title }

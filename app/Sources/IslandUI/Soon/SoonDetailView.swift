@@ -10,10 +10,10 @@ struct SoonDetailView: View {
     VStack(alignment: .leading, spacing: 5) {
       HStack {
         Button("Назад") { onAction(.showList) }
-          .foregroundStyle(IslandPalette.secondary)
         Spacer()
         Text("Soon")
-          .foregroundStyle(SoonStyle.teal)
+          .font(.system(size: 13, weight: .semibold))
+          .foregroundStyle(IslandPalette.foreground)
       }
       .frame(height: 16)
       ScrollView {
@@ -27,7 +27,7 @@ struct SoonDetailView: View {
           HStack(spacing: 8) {
             Text(SoonStyle.remaining(reminder, now: now))
               .font(.system(size: 13, weight: .medium, design: .monospaced))
-              .foregroundStyle(SoonStyle.teal)
+              .foregroundStyle(IslandPalette.secondary)
             Text(reminder.dueAt, format: .dateTime.hour().minute())
               .foregroundStyle(IslandPalette.secondary)
             Text(stateLabel)
@@ -36,11 +36,9 @@ struct SoonDetailView: View {
           .font(.system(size: 11))
           if reminder.state == .completed {
             Button("Повторить") { onAction(.repeatReminder(id: reminder.id, revision: reminder.revision)) }
-              .foregroundStyle(SoonStyle.teal)
           } else {
             HStack(spacing: 14) {
               Button("Готово") { onAction(.complete(id: reminder.id, revision: reminder.revision)) }
-                .foregroundStyle(SoonStyle.teal)
               Button("+5 мин") { onAction(.snooze(id: reminder.id, revision: reminder.revision, seconds: 300)) }
               Button("Отложить…") { onAction(.customSnooze(id: reminder.id, revision: reminder.revision)) }
             }
@@ -58,7 +56,7 @@ struct SoonDetailView: View {
     }
     .font(.system(size: 12))
     .foregroundStyle(IslandPalette.foreground)
-    .buttonStyle(.plain)
+    .buttonStyle(SoonTextButtonStyle())
     .padding(.horizontal, 24)
     .padding(.top, 32)
     .padding(.bottom, 22)

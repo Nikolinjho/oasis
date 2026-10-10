@@ -15,7 +15,7 @@ struct SoonPeekView: View {
         Spacer(minLength: notchWidth)
         Text("Soon")
           .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(SoonStyle.teal)
+          .foregroundStyle(IslandPalette.foreground)
           .lineLimit(1)
           .fixedSize()
       }

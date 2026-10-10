@@ -11,10 +11,9 @@ struct SoonListView: View {
       HStack {
         Text("Soon")
           .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(SoonStyle.teal)
+          .foregroundStyle(IslandPalette.foreground)
         Spacer()
         Button("Добавить") { onAction(.create) }
-          .foregroundStyle(SoonStyle.teal)
       }
       .frame(height: 18)
       ScrollView {
@@ -47,7 +46,7 @@ struct SoonListView: View {
       .frame(height: 11)
     }
     .font(.system(size: 12))
-    .buttonStyle(.plain)
+    .buttonStyle(SoonTextButtonStyle())
     .padding(.horizontal, 24)
     .padding(.top, 32)
     .padding(.bottom, 22)
@@ -59,6 +58,7 @@ private struct SoonListRow: View {
   let reminder: SoonReminder
   let now: Date
   let onAction: (SoonAction) -> Void
+  @State private var isHovered = false
 
   var body: some View {
     HStack(spacing: 6) {
@@ -69,17 +69,20 @@ private struct SoonListRow: View {
           Text(reminder.title)
             .font(.system(size: 12, weight: .medium))
             .foregroundStyle(IslandPalette.foreground)
+            .underline(isHovered)
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityLabel(reminder.title)
           Text(SoonStyle.remaining(reminder, now: now))
             .font(.system(size: 12, design: .monospaced))
-            .foregroundStyle(reminder.state == .completed ? IslandPalette.secondary : SoonStyle.teal)
+            .foregroundStyle(IslandPalette.secondary)
             .lineLimit(1)
             .fixedSize()
         }
         .contentShape(Rectangle())
       }
+      .buttonStyle(.plain)
+      .onHover { isHovered = $0 }
       .help(reminder.title)
       Button(reminder.state == .completed ? "Повторить" : "Готово") {
         onAction(
@@ -88,7 +91,6 @@ private struct SoonListRow: View {
             : .complete(id: reminder.id, revision: reminder.revision))
       }
       .font(.system(size: 11))
-      .foregroundStyle(reminder.state == .completed ? IslandPalette.secondary : SoonStyle.teal)
       .fixedSize()
     }
     .frame(height: 28)
