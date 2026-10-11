@@ -28,7 +28,8 @@ final class SoonComposerController {
   @ObservationIgnored var onEditing: (Bool) -> Void = { _ in }
   @ObservationIgnored var frame: () -> CGRect = {
     let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
-    return CGRect(x: screen.midX - 312, y: screen.maxY - 320, width: 624, height: 320)
+    let size = IslandGeometry.windowSize
+    return CGRect(x: screen.midX - size.width / 2, y: screen.maxY - size.height, width: size.width, height: size.height)
   }
   @ObservationIgnored var submit: (String, String, SoonComposerMode) async throws -> Void = { _, _, _ in }
 
@@ -140,10 +141,12 @@ final class SoonComposerController {
       handler: { [weak self] event in
         MainActor.assumeIsolated {
           guard let self else { return }
-          if event.window === self.panel,
-            CGRect(x: (624 - 345) / 2, y: 320 - 175, width: 345, height: 175).contains(event.locationInWindow)
-          {
-            return
+          if let panel = self.panel, event.window === panel {
+            let size = IslandGeometry.expanded
+            let body = CGRect(
+              x: (panel.frame.width - size.width) / 2, y: panel.frame.height - size.height,
+              width: size.width, height: size.height)
+            if body.contains(event.locationInWindow) { return }
           }
           self.outsideClick()
         }
@@ -172,7 +175,7 @@ final class SoonComposerController {
           error: controller.error, submitting: controller.submitting,
           onSubmit: { controller.save() }, onClose: { controller.close() })
       }
-      .frame(width: 624, height: 320, alignment: .top)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
   }
 }
