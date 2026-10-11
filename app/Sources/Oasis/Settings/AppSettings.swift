@@ -276,7 +276,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   /// Последний просмотренный вид раскрытого: Most Recent открывает его и после перезапуска.
   /// Служебное значение, как builtInNotch: машина меняет его сама, onChange не зовёт
   var lastExpandedView: ExpandedView {
-    get { Self.readRaw(defaults, Key.lastExpandedView, ExpandedView.duo) }
+    get { Self.readRaw(defaults, Key.lastExpandedView, ExpandedView.overview) }
     set { defaults.set(newValue.rawValue, forKey: Key.lastExpandedView) }
   }
 

@@ -24,6 +24,10 @@ public struct IslandView: View {
   let onClick: () -> Void
   let onAction: (PlayerAction) -> Void
   let onJoin: (URL) -> Void
+  let mediaEnabled: Bool
+  let calendarEnabled: Bool
+  let onSelectView: (ExpandedView) -> Void
+  let onOpenSettings: () -> Void
 
   public init(
     model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
@@ -38,7 +42,10 @@ public struct IslandView: View {
     volume: Double = 0,
     onClick: @escaping () -> Void, onAction: @escaping (PlayerAction) -> Void,
     onJoin: @escaping (URL) -> Void = { _ in },
-    onSoonAction: @escaping (SoonAction) -> Void = { _ in }
+    onSoonAction: @escaping (SoonAction) -> Void = { _ in },
+    mediaEnabled: Bool = true, calendarEnabled: Bool = true,
+    onSelectView: @escaping (ExpandedView) -> Void = { _ in },
+    onOpenSettings: @escaping () -> Void = {}
   ) {
     self.model = model
     self.spec = spec
@@ -57,6 +64,10 @@ public struct IslandView: View {
     self.onClick = onClick
     self.onAction = onAction
     self.onJoin = onJoin
+    self.mediaEnabled = mediaEnabled
+    self.calendarEnabled = calendarEnabled
+    self.onSelectView = onSelectView
+    self.onOpenSettings = onOpenSettings
   }
 
   public var body: some View {
@@ -120,7 +131,6 @@ public struct IslandView: View {
       .id(ContentID.calendar)
       .transition(.slot)
     case .expanded:
-      // раскрытый открывается в Duo, как в Alcove (решение 27.09). Плеер и календарь — листанием (ui-inspection 3.7)
       // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
       ExpandedContent(
         view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude,
@@ -128,7 +138,9 @@ public struct IslandView: View {
         appearance: appearance,
         liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
         showsVolumeRow: model.volumeRowShown, onAction: onAction, onJoin: onJoin,
-        timeScale: model.config.timeScale
+        timeScale: model.config.timeScale, navigation: model.config.dashboardNavigation,
+        notchWidth: notchWidth, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
+        onSelectView: onSelectView, onOpenSettings: onOpenSettings
       )
       .id(ContentID.expanded)
       .transition(.playerEntrance(timeScale: model.config.timeScale))
@@ -155,6 +167,7 @@ public struct IslandView: View {
   }
 
   private func islandClicked() {
+    if model.surface == .expanded, model.config.dashboardNavigation { return }
     if model.surface == .expanded, model.expandedView == .soon { return }
     if case .alert(.soon(let notice)) = model.surface {
       guard notice.reminderIDs.count == 1,

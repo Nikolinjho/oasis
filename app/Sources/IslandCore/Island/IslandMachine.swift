@@ -147,7 +147,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   /// Поведение, которое отличает наш режим от Alcove. Эталон сверки записан
   /// в режиме Alcove, поэтому оба поведения — настройка, а не замена
   public struct Config: Equatable, Sendable {
-    /// Hover сразу раскрывает expanded (по умолчанию — Duo, полный плеер по свайпу). Выключено:
+    /// Hover сразу раскрывает expanded (по умолчанию — обзор). Выключено:
     /// hover даёт мини-состояние, раскрытие — по клику
     public var hoverOpensPlayer: Bool
     /// При живой активности (музыка, окно календаря) остров стоит в компакте. Выключено: компакт
@@ -172,6 +172,8 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     public var nowPlaying = NowPlayingRules()
     /// Idle Activity (General): какой вид открывается раскрытием
     public var expanded = ExpandedRules()
+    /// В пользовательском режиме Duo заменён общим обзором. Режим сверки Alcove сохраняет прежние виды.
+    public var dashboardNavigation = false
     public var hideSoonPeekInFullscreen = true
     /// Calendar: peek и звук на старте. Хранится в alerts: напоминанию нужны те же длительность и звук
     public var calendar: CalendarRules {
@@ -203,7 +205,11 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     /// Режим пользователя: hover раскрывает остров, при живой активности в покое компакт, как у Alcove.
     /// Покой в форме выреза пробовали и отказались: остаётся настройкой compactAtRest = false.
     /// Анимации на 18% медленнее Alcove: по живой проверке замеренные казались слишком быстрыми
-    public static let user = Config(hoverOpensPlayer: true, compactAtRest: true, timeScale: 1.18)
+    public static let user: Config = {
+      var config = Config(hoverOpensPlayer: true, compactAtRest: true, timeScale: 1.18)
+      config.dashboardNavigation = true
+      return config
+    }()
     /// Поведение Alcove, с которым записан эталон: для demo-прогона и сверки, пружины как в замерах
     public static let alcove = Config(hoverOpensPlayer: false, compactAtRest: true)
   }
@@ -622,14 +628,15 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func claudeViewAvailable(_ m: inout IslandModel, _ available: Bool) -> [IslandEffect] {
     m.claudeViewAvailable = available
     guard !available else { return [] }
-    if m.lastExpandedView == .claude { m.lastExpandedView = .duo }
+    if m.lastExpandedView == .claude { m.lastExpandedView = m.config.dashboardNavigation ? .overview : .duo }
     guard m.expandedView == .claude else { return [] }
-    m.expandedView = .duo
+    m.expandedView = m.config.dashboardNavigation ? .overview : .duo
     return m.surface == .expanded ? [.animate(.viewSwap)] : []
   }
 
   private static func unavailableViews(_ m: IslandModel) -> Set<ExpandedView> {
     var hidden: Set<ExpandedView> = []
+    if !m.config.dashboardNavigation { hidden.formUnion([.overview, .modules]) }
     if !m.claudeViewAvailable { hidden.insert(.claude) }
     if !m.soonViewAvailable { hidden.insert(.soon) }
     return hidden
@@ -661,9 +668,9 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     m.soonViewAvailable = available
     guard !available else { return [] }
     let effects = retractSoonAlerts(&m)
-    if m.lastExpandedView == .soon { m.lastExpandedView = .duo }
+    if m.lastExpandedView == .soon { m.lastExpandedView = m.config.dashboardNavigation ? .overview : .duo }
     guard m.expandedView == .soon else { return effects }
-    m.expandedView = .duo
+    m.expandedView = m.config.dashboardNavigation ? .overview : .duo
     return effects + (m.surface == .expanded ? [.animate(.viewSwap)] : [])
   }
 
@@ -692,11 +699,13 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
       + peekCancels(from: source) + [.animate(transition)]
   }
 
-  /// Следующий вид раскрытого по кругу. Форма та же, меняется только контент.
-  /// Плеер в цикле и без музыки: пропускает ли его Alcove, эталона нет (ui-inspection 3.7, «Не проверено»)
+  /// В пользовательском режиме свайп переключает обзор и каталог. Сверка Alcove сохраняет старый цикл.
   private static func expandedViewCycled(_ m: inout IslandModel) -> [IslandEffect] {
     guard m.surface == .expanded else { return [] }
-    m.expandedView = m.expandedView.next(skipping: unavailableViews(m))
+    m.expandedView =
+      m.config.dashboardNavigation
+      ? (m.expandedView == .modules ? .overview : .modules)
+      : m.expandedView.next(skipping: unavailableViews(m))
     m.lastExpandedView = m.expandedView
     return [.animate(.viewSwap)]
   }
@@ -814,6 +823,10 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   /// Вид при раскрытии по Idle Activity. nil — None, раскрывать нечего
   private static func openingView(_ m: IslandModel) -> ExpandedView? {
     guard let view = m.config.expanded.openingView(last: m.lastExpandedView, hasMedia: m.hasMedia) else { return nil }
+    if m.config.dashboardNavigation {
+      if unavailableViews(m).contains(view) { return .overview }
+      if view == .duo, !m.config.expanded.mostRecent { return .overview }
+    }
     return unavailableViews(m).contains(view) ? .duo : view
   }
 

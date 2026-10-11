@@ -35,6 +35,7 @@ final class IslandWindowController {
   /// General → Gestures → Natural movement: источник знака dy у свайпа (swipeInput)
   var naturalMovement = true
   private var composerActive = false
+  private var scrollInList = false
   var onComposerSurfaceChange: (Surface) -> Void = { _ in }
 
   init(store: IslandStore, menu: NSMenu) {
@@ -180,17 +181,17 @@ final class IslandWindowController {
   /// остальное — не наше: скролл уходит дальше как обычно (review Task 15)
   private func handleScroll(_ event: NSEvent) -> Bool {
     guard !composerActive else { return false }
-    if store.model.surface == .expanded, store.model.expandedView == .soon, let panel,
-      NSEvent.mouseLocation.y < panel.frame.maxY - 54
-    {
-      return false
-    }
     guard let panel, event.window === panel,
       let input = Self.swipeInput(
         phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
         deltaX: event.scrollingDeltaX, deltaY: event.scrollingDeltaY,
         inverted: event.isDirectionInvertedFromDevice, natural: naturalMovement)
     else { return false }
+    if input.phase == .began { scrollInList = pointerOverList(panel: panel) }
+    if scrollInList {
+      if input.phase == .ended || input.phase == .cancelled { scrollInList = false }
+      return false
+    }
     let surface = store.model.surface
     let ours = surface == .expanded || (store.swipeToDismiss && IslandStore.isRestSwipeSurface(surface))
     guard ours else {
@@ -199,6 +200,20 @@ final class IslandWindowController {
     }
     store.swipe(input.phase, dx: input.dx, dy: input.dy)
     return true
+  }
+
+  /// Владелец прокрутки определяется один раз: перемещение курсора не обрывает уже начатый свайп.
+  private func pointerOverList(panel: NotchPanel) -> Bool {
+    guard store.model.surface == .expanded else { return false }
+    let pointer = NSEvent.mouseLocation
+    if store.model.expandedView == .soon {
+      let header: CGFloat = store.config.dashboardNavigation ? ExpandedLayout.headerHeight : 0
+      return pointer.y < panel.frame.maxY - 54 - header
+    }
+    guard store.model.expandedView == .overview, store.soonPanel != nil else { return false }
+    let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
+    return pointer.x >= body.maxX - 230 && pointer.x <= body.maxX - 24
+      && pointer.y < panel.frame.maxY - 62 && pointer.y > panel.frame.maxY - 174
   }
 
   /// Разбор события scrollWheel для SwipeTracker. Инерцию не берём: у Alcove её нет. Колесо мыши
@@ -304,26 +319,6 @@ final class IslandWindowController {
     store.send(.hoverEntered)
   }
 
-  /// Флаг закрытия свайпом держится, пока курсор над островом и остров не раскрыт снова (кликом,
-  /// отладкой): иначе он пережил бы новое раскрытие и съел законное переоткрытие после следующего уведомления
-  static func keepsClosedBySwipe(_ flag: Bool, surface: Surface, pointerInside: Bool) -> Bool {
-    flag && pointerInside && surface != .expanded
-  }
-
-  /// true, если сейчас стоит досылать hoverEntered: курсор над островом и surface — состояние покоя
-  /// (idle/compact/peek/calendar/calendarPeek). Раскрытые им состояния (hover, hoverNudge, expanded)
-  /// в этот список не входят, поэтому повторного hoverEntered из них не будет — зациклиться некому.
-  /// После закрытия свайпом вверх (closedBySwipe) не досылаем: иначе курсор у верха острова
-  /// раскрывал бы его обратно в тот же момент. Флаг снимается, когда курсор уходит с острова
-  static func shouldReenterHover(surface: Surface, pointerInside: Bool, closedBySwipe: Bool = false) -> Bool {
-    guard pointerInside, !closedBySwipe else { return false }
-    switch surface {
-    // компакт календаря тоже покой: иначе после уведомления поверх календаря
-    // остров остаётся закрытым под курсором
-    case .idle, .compact, .peek, .calendar, .calendarPeek: return true
-    default: return false
-    }
-  }
 }
 
 extension IslandWindowController {
@@ -364,6 +359,11 @@ struct IslandRootView: View {
       onClick: { store.send(.clicked) },
       onAction: { store.onAction($0) },
       onJoin: { store.onJoin($0) },
-      onSoonAction: { store.onSoonAction($0) })
+      onSoonAction: { store.onSoonAction($0) },
+      mediaEnabled: store.mediaEnabled, calendarEnabled: store.calendarFilter.isEnabled,
+      onSelectView: { view in
+        if view == .soon { store.onSoonAction(.showList) } else { store.send(.expandedViewRequested(view)) }
+      },
+      onOpenSettings: { store.onOpenSettings() })
   }
 }

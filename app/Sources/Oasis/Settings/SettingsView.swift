@@ -168,7 +168,7 @@ struct GeneralPage: View {
               Tile(value: IdleActivity.none, title: "None", preview: AnyView(tileGlyph("nosign"))),
               Tile(value: IdleActivity.playing, title: "Playing", preview: AnyView(tileGlyph("play.fill"))),
               Tile(value: IdleActivity.calendar, title: "Calendar", preview: AnyView(tileGlyph("calendar"))),
-              Tile(value: IdleActivity.duo, title: "Duo", preview: AnyView(tileGlyph("rectangle.split.2x1.fill"))),
+              Tile(value: IdleActivity.duo, title: "Overview", preview: AnyView(tileGlyph("rectangle.split.3x1.fill"))),
             ], selection: $settings.idleActivity, height: 52)
           RowDivider()
           ToggleRow(title: "Force enable activity", isOn: $settings.forceEnableActivity)

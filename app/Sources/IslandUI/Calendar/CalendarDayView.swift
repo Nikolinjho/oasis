@@ -12,6 +12,8 @@ struct CalendarDayView: View {
   /// Always show month view и Use event indicators
   var style = CalendarAppearance()
   var calendar: Calendar = .current
+  var compact = false
+  var onOpen: (() -> Void)?
   let onJoin: (URL) -> Void
 
   static let shown = 2
@@ -37,44 +39,51 @@ struct CalendarDayView: View {
           .font(.system(size: 34, weight: .light))
           .foregroundStyle(IslandPalette.foreground)
       }
-      .offset(x: 17.5, y: 18)
+      .contentShape(Rectangle())
+      .onTapGesture { onOpen?() }
+      .pointerStyle(onOpen == nil ? .default : .link)
+      .offset(x: compact ? 0 : 17.5, y: compact ? 0 : 18)
 
       VStack(alignment: .leading, spacing: 4) {
         if today.isEmpty {
           EmptyDay()
         } else {
-          ForEach(today.prefix(Self.shown)) { event in
-            EventCard(event: event, onJoin: MeetingLink.find(in: event).map { url in { onJoin(url) } })
+          ForEach(visible(today, limit: Self.shown, height: 74)) { event in
+            EventCard(event: event, width: eventWidth, onJoin: MeetingLink.find(in: event).map { url in { onJoin(url) } })
+          }
+          if compact, let more = Self.more(total: today.count, shown: visible(today, limit: Self.shown, height: 74).count) {
+            moreButton(more)
           }
         }
       }
-      .offset(x: 17.5, y: 72)
+      .offset(x: compact ? 0 : 17.5, y: compact ? 52 : 72)
 
       if style.monthView {
         MonthGridView(
           grid: MonthGrid(containing: now, calendar: calendar), now: now,
-          events: style.eventIndicators ? agenda.events : [], calendar: calendar)
+          events: style.eventIndicators ? agenda.events : [], calendar: calendar, compact: compact)
       } else {
         nearestColumn(now)
       }
     }
-    .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)
+    .frame(width: compact ? 280 : DuoLayout.size.width, height: compact ? 126 : DuoLayout.size.height, alignment: .topLeading)
   }
 
   /// Ближайший день с событиями в пределах недели (`MON, 5`, завтра — TMRW). Нет — только заголовок TMRW
   private func nearestColumn(_ now: Date) -> some View {
     let nearest = agenda.nearestDay(after: now, calendar: calendar)
     let events = nearest?.events ?? []
-    let hidden = events.dropFirst(Self.nearestShown)
+    let shown = visible(events, limit: Self.nearestShown, height: 104)
+    let hidden = events.dropFirst(shown.count)
     return VStack(alignment: .trailing, spacing: 4) {
       Text(nearest.map { DayAgenda.title(for: $0.day, now: now, calendar: calendar) } ?? "TMRW")
         .font(.system(size: 10, weight: .bold))
         .foregroundStyle(IslandPalette.secondary)
-        .frame(width: DuoLayout.eventWidth, height: 18, alignment: .topTrailing)
-      ForEach(events.prefix(Self.nearestShown)) { event in
-        EventCard(event: event)
+        .frame(width: eventWidth, height: 18, alignment: .topTrailing)
+      ForEach(shown) { event in
+        EventCard(event: event, width: eventWidth)
       }
-      if let more = Self.more(total: events.count, shown: Self.nearestShown), let first = hidden.first {
+      if let more = Self.more(total: events.count, shown: shown.count), let first = hidden.first {
         HStack(spacing: 5) {
           Capsule().fill(Color(first.color)).frame(width: 3, height: 14)
           Text(more)
@@ -82,10 +91,37 @@ struct CalendarDayView: View {
         .font(.system(size: 11, weight: .semibold))
         .foregroundStyle(IslandPalette.secondary)
         .padding(.leading, 4)
-        .frame(width: DuoLayout.eventWidth, alignment: .leading)
+        .frame(width: eventWidth, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture { onOpen?() }
       }
     }
-    .offset(x: DuoLayout.eventOrigin.x, y: 18)
+    .offset(x: compact ? 148 : DuoLayout.eventOrigin.x, y: compact ? 0 : 18)
+  }
+
+  private var eventWidth: CGFloat { compact ? 132 : DuoLayout.eventWidth }
+
+  /// Карточки с местом выше: резервируем строку счётчика, чтобы Claude оставался под календарём.
+  private func visible(_ events: [CalendarEvent], limit: Int, height: CGFloat) -> [CalendarEvent] {
+    guard compact else { return Array(events.prefix(limit)) }
+    var result: [CalendarEvent] = []
+    var used: CGFloat = 0
+    for event in events.prefix(limit) {
+      let next = used + (result.isEmpty ? 0 : 4) + EventCard.height(for: event)
+      let more: CGFloat = result.count + 1 < events.count ? 18 : 0
+      guard next + more <= height else { break }
+      result.append(event)
+      used = next
+    }
+    return result
+  }
+
+  private func moreButton(_ title: String) -> some View {
+    Button(title) { onOpen?() }
+      .font(.system(size: 10, weight: .medium))
+      .foregroundStyle(IslandPalette.secondary)
+      .buttonStyle(.plain)
+      .frame(height: 14)
   }
 
   /// Колонка «сегодня» — полный список дня: все незакончившиеся по началу, без отклонённых. Не стопка Duo:

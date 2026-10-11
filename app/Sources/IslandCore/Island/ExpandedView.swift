@@ -1,7 +1,8 @@
-/// Виды раскрытого острова. Свайп вниз листает их по кругу, у всех размер 345×175 (ui-inspection 3.7).
+/// Виды раскрытого острова. Обзор и каталог открывают модули без последовательного листания.
 /// rawValue — ключ в UserDefaults: последний вид для Most Recent переживает перезапуск
 public enum ExpandedView: String, CaseIterable, Hashable, Sendable {
   case duo, player, calendar, claude, soon
+  case overview, modules
 
   public var next: ExpandedView {
     let all = Self.allCases

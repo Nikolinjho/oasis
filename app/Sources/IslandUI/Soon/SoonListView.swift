@@ -4,6 +4,7 @@ import SwiftUI
 struct SoonListView: View {
   let panel: SoonPanel
   let now: Date
+  var compact = false
   let onAction: (SoonAction) -> Void
 
   var body: some View {
@@ -31,7 +32,7 @@ struct SoonListView: View {
         }
       }
       .scrollIndicators(.hidden)
-      .frame(height: 84)
+      .frame(height: compact ? 112 : 84)
       HStack {
         Button(panel.showsCompleted ? "Активные" : "Завершённые") {
           onAction(panel.showsCompleted ? .showList : .showCompleted)
@@ -47,10 +48,10 @@ struct SoonListView: View {
     }
     .font(.system(size: 12))
     .buttonStyle(SoonTextButtonStyle())
-    .padding(.horizontal, 24)
-    .padding(.top, 32)
-    .padding(.bottom, 22)
-    .frame(width: 345, height: 175, alignment: .top)
+    .padding(.horizontal, compact ? 0 : 24)
+    .padding(.top, compact ? 0 : 32)
+    .padding(.bottom, compact ? 0 : 22)
+    .frame(width: compact ? 204 : 345, height: compact ? 164 : 175, alignment: .top)
   }
 }
 

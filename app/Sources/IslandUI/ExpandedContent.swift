@@ -17,10 +17,43 @@ struct ExpandedContent: View {
   let onAction: (PlayerAction) -> Void
   let onJoin: (URL) -> Void
   var timeScale: Double = 1
+  var navigation = false
+  var notchWidth: CGFloat = 185
+  var mediaEnabled = true
+  var calendarEnabled = true
+  var onSelectView: (ExpandedView) -> Void = { _ in }
+  var onOpenSettings: () -> Void = {}
 
   var body: some View {
+    ZStack(alignment: .top) {
+      content
+        .padding(.top, navigation ? ExpandedLayout.headerHeight : 0)
+      if navigation {
+        ExpandedNavigation(
+          view: view, width: size.width, notchWidth: notchWidth,
+          onSelectView: onSelectView, onOpenSettings: onOpenSettings)
+      }
+    }
+    .frame(width: size.width, height: size.height, alignment: .top)
+  }
+
+  private var content: some View {
     ZStack(alignment: .topLeading) {
       switch view {
+      case .overview:
+        OverviewView(
+          info: info, agenda: agenda, claude: claude, soon: soon, dismissedEvents: dismissedEvents,
+          appearance: appearance, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
+          onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
+          onSelectView: onSelectView, onOpenSettings: onOpenSettings
+        )
+        .transition(.viewSwap(timeScale: timeScale))
+      case .modules:
+        ModulesView(
+          mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
+          claudeAvailable: claude != nil, soonAvailable: soon != nil, onSelectView: onSelectView
+        )
+        .transition(.viewSwap(timeScale: timeScale))
       case .duo:
         DuoView(
           info: info, agenda: agenda, dismissedEvents: dismissedEvents, appearance: appearance, liveEvent: liveEvent,
@@ -52,15 +85,15 @@ struct ExpandedContent: View {
           .transition(.viewSwap(timeScale: timeScale))
       }
     }
-    .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .topLeading)
+    .frame(width: size.width, height: contentHeight, alignment: .topLeading)
   }
 
-  /// Duo и календарь — фиксированные 175 (DuoLayout.size), как раньше. Плеер со строкой громкости выше
-  /// на IslandGeometry.volumeRowHeight: высота контента совпадает с IslandGeometry.spec(volumeRow: true),
-  /// а не остаётся 175 в расчёте, что лишнее просто не обрежется вышестоящим clipShape
+  private var size: CGSize {
+    ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
+  }
+
   private var contentHeight: CGFloat {
-    guard view == .player, showsVolumeRow else { return DuoLayout.size.height }
-    return DuoLayout.size.height + IslandGeometry.volumeRowHeight
+    size.height - (navigation ? ExpandedLayout.headerHeight : 0)
   }
 }
 

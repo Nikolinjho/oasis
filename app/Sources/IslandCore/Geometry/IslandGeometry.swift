@@ -180,7 +180,7 @@ public enum IslandGeometry {
   /// за 80 pt от формы: раскрытый 381.6 с ушками + 2 × 80 = 541.6 в ширину, 175 + 80 = 255 в высоту.
   /// Прежние 480 × 256 вмещали только пик перелёта с тенью (398.6 × 188.1 + 36 pt тени) и плеер
   /// со строкой громкости, растянутый свайпом (207 + 7 + 41 тени = 255)
-  public static let windowSize = CGSize(width: 624, height: 320)
+  public static let windowSize = CGSize(width: 960, height: 360)
 
   /// calendarIndicatorWidth — ширина самого широкого индикатора компакта календаря (меряет IslandUI),
   /// нужна только .calendar и .calendarPeek. reminderIndicatorWidth — то же для напоминания
@@ -189,7 +189,8 @@ public enum IslandGeometry {
   public static func spec(  // swiftlint:disable:this cyclomatic_complexity function_body_length - таблица поверхность → форма
     for surface: Surface, hasMedia: Bool, notch: CGSize, calendarIndicatorWidth: CGFloat,
     reminderIndicatorWidth: CGFloat, battery: BatteryAlertStyle = BatteryAlertStyle(),
-    calendarWithMusic: Bool = false, volumeRow: Bool = false
+    calendarWithMusic: Bool = false, volumeRow: Bool = false,
+    expandedView: ExpandedView = .duo, navigation: Bool = false
   ) -> IslandShapeSpec {
     if case .hoverNudge(let from) = surface {
       // отклик — исходная форма, только шире: радиус и ушки как у неё (оценка)
@@ -211,7 +212,7 @@ public enum IslandGeometry {
         hasMedia
           ? CGSize(width: notchRelativeWidth(hoverWithMedia.width, notch: notch.width), height: hoverWithMedia.height)
           : hoverEmpty
-      case .expanded: expanded
+      case .expanded: ExpandedLayout.size(for: expandedView, navigation: navigation)
       case .shrink: CGSize(width: shrinkWidth, height: notch.height)
       case .hud: CGSize(width: notchRelativeWidth(hud.width, notch: notch.width), height: hud.height)
       case .alert(let alert): size(for: alert, notch: notch, reminderIndicatorWidth: reminderIndicatorWidth, battery: battery)
@@ -256,7 +257,7 @@ public enum IslandGeometry {
       case .hoverNudge: Shoulder.idle  // разобран выше
       }
     // со строкой громкости углы на кадре те же, что у 175: радиус по высоте без строки (замера нет, оценка)
-    let radiusHeight = surface == .expanded && volumeRow ? expanded.height : size.height
+    let radiusHeight = size.height - (surface == .expanded && volumeRow ? volumeRowHeight : 0)
     return IslandShapeSpec(size: size, bottomRadius: bottomRadius(forHeight: radiusHeight), shoulder: shoulder)
   }
 

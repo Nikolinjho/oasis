@@ -1,15 +1,15 @@
-/// Idle Activity (General, ui-inspection 1.2): плитки None / Playing / Calendar / Duo. По ключам Alcove
-/// (idleActivity.expandedActivity.*) они выбирают вид раскрытого, а не покой (решение 28.09)
+/// Idle Activity выбирает начальный экран раскрытого. Ключ duo сохранён для совместимости настроек:
+/// в пользовательском режиме он открывает Overview, в режиме сверки Alcove — Duo.
 public enum IdleActivity: String, CaseIterable, Sendable {
   case none, playing, calendar, duo
 
-  /// Подпись плитки и тумблера Most Recent (ui-inspection 1.2): None / Playing / Calendar / Duo
+  /// Подпись плитки и тумблера Most Recent.
   public var title: String {
     switch self {
     case .none: "None"
     case .playing: "Playing"
     case .calendar: "Calendar"
-    case .duo: "Duo"
+    case .duo: "Overview"
     }
   }
 }

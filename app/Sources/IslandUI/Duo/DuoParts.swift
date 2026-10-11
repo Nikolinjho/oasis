@@ -186,6 +186,7 @@ struct DateBadge: View {
 /// 138×28 без места (название + время), 138×40 с местом (название + 📍место + время, Alcove 1.7.9, 29.09)
 struct EventCard: View {
   let event: CalendarEvent
+  var width = DuoLayout.eventWidth
   var onJoin: (() -> Void)?
 
   /// Вся карточка — кнопка созвона, если ссылка есть (решение 28.09). У Alcove карточка — AX-кнопка,
@@ -248,7 +249,7 @@ struct EventCard: View {
     // иначе текст упирается в край (оценка по кадру 29.09)
     .padding(.vertical, Self.height(for: event) == 28 ? 3 : 1)
     .padding(.leading, 4)
-    .frame(width: DuoLayout.eventWidth, height: Self.height(for: event))
+    .frame(width: width, height: Self.height(for: event))
     .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.15)))
     .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     // жест карточки перекрывает клик по острову; Join внутри — своя кнопка и срабатывает сам

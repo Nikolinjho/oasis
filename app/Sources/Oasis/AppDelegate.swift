@@ -45,13 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private var tasks: [Task<Void, Never>] = []
   private var debugSections: [DebugSection] = []
   private lazy var links = LaunchLinkQueue { [weak self] url in DebugURL.perform(url, in: self?.debugSections ?? []) }
-  /// Строка громкости плеера: пока её двигают, изменения громкости HUD не показывают (у Alcove HUD
-  /// от строки не появляется, 28.09). 0.5 с после последнего сдвига — оценка: CoreAudio отвечает за десятки мс
+  /// После изменения громкости из плеера HUD молчит 0.5 с, пока CoreAudio подтверждает уровень.
   private var rowQuietUntil = Date.distantPast
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "app")
 
-  /// При холодном запуске по ссылке (`open -g -a … "oasis://…"`) AppKit доставляет
-  /// application(_:open:) ещё до applicationDidFinishLaunching: каталог должен быть готов уже здесь
+  /// При холодном запуске по ссылке каталог готов до applicationDidFinishLaunching: AppKit уже доставляет URL.
   func applicationWillFinishLaunching(_ notification: Notification) {
     soon.install()
     debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude, soon: soon.module)
@@ -68,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     // Most Recent: последний вид раскрытого переживает перезапуск
     store.restoreLastExpandedView(settings.lastExpandedView)
     store.onLastExpandedViewChange = { [weak self] view in self?.settings.lastExpandedView = view }
+    store.onOpenSettings = { [weak self] in self?.settingsWindow.show() }
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -148,6 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
 
   /// Вид острова: настройки плюс текущее устройство вывода
   private func applyAppearance() {
+    store.mediaEnabled = settings.nowPlayingEnabled
     var appearance = settings.appearance
     appearance.output = OutputDeviceKind.classify(
       transport: output.transport, uid: output.uid, name: output.name, knownHeadphones: knownHeadphones)

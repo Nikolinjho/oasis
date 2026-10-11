@@ -9,6 +9,13 @@ struct MonthGridView: View {
   /// События месяца для индикаторов. Пусто, если Use event indicators выключен
   var events: [CalendarEvent] = []
   var calendar: Calendar = .current
+  var compact = false
+
+  private var cell: CGSize { compact ? CGSize(width: 19, height: 16) : Self.cell }
+  private var left: CGFloat { compact ? 147 : Self.left }
+  private var titleY: CGFloat { compact ? 7 : Self.titleCenterY }
+  private var weekdayY: CGFloat { compact ? 24 : Self.weekdayCenterY }
+  private var firstRowY: CGFloat { compact ? 38 : Self.firstRowCenterY }
 
   static let cell = CGSize(width: 21, height: 20)
   /// Левый край сетки: 7 колонок кончаются у правого края колонки событий (188.5 + 138)
@@ -24,24 +31,24 @@ struct MonthGridView: View {
       Text(grid.title)
         .font(.system(size: 10, weight: .bold))
         .foregroundStyle(IslandPalette.dateAccent)
-        .frame(width: 7 * Self.cell.width, alignment: .trailing)
-        .position(x: Self.left + 3.5 * Self.cell.width, y: Self.titleCenterY)
+        .frame(width: 7 * cell.width, alignment: .trailing)
+        .position(x: left + 3.5 * cell.width, y: titleY)
       ForEach(Array(MonthGrid.weekdaySymbols.enumerated()), id: \.offset) { column, symbol in
         Text(symbol)
           .font(.system(size: 10.5, weight: .semibold))
           .foregroundStyle(MonthGrid.isWeekend(column: column) ? IslandPalette.secondary : IslandPalette.foreground)
-          .position(x: Self.centerX(column), y: Self.weekdayCenterY)
+          .position(x: centerX(column), y: weekdayY)
       }
       ForEach(Array(grid.weeks.enumerated()), id: \.offset) { row, week in
         ForEach(Array(week.enumerated()), id: \.offset) { column, day in
           if let day {
             dayCell(day, column: column)
-              .position(x: Self.centerX(column), y: Self.firstRowCenterY + CGFloat(row) * Self.cell.height)
+              .position(x: centerX(column), y: firstRowY + CGFloat(row) * cell.height)
           }
         }
       }
     }
-    .frame(width: DuoLayout.size.width, height: DuoLayout.size.height, alignment: .topLeading)
+    .frame(width: compact ? 280 : DuoLayout.size.width, height: compact ? 126 : DuoLayout.size.height, alignment: .topLeading)
   }
 
   private func dayCell(_ day: Date, column: Int) -> some View {
@@ -53,7 +60,7 @@ struct MonthGridView: View {
       .foregroundStyle(
         isToday ? IslandPalette.foreground : MonthGrid.isWeekend(column: column) ? IslandPalette.secondary : IslandPalette.foreground
       )
-      .frame(width: Self.todayDiameter, height: Self.todayDiameter)
+      .frame(width: compact ? 16 : Self.todayDiameter, height: compact ? 16 : Self.todayDiameter)
       .background(Circle().fill(isToday ? IslandPalette.dateAccent : .clear))
       // черточки под числом: по одной на календарь с событиями этого дня, в его цвете
       .overlay(alignment: .bottom) {
@@ -67,6 +74,10 @@ struct MonthGridView: View {
   }
 
   static func centerX(_ column: Int) -> CGFloat {
+    left + (CGFloat(column) + 0.5) * cell.width
+  }
+
+  private func centerX(_ column: Int) -> CGFloat {
     left + (CGFloat(column) + 0.5) * cell.width
   }
 }
