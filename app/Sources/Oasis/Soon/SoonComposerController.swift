@@ -17,6 +17,7 @@ final class SoonComposerController {
   private(set) var submitting = false
   private(set) var error: String?
   private(set) var isOpen = false
+  private(set) var dismissalSpec: IslandShapeSpec?
   var authorizationPending = false
   private(set) var mode = SoonComposerMode.new
   @ObservationIgnored private var panel: SoonComposerPanel?
@@ -25,7 +26,9 @@ final class SoonComposerController {
   @ObservationIgnored private var suspendedForHUD = false
   @ObservationIgnored private var restoreAfterHUD = true
   @ObservationIgnored private var submission: Task<Void, Never>?
+  @ObservationIgnored private var dismissalID = UUID()
   @ObservationIgnored var onEditing: (Bool) -> Void = { _ in }
+  @ObservationIgnored var onDismiss: () -> (spec: IslandShapeSpec, animation: Animation)? = { nil }
   @ObservationIgnored var frame: () -> CGRect = {
     let screen = NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
     let size = IslandGeometry.windowSize
@@ -34,7 +37,8 @@ final class SoonComposerController {
   @ObservationIgnored var submit: (String, String, SoonComposerMode) async throws -> Void = { _, _, _ in }
 
   func show(_ mode: SoonComposerMode) {
-    guard !submitting else { return }
+    guard !submitting, dismissalSpec == nil else { return }
+    dismissalID = UUID()
     if self.mode != mode {
       self.mode = mode
       switch mode {
@@ -68,6 +72,8 @@ final class SoonComposerController {
     monitors.removeAll()
     panel = nil
     isOpen = false
+    dismissalID = UUID()
+    dismissalSpec = nil
     suspendedForHUD = false
     onEditing(false)
     if shouldRestore { previousApp?.activate() }
@@ -159,23 +165,38 @@ final class SoonComposerController {
 
   private func outsideClick() {
     if suspendedForHUD { restoreAfterHUD = false }
-    guard !authorizationPending, !submitting else { return }
-    close()
+    guard !authorizationPending, !submitting, dismissalSpec == nil else { return }
+    guard !suspendedForHUD, let target = onDismiss() else {
+      close()
+      return
+    }
+    let id = dismissalID
+    withAnimation(target.animation, completionCriteria: .removed) {
+      dismissalSpec = target.spec
+    } completion: { [weak self] in
+      guard let self, self.isOpen, self.dismissalID == id else { return }
+      self.close()
+    }
   }
 
   private struct SoonComposerRoot: View {
     @Bindable var controller: SoonComposerController
     private let spec = IslandShapeSpec(size: CGSize(width: 345, height: 175), bottomRadius: 35, shoulder: 18.3)
     var body: some View {
+      let shape = IslandShape(spec: controller.dismissalSpec ?? spec)
       ZStack(alignment: .top) {
-        IslandShape(spec: spec).fill(.black)
+        shape.fill(.black)
         SoonComposerView(
           title: $controller.title, duration: $controller.duration,
           heading: controller.mode == .new ? "Новое напоминание" : "Изменить напоминание",
           error: controller.error, submitting: controller.submitting,
-          onSubmit: { controller.save() }, onClose: { controller.close() })
+          onSubmit: { controller.save() }, onClose: { controller.close() }
+        )
+        .opacity(controller.dismissalSpec == nil ? 1 : 0)
+        .allowsHitTesting(controller.dismissalSpec == nil)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      .clipShape(shape)
     }
   }
 }

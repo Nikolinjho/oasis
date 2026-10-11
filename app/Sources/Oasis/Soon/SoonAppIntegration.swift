@@ -38,6 +38,7 @@ final class SoonAppIntegration {
   func start(window: IslandWindowController?) {
     composer.frame = { [weak window] in window?.composerFrame ?? .zero }
     composer.onEditing = { [weak window] active in window?.setComposerActive(active) }
+    composer.onDismiss = { [weak window] in window?.dismissComposer() }
     window?.onComposerSurfaceChange = { [weak composer] surface in composer?.surfaceChanged(surface) }
     module.start()
   }

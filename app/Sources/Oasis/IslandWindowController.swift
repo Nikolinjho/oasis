@@ -326,6 +326,16 @@ extension IslandWindowController {
     panel?.frame ?? CGRect(x: 400, y: 400, width: 624, height: 320)
   }
 
+  func dismissComposer() -> (spec: IslandShapeSpec, animation: Animation) {
+    pointerInside = false
+    hoverOpenedFrom = nil
+    leftButtonDown = false
+    dragStartedInside = false
+    store.send(.clickedOutside)
+    let animation = IslandMotion.spring(for: .collapse, timeScale: store.model.config.timeScale)?.animation ?? .default
+    return (store.spec, animation)
+  }
+
   func setComposerActive(_ active: Bool) {
     composerActive = active
     store.setSoonComposing(active)
