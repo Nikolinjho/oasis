@@ -15,7 +15,7 @@ struct SoonPeekView: View {
         Spacer(minLength: notchWidth)
         Text("Soon")
           .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(IslandPalette.foreground)
+          .foregroundStyle(SoonPalette.foreground)
           .lineLimit(1)
           .fixedSize()
       }
@@ -23,7 +23,7 @@ struct SoonPeekView: View {
       .frame(height: 32)
       Text(layout.line?.title ?? notice.title)
         .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(IslandPalette.foreground)
+        .foregroundStyle(SoonPalette.foreground)
         .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 24)

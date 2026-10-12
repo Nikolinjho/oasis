@@ -8,7 +8,9 @@ struct ActivityIcon: View {
 
   var body: some View {
     Group {
-      if let name = layout.imageName, let image = IconLibrary.image(named: name) {
+      if layout.imageName == "soon" {
+        SoonIcon()
+      } else if let name = layout.imageName, let image = IconLibrary.image(named: name) {
         Image(nsImage: image)
           .renderingMode(.template)
           .resizable()

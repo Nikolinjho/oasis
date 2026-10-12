@@ -17,6 +17,7 @@ cp "$BIN" "$APP/Contents/MacOS/Oasis"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 # иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
 cp -R Resources/YandexMusic "$APP/Contents/Resources/"
+cp -R Resources/Soon "$APP/Contents/Resources/"
 cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png "$APP/Contents/Resources/"
 
 if [ -d "$ADAPTER" ]; then

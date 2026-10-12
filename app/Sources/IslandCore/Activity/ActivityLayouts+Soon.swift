@@ -1,12 +1,12 @@
 import Foundation
 
 extension ActivityLayouts {
-  public static let soonTeal = RGB(red: 45 / 255, green: 212 / 255, blue: 191 / 255)
+  public static let soonAccent = RGB(red: 1, green: 184 / 255, blue: 0)
 
   public static func soon(_ notice: SoonNotice) -> ActivityLayout {
     ActivityLayout(
-      symbol: "checklist", symbolColor: soonTeal,
-      indicator: .text("Soon", color: soonTeal),
-      line: .init(bar: nil, title: notice.title))
+      symbol: "clock.arrow.circlepath", symbolColor: soonAccent,
+      indicator: .text("Soon", color: soonAccent),
+      line: .init(bar: nil, title: notice.title), imageName: "soon")
   }
 }

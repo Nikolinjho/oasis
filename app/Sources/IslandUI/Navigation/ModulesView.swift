@@ -16,7 +16,7 @@ struct ModulesView: View {
       tile(
         "Claude Code", subtitle: claudeAvailable ? "Лимиты и прогноз" : "Нет данных", symbol: "sparkle", view: .claude,
         enabled: claudeAvailable)
-      tile("Soon", subtitle: "Напоминания", symbol: "checkmark.circle", view: .soon, enabled: soonAvailable)
+      tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon, enabled: soonAvailable)
       ModuleTile(title: "Pomodoro", subtitle: "Скоро", symbol: "timer", enabled: false, action: {})
     }
     .padding(.horizontal, 24)
@@ -41,10 +41,16 @@ private struct ModuleTile: View {
   var body: some View {
     Button(action: action) {
       VStack(spacing: 10) {
-        Image(systemName: symbol)
-          .font(.system(size: 28, weight: .regular))
-          .frame(height: 36)
-          .foregroundStyle(title == "Claude Code" ? .orange : title == "Soon" ? SoonStyle.teal : IslandPalette.foreground)
+        Group {
+          if title == "Soon" {
+            SoonIcon().frame(width: 36, height: 36)
+          } else {
+            Image(systemName: symbol)
+              .font(.system(size: 28, weight: .regular))
+              .foregroundStyle(title == "Claude Code" ? .orange : IslandPalette.foreground)
+          }
+        }
+        .frame(height: 36)
         Text(title)
           .font(.system(size: 12, weight: .semibold))
           .foregroundStyle(IslandPalette.foreground)

@@ -94,7 +94,7 @@ struct OverviewView: View {
     Button(action: onOpenSettings) {
       VStack(spacing: 6) {
         Text(title).font(.system(size: 12, weight: .medium))
-        Text("Настроить").font(.system(size: 11)).foregroundStyle(SoonStyle.teal)
+        Text("Настроить").font(.system(size: 11)).foregroundStyle(Color(red: 45 / 255, green: 212 / 255, blue: 191 / 255))
       }
       .foregroundStyle(IslandPalette.secondary)
       .frame(width: width, height: height)

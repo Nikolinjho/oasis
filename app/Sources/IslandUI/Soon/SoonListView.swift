@@ -10,9 +10,10 @@ struct SoonListView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       HStack {
+        SoonIcon().frame(width: 16, height: 16)
         Text("Soon")
           .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(IslandPalette.foreground)
+          .foregroundStyle(SoonPalette.foreground)
         Spacer()
         Button("Добавить") { onAction(.create) }
       }
@@ -22,7 +23,7 @@ struct SoonListView: View {
           if panel.visibleReminders.isEmpty {
             Text(panel.showsCompleted ? "Завершённых напоминаний нет" : "Напоминаний пока нет")
               .font(.system(size: 12))
-              .foregroundStyle(IslandPalette.secondary)
+              .foregroundStyle(SoonPalette.secondary)
               .frame(maxWidth: .infinity, minHeight: 84, alignment: .center)
           } else {
             ForEach(panel.visibleReminders) { reminder in
@@ -40,10 +41,11 @@ struct SoonListView: View {
         Spacer()
         if panel.showsCompleted, panel.reminders.contains(where: { $0.state == .completed }) {
           Button("Очистить") { onAction(.clearCompleted) }
+            .buttonStyle(SoonTextButtonStyle(tint: SoonPalette.darkCoral))
         }
       }
       .font(.system(size: 10))
-      .foregroundStyle(IslandPalette.secondary)
+      .foregroundStyle(SoonPalette.secondary)
       .frame(height: 11)
     }
     .font(.system(size: 12))
@@ -69,14 +71,14 @@ private struct SoonListRow: View {
         HStack(spacing: 6) {
           Text(reminder.title)
             .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(IslandPalette.foreground)
+            .foregroundStyle(SoonPalette.foreground)
             .underline(isHovered)
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityLabel(reminder.title)
           Text(SoonStyle.remaining(reminder, now: now))
             .font(.system(size: 12, design: .monospaced))
-            .foregroundStyle(IslandPalette.secondary)
+            .foregroundStyle(SoonPalette.secondary)
             .lineLimit(1)
             .fixedSize()
         }
@@ -99,8 +101,6 @@ private struct SoonListRow: View {
 }
 
 internal enum SoonStyle {
-  static let teal = Color(ActivityLayouts.soonTeal)
-
   static func remaining(_ reminder: SoonReminder, now: Date) -> String {
     if reminder.state == .completed { return "Готово" }
     let seconds = max(0, Int(reminder.dueAt.timeIntervalSince(now).rounded(.up)))

@@ -11,27 +11,28 @@ struct SoonDetailView: View {
       HStack {
         Button("Назад") { onAction(.showList) }
         Spacer()
+        SoonIcon().frame(width: 16, height: 16)
         Text("Soon")
           .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(IslandPalette.foreground)
+          .foregroundStyle(SoonPalette.foreground)
       }
       .frame(height: 16)
       ScrollView {
         VStack(alignment: .leading, spacing: 6) {
           Text(reminder.title)
             .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(IslandPalette.foreground)
+            .foregroundStyle(SoonPalette.foreground)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel(reminder.title)
             .textSelection(.enabled)
           HStack(spacing: 8) {
             Text(SoonStyle.remaining(reminder, now: now))
               .font(.system(size: 13, weight: .medium, design: .monospaced))
-              .foregroundStyle(IslandPalette.secondary)
+              .foregroundStyle(SoonPalette.secondary)
             Text(reminder.dueAt, format: .dateTime.hour().minute())
-              .foregroundStyle(IslandPalette.secondary)
+              .foregroundStyle(SoonPalette.secondary)
             Text(stateLabel)
-              .foregroundStyle(IslandPalette.secondary)
+              .foregroundStyle(SoonPalette.secondary)
           }
           .font(.system(size: 11))
           if reminder.state == .completed {
@@ -48,6 +49,7 @@ struct SoonDetailView: View {
               Button("Изменить") { onAction(.edit(id: reminder.id, revision: reminder.revision)) }
             }
             Button("Удалить") { onAction(.delete(id: reminder.id, revision: reminder.revision)) }
+              .buttonStyle(SoonTextButtonStyle(tint: SoonPalette.darkCoral))
           }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -55,7 +57,7 @@ struct SoonDetailView: View {
       .scrollIndicators(.hidden)
     }
     .font(.system(size: 12))
-    .foregroundStyle(IslandPalette.foreground)
+    .foregroundStyle(SoonPalette.foreground)
     .buttonStyle(SoonTextButtonStyle())
     .padding(.horizontal, 24)
     .padding(.top, 32)

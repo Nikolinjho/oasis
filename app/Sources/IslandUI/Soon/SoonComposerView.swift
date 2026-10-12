@@ -11,7 +11,6 @@ public struct SoonComposerView: View {
   let onClose: () -> Void
   @FocusState private var focused: Field?
   private enum Field: Hashable { case title, duration }
-  private let accent = Color(red: 45 / 255, green: 212 / 255, blue: 191 / 255)
 
   public init(
     title: Binding<String>, duration: Binding<String>, heading: String = "Новое напоминание",
@@ -65,7 +64,7 @@ public struct SoonComposerView: View {
       .padding(.top, 6)
       HStack(spacing: 6) {
         Text(error ?? deadlineText)
-          .foregroundStyle(error == nil ? IslandPalette.secondary : IslandPalette.lowBattery)
+          .foregroundStyle(error == nil ? SoonPalette.secondary : SoonPalette.darkCoral)
           .font(.system(size: 10))
           .lineLimit(1)
           .help(error ?? deadlineText)
@@ -80,11 +79,11 @@ public struct SoonComposerView: View {
     }
     .padding(.horizontal, 24)
     .frame(width: 345, height: 175, alignment: .top)
-    .foregroundStyle(IslandPalette.foreground)
+    .foregroundStyle(SoonPalette.foreground)
     .font(.system(size: 11))
     .buttonStyle(SoonTextButtonStyle())
     .environment(\.colorScheme, .dark)
-    .tint(accent)
+    .tint(SoonPalette.accent)
     .onAppear { focused = .title }
     .onExitCommand(perform: onClose)
   }

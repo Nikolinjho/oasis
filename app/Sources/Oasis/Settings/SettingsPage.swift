@@ -1,3 +1,4 @@
+import IslandUI
 import SwiftUI
 
 /// Пункты сайдбара в порядке Alcove (ui-inspection 1.1). Готова только General, остальные —
@@ -43,7 +44,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .lockScreen: "lock.fill"
     case .claudeCode: "sparkle"
     case .pomodoro: "timer"
-    case .soon: "checklist"
+    case .soon: "clock.arrow.circlepath"
     case .about: "info"
     }
   }
@@ -63,7 +64,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     // Оранжевый Claude ≈ #D97757: у Alcove таких страниц нет, цвета модулей — оценка
     case .claudeCode: Color(red: 0.85, green: 0.47, blue: 0.34)
     case .pomodoro: .red
-    case .soon: .teal
+    case .soon: SoonPalette.accent
     }
   }
 

@@ -1,4 +1,5 @@
 import AppKit
+import IslandUI
 import SwiftUI
 
 /// Акцент Alcove: тумблер и заливка слайдера (ui-inspection 1.1)
@@ -21,13 +22,17 @@ struct SettingsIcon: View {
   let side: CGFloat
 
   var body: some View {
-    RoundedRectangle(cornerRadius: side * 0.26, style: .continuous)
-      .fill(page.tint)
-      .frame(width: side, height: side)
-      .overlay(
-        Image(systemName: page.symbol)
-          .font(.system(size: side * 0.55, weight: .semibold))
-          .foregroundStyle(.white))
+    if page == .soon {
+      SoonIcon().frame(width: side, height: side)
+    } else {
+      RoundedRectangle(cornerRadius: side * 0.26, style: .continuous)
+        .fill(page.tint)
+        .frame(width: side, height: side)
+        .overlay(
+          Image(systemName: page.symbol)
+            .font(.system(size: side * 0.55, weight: .semibold))
+            .foregroundStyle(.white))
+    }
   }
 }
 
@@ -107,6 +112,7 @@ struct ToggleRow: View {
   var preview: (() -> Void)?
   var icon: String?
   @Binding var isOn: Bool
+  var tint: Color = SettingsPalette.accent
 
   var body: some View {
     HStack(spacing: 6) {
@@ -122,7 +128,7 @@ struct ToggleRow: View {
       Toggle("", isOn: $isOn)
         .labelsHidden()
         .toggleStyle(.switch)
-        .tint(SettingsPalette.accent)
+        .tint(tint)
     }
     .padding(.horizontal, 12)
     .frame(height: 42)

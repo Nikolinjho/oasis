@@ -1,5 +1,6 @@
 import AppKit
 import IslandCore
+import IslandUI
 import SwiftUI
 
 struct SoonSettingsPage: View {
@@ -10,13 +11,13 @@ struct SoonSettingsPage: View {
     VStack(alignment: .leading, spacing: 16) {
       PageHeader(page: .soon)
       SettingsCard(title: nil) {
-        ToggleRow(title: "Soon", info: "Короткие напоминания с произвольным сроком", isOn: $settings.enabled)
+        ToggleRow(title: "Soon", info: "Короткие напоминания с произвольным сроком", isOn: $settings.enabled, tint: SoonPalette.accent)
       }
       if settings.enabled {
         SettingsCard(title: "Notifications") {
-          ToggleRow(title: "Show in island", isOn: $settings.showInIsland)
+          ToggleRow(title: "Show in island", isOn: $settings.showInIsland, tint: SoonPalette.accent)
           RowDivider()
-          ToggleRow(title: "System notifications", isOn: $settings.systemNotifications)
+          ToggleRow(title: "System notifications", isOn: $settings.systemNotifications, tint: SoonPalette.accent)
           if settings.systemNotifications {
             VStack(alignment: .leading, spacing: 6) {
               Text(authorizationText).font(.system(size: 11)).foregroundStyle(.secondary)
@@ -27,7 +28,7 @@ struct SoonSettingsPage: View {
                   }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(SettingsPalette.accent)
+                .foregroundStyle(SoonPalette.accent)
               }
               if let error = module.delivery.error {
                 Text(error).font(.system(size: 11)).foregroundStyle(.secondary)
@@ -36,16 +37,17 @@ struct SoonSettingsPage: View {
             .padding(.bottom, 8)
           }
           RowDivider()
-          ToggleRow(title: "Play sound", isOn: $settings.playSound)
+          ToggleRow(title: "Play sound", isOn: $settings.playSound, tint: SoonPalette.accent)
         }
         SettingsCard(title: "Behaviour") {
-          ToggleRow(title: "Hide peek in fullscreen", isOn: $settings.hidePeekInFullscreen)
+          ToggleRow(title: "Hide peek in fullscreen", isOn: $settings.hidePeekInFullscreen, tint: SoonPalette.accent)
         }
         HStack {
           Button("New reminder…") { module.perform(.create) }
-            .foregroundStyle(SettingsPalette.accent)
+            .foregroundStyle(SoonPalette.accent)
           Spacer()
           Button("Clear completed") { module.perform(.clearCompleted) }
+            .foregroundStyle(SoonPalette.coral)
             .disabled(!module.reminders.contains { $0.state == .completed })
         }
         .buttonStyle(.plain)
@@ -54,7 +56,7 @@ struct SoonSettingsPage: View {
         .padding(.bottom, 22)
       }
       if let error = module.error {
-        Text(error).font(.system(size: 11)).foregroundStyle(.red)
+        Text(error).font(.system(size: 11)).foregroundStyle(SoonPalette.coral)
       }
     }
     .onAppear { module.systemTimeChanged() }
