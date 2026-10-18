@@ -102,7 +102,7 @@ final class CalendarClock {
               CalendarReminder(
                 eventID: event.id, title: event.title, minutes: minutes,
                 color: settings.coloredIndicator ? event.color : ActivityLayouts.calendarRed))))
-      case .started where !started:
+      case .started(let event) where !started && event.id == live?.id:
         started = true
         store.send(.calendarStarted)
       case .started:
@@ -122,9 +122,8 @@ final class CalendarClock {
   }
 
   /// Пункты события для меню menu bar — по повестке раскрытого (режим Expanded View включает меню).
-  /// Окно календаря открыто — событие окна (начавшееся позже всех), иначе самое раннее из T − lead…конец.
-  /// Отступление от «самое раннее» плана намеренное: при пересечении (A 10:00–11:00, B с 10:30) Join и Dismiss
-  /// должны относиться к B, которое показывает остров, а не к A
+  /// Окно календаря открыто — первое идущее событие, иначе ближайшее из T − lead…конец.
+  /// Join и Dismiss относятся к тому же событию, что и кольцо в компакте.
   func menuModel(now: Date = Date()) -> CalendarMenuModel? {
     if let live = CalendarSchedule.liveEvent(in: Self.visible(expanded, dismissed), at: now, lead: settings.lead) {
       return CalendarMenuModel(event: live, meeting: MeetingLink.find(in: live))

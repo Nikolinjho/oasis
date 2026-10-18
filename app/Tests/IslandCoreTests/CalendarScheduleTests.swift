@@ -63,18 +63,41 @@ struct CalendarScheduleTests {
     #expect(CalendarSchedule.nextBoundary(in: Self.agenda, after: Self.at(0), extra: { [$0.start.addingTimeInterval(4)] }) == Self.at(4))
   }
 
-  @Test("Пересекающиеся события: окно переходит к начавшемуся позже ровно в момент его старта, после конца — обратно")
+  @Test("Пересекающееся событие не забирает окно у идущего, даже если целиком помещается внутри него")
   func overlappingLiveEvent() {
     let long = CalendarEvent(
       id: "long", title: "Длинное", start: Self.start, end: Self.at(3600), isAllDay: false, color: Self.event.color)
     let inner = CalendarEvent(
       id: "inner", title: "Внутри", start: Self.at(1800), end: Self.at(2700), isAllDay: false, color: Self.event.color)
     let agenda = DayAgenda.make(events: [inner, long], now: Self.at(-100))
-    // до старта inner окно держит long, даже когда T−15 у inner уже прошёл: переход не раньше старта
     #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1799)) == long)
-    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1800)) == inner)
-    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2000)) == inner)
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(1800)) == long)
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2000)) == long)
     #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(2700)) == long)
+  }
+
+  @Test("При остатке 12 минут кольцо относится к первой встрече, следующая получает окно только после её конца")
+  func overlappingCallsKeepProgress() {
+    let first = CalendarEvent(
+      id: "first", title: "Первая встреча", start: Self.start, end: Self.at(45 * 60), isAllDay: false, color: Self.event.color)
+    let second = CalendarEvent(
+      id: "second", title: "Вторая встреча", start: Self.at(15 * 60), end: Self.at(75 * 60), isAllDay: false, color: first.color)
+    let agenda = DayAgenda.make(events: [second, first], now: Self.at(0))
+    let now = Self.at(33 * 60)
+    let live = CalendarSchedule.liveEvent(in: agenda, at: now)
+    #expect(live == first)
+    if let live {
+      let layout = ActivityLayouts.calendar(event: live, now: now, showsLine: true)
+      guard case .ring(let progress, _, _) = layout.indicator else {
+        Issue.record("У идущего события должно быть кольцо")
+        return
+      }
+      #expect(abs(progress - 33.0 / 45) < 0.0001)
+      #expect(layout.line?.trailing == "12m")
+    }
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(45 * 60 - 1)) == first)
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(45 * 60)) == second)
+    #expect(CalendarSchedule.liveEvent(in: agenda, at: Self.at(75 * 60)) == nil)
   }
 
   @Test("События встык без разрыва: окно переходит к следующему точно в момент его начала, не раньше (Alcove — не проверено, оценка)")

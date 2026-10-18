@@ -14,9 +14,9 @@ public enum CalendarSchedule {
   /// Отметку старше этого (Mac спал, таймер опоздал) уже не показываем
   public static let staleAfter: TimeInterval = 60
 
-  /// Событие окна календаря. Сначала — среди уже начавшихся и ещё не закончившихся, то, что стартовало
-  /// позже всех: событие внутри идущего забирает окно в момент своего старта, а не раньше — это отдельная
-  /// проверка именно ради событий встык/пересечения, отдельно от простого «начнётся в ближайшие lead».
+  /// Одно событие за раз: среди уже начавшихся и ещё не закончившихся выбираем первое по началу.
+  /// Пересекающаяся встреча не забирает окно до конца текущей. После её конца следующая уже идущая
+  /// встреча получает окно с прогрессом от собственного начала.
   /// Если ни одно не началось — ближайшее по старту предстоящее, чьё окно (start−lead) уже открыто.
   /// Поведение Alcove для событий встык (A 10:00–10:30, B 10:30…) вживую не проверяли — оценка.
   /// События по началу (DayAgenda.make), завтрашние после сегодняшних.
@@ -29,7 +29,7 @@ public enum CalendarSchedule {
       guard let hidingAfterStart else { return true }
       return now < event.start.addingTimeInterval(hidingAfterStart)
     }
-    let started: CalendarEvent? = list.last { (event: CalendarEvent) -> Bool in
+    let started: CalendarEvent? = list.first { (event: CalendarEvent) -> Bool in
       event.start <= now && now < event.end
     }
     if let started { return started }
