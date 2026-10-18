@@ -1,0 +1,68 @@
+- main [ref=f16e2]:
+  - generic [ref=f16e3]: OASIS · ДИЗАЙН 03
+  - heading "Запросы Claude в текущем интерфейсе" [level=1] [ref=f16e4]
+  - paragraph [ref=f16e5]: Подробный экран 345 × 207 pt и Обзор 768 × 216 pt. Те же навигация, палитра, размеры текста и текстовые действия, что в приложении.
+  - paragraph [ref=f16e6]: HTML-макет. Геометрия и типографика сверены с кодом и сохранёнными скриншотами. Это не снимок работающей новой функции.
+  - generic [ref=f16e7]:
+    - heading "Попробуй сценарий" [level=2] [ref=f16e8]
+    - generic [ref=f16e9]:
+      - button "Вопрос" [ref=f16e10] [cursor=pointer]
+      - button "Свой ответ" [ref=f16e11] [cursor=pointer]
+      - button "Разрешение" [ref=f16e12] [cursor=pointer]
+      - button "Входящие" [ref=f16e13] [cursor=pointer]
+      - button "Обзор" [ref=f16e14] [cursor=pointer]
+      - button "Лимиты" [ref=f16e15] [cursor=pointer]
+      - button "Одновременные события" [ref=f16e16] [cursor=pointer]
+      - button "HUD" [ref=f16e17] [cursor=pointer]
+    - generic [ref=f16e18]:
+      - generic [ref=f16e19]:
+        - generic [ref=f16e20]: ● Terminal Shell Edit
+        - generic [ref=f16e21]: 100% Сб 22:10
+      - generic [ref=f16e22]:
+        - navigation [ref=f16e25]:
+          - button "Обзор" [ref=f16e27] [cursor=pointer]
+          - generic [ref=f16e29]:
+            - button "Модули" [ref=f16e30] [cursor=pointer]
+            - button "Настройки" [ref=f16e36] [cursor=pointer]
+        - generic [ref=f16e41]:
+          - generic [ref=f16e42]:
+            - strong [ref=f16e45]: Claude Code
+            - generic [ref=f16e46]: oasis · …a7f2
+          - generic [ref=f16e47]: Вопрос 1 из 1 · сессия …a7f2
+          - generic [ref=f16e48]:
+            - paragraph [ref=f16e49]: Как показывать вопросы Claude?
+            - generic [ref=f16e50]:
+              - button "Внутри текущего виджета" [ref=f16e51] [cursor=pointer]
+              - button "Отдельным окном" [ref=f16e53] [cursor=pointer]
+          - generic [ref=f16e55]:
+            - button "Входящие · 2" [ref=f16e56] [cursor=pointer]
+            - generic [ref=f16e57]:
+              - button "Свой ответ" [ref=f16e58] [cursor=pointer]
+              - button "Отправить" [disabled] [ref=f16e59]
+      - generic [ref=f16e60]: Музыка, календарь и Soon доступны в Обзоре. Переход сохраняет черновик.
+    - generic [ref=f16e61]: Открой «Свой ответ», введи текст и добавь одновременные события.
+  - generic [ref=f16e62]:
+    - heading "Текущие экраны, взятые за основу" [level=2] [ref=f16e63]
+    - generic [ref=f16e64]:
+      - figure "Claude Code · снимок из capture/analysis/dashboard-navigation/claude.png." [ref=f16e65]:
+        - img "Сохранённый снимок текущего модуля лимитов Claude в Oasis" [ref=f16e66]
+      - figure "Soon · снимок из capture/analysis/soon-brand/preview.png. Текстовые действия и отступы берём отсюда." [ref=f16e68]:
+        - img "Сохранённый снимок текущего списка Soon в Oasis" [ref=f16e69]
+  - generic [ref=f16e71]:
+    - generic [ref=f16e72]:
+      - heading "Стиль берём из приложения" [level=2] [ref=f16e73]
+      - list [ref=f16e74]:
+        - listitem [ref=f16e75]: "Чёрный фон #000000, текст IslandPalette.foreground, вторичный текст с прозрачностью 60%."
+        - listitem [ref=f16e76]: Обычная навигация ExpandedNavigation высотой 32 pt, место под вырез 185 pt.
+        - listitem [ref=f16e77]: Заголовок 13 pt, текст 12 pt, действия 11 pt, подписи 10 pt. Боковые отступы 24 pt, нижний 22 pt.
+        - listitem [ref=f16e78]: "Поле как в SoonComposerView: #1C1C1E, радиус 6 pt, отступ текста 12 pt."
+        - listitem [ref=f16e79]: "Акцент Claude #D97757. Золотой #FFB800 остаётся у Soon."
+    - generic [ref=f16e80]:
+      - heading "Несколько источников" [level=2] [ref=f16e81]
+      - list [ref=f16e82]:
+        - listitem [ref=f16e83]: "Обзор сохраняет три текущие колонки: музыка, календарь с Claude под ним, Soon."
+        - listitem [ref=f16e84]: В строке Claude появляется «3 ждут ответа». Музыка и календарь продолжают обновляться.
+        - listitem [ref=f16e85]: При вводе начало созвона даёт одну текстовую строку «Созвон начался · Войти». Без перестройки поля.
+        - listitem [ref=f16e86]: Остальные события видны во входящих. Уведомления не переключают открытый экран.
+        - listitem [ref=f16e87]: HUD временно скрывает ответ и возвращает его с черновиком и выделением.
+  - paragraph [ref=f16e88]: Вариант 480 × 352 и постоянная дополнительная полоса из v2 сняты. Для длинного вопроса прокручивается содержимое экрана, действия остаются видны. HTML показывает приближение формы острова. В приложении используется существующий IslandShape с его squircle и анимациями.

@@ -1,0 +1,139 @@
+- main [ref=f3e2]:
+  - generic [ref=f3e3]:
+    - generic [ref=f3e4]:
+      - generic [ref=f3e5]: Oasis / Claude Code
+      - generic [ref=f3e6]: Дизайн 01 · 17 октября 2026
+    - heading "Claude спрашивает. Ты отвечаешь из острова." [level=1] [ref=f3e7]: Claude спрашивает.Ты отвечаешь из острова.
+    - paragraph [ref=f3e8]: Peek привлекает внимание. Внутри виджета – вопрос, контекст сессии и ответ. Без поиска нужного чата среди окон.
+    - paragraph [ref=f3e9]: Интерактивный макет. Все события и отправка смоделированы, соединения с Claude нет.
+  - generic [ref=f3e11]:
+    - generic [ref=f3e12]:
+      - text: 01 / СОБЫТИЕ
+      - generic [ref=f3e13]: Короткий peek
+      - paragraph [ref=f3e14]: Проект и причина ожидания. Клик ведёт к запросу.
+      - generic [ref=f3e16] [cursor=pointer]:
+        - generic [ref=f3e18]:
+          - generic [ref=f3e19]: ✳
+          - generic [ref=f3e20]: "2"
+        - generic [ref=f3e21]:
+          - generic [ref=f3e22]: oasis · Нужен ответ
+          - generic [ref=f3e23]: Открыть
+    - generic [ref=f3e24]:
+      - text: 02 / ОЖИДАНИЕ
+      - generic [ref=f3e25]: Заметно, пока не ответишь
+      - paragraph [ref=f3e26]: После peek остаётся точка. Музыка и календарь продолжают жить.
+    - generic [ref=f3e30]:
+      - text: 03 / ОТВЕТ
+      - generic [ref=f3e31]: Точная сессия, явное действие
+      - paragraph [ref=f3e32]: Выбрать вариант, написать свой ответ или разрешить команду.
+      - generic [ref=f3e36] [cursor=pointer]:
+        - generic [ref=f3e37]: ✓ Ответ принят
+        - generic [ref=f3e38]: oasis · …a7f2
+  - generic [ref=f3e39]:
+    - generic [ref=f3e40]:
+      - generic [ref=f3e41]:
+        - heading "Попробуй ответить" [level=2] [ref=f3e42]
+        - paragraph [ref=f3e43]: Рекомендуемый экран A · 480 × 352 pt · масштаб 1:1
+      - generic [ref=f3e44]:
+        - button "Вопрос" [ref=f3e45] [cursor=pointer]
+        - button "Разрешение" [ref=f3e46] [cursor=pointer]
+        - button "Несколько ответов" [ref=f3e47] [cursor=pointer]
+        - button "Срок истёк" [ref=f3e48] [cursor=pointer]
+        - button "Ошибка" [ref=f3e49] [cursor=pointer]
+        - button "HUD" [ref=f3e50] [cursor=pointer]
+    - generic [ref=f3e51]:
+      - generic [ref=f3e52]:
+        - generic [ref=f3e53]:
+          - generic [ref=f3e54]: ●
+          - generic [ref=f3e55]: Terminal
+          - generic [ref=f3e56]: Shell
+          - generic [ref=f3e57]: Edit
+        - generic [ref=f3e58]:
+          - generic [ref=f3e59]: ◉
+          - generic [ref=f3e60]: 100%
+          - generic [ref=f3e61]: Сб 21:45
+      - generic [ref=f3e62]:
+        - generic [ref=f3e63]:
+          - button "Обзор" [ref=f3e64] [cursor=pointer]
+          - generic [ref=f3e66]:
+            - button "Очередь · 2" [ref=f3e67] [cursor=pointer]
+            - text: /
+            - button "Закрыть виджет" [ref=f3e68] [cursor=pointer]: ×
+        - generic [ref=f3e69]:
+          - generic [ref=f3e70]:
+            - generic [ref=f3e71]: ✳
+            - strong [ref=f3e72]: Claude Code
+            - generic [ref=f3e73]: Нужен ответ
+          - generic [ref=f3e74]: oasis · feat/claude-requests · …a7f2
+          - generic [ref=f3e75]:
+            - button "Запросы · 2" [ref=f3e76] [cursor=pointer]
+            - button "Лимиты" [ref=f3e77] [cursor=pointer]
+          - generic [ref=f3e78]:
+            - generic [ref=f3e79]: Где показывать вопросы Claude?
+            - generic [ref=f3e80]: Вопрос 1 из 1 · Выбери один вариант
+            - generic [ref=f3e81]:
+              - button "Отдельный экран запросов рекомендуется" [ref=f3e82] [cursor=pointer]:
+                - generic [ref=f3e84]: Отдельный экран запросов
+                - emphasis [ref=f3e85]: рекомендуется
+              - button "Внутри широкого Обзора" [ref=f3e86] [cursor=pointer]
+            - button "Свой ответ" [ref=f3e89] [cursor=pointer]
+          - generic [ref=f3e90]:
+            - button "В терминал" [ref=f3e91] [cursor=pointer]
+            - generic [ref=f3e92]:
+              - generic [ref=f3e93]: ⌘ Enter
+              - button "Отправить" [disabled] [ref=f3e94]
+      - generic [ref=f3e95]: Выбери вариант или открой «Свой ответ». Отправка – отдельное действие.
+    - generic [ref=f3e96]: Выбор и черновик сохраняются при закрытии и смене запроса.
+  - generic [ref=f3e97]:
+    - generic [ref=f3e99]:
+      - heading "Где живёт ответ" [level=2] [ref=f3e100]
+      - paragraph [ref=f3e101]: Три варианта размещения. A оставляет место и для вопроса, и для ввода.
+    - generic [ref=f3e102]:
+      - article [ref=f3e103]:
+        - generic [ref=f3e104]: Claude · Запросы
+        - heading "A · Отдельный экран рекомендую" [level=3] [ref=f3e109]:
+          - text: A · Отдельный экран
+          - generic [ref=f3e110]: рекомендую
+        - paragraph [ref=f3e111]: 480 × 352 pt. Полный вопрос и очередь. Лимиты – соседняя вкладка.
+        - button "Посмотреть A" [ref=f3e112] [cursor=pointer]
+      - article [ref=f3e113]:
+        - generic [ref=f3e115]:
+          - generic [ref=f3e116]: Музыка
+          - generic [ref=f3e119]: Календарь
+          - generic [ref=f3e122]: Запрос
+        - heading "B · В широком Обзоре" [level=3] [ref=f3e125]
+        - paragraph [ref=f3e126]: 768 × 248 pt. Несколько модулей рядом, но ответ вытесняет часть Обзора.
+        - button "Посмотреть B" [ref=f3e127] [cursor=pointer]
+      - article [ref=f3e128]:
+        - generic [ref=f3e129]: Claude
+        - heading "C · Нынешний размер" [level=3] [ref=f3e134]
+        - paragraph [ref=f3e135]: 345 × 207 pt. Компактно, длинные вопросы и варианты прокручиваются.
+        - button "Посмотреть C" [ref=f3e136] [cursor=pointer]
+  - generic [ref=f3e137]:
+    - generic [ref=f3e138]:
+      - heading "Что берём у Lumio" [level=2] [ref=f3e139]
+      - paragraph [ref=f3e140]: Сигнал ожидания у выреза, контекст сессии, понятный выбор и отдельное разрешение команды. В Oasis это дополняет Обзор и существующий модуль Claude.
+      - paragraph [ref=f3e141]:
+        - link "Сайт Lumio" [ref=f3e142] [cursor=pointer]:
+          - /url: https://lumiomac.com/
+        - text: ·
+        - link "Кадр демо разрешения" [ref=f3e143] [cursor=pointer]:
+          - /url: /lumio-permission-frame.png
+      - paragraph [ref=f3e144]: Свечение спокойное. Новое событие обновляет очередь, сохраняя открытый вопрос и черновик.
+    - generic [ref=f3e145]:
+      - heading "Поведение, которое важно" [level=2] [ref=f3e146]
+      - list [ref=f3e147]:
+        - listitem [ref=f3e148]: Peek не забирает фокус клавиатуры.
+        - listitem [ref=f3e149]: Закрыть – сохранить ожидание. Отклонить – ответить отказом.
+        - listitem [ref=f3e150]: В поле Enter добавляет строку, ⌘ Enter отправляет.
+        - listitem [ref=f3e151]: Истёкший запрос нельзя отправить повторно.
+        - listitem [ref=f3e152]: После отправки различаем приём мостом и продолжение Claude.
+  - generic [ref=f3e153]:
+    - heading "На согласование" [level=2] [ref=f3e154]
+    - paragraph [ref=f3e155]: "Предлагаю A: отдельный экран «Запросы» внутри Claude, peek с переходом к конкретной сессии, варианты и свой ответ, разовые разрешения и отказы."
+    - paragraph [ref=f3e156]: После выбора дизайна – план реализации. Транспорт через хуки Claude Code сначала требует живой проверки. Новый текст в завершённый чат – отдельная возможность.
+    - generic [ref=f3e157]:
+      - link "Документация хуков Claude Code" [ref=f3e158] [cursor=pointer]:
+        - /url: https://code.claude.com/docs/en/hooks#tools-that-require-user-interaction
+      - generic [ref=f3e159]: Oasis · master 12fb64a
+      - generic [ref=f3e160]: "Акцент Claude #D97757"

@@ -1,0 +1,21 @@
+Building for production...
+[2 / 9] IslandCore
+[3 / 10] IslandCore
+[10 / 15] IslandUI
+[12 / 17] IslandUI
+[14 / 17] IslandSources
+[22 / 23] Oasis-product
+/Users/itsnikoko/oasis/app/Sources/Oasis/BackdropMonitor.swift:110:3: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'BackdropMonitor.CreateImage?' (aka 'Optional<@convention(c) (CGRect, UInt32, UInt32, UInt32) -> Optional<Unmanaged<CGImage>>>'), consider removing it
+108 |   /// CGWindowListCreateImage в SDK macOS 15+ помечен obsoleted, но в системе есть: берём через dlsym.
+109 |   /// Не нашёлся — снимков нет, фон тёмный
+110 |   nonisolated(unsafe) private static let createImage: CreateImage? = {
+    |   `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'BackdropMonitor.CreateImage?' (aka 'Optional<@convention(c) (CGRect, UInt32, UInt32, UInt32) -> Optional<Unmanaged<CGImage>>>'), consider removing it
+111 |     guard let handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY),
+112 |       let symbol = dlsym(handle, "CGWindowListCreateImage")
+[23 / 24] Oasis-product
+[26 / 28] Oasis-product
+[27 / 28] Oasis-product
+Build complete! (12,77 secs)
+build/Oasis.app/Contents/Resources/MediaRemoteAdapter.framework: replacing existing signature
+build/Oasis.app: replacing existing signature
+Собрано: build/Oasis.app (release, подпись: Oasis Dev)

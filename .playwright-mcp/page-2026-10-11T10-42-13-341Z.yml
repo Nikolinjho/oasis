@@ -1,0 +1,128 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e3]:
+    - navigation "Main navigation" [ref=e4]:
+      - link "NotchNook home" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: NotchNook
+      - generic [ref=e7]:
+        - link "Plans" [ref=e8] [cursor=pointer]:
+          - /url: "#plans"
+        - link "FAQ" [ref=e9] [cursor=pointer]:
+          - /url: "#questions"
+        - link "Support" [ref=e10] [cursor=pointer]:
+          - /url: /support
+        - link "Get NotchNook" [ref=e11] [cursor=pointer]:
+          - /url: "#plans"
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: You heard it was gone
+      - heading "NotchNook is back." [level=1] [ref=e15]:
+        - generic [aria-hidden] [ref=e17]:
+          - text: NotchNook is dead
+          - emphasis [ref=e18]: back.
+      - paragraph [ref=e19]: Your music, notes, tasks and calendar, right in your Mac’s notch. It went quiet for a while. Now it’s back.
+      - generic [ref=e20]:
+        - link "Get NotchNook" [ref=e21] [cursor=pointer]:
+          - /url: "#plans"
+        - link "Download free trial" [ref=e22] [cursor=pointer]:
+          - /url: /download?start=1
+          - text: Download free trial
+          - generic [aria-hidden] [ref=e23]: ↓
+      - figure [ref=e25]:
+        - button "Play or pause the NotchNook demonstration" [pressed] [ref=e26]
+    - region [ref=e27]:
+      - heading "Everything you need, right at the top." [level=2] [ref=e28]
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Choose your plan." [level=2] [ref=e33]
+        - complementary "Relaunch offer deadline" [ref=e34]: Welcome-back prices.Offer ends October 13.
+      - generic [ref=e35]:
+        - article [ref=e36]:
+          - generic [ref=e37]: Flexible access
+          - heading "Monthly" [level=3] [ref=e38]
+          - generic [ref=e39]:
+            - deletion [ref=e40]: US$3
+            - generic [ref=e41]: RELAUNCH
+            - generic [ref=e42]: US$2/month
+          - paragraph [ref=e43]: US$2/month while your subscription stays active.Cancel anytime.
+          - link "Start monthly ↗" [ref=e44] [cursor=pointer]:
+            - /url: /buy?offer=monthly
+        - article [ref=e45]:
+          - generic [ref=e46]: One payment
+          - heading "Lifetime" [level=3] [ref=e47]
+          - generic [ref=e48]:
+            - deletion [ref=e49]: US$25
+            - generic [ref=e50]: RELAUNCH
+            - generic [ref=e51]: US$15 one-time
+          - paragraph [ref=e52]: One payment. Lifetime access.No monthly subscription.
+          - link "Buy lifetime ↗" [ref=e53] [cursor=pointer]:
+            - /url: /buy?offer=lifetime
+      - paragraph [ref=e54]: Each license activates on two Macs. Your license and download link are sent by email after payment. Any applicable taxes will be shown at checkout.
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]: Frequently asked
+        - heading "Good to know." [level=2] [ref=e58]
+        - paragraph [ref=e59]:
+          - text: Something else on your mind?
+          - link "Contact support." [ref=e60] [cursor=pointer]:
+            - /url: mailto:support@getnotchnook.com
+      - generic [ref=e61]:
+        - group [ref=e62]:
+          - generic "Can I try it before buying? +" [ref=e63] [cursor=pointer]
+        - group [ref=e64]:
+          - generic "Can I cancel the monthly plan? +" [ref=e65] [cursor=pointer]
+        - group [ref=e66]:
+          - generic "Can I get a refund? +" [ref=e67] [cursor=pointer]
+        - group [ref=e68]:
+          - generic "Which Macs are supported? +" [ref=e69] [cursor=pointer]
+        - group [ref=e70]:
+          - generic "Does my Mac need a physical notch? +" [ref=e71] [cursor=pointer]
+        - group [ref=e72]:
+          - generic "Can I use it with multiple monitors? +" [ref=e73] [cursor=pointer]
+        - group [ref=e74]:
+          - generic "Can I download or buy NotchNook now? +" [ref=e75] [cursor=pointer]
+  - contentinfo [ref=e76]:
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - link "NotchNook home" [ref=e79] [cursor=pointer]:
+          - /url: /
+          - text: NotchNook
+          - superscript [ref=e80]: TM
+        - paragraph [ref=e81]: For macOS 14.6 or later.
+      - navigation "Product links" [ref=e82]:
+        - heading "Product" [level=2] [ref=e83]
+        - link "Download" [ref=e84] [cursor=pointer]:
+          - /url: /download
+        - link "Plans" [ref=e85] [cursor=pointer]:
+          - /url: /#plans
+        - link "What’s new" [ref=e86] [cursor=pointer]:
+          - /url: /whats-new
+        - link "Demonstrations" [ref=e87] [cursor=pointer]:
+          - /url: /#main
+      - navigation "Help links" [ref=e88]:
+        - heading "Help" [level=2] [ref=e89]
+        - link "Support" [ref=e90] [cursor=pointer]:
+          - /url: /support
+        - link "License help" [ref=e91] [cursor=pointer]:
+          - /url: /help
+        - link "FAQ" [ref=e92] [cursor=pointer]:
+          - /url: /faq
+        - link "Press kit" [ref=e93] [cursor=pointer]:
+          - /url: /press
+      - navigation "Company links" [ref=e94]:
+        - heading "Connect" [level=2] [ref=e95]
+        - link "Email support" [ref=e96] [cursor=pointer]:
+          - /url: mailto:support@getnotchnook.com
+        - link "Follow NotchNook on X (opens in a new tab)" [ref=e97] [cursor=pointer]:
+          - /url: https://x.com/getnotchnook
+          - text: Follow on X ↗
+        - link "Terms" [ref=e98] [cursor=pointer]:
+          - /url: /terms
+        - link "Privacy" [ref=e99] [cursor=pointer]:
+          - /url: /privacy
+      - generic [ref=e100]:
+        - generic [ref=e101]: © 2026 NotchNook. All rights reserved.
+        - link "Back to top ↑" [ref=e102] [cursor=pointer]:
+          - /url: "#"

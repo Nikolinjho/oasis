@@ -1,0 +1,7 @@
+Building for production...
+[1 / 1]
+Build complete! (0,32 secs)
+build/Oasis.app/Contents/Resources/MediaRemoteAdapter.framework: replacing existing signature
+build/Oasis.app: replacing existing signature
+Собрано: build/Oasis.app (release, подпись: Oasis Dev)
+Установлено: /Users/itsnikoko/Applications/Oasis.app

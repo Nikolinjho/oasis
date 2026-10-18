@@ -1,0 +1,3 @@
+swift-format: exit 0
+SwiftLint: exit 0
+git diff --check: exit 0

@@ -1,0 +1,115 @@
+- main [ref=f24e2]:
+  - generic [ref=f24e3]: OASIS · ДИЗАЙН 04
+  - heading "Несколько агентов. Один остров." [level=1] [ref=f24e4]
+  - paragraph [ref=f24e5]: Слева все сессии Claude Code и подагенты, справа выбранный вопрос, разрешение или состояние. Стиль Oasis, больше места для одновременной работы.
+  - paragraph [ref=f24e6]: "Из Lumio: сигнал ожидания, время ожидания, описание действия перед разрешением. Размеры, навигация и элементы – из Oasis. Время в макете смоделировано."
+  - paragraph [ref=f24e7]: HTML-макет. Геометрия и типографика сверены с кодом и сохранёнными скриншотами. Это не снимок работающей новой функции.
+  - generic [ref=f24e8]:
+    - heading "Попробуй сценарий" [level=2] [ref=f24e9]
+    - generic [ref=f24e10]:
+      - button "Вопрос" [ref=f24e11] [cursor=pointer]
+      - button "Свой ответ" [ref=f24e12] [cursor=pointer]
+      - button "Разрешение" [ref=f24e13] [cursor=pointer]
+      - button "Входящие" [ref=f24e14] [cursor=pointer]
+      - button "Обзор" [ref=f24e15] [cursor=pointer]
+      - button "Лимиты" [ref=f24e16] [cursor=pointer]
+      - button "Одновременные события" [ref=f24e17] [cursor=pointer]
+      - button "HUD" [ref=f24e18] [cursor=pointer]
+      - button "Сигнал у выреза" [ref=f24e19] [cursor=pointer]
+    - generic [ref=f24e20]:
+      - generic [ref=f24e21]: "Размер панели Claude:"
+      - button "640 × 320 · рекомендую" [ref=f24e22] [cursor=pointer]
+      - button "560 × 288" [ref=f24e23] [cursor=pointer]
+    - generic [ref=f24e24]:
+      - generic [ref=f24e25]:
+        - generic [ref=f24e26]: ● Terminal Shell Edit
+        - generic [ref=f24e27]: 100% Сб 22:10
+      - generic [ref=f24e28]:
+        - navigation [ref=f24e31]:
+          - generic [ref=f24e32]:
+            - button "Обзор" [ref=f24e33] [cursor=pointer]
+            - button "Модули" [ref=f24e34] [cursor=pointer]
+          - generic [ref=f24e35]:
+            - button "Ждут · 2" [ref=f24e36] [cursor=pointer]
+            - button "Настройки" [ref=f24e37] [cursor=pointer]
+        - generic [ref=f24e42]:
+          - complementary [ref=f24e43]:
+            - generic [ref=f24e44]:
+              - text: Сессии
+              - generic [ref=f24e45]: Claude Code
+            - generic [ref=f24e46]:
+              - button "Все · 5" [ref=f24e47] [cursor=pointer]
+              - button "Ждут · 2" [ref=f24e48] [cursor=pointer]
+            - generic [ref=f24e49]:
+              - button "oasis Нужен ответ …a7f2" [pressed] [ref=f24e50] [cursor=pointer]:
+                - generic [ref=f24e51]: oasis
+                - generic [ref=f24e54]:
+                  - generic [ref=f24e55]: Нужен ответ
+                  - generic [ref=f24e56]: …a7f2
+              - button "app-guide-next Нужно разрешение …b9c1" [ref=f24e57] [cursor=pointer]:
+                - generic [ref=f24e58]: app-guide-next
+                - generic [ref=f24e61]:
+                  - generic [ref=f24e62]: Нужно разрешение
+                  - generic [ref=f24e63]: …b9c1
+              - button "oasis Работает …c2d4" [ref=f24e64] [cursor=pointer]:
+                - generic [ref=f24e65]: oasis
+                - generic [ref=f24e68]:
+                  - generic [ref=f24e69]: Работает
+                  - generic [ref=f24e70]: …c2d4
+              - button "sputnik8-server Ход завершён …d4f1" [ref=f24e71] [cursor=pointer]:
+                - generic [ref=f24e72]: sputnik8-server
+                - generic [ref=f24e75]:
+                  - generic [ref=f24e76]: Ход завершён
+                  - generic [ref=f24e77]: …d4f1
+              - button "oasis Ошибка подагента …e5a3" [ref=f24e78] [cursor=pointer]:
+                - generic [ref=f24e79]: oasis
+                - generic [ref=f24e82]:
+                  - generic [ref=f24e83]: Ошибка подагента
+                  - generic [ref=f24e84]: …e5a3
+          - generic [ref=f24e86]:
+            - generic [ref=f24e87]:
+              - strong [ref=f24e90]: Уведомления агентов
+              - generic [ref=f24e91]: …a7f2
+            - generic [ref=f24e92]: oasis · feat/claude-requests
+            - generic [ref=f24e93]: Ждёт ответа 0:32
+            - generic [ref=f24e94]:
+              - paragraph [ref=f24e95]: Как показывать запросы нескольких агентов?
+              - generic [ref=f24e96]:
+                - button "Список сессий и ответ рядом" [ref=f24e97] [cursor=pointer]
+                - button "Список с переходом в отдельный экран" [ref=f24e99] [cursor=pointer]
+            - generic [ref=f24e101]:
+              - button "В терминал" [ref=f24e102] [cursor=pointer]
+              - generic [ref=f24e103]:
+                - button "Свой ответ" [ref=f24e104] [cursor=pointer]
+                - button "Отправить" [disabled] [ref=f24e105]
+      - generic [ref=f24e106]: Музыка, календарь и Soon доступны в Обзоре. Переход сохраняет черновик.
+    - generic [ref=f24e107]: Открой «Свой ответ», введи текст и добавь одновременные события.
+  - generic [ref=f24e108]:
+    - article [ref=f24e109]:
+      - strong [ref=f24e110]: 640 × 320 · список и ответ рядом
+      - paragraph [ref=f24e111]: Вопрос и варианты читаются свободнее. Пять строк сессий с прокруткой списка. Помещается в текущее окно 960 × 360.
+    - article [ref=f24e112]:
+      - strong [ref=f24e113]: 560 × 288 · компактнее
+      - paragraph [ref=f24e114]: Та же структура, меньше пространства у ответа. Длинные вопросы и список прокручиваются чаще. Можно сравнить переключателем.
+  - generic [ref=f24e115]:
+    - heading "Текущие экраны, взятые за основу" [level=2] [ref=f24e116]
+    - generic [ref=f24e117]:
+      - figure "Claude Code · снимок из capture/analysis/dashboard-navigation/claude.png." [ref=f24e118]:
+        - img "Сохранённый снимок текущего модуля лимитов Claude в Oasis" [ref=f24e119]
+      - figure "Soon · снимок из capture/analysis/soon-brand/preview.png. Текстовые действия и отступы берём отсюда." [ref=f24e121]:
+        - img "Сохранённый снимок текущего списка Soon в Oasis" [ref=f24e122]
+  - generic [ref=f24e124]:
+    - generic [ref=f24e125]:
+      - heading "Что сохранили из Oasis" [level=2] [ref=f24e126]
+      - list [ref=f24e127]:
+        - listitem [ref=f24e128]: Форму и ушки острова, чёрный фон, палитру, шрифты, отступы и текстовые действия.
+        - listitem [ref=f24e129]: Навигацию Обзор / Модули / настройки, свободную область физического выреза.
+        - listitem [ref=f24e130]: "Существующие три колонки Обзора: музыка, календарь с Claude, Soon."
+    - generic [ref=f24e131]:
+      - heading "Что добавили из Lumio" [level=2] [ref=f24e132]
+      - list [ref=f24e133]:
+        - listitem [ref=f24e134]: Список агентов с различимыми состояниями и выбором сессии.
+        - listitem [ref=f24e135]: Проект, ветку, время ожидания и точный адресат ответа.
+        - listitem [ref=f24e136]: Видимость работающих и завершивших ход агентов, отдельное обозначение подагента.
+        - listitem [ref=f24e137]: Входящие события не меняют выбранного агента и его черновик.
+  - paragraph [ref=f24e138]: "В v4 увеличивается только экран Claude: 640 × 320 или 560 × 288. Обзор остаётся 768 × 216. Сессии одного проекта различаются веткой, коротким sessionID и собственным requestID. Подагент помечен отдельно. Все состояния и время в макете смоделированы."

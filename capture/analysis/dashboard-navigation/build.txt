@@ -1,0 +1,12 @@
+Building for production...
+[2 / 10] IslandCore
+[3 / 11] IslandCore
+[8 / 12] IslandUI
+[9 / 13] IslandUI
+[14 / 14] Oasis-product
+[15 / 16] Oasis-product
+Build complete! (6,07 secs)
+build/Oasis.app/Contents/Resources/MediaRemoteAdapter.framework: replacing existing signature
+build/Oasis.app: replacing existing signature
+Собрано: build/Oasis.app (release, подпись: Oasis Dev)
+Установлено: /Users/itsnikoko/Applications/Oasis.app

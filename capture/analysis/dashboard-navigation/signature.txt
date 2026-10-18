@@ -1,0 +1,2 @@
+/Users/itsnikoko/Applications/Oasis.app: valid on disk
+/Users/itsnikoko/Applications/Oasis.app: satisfies its Designated Requirement

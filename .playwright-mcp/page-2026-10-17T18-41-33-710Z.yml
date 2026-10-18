@@ -1,0 +1,126 @@
+- generic [active] [ref=f2e1]:
+  - navigation [ref=f2e2]:
+    - link "Lumio" [ref=f2e3] [cursor=pointer]:
+      - /url: "#top"
+    - generic [ref=f2e4]:
+      - link "Notch" [ref=f2e5] [cursor=pointer]:
+        - /url: "#notch"
+      - link "Office" [ref=f2e6] [cursor=pointer]:
+        - /url: "#office"
+      - link "Privacy" [ref=f2e7] [cursor=pointer]:
+        - /url: "#privacy"
+      - link "Install" [ref=f2e8] [cursor=pointer]:
+        - /url: "#install"
+    - generic [ref=f2e9]:
+      - button "Language" [ref=f2e10] [cursor=pointer]:
+        - generic [ref=f2e11]: EN
+        - generic [ref=f2e12]: RU
+      - link "Download" [ref=f2e13] [cursor=pointer]:
+        - /url: "#install"
+  - banner [ref=f2e14]:
+    - generic [ref=f2e15]:
+      - paragraph [ref=f2e16]: For Claude Code and Codex
+      - heading "Your agents, in the notch." [level=1] [ref=f2e17]:
+        - generic [ref=f2e18]: Your
+        - generic [ref=f2e19]: agents,
+        - generic [ref=f2e20]: in
+        - generic [ref=f2e21]: the
+        - generic [ref=f2e22]: notch.
+      - paragraph [ref=f2e23]: Lumio turns the MacBook notch into a control room for Claude Code and Codex. Who’s working, who needs your “yes”, who’s done — one glance, no window switching.
+      - link "Download for Mac" [ref=f2e25] [cursor=pointer]:
+        - /url: /Lumio.zip
+      - paragraph [ref=f2e29]: Free · macOS 14 or later · Apple silicon and Intel
+    - button "Turn sound on" [ref=f2e33] [cursor=pointer]
+  - paragraph [ref=f2e39]: You run three agents at once. One is done. One is waiting for your “yes”. One crashed ten minutes ago. And you find out only when you switch windows.
+  - generic [ref=f2e41]:
+    - paragraph [ref=f2e42]: The notch
+    - heading "It calls when it needs you." [level=2] [ref=f2e43]
+    - paragraph [ref=f2e44]: When an agent asks for permission or a question, the notch glows in its color — warm for Claude, icy for Codex — and a dot appears in the menu bar. Approve the command or pick an answer right in the notch — no window switching.
+  - generic [ref=f2e48]:
+    - paragraph [ref=f2e49]: Stay awake
+    - heading "Step away. Let your agents finish." [level=2] [ref=f2e50]: Step away.Let your agents finish.
+    - paragraph [ref=f2e51]: Your Mac stays awake while your agents work. The display can turn off — sessions keep going. Just keep the lid open. A timer gives you control.
+  - generic [ref=f2e55]:
+    - generic [ref=f2e57]:
+      - heading "Every session. One clear view." [level=3] [ref=f2e58]
+      - paragraph [ref=f2e59]: See what each agent is doing and what it needs. A memory bar shows when it’s time to start a fresh session.
+    - generic [ref=f2e63]:
+      - heading "Reply without opening a window." [level=3] [ref=f2e64]
+      - paragraph [ref=f2e65]: Type in the notch and send. Codex gets it right away. For Claude Code, turn on auto-send and Lumio types it into the right chat for you.
+  - generic [ref=f2e69]:
+    - paragraph [ref=f2e70]: The office
+    - heading "Every agent gets a desk." [level=2] [ref=f2e71]
+    - paragraph [ref=f2e72]: Double‑tap the right ⌘ and a pixel office grows out of the notch. Working agents type at their iMacs, and each screen shows what they’re doing — code, terminal or browser. The one who needs you stands up, and the ones who are done go for coffee.
+  - generic [ref=f2e76]:
+    - generic [ref=f2e78]:
+      - heading "Lit by the real sun." [level=3] [ref=f2e79]
+      - paragraph [ref=f2e80]: Sunrise, sunset and night follow the real sun. At night the lamps glow and the screens light up faces.
+    - generic [ref=f2e84]:
+      - heading "A thought? Right ⌥." [level=3] [ref=f2e85]
+      - paragraph [ref=f2e86]: Tap, type, Enter — it’s saved. To Lumio, your Obsidian daily note, any folder or Apple Notes.
+  - generic [ref=f2e90]:
+    - paragraph [ref=f2e91]: Music
+    - heading "Your music, glowing around the notch." [level=2] [ref=f2e92]
+    - paragraph [ref=f2e93]: Now playing from any player or browser tab, with the colours of the cover breathing around the notch.
+  - generic [ref=f2e96]:
+    - generic [ref=f2e97]:
+      - heading "A notch on every display." [level=3] [ref=f2e102]
+      - paragraph [ref=f2e103]: External monitors get a virtual one.
+    - generic [ref=f2e104]:
+      - heading "A dev log that writes itself." [level=3] [ref=f2e108]
+      - paragraph [ref=f2e109]: What got done, fixed and what’s next — in Obsidian.
+    - generic [ref=f2e110]:
+      - heading "Your limits in sight." [level=3] [ref=f2e113]
+      - paragraph [ref=f2e114]: Claude and Codex limits, right in the office.
+    - generic [ref=f2e115]:
+      - heading "Every pixel, drawn in code." [level=3] [ref=f2e121]
+      - paragraph [ref=f2e122]: Even the lo‑fi soundtrack. No stock assets.
+  - generic [ref=f2e124]:
+    - paragraph [ref=f2e128]: Everything stays on your Mac.
+    - paragraph [ref=f2e129]: No accounts, no tracking. No Screen Recording permission; Accessibility only if you turn on sending Claude replies from the notch. Lumio reads your agents’ local files — and nothing goes to the network unless you turn it on. The daily update check only tells us that one more Mac uses Lumio — by a random number, nothing about you.
+  - generic [ref=f2e131]:
+    - heading "Get Lumio." [level=2] [ref=f2e132]
+    - paragraph [ref=f2e133]: Free. Ten seconds to install.
+    - generic [ref=f2e134]:
+      - generic [ref=f2e135]:
+        - generic [ref=f2e136]: Recommended
+        - heading "One command in Terminal" [level=3] [ref=f2e137]
+        - paragraph [ref=f2e138]: Copy, paste into Terminal and press Enter. Lumio installs and opens with no macOS warnings, then updates itself.
+        - paragraph [ref=f2e139]:
+          - generic [ref=f2e140]: ⌘
+          - generic [ref=f2e141]: Space
+          - text: “Terminal”
+          - generic [ref=f2e142]: →
+          - generic [ref=f2e143]: ⌘
+          - generic [ref=f2e144]: V
+          - generic [ref=f2e145]: →
+          - generic [ref=f2e146]: Enter
+        - generic [ref=f2e147]:
+          - code [ref=f2e148]: curl -fsSL https://lumiomac.com/install.sh | sh
+          - button "Copy" [ref=f2e149] [cursor=pointer]
+      - generic [ref=f2e150]:
+        - heading "Or download the app" [level=3] [ref=f2e151]
+        - paragraph [ref=f2e152]: On first launch macOS asks you to confirm — just once. Updates then install by themselves.
+        - link "Download for Mac" [ref=f2e153] [cursor=pointer]:
+          - /url: /Lumio.zip
+        - paragraph [ref=f2e157]: Version 1.1 · 7.8 MB · for macOS 14 or later
+        - button "How to open it the first time ›" [ref=f2e158] [cursor=pointer]
+    - paragraph [ref=f2e159]:
+      - text: Needs macOS 14 Sonoma or later and
+      - link "Claude Code" [ref=f2e160] [cursor=pointer]:
+        - /url: https://claude.com/claude-code
+      - text: or
+      - link "Codex" [ref=f2e161] [cursor=pointer]:
+        - /url: https://openai.com/codex
+      - text: .No notch? Lumio draws a virtual one. The dev log needs
+      - link "Obsidian" [ref=f2e162] [cursor=pointer]:
+        - /url: https://obsidian.md
+      - text: .
+  - contentinfo [ref=f2e163]:
+    - generic [ref=f2e164]: Lumio
+    - generic [ref=f2e165]:
+      - text: © 2026 Lumio ·
+      - link "License" [ref=f2e166] [cursor=pointer]:
+        - /url: /license.html?lang=en
+    - link "Contact" [ref=f2e168] [cursor=pointer]:
+      - /url: mailto:lumiomac.app@outlook.com

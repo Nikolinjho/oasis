@@ -1,0 +1,70 @@
+- main [ref=f18e2]:
+  - generic [ref=f18e3]: OASIS · ДИЗАЙН 03
+  - heading "Oasis с деталями из Lumio" [level=1] [ref=f18e4]
+  - paragraph [ref=f18e5]: Подробный экран 345 × 207 pt и Обзор 768 × 216 pt. Те же навигация, палитра, размеры текста и текстовые действия, что в приложении.
+  - paragraph [ref=f18e6]: "Из Lumio: сигнал ожидания, время ожидания, описание действия перед разрешением. Размеры, навигация и элементы – из Oasis. Время в макете смоделировано."
+  - paragraph [ref=f18e7]: HTML-макет. Геометрия и типографика сверены с кодом и сохранёнными скриншотами. Это не снимок работающей новой функции.
+  - generic [ref=f18e8]:
+    - heading "Попробуй сценарий" [level=2] [ref=f18e9]
+    - generic [ref=f18e10]:
+      - button "Вопрос" [ref=f18e11] [cursor=pointer]
+      - button "Свой ответ" [ref=f18e12] [cursor=pointer]
+      - button "Разрешение" [ref=f18e13] [cursor=pointer]
+      - button "Входящие" [ref=f18e14] [cursor=pointer]
+      - button "Обзор" [ref=f18e15] [cursor=pointer]
+      - button "Лимиты" [ref=f18e16] [cursor=pointer]
+      - button "Одновременные события" [ref=f18e17] [cursor=pointer]
+      - button "HUD" [ref=f18e18] [cursor=pointer]
+      - button "Сигнал у выреза" [ref=f18e19] [cursor=pointer]
+    - generic [ref=f18e20]:
+      - generic [ref=f18e21]:
+        - generic [ref=f18e22]: ● Terminal Shell Edit
+        - generic [ref=f18e23]: 100% Сб 22:10
+      - generic [ref=f18e24]:
+        - navigation [ref=f18e27]:
+          - button "Обзор" [ref=f18e29] [cursor=pointer]
+          - generic [ref=f18e31]:
+            - button "Модули" [ref=f18e32] [cursor=pointer]
+            - button "Настройки" [ref=f18e38] [cursor=pointer]
+        - generic [ref=f18e43]:
+          - generic [ref=f18e44]:
+            - strong [ref=f18e47]: Claude Code
+            - generic [ref=f18e48]: oasis · …a7f2
+          - generic [ref=f18e49]: Ждёт ответа 0:32 · Вопрос 1 из 1
+          - generic [ref=f18e50]:
+            - paragraph [ref=f18e51]: Как показывать вопросы Claude?
+            - generic [ref=f18e52]:
+              - button "Внутри текущего виджета" [ref=f18e53] [cursor=pointer]
+              - button "Отдельным окном" [ref=f18e55] [cursor=pointer]
+          - generic [ref=f18e57]:
+            - button "Входящие · 2" [ref=f18e58] [cursor=pointer]
+            - generic [ref=f18e59]:
+              - button "Свой ответ" [ref=f18e60] [cursor=pointer]
+              - button "Отправить" [disabled] [ref=f18e61]
+      - generic [ref=f18e62]: Музыка, календарь и Soon доступны в Обзоре. Переход сохраняет черновик.
+    - generic [ref=f18e63]: Открой «Свой ответ», введи текст и добавь одновременные события.
+  - generic [ref=f18e64]:
+    - heading "Текущие экраны, взятые за основу" [level=2] [ref=f18e65]
+    - generic [ref=f18e66]:
+      - figure "Claude Code · снимок из capture/analysis/dashboard-navigation/claude.png." [ref=f18e67]:
+        - img "Сохранённый снимок текущего модуля лимитов Claude в Oasis" [ref=f18e68]
+      - figure "Soon · снимок из capture/analysis/soon-brand/preview.png. Текстовые действия и отступы берём отсюда." [ref=f18e70]:
+        - img "Сохранённый снимок текущего списка Soon в Oasis" [ref=f18e71]
+  - generic [ref=f18e73]:
+    - generic [ref=f18e74]:
+      - heading "Стиль берём из приложения" [level=2] [ref=f18e75]
+      - list [ref=f18e76]:
+        - listitem [ref=f18e77]: "Чёрный фон #000000, текст IslandPalette.foreground, вторичный текст с прозрачностью 60%."
+        - listitem [ref=f18e78]: Обычная навигация ExpandedNavigation высотой 32 pt, место под вырез 185 pt.
+        - listitem [ref=f18e79]: Заголовок 13 pt, текст 12 pt, действия 11 pt, подписи 10 pt. Боковые отступы 24 pt, нижний 22 pt.
+        - listitem [ref=f18e80]: "Поле как в SoonComposerView: #1C1C1E, радиус 6 pt, отступ текста 12 pt."
+        - listitem [ref=f18e81]: "Акцент Claude #D97757. Золотой #FFB800 остаётся у Soon."
+    - generic [ref=f18e82]:
+      - heading "Несколько источников" [level=2] [ref=f18e83]
+      - list [ref=f18e84]:
+        - listitem [ref=f18e85]: "Обзор сохраняет три текущие колонки: музыка, календарь с Claude под ним, Soon."
+        - listitem [ref=f18e86]: В строке Claude появляется «3 ждут ответа». Музыка и календарь продолжают обновляться.
+        - listitem [ref=f18e87]: При вводе начало созвона даёт одну текстовую строку «Созвон начался · Войти». Без перестройки поля.
+        - listitem [ref=f18e88]: Остальные события видны во входящих. Уведомления не переключают открытый экран.
+        - listitem [ref=f18e89]: HUD временно скрывает ответ и возвращает его с черновиком и выделением.
+  - paragraph [ref=f18e90]: Вариант 480 × 352 и постоянная дополнительная полоса из v2 сняты. Для длинного вопроса прокручивается содержимое экрана, действия остаются видны. HTML показывает приближение формы острова. В приложении используется существующий IslandShape с его squircle и анимациями.

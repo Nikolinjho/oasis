@@ -1,0 +1,17 @@
+Building for production...
+[2 / 5] Oasis-product
+/private/tmp/oasis-dashboard-navigation/app/Sources/Oasis/BackdropMonitor.swift:110:3: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'BackdropMonitor.CreateImage?' (aka 'Optional<@convention(c) (CGRect, UInt32, UInt32, UInt32) -> Optional<Unmanaged<CGImage>>>'), consider removing it
+108 |   /// CGWindowListCreateImage в SDK macOS 15+ помечен obsoleted, но в системе есть: берём через dlsym.
+109 |   /// Не нашёлся — снимков нет, фон тёмный
+110 |   nonisolated(unsafe) private static let createImage: CreateImage? = {
+    |   `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'BackdropMonitor.CreateImage?' (aka 'Optional<@convention(c) (CGRect, UInt32, UInt32, UInt32) -> Optional<Unmanaged<CGImage>>>'), consider removing it
+111 |     guard let handle = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY),
+112 |       let symbol = dlsym(handle, "CGWindowListCreateImage")
+[4 / 6] Oasis-product
+[6 / 6] Oasis-product
+[7 / 8] Oasis-product
+Build complete! (6,15 secs)
+build/Oasis.app/Contents/Resources/MediaRemoteAdapter.framework: replacing existing signature
+build/Oasis.app: replacing existing signature
+Собрано: build/Oasis.app (release, подпись: Oasis Dev)
+Установлено: /Users/itsnikoko/Applications/Oasis.app

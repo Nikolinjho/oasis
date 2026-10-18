@@ -1,0 +1,208 @@
+- main [ref=f14e2]:
+  - generic [ref=f14e3]:
+    - generic [ref=f14e4]:
+      - generic [ref=f14e5]: Oasis / Claude Code
+      - generic [ref=f14e6]: Дизайн 02 · несколько активностей
+    - heading "Один остров. Несколько дел одновременно." [level=1] [ref=f14e7]: Один остров.Несколько дел одновременно.
+    - paragraph [ref=f14e8]: Ты отвечаешь Claude, музыка играет, начинается созвон. Остров показывает контекст и сохраняет ввод. Новое событие получает своё место во входящих.
+    - paragraph [ref=f14e9]: Интерактивный макет. Все события и отправка смоделированы, соединения с Claude нет.
+  - generic [ref=f14e10]:
+    - generic [ref=f14e12]:
+      - heading "Как активности делят остров" [level=2] [ref=f14e13]
+      - paragraph [ref=f14e14]: "Три независимых слоя: текущие активности, ожидающие действия и показ одного peek. Истечение peek не удаляет сам запрос."
+    - generic [ref=f14e15]:
+      - generic [ref=f14e16]:
+        - text: 01 / СОБЫТИЕ
+        - generic [ref=f14e17]: Короткий peek
+        - paragraph [ref=f14e18]: Проект и причина ожидания. Клик ведёт к запросу.
+        - generic [ref=f14e20] [cursor=pointer]:
+          - generic [ref=f14e22]:
+            - generic [ref=f14e23]: ✳
+            - generic [ref=f14e24]: "2"
+          - generic [ref=f14e25]:
+            - generic [ref=f14e26]: oasis · Нужен ответ
+            - generic [ref=f14e27]: Открыть
+      - generic [ref=f14e28]:
+        - text: 02 / ОДНОВРЕМЕННО
+        - generic [ref=f14e29]: Календарь, музыка, входящие
+        - paragraph [ref=f14e30]: Календарь слева от выреза. Музыка и счётчик справа. Видны вместе.
+        - generic [ref=f14e31]:
+          - generic [ref=f14e32]:
+            - generic [ref=f14e33]: ▦ 1 мин
+            - generic [ref=f14e34]:
+              - generic [ref=f14e35]: ♫ Ⅱ
+              - generic [ref=f14e36]: ✳ 2
+          - generic [ref=f14e37]: Полный компакт 400 × 32 pt
+      - generic [ref=f14e38]:
+        - text: 03 / ОТВЕТ
+        - generic [ref=f14e39]: Точная сессия, явное действие
+        - paragraph [ref=f14e40]: Выбрать вариант, написать свой ответ или разрешить команду.
+        - generic [ref=f14e44] [cursor=pointer]:
+          - generic [ref=f14e45]: ✓ Ответ принят
+          - generic [ref=f14e46]: oasis · …a7f2
+  - generic [ref=f14e47]:
+    - generic [ref=f14e48]:
+      - generic [ref=f14e49]:
+        - heading "Пиши ответ, пока приходят события" [level=2] [ref=f14e50]
+        - paragraph [ref=f14e51]: Рекомендуемый экран A · 480 × 352 pt · масштаб 1:1
+      - generic [ref=f14e52]:
+        - button "Вопрос" [ref=f14e53] [cursor=pointer]
+        - button "Разрешение" [ref=f14e54] [cursor=pointer]
+        - button "Несколько ответов" [ref=f14e55] [cursor=pointer]
+        - button "Срок истёк" [ref=f14e56] [cursor=pointer]
+        - button "Ошибка" [ref=f14e57] [cursor=pointer]
+        - button "HUD" [ref=f14e58] [cursor=pointer]
+    - generic [ref=f14e59]:
+      - button "Созвон начался" [ref=f14e60] [cursor=pointer]
+      - button "Сменился трек" [ref=f14e61] [cursor=pointer]
+      - button "Soon сработал" [ref=f14e62] [cursor=pointer]
+      - button "Ещё вопрос" [ref=f14e63] [cursor=pointer]
+      - button "Батарея 3%" [ref=f14e64] [cursor=pointer]
+      - button "Всё одновременно" [ref=f14e65] [cursor=pointer]
+      - button "Сбросить" [ref=f14e66] [cursor=pointer]
+    - generic [ref=f14e67]: Музыка и календарь обновляются независимо от открытого запроса.
+    - generic [ref=f14e68]:
+      - generic [ref=f14e69]:
+        - generic [ref=f14e70]:
+          - generic [ref=f14e71]: ●
+          - generic [ref=f14e72]: Terminal
+          - generic [ref=f14e73]: Shell
+          - generic [ref=f14e74]: Edit
+        - generic [ref=f14e75]:
+          - generic [ref=f14e76]: ◉
+          - generic [ref=f14e77]: 100%
+          - generic [ref=f14e78]: Сб 21:45
+      - generic [ref=f14e79]:
+        - generic [ref=f14e80]:
+          - button "Обзор" [ref=f14e81] [cursor=pointer]
+          - generic [ref=f14e83]:
+            - button "Входящие · 2" [ref=f14e84] [cursor=pointer]
+            - text: /
+            - button "Закрыть виджет" [ref=f14e85] [cursor=pointer]: ×
+        - generic [ref=f14e86]:
+          - generic [ref=f14e87]:
+            - generic [ref=f14e88]:
+              - generic [ref=f14e89]: ▦
+              - strong [ref=f14e90]: Созвон через 1 мин
+              - button "Войти" [ref=f14e91] [cursor=pointer]
+            - generic [ref=f14e92]:
+              - generic [ref=f14e93]: ♫ Teardrop
+              - button "Приостановить музыку" [ref=f14e94] [cursor=pointer]: Ⅱ
+          - generic [ref=f14e95]:
+            - generic [ref=f14e96]: ✳
+            - strong [ref=f14e97]: Claude Code
+            - generic [ref=f14e98]: Нужен ответ
+          - generic [ref=f14e99]: oasis · feat/claude-requests · …a7f2
+          - generic [ref=f14e100]:
+            - button "Запросы · 2" [ref=f14e101] [cursor=pointer]
+            - button "Лимиты" [ref=f14e102] [cursor=pointer]
+          - generic [ref=f14e103]:
+            - generic [ref=f14e104]: Где показывать вопросы Claude?
+            - generic [ref=f14e105]: Вопрос 1 из 1 · Выбери один вариант
+            - generic [ref=f14e106]:
+              - button "Отдельный экран запросов рекомендуется" [ref=f14e107] [cursor=pointer]:
+                - generic [ref=f14e109]: Отдельный экран запросов
+                - emphasis [ref=f14e110]: рекомендуется
+              - button "Внутри широкого Обзора" [ref=f14e111] [cursor=pointer]
+            - button "Свой ответ" [ref=f14e114] [cursor=pointer]
+          - generic [ref=f14e115]:
+            - button "В терминал" [ref=f14e116] [cursor=pointer]
+            - generic [ref=f14e117]:
+              - generic [ref=f14e118]: ⌘ Enter
+              - button "Отправить" [disabled] [ref=f14e119]
+      - generic [ref=f14e120]: Ввод защищён. Начало созвона обновит полосу, новый трек – музыкальную строку.
+    - generic [ref=f14e121]: Выбор и черновик сохраняются при закрытии и смене запроса. События календаря и музыка видны в общей полосе.
+  - generic [ref=f14e122]:
+    - generic [ref=f14e123]:
+      - article [ref=f14e124]:
+        - heading "События в этой симуляции" [level=3] [ref=f14e125]
+        - generic [ref=f14e126]: Введи ответ и добавь событие кнопками над островом.
+      - article [ref=f14e127]:
+        - heading "Очередь показа peek" [level=3] [ref=f14e128]
+        - paragraph [ref=f14e129]: Очередь peek пуста
+        - paragraph [ref=f14e130]: Пока открыт ответ, peek ждут. Закрой остров крестиком, чтобы увидеть последовательный показ. «Входящие» открываются вручную.
+    - table [ref=f14e131]:
+      - rowgroup [ref=f14e132]:
+        - row [ref=f14e133]:
+          - columnheader "Что приходит" [ref=f14e134]
+          - columnheader "Пока пишешь ответ" [ref=f14e135]
+          - columnheader "Когда остров закрыт" [ref=f14e136]
+      - rowgroup [ref=f14e137]:
+        - row [ref=f14e138]:
+          - cell "Музыка" [ref=f14e139]
+          - cell "Название и Play/Pause в полосе. Курсор остаётся в поле." [ref=f14e140]
+          - cell "Значок в компакте. Peek смены трека уступает важным событиям." [ref=f14e141]
+        - row [ref=f14e142]:
+          - cell "Начало созвона" [ref=f14e143]
+          - cell "Полоса меняется на «Созвон идёт», кнопка «Войти» доступна сразу." [ref=f14e144]
+          - cell "Peek раньше обычного вопроса Claude, затем таймер события в компакте." [ref=f14e145]
+        - row [ref=f14e146]:
+          - cell "Новый вопрос Claude" [ref=f14e147]
+          - cell "Увеличивает счётчик входящих. Открытый вопрос и выбор сохраняются." [ref=f14e148]
+          - cell "Peek и общий счётчик, запрос остаётся до ответа или отмены." [ref=f14e149]
+        - row [ref=f14e150]:
+          - cell "Soon" [ref=f14e151]
+          - cell "Короткая строка напоминания и запись во входящих." [ref=f14e152]
+          - cell "Peek, действия «Готово» и «Отложить» в источнике." [ref=f14e153]
+        - row [ref=f14e154]:
+          - cell "Батарея" [ref=f14e155]
+          - cell "Заметная строка вместо обычной подсказки. Текст ответа сохранён." [ref=f14e156]
+          - cell "Peek с приоритетом календаря и Soon." [ref=f14e157]
+        - row [ref=f14e158]:
+          - cell "Громкость / яркость" [ref=f14e159]
+          - cell "HUD временно получает экран, затем возвращается ответ и позиция курсора." [ref=f14e160]
+          - cell "HUD получает экран, живые peek продолжаются после него." [ref=f14e161]
+    - paragraph [ref=f14e162]: Таблица описывает предлагаемые правила. Непрочитанные запросы не смешиваются с проигранными уведомлениями. Для каждого источника нужны свои критерии актуальности.
+  - generic [ref=f14e163]:
+    - generic [ref=f14e165]:
+      - heading "Где живёт ответ" [level=2] [ref=f14e166]
+      - paragraph [ref=f14e167]: Три варианта размещения. A оставляет место и для вопроса, и для ввода.
+    - generic [ref=f14e168]:
+      - article [ref=f14e169]:
+        - generic [ref=f14e170]: Claude · Запросы
+        - heading "A · Отдельный экран рекомендую" [level=3] [ref=f14e175]:
+          - text: A · Отдельный экран
+          - generic [ref=f14e176]: рекомендую
+        - paragraph [ref=f14e177]: 480 × 352 pt. Полный вопрос и очередь. Лимиты – соседняя вкладка.
+        - button "Посмотреть A" [ref=f14e178] [cursor=pointer]
+      - article [ref=f14e179]:
+        - generic [ref=f14e181]:
+          - generic [ref=f14e182]: Музыка
+          - generic [ref=f14e185]: Календарь
+          - generic [ref=f14e188]: Запрос
+        - heading "B · В широком Обзоре" [level=3] [ref=f14e191]
+        - paragraph [ref=f14e192]: 768 × 248 pt. Несколько модулей рядом, но ответ вытесняет часть Обзора.
+        - button "Посмотреть B" [ref=f14e193] [cursor=pointer]
+      - article [ref=f14e194]:
+        - generic [ref=f14e195]: Claude
+        - heading "C · Нынешний размер" [level=3] [ref=f14e200]
+        - paragraph [ref=f14e201]: 345 × 207 pt. Компактно, длинные вопросы и варианты прокручиваются.
+        - button "Посмотреть C" [ref=f14e202] [cursor=pointer]
+  - generic [ref=f14e203]:
+    - generic [ref=f14e204]:
+      - heading "Что берём у Lumio" [level=2] [ref=f14e205]
+      - paragraph [ref=f14e206]: Сигнал ожидания у выреза, контекст сессии, понятный выбор и отдельное разрешение команды. В Oasis это дополняет Обзор и существующий модуль Claude.
+      - paragraph [ref=f14e207]:
+        - link "Сайт Lumio" [ref=f14e208] [cursor=pointer]:
+          - /url: https://lumiomac.com/
+        - text: · кадр демо ниже
+      - group [ref=f14e209]:
+        - generic "Посмотреть кадр Lumio" [ref=f14e210] [cursor=pointer]
+      - paragraph [ref=f14e211]: Свечение спокойное. Новое событие обновляет очередь, сохраняя открытый вопрос и черновик.
+    - generic [ref=f14e212]:
+      - heading "Поведение, которое важно" [level=2] [ref=f14e213]
+      - list [ref=f14e214]:
+        - listitem [ref=f14e215]: Peek не забирает фокус клавиатуры.
+        - listitem [ref=f14e216]: Закрыть – сохранить ожидание. Отклонить – ответить отказом.
+        - listitem [ref=f14e217]: В поле Enter добавляет строку, ⌘ Enter отправляет.
+        - listitem [ref=f14e218]: Истёкший запрос нельзя отправить повторно.
+        - listitem [ref=f14e219]: После отправки различаем приём мостом и продолжение Claude.
+  - generic [ref=f14e220]:
+    - heading "На согласование" [level=2] [ref=f14e221]
+    - paragraph [ref=f14e222]: Предлагаю A с общей полосой активностей и входящими для всего Oasis. Экран ответа не переключается сам. Календарь, музыка и новые запросы видны одновременно.
+    - paragraph [ref=f14e223]: После выбора дизайна – план реализации. Транспорт через хуки Claude Code сначала требует живой проверки. Новый текст в завершённый чат – отдельная возможность.
+    - generic [ref=f14e224]:
+      - link "Документация хуков Claude Code" [ref=f14e225] [cursor=pointer]:
+        - /url: https://code.claude.com/docs/en/hooks#tools-that-require-user-interaction
+      - generic [ref=f14e226]: Oasis · master 12fb64a
+      - generic [ref=f14e227]: "Акцент Claude #D97757"
