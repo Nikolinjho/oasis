@@ -5,11 +5,18 @@ struct SoonDetailView: View {
   let reminder: SoonReminder
   let now: Date
   let onAction: (SoonAction) -> Void
+  var showsBackButton = true
 
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
       HStack {
-        Button("Назад") { onAction(.showList) }
+        if showsBackButton {
+          Button {
+            onAction(.showList)
+          } label: {
+            Label("Назад", systemImage: "chevron.left")
+          }
+        }
         Spacer()
         SoonIcon().frame(width: 16, height: 16)
         Text("Soon")

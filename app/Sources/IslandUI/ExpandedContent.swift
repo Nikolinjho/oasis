@@ -35,7 +35,9 @@ struct ExpandedContent: View {
           view: view, width: size.width, notchWidth: notchWidth,
           onSelectView: onSelectView, onOpenSettings: onOpenSettings, waitingCount: agents.waitingCount,
           attentionCount: agents.attention.filter { $0.active && $0.unread }.count,
-          onFilterWaiting: { onAgentsAction(.filterWaiting(true)) })
+          onFilterWaiting: { onAgentsAction(.filterWaiting(true)) },
+          onBack: view == .soon && soon?.selected != nil ? { onSoonAction(.showList) } : nil,
+          backDestination: view == .soon && soon?.selected != nil ? "Soon" : nil)
       }
     }
     .frame(width: size.width, height: size.height, alignment: .top)
@@ -83,7 +85,7 @@ struct ExpandedContent: View {
         if let soon {
           TimelineView(.periodic(from: .now, by: 1)) { context in
             if let selected = soon.selected {
-              SoonDetailView(reminder: selected, now: context.date, onAction: onSoonAction)
+              SoonDetailView(reminder: selected, now: context.date, onAction: onSoonAction, showsBackButton: !navigation)
             } else {
               SoonListView(panel: soon, now: context.date, onAction: onSoonAction)
             }

@@ -11,8 +11,6 @@ struct AttentionInboxView: View {
       HStack {
         Text("Входящие").font(.system(size: 15, weight: .semibold))
         Spacer()
-        Button("К агентам") { onAction(.closeInbox) }
-          .font(.system(size: 11)).buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
       }
       if panel.attention.isEmpty {
         Text("Новых событий пока нет").font(.system(size: 12)).foregroundStyle(IslandPalette.secondary)
