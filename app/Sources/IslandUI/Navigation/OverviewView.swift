@@ -5,6 +5,7 @@ struct OverviewView: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
+  var agents = ClaudeAgentsPanel()
   let soon: SoonPanel?
   let dismissedEvents: Set<String>
   let appearance: IslandAppearance
@@ -60,7 +61,7 @@ struct OverviewView: View {
 
   private var claudeSummary: some View {
     Button {
-      if claude != nil { onSelectView(.claude) } else { onOpenSettings() }
+      onSelectView(.agents)
     } label: {
       HStack(spacing: 8) {
         Image(systemName: "sparkle").font(.system(size: 20)).foregroundStyle(.orange)
@@ -75,16 +76,18 @@ struct OverviewView: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .help(claude == nil ? "Открыть настройки подключения Claude Code" : "Лимиты Claude Code")
+    .help("Агенты и ответы Claude Code")
   }
 
   private var claudeTitle: String {
+    if agents.waitingCount > 0 { return "Claude · \(agents.waitingCount) ждут ответа" }
     guard let claude, let window = claude.limits.fiveHour ?? claude.limits.sevenDay else { return "Claude Code" }
     return "Claude · \(claude.remaining(window))% осталось"
   }
 
   private var claudeSubtitle: String {
-    guard let claude else { return "Нет данных · Настроить" }
+    if !agents.agents.isEmpty { return "Сессий: \(agents.agents.count) · Агенты и ответы" }
+    guard let claude else { return agents.connected ? "Подключено · Агенты и ответы" : "Подключить агентов" }
     if claude.isStale { return claude.freshness }
     if let window = claude.limits.fiveHour { return "5 часов · \(claude.resetText(window, weekday: false))" }
     return "7 дней · \(claude.freshness)"

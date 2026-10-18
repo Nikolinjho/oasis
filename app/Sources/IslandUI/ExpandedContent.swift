@@ -4,6 +4,8 @@ import SwiftUI
 /// Контент раскрытого по виду. Смена вида — только контент: старый гаснет в блюр, новый проявляется (ui-inspection 3.7)
 struct ExpandedContent: View {
   let view: ExpandedView
+  var agents = ClaudeAgentsPanel()
+  var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var claude: ClaudePanel?
@@ -27,11 +29,13 @@ struct ExpandedContent: View {
   var body: some View {
     ZStack(alignment: .top) {
       content
-        .padding(.top, navigation ? ExpandedLayout.headerHeight : 0)
-      if navigation {
+        .padding(.top, (navigation || view == .agents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
+      if navigation || view == .agents || view == .inbox {
         ExpandedNavigation(
           view: view, width: size.width, notchWidth: notchWidth,
-          onSelectView: onSelectView, onOpenSettings: onOpenSettings)
+          onSelectView: onSelectView, onOpenSettings: onOpenSettings, waitingCount: agents.waitingCount,
+          attentionCount: agents.attention.filter { $0.active && $0.unread }.count,
+          onFilterWaiting: { onAgentsAction(.filterWaiting(true)) })
       }
     }
     .frame(width: size.width, height: size.height, alignment: .top)
@@ -42,7 +46,7 @@ struct ExpandedContent: View {
       switch view {
       case .overview:
         OverviewView(
-          info: info, agenda: agenda, claude: claude, soon: soon, dismissedEvents: dismissedEvents,
+          info: info, agenda: agenda, claude: claude, agents: agents, soon: soon, dismissedEvents: dismissedEvents,
           appearance: appearance, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
           onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
           onSelectView: onSelectView, onOpenSettings: onOpenSettings
@@ -64,6 +68,12 @@ struct ExpandedContent: View {
         PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
           .transition(.viewSwap(timeScale: timeScale))
+      case .inbox:
+        AttentionInboxView(panel: agents, onAction: onAgentsAction)
+      case .agents:
+        ClaudeAgentsView(
+          panel: agents, onAction: onAgentsAction, onOpenSettings: onOpenSettings, context: liveEvent, music: info,
+          soonCount: soon?.reminders.filter { $0.state != .completed }.count ?? 0, onJoin: onJoin)
       case .claude:
         if let claude {
           ClaudeLimitsView(panel: claude)
@@ -89,11 +99,13 @@ struct ExpandedContent: View {
   }
 
   private var size: CGSize {
-    ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
+    view == .agents
+      ? CGSize(width: agents.width, height: agents.height)
+      : ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
   }
 
   private var contentHeight: CGFloat {
-    size.height - (navigation ? ExpandedLayout.headerHeight : 0)
+    size.height - ((navigation || view == .agents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
   }
 }
 

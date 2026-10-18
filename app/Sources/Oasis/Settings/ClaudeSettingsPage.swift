@@ -5,6 +5,7 @@ import SwiftUI
 struct ClaudeSettingsPage: View {
   @ObservedObject var settings: ClaudeSettings
   @ObservedObject var connection: ClaudeConnection
+  var agents: ClaudeRequestsModule?
   let preview: (IslandSound) -> Void
 
   var body: some View {
@@ -13,7 +14,8 @@ struct ClaudeSettingsPage: View {
       SettingsCard(title: nil) {
         ToggleRow(title: "Claude Code", info: "Лимиты подписки Claude: peek по порогам и вид в раскрытом острове", isOn: $settings.enabled)
       }
-      SettingsCard(title: "Подключение") {
+      if let agents { ClaudeAgentsSettingsCard(module: agents) }
+      SettingsCard(title: "Подключение лимитов") {
         ConnectionRow(connection: connection, text: settings.statuslineText)
         RowDivider()
         ClaudeChoiceRow(

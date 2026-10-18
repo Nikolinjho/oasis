@@ -7,8 +7,11 @@ struct ExpandedNavigation: View {
   let notchWidth: CGFloat
   let onSelectView: (ExpandedView) -> Void
   let onOpenSettings: () -> Void
+  var waitingCount = 0
+  var attentionCount = 0
+  var onFilterWaiting: () -> Void = {}
 
-  private var wide: Bool { width == ExpandedLayout.dashboard.width }
+  private var wide: Bool { width >= 560 }
   private var wing: CGFloat { max(0, (width - notchWidth) / 2 - (wide ? 20 : 10)) }
 
   var body: some View {
@@ -21,6 +24,11 @@ struct ExpandedNavigation: View {
       Color.clear.frame(width: notchWidth)
       HStack(spacing: 6) {
         Spacer(minLength: 0)
+        if view == .agents {
+          Button(action: onFilterWaiting) {
+            Text("\(waitingCount) ждут ответа").font(.system(size: 10)).foregroundStyle(ClaudeAgentsStyle.accent)
+          }.help("Показать ожидающих ответа")
+        }
         if !wide {
           Button {
             onSelectView(.modules)
@@ -30,6 +38,11 @@ struct ExpandedNavigation: View {
           .help("Модули")
           .accessibilityLabel("Модули")
         }
+        Button {
+          onSelectView(.inbox)
+        } label: {
+          Image(systemName: attentionCount > 0 ? "tray.full" : "tray")
+        }.help("Входящие · \(attentionCount)").accessibilityLabel("Входящие")
         Button(action: onOpenSettings) {
           Image(systemName: "gearshape")
         }

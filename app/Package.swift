@@ -8,6 +8,7 @@ let package = Package(
     .target(name: "IslandCore"),
     .target(name: "IslandSources", dependencies: ["IslandCore"]),
     .target(name: "IslandUI", dependencies: ["IslandCore"]),
+    .executableTarget(name: "OasisClaudeBridge", dependencies: ["IslandCore", "IslandSources"]),
     .executableTarget(name: "Oasis", dependencies: ["IslandCore", "IslandSources", "IslandUI"]),
     .testTarget(name: "IslandCoreTests", dependencies: ["IslandCore"], resources: [.copy("Fixtures")]),
     .testTarget(name: "IslandSourcesTests", dependencies: ["IslandSources", "IslandCore"], resources: [.copy("Fixtures")]),

@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsView: View {
   @ObservedObject var settings: AppSettings
   var claudeConnection: ClaudeConnection?
+  var agents: ClaudeRequestsModule?
   var soonModule: SoonModule?
   /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
   var playSound: (IslandSound) -> Void = { _ in }
@@ -46,7 +47,7 @@ struct SettingsView: View {
     case .nowPlaying: NowPlayingPage(settings: settings)
     case .claudeCode:
       if let claudeConnection {
-        ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, preview: playSound)
+        ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, agents: agents, preview: playSound)
       }
     case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
     case .soon:

@@ -14,6 +14,7 @@ public enum IslandAlert: Equatable, Sendable {
   /// Порог лимита Claude Code, прогноз исчерпания или сброс окна.
   case claude(ClaudeNotice)
   case soon(SoonNotice)
+  case claudeRequest(ClaudeRequestID)
 
   /// Вид: повтор того же вида в очереди заменяет ждущее, а поверх показанного обновляет его.
   /// Напоминания одного вида — только об одном событии: «за 5» заменяет «за 15» того же события,
@@ -23,6 +24,7 @@ public enum IslandAlert: Equatable, Sendable {
     case calendarReminder(eventID: String)
     case airpods
     case claude
+    case claudeRequest(ClaudeRequestID)
     case soon(occurrenceID: String)
   }
 
@@ -34,6 +36,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .calendarReminder(let reminder): .calendarReminder(eventID: reminder.eventID)
     case .airpods: .airpods
     case .claude: .claude
+    case .claudeRequest(let id): .claudeRequest(id)
     case .soon(let notice): .soon(occurrenceID: notice.occurrenceID)
     }
   }
@@ -41,9 +44,8 @@ public enum IslandAlert: Equatable, Sendable {
   /// Кто вперёд в очереди. У Alcove приоритеты неизвестны: значения — допущение плана P1
   public var priority: Int {
     switch self {
-    case .lowBattery, .calendarReminder, .soon: 2
-    case .lowPower, .airpods: 1
-    case .charging: 0
+    case .charging, .lowBattery, .lowPower, .calendarReminder, .soon: 2
+    case .airpods, .claudeRequest: 1
     case .claude(let notice): notice.urgent ? 2 : notice.reason == .reset ? 0 : 1
     }
   }
@@ -55,6 +57,7 @@ public enum IslandAlert: Equatable, Sendable {
     // как peek календаря на старте: Peek duration 4 с (ui-inspection 3.5)
     case .calendarReminder: IslandTiming.calendarPeek
     case .claude: IslandTiming.calendarPeek
+    case .claudeRequest: .seconds(5)
     case .soon: .seconds(5)
     }
   }
@@ -62,7 +65,7 @@ public enum IslandAlert: Equatable, Sendable {
   /// Звуки Alcove по умолчанию: Play sound on low battery вкл (ui-inspection 1.3), low power — low-power.caf из бандла
   public var sound: IslandSound? {
     switch self {
-    case .charging: nil
+    case .charging, .claudeRequest: nil
     // Connectivity → Play sound on low battery: звук тот же, что у батареи Mac. Предположение, у Alcove не снимали
     case .airpods(let info): info.isLowBattery ? .lowBattery : nil
     case .lowBattery: .lowBattery

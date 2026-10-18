@@ -30,6 +30,7 @@ public enum IslandEvent: Equatable, Sendable {
   /// Свайп вниз по раскрытому: следующий вид
   case expandedViewCycled
   case claudeViewAvailable(Bool)
+  case agentsWaitingChanged(Int)
   case soonViewAvailable(Bool)
   case expandedViewRequested(ExpandedView)
   /// Свайп вверх по компакту: активность уходит в форму выреза до смены активности или свайпа вниз
@@ -85,6 +86,7 @@ public struct IslandModel: Equatable, Sendable {
   /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
   public var expandedView: ExpandedView = .duo
   public var claudeViewAvailable = false
+  public var agentsWaitingCount = 0
   public var soonViewAvailable = false
   /// Последний просмотренный вид раскрытого: для Most Recent
   public var lastExpandedView: ExpandedView = .duo
@@ -109,7 +111,7 @@ public struct IslandModel: Equatable, Sendable {
   public var base: Surface {
     guard config.compactAtRest, !isFullscreen, !dismissed else { return .idle }
     if calendarLive { return .calendar }
-    return showsMedia ? .compact : .idle
+    return showsMedia || agentsWaitingCount > 0 ? .compact : .idle
   }
 
   /// Музыка в покое: трек есть, Now Playing включён, пауза не дольше Idle duration, источник не на переднем плане
@@ -224,7 +226,9 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     // (calendarLiveChanged ждёт смены base, а calendar приоритетнее музыки в base независимо от неё):
     // компакт/peek меняют размер на месте, без этого — мгновенный скачок ширины без анимации.
     // Отклик hover над компактом календаря рисует тот же компакт, только шире: туда же
-    if isCalendarRest(unwrapHoverNudge(model.surface)), showedMedia != model.showsMedia,
+    if isCalendarRest(unwrapHoverNudge(model.surface))
+      || (model.agentsWaitingCount > 0 && isRest(unwrapHoverNudge(model.surface))),
+      showedMedia != model.showsMedia,
       !effects.contains(where: { if case .animate = $0 { true } else { false } })
     {
       effects.append(.animate(.calendarRestyle))
@@ -244,6 +248,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .calendarLiveChanged(let live): calendarLiveChanged(&model, live)
     case .calendarStarted: calendarStarted(&model)
     case .expandedViewCycled: expandedViewCycled(&model)
+    case .agentsWaitingChanged(let count): agentsWaitingChanged(&model, count)
     case .claudeViewAvailable(let available): claudeViewAvailable(&model, available)
     case .soonViewAvailable(let available): soonViewAvailable(&model, available)
     case .expandedViewRequested(let view): expandedViewRequested(&model, view)
@@ -364,6 +369,17 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     return false
   }
 
+  private static func agentsWaitingChanged(_ m: inout IslandModel, _ count: Int) -> [IslandEffect] {
+    let old = m.base
+    let hadRequests = m.agentsWaitingCount > 0
+    m.agentsWaitingCount = max(0, count)
+    let effects = baseChanged(&m, from: old)
+    if effects.isEmpty, hadRequests != (m.agentsWaitingCount > 0), isRest(unwrapHoverNudge(m.surface)) {
+      return [.animate(.calendarRestyle)]
+    }
+    return effects
+  }
+
   private static func mediaCleared(_ m: inout IslandModel) -> [IslandEffect] {
     m.hasMedia = false
     m.isPlaying = false
@@ -374,8 +390,8 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     if let pending = m.pending, isRest(pending) { m.pending = m.base }
     switch m.surface {
     case .compact, .peek:
-      m.surface = .idle
-      return [.cancel(.peekEnd), .animate(.compactOut)]
+      m.surface = m.base
+      return [.cancel(.peekEnd), .animate(m.base == .idle ? .compactOut : .calendarRestyle)]
     default:
       return []
     }

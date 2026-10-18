@@ -14,8 +14,8 @@ struct ModulesView: View {
       tile("Музыка", subtitle: "Плеер", symbol: "music.note", view: .player, enabled: mediaEnabled)
       tile("Календарь", subtitle: "События и месяц", symbol: "calendar", view: .calendar, enabled: calendarEnabled)
       tile(
-        "Claude Code", subtitle: claudeAvailable ? "Лимиты и прогноз" : "Нет данных", symbol: "sparkle", view: .claude,
-        enabled: claudeAvailable)
+        "Claude Code", subtitle: "Агенты и ответы", symbol: "sparkle", view: .agents,
+        enabled: true)
       tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon, enabled: soonAvailable)
       ModuleTile(title: "Pomodoro", subtitle: "Скоро", symbol: "timer", enabled: false, action: {})
     }

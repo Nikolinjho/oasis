@@ -15,6 +15,7 @@ final class IslandWindowController {
   private var pointerInside = false
   /// Тело острова, над которым курсор вошёл: держит hover, пока курсор над ним
   private var hoverOpenedFrom: CGRect?
+  private var expandedRegion: (view: ExpandedView, body: CGRect)?
   /// Пока контекстное меню острова открыто, курсор на меню и клики в нём не значат «ушёл с острова»
   private var menuOpen = false
   /// Остров закрыт свайпом вверх, а курсор так и стоит над ним: не раскрываем снова, пока курсор не уйдёт
@@ -35,6 +36,7 @@ final class IslandWindowController {
   /// General → Gestures → Natural movement: источник знака dy у свайпа (swipeInput)
   var naturalMovement = true
   private var composerActive = false
+  private lazy var agentInput = ClaudeAgentInputController(store: store)
   private var scrollInList = false
   var onComposerSurfaceChange: (Surface) -> Void = { _ in }
 
@@ -94,6 +96,16 @@ final class IslandWindowController {
 
   // swiftlint:disable:next function_body_length - мониторы событий одним списком, порядок установки виден целиком
   private func installMonitors() {
+    if let keyboard = NSEvent.addLocalMonitorForEvents(
+      matching: .keyDown,
+      handler: { [weak self] event in
+        guard let self, event.window === panel, agentInput.active, event.keyCode == 53 else { return event }
+        store.onAgentsAction(.close)
+        return nil
+      })
+    {
+      monitors.append(keyboard)
+    }
     let moves: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged]
     if let global = NSEvent.addGlobalMonitorForEvents(
       matching: moves,
@@ -206,6 +218,7 @@ final class IslandWindowController {
   private func pointerOverList(panel: NotchPanel) -> Bool {
     guard store.model.surface == .expanded else { return false }
     let pointer = NSEvent.mouseLocation
+    if store.model.expandedView == .agents || store.model.expandedView == .inbox { return true }
     if store.model.expandedView == .soon {
       let header: CGFloat = store.config.dashboardNavigation ? ExpandedLayout.headerHeight : 0
       return pointer.y < panel.frame.maxY - 54 - header
@@ -214,32 +227,6 @@ final class IslandWindowController {
     let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
     return pointer.x >= body.maxX - 230 && pointer.x <= body.maxX - 24
       && pointer.y < panel.frame.maxY - 62 && pointer.y > panel.frame.maxY - 174
-  }
-
-  /// Разбор события scrollWheel для SwipeTracker. Инерцию не берём: у Alcove её нет. Колесо мыши
-  /// (без точных дельт) не трогаем. Касание (mayBegin) и прочие фазы — nil. Ось (вертикаль или горизонталь)
-  /// решает трекер. Знак зависит от General → Gestures → Natural movement (natural): вкл (по умолчанию) —
-  /// как в записи жестов, пальцы вниз дают dy > 0 при включённой системной натуральной прокрутке (inverted),
-  /// и наоборот при выключенной. Natural movement выкл — жест всегда читается как прокрутка контента:
-  /// системная inverted не учитывается, знак тот же, что у natural: true, inverted: false
-  static func swipeInput(  // swiftlint:disable:this function_parameter_count - поля NSEvent плюс две настройки
-    phase: NSEvent.Phase, momentumPhase: NSEvent.Phase, precise: Bool,
-    deltaX: CGFloat, deltaY: CGFloat, inverted: Bool, natural: Bool = true
-  ) -> SwipeInput? {
-    guard precise, momentumPhase.isEmpty else { return nil }
-    // Natural movement вкл: знак от устройства, пальцы вниз — dy > 0 при любой системной прокрутке.
-    // Выкл: как прокрутка контента — с натуральной прокруткой направление обратное
-    let sign: CGFloat = natural && inverted ? 1 : -1
-    let trackerPhase: SwipeTracker.Phase
-    switch phase {
-    case .began: trackerPhase = .began
-    case .changed: trackerPhase = .changed
-    case .ended: trackerPhase = .ended
-    case .cancelled: trackerPhase = .cancelled
-    default: return nil
-    }
-    guard trackerPhase == .changed else { return SwipeInput(phase: trackerPhase, dx: 0, dy: 0) }
-    return SwipeInput(phase: .changed, dx: sign * deltaX, dy: sign * deltaY)
   }
 
   /// Меню от точки клика, как контекстное меню у Alcove. popUp возвращается, когда меню закрыто:
@@ -265,8 +252,10 @@ final class IslandWindowController {
     // безопасная зона — только у раскрытого: компакт и hover из покоя держатся по форме, как раньше
     let zone: IslandGeometry.SafeZone? =
       store.model.surface == .expanded ? (store.appearance.progressiveBlur ? .blurred : .plain) : nil
-    let inside = IslandGeometry.pointerInside(
-      point, body: body, island: island, openedFrom: hoverOpenedFrom, expandedSafeZone: zone)
+    let inside =
+      agentInput.active
+      || IslandGeometry.pointerInside(
+        point, body: body, island: island, openedFrom: hoverOpenedFrom, expandedSafeZone: zone)
     guard inside != pointerInside else { return }
     guard inside || Self.shouldSendHoverExit(pointerInside: inside, buttonDown: leftButtonDown, dragStartedInside: dragStartedInside)
     else { return }
@@ -304,6 +293,8 @@ final class IslandWindowController {
   /// alert/HUD/shrink съедают исходный hoverEntered (машина в этих состояниях его игнорирует),
   /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
   private func surfaceChanged() {
+    retainNavigationRegion()
+    agentInput.surfaceChanged(store.model.surface)
     if composerActive {
       if case .hud = store.model.surface { panel?.orderFrontRegardless() } else { panel?.orderOut(nil) }
       onComposerSurfaceChange(store.model.surface)
@@ -322,6 +313,21 @@ final class IslandWindowController {
 }
 
 extension IslandWindowController {
+  private func retainNavigationRegion() {
+    if store.model.surface == .expanded, let panel {
+      let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
+      if let previous = expandedRegion, previous.view != store.model.expandedView {
+        // После сужения экрана курсор ещё над нажатой кнопкой предыдущего экрана.
+        hoverOpenedFrom = previous.body.union(hoverOpenedFrom ?? previous.body)
+      }
+      expandedRegion = (store.model.expandedView, body)
+    } else {
+      expandedRegion = nil
+    }
+  }
+
+  func setAgentInputActive(_ active: Bool) { agentInput.setActive(active, panel: panel) }
+
   var composerFrame: CGRect {
     panel?.frame ?? CGRect(x: 400, y: 400, width: 624, height: 320)
   }
@@ -345,35 +351,5 @@ extension IslandWindowController {
       panel?.orderFrontRegardless()
       pointerMoved()
     }
-  }
-}
-
-struct IslandRootView: View {
-  let store: IslandStore
-
-  var body: some View {
-    IslandView(
-      model: store.model,
-      spec: store.spec,
-      notchWidth: store.notch.width,
-      nowPlaying: store.nowPlaying,
-      agenda: store.agenda,
-      claude: store.claudePanel,
-      soon: store.soonPanel,
-      dismissedEvents: store.dismissedEvents,
-      calendarEvent: store.calendarEvent,
-      dragBlurred: store.dragBlurred,
-      appearance: store.appearance,
-      backdropDark: store.backdropDark,
-      volume: store.volumeLevel,
-      onClick: { store.send(.clicked) },
-      onAction: { store.onAction($0) },
-      onJoin: { store.onJoin($0) },
-      onSoonAction: { store.onSoonAction($0) },
-      mediaEnabled: store.mediaEnabled, calendarEnabled: store.calendarFilter.isEnabled,
-      onSelectView: { view in
-        if view == .soon { store.onSoonAction(.showList) } else { store.send(.expandedViewRequested(view)) }
-      },
-      onOpenSettings: { store.onOpenSettings() })
   }
 }

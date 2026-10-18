@@ -18,7 +18,24 @@ final class NotchPanel: NSPanel {
   }
 
   // окно не забирает фокус у активного приложения: кнопки в NSHostingView срабатывают и с первого клика
-  override var canBecomeKey: Bool { false }
+  var acceptsAgentInput = false
+  override var canBecomeKey: Bool { acceptsAgentInput }
+  override func performKeyEquivalent(with event: NSEvent) -> Bool {
+    if acceptsAgentInput, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command {
+      let action: Selector?
+      // Правки работают и в русской раскладке, где charactersIgnoringModifiers не содержит a/c/v/x.
+      switch event.keyCode {
+      case 0: action = #selector(NSText.selectAll(_:))
+      case 8: action = #selector(NSText.copy(_:))
+      case 9: action = #selector(NSText.paste(_:))
+      case 7: action = #selector(NSText.cut(_:))
+      default: action = nil
+      }
+      if let action { return NSApp.sendAction(action, to: nil, from: self) }
+    }
+    return super.performKeyEquivalent(with: event)
+  }
+
   override var canBecomeMain: Bool { false }
 }
 

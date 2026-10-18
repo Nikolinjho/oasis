@@ -126,6 +126,7 @@ public enum IslandGeometry {
     case .calendarReminder: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
     case .airpods: airpodsSize(notch: notch)
     case .claude: calendarSize(calendarPeek, notch: notch, indicatorWidth: reminderIndicatorWidth)
+    case .claudeRequest: CGSize(width: max(400, notch.width + 215), height: calendarPeek.height)
     case .soon: CGSize(width: max(300, notch.width + 2 * (24 + 32)), height: calendarPeek.height)
     }
   }

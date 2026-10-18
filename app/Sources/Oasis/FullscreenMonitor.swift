@@ -54,10 +54,10 @@ final class FullscreenMonitor {
     else { return false }
     let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
     let windows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
-    return FullscreenWindows.isFullscreen(
-      windows: windows,
-      frontmostPID: NSWorkspace.shared.frontmostApplication?.processIdentifier,
-      ownPID: ProcessInfo.processInfo.processIdentifier,
-      screen: FullscreenWindows.cgRect(ofScreenFrame: notchScreen.frame, primaryScreenHeight: primary.frame.height))
+    let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier
+    let ownPID = ProcessInfo.processInfo.processIdentifier
+    let screen = FullscreenWindows.cgRect(ofScreenFrame: notchScreen.frame, primaryScreenHeight: primary.frame.height)
+    return FullscreenWindows.isFullscreen(windows: windows, frontmostPID: pid, ownPID: ownPID, screen: screen)
+      || FullscreenAccessibility.isFullscreen(pid: pid, ownPID: ownPID, screen: screen, topInset: notchScreen.safeAreaInsets.top)
   }
 }

@@ -12,9 +12,14 @@ final class IslandStore {
   private(set) var model: IslandModel
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
+  var agentsPanel = ClaudeAgentsPanel()
+  var showAttentionInbox = false
+  var agentInputActive = false
+  @ObservationIgnored var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
   private(set) var claudePanel: ClaudePanel?
   private(set) var soonPanel: SoonPanel?
-  @ObservationIgnored var soonComposition = SoonCompositionState()
+  @ObservationIgnored var attention = AttentionCoordinator()
+  var attentionItems: [IslandAttention] = []
   /// Последний payload источника как есть
   @ObservationIgnored private var sourceNowPlaying: NowPlayingInfo?
   @ObservationIgnored private var playbackModes = PlaybackModeOverride()
@@ -83,14 +88,6 @@ final class IslandStore {
 
   init(config: IslandMachine.Config = .user) {
     model = IslandModel(config: config)
-  }
-
-  /// Режим машины. Demo-прогон переключает на .alcove: эталон сверки записан с поведением Alcove.
-  /// Настройки могут сменить покой (Now Playing выключен) или вид компакта календаря: машина переводит
-  /// остров сама, пружиной, как при событиях (configChanged)
-  var config: IslandMachine.Config {
-    get { model.config }
-    set { send(.configChanged(newValue)) }
   }
 
   /// Окно календаря открылось (событие) или закрылось (nil). Зовёт CalendarClock и отладка
@@ -197,13 +194,15 @@ final class IslandStore {
     }
   }
 
-  // swiftlint:disable:next cyclomatic_complexity - редьюс и по case на эффект, разбивка спрячет порядок применения
   func send(_ event: IslandEvent) {
-    guard !deferSoonComposition(event) else { return }
+    guard !deferAttention(event) else { return }
     var next = model
+    let expiryEffects = prepareAttention(&next)
     let previous = model.surface
+    let previousView = model.expandedView
     let previousLast = model.lastExpandedView
-    let effects = IslandMachine.reduce(&next, event)
+    let effects = expiryEffects + IslandMachine.reduce(&next, event)
+    protectQueuedAttention(&next)
 
     var transition: IslandTransition?
     for case .animate(let t) in effects { transition = t }
@@ -228,28 +227,16 @@ final class IslandStore {
       NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
     }
 
-    for effect in effects {
-      switch effect {
-      case .animate:
-        break
-      case .schedule(let id, let delay):
-        timers[id]?.cancel()
-        timers[id] = Task { [weak self] in
-          try? await Task.sleep(for: delay)
-          guard !Task.isCancelled else { return }
-          self?.timers[id] = nil
-          self?.send(.timerFired(id))
-        }
-      case .cancel(let id):
-        timers[id]?.cancel()
-        timers[id] = nil
-      case .play(let sound):
-        onSound(sound)
-      }
+    execute(effects)
+    markPresentedRequest()
+    if let restore = restoreAttentionAfterHUD(event) {
+      send(.expandedViewRequested(restore))
+      return
     }
     // после эффектов: вложенный send из колбэка не перемешается с таймерами этого события
-    if model.surface != previous { onSurfaceChange() }
+    if model.surface != previous || model.expandedView != previousView { onSurfaceChange() }
     if model.lastExpandedView != previousLast { onLastExpandedViewChange(model.lastExpandedView) }
+    if previous == .expanded, model.surface != .expanded { releaseAttentionIfPossible() }
   }
 
   func apply(_ change: NowPlayingChange, now: Date = Date()) {
@@ -350,6 +337,7 @@ final class IslandStore {
   /// Раскрытый (Duo, календарный вид) видит события Both и Expanded View, часы — Both и Live Activity
   private func publish(_ events: [CalendarEvent], now: Date) {
     shownEvents = events
+    updateAttentionCalendar(calendarFilter.live(events))
     agenda = DayAgenda.make(events: calendarFilter.expanded(events), now: now)
     onAgendaChange(DayAgenda.make(events: calendarFilter.live(events), now: now))
   }
@@ -370,6 +358,42 @@ extension IslandStore {
   func applyClaude(_ panel: ClaudePanel?) {
     claudePanel = panel
     send(.claudeViewAvailable(panel != nil))
+  }
+
+}
+
+extension IslandStore {
+  var config: IslandMachine.Config {
+    get { model.config }
+    set { send(.configChanged(newValue)) }
+  }
+}
+
+extension IslandStore {
+  private func execute(_ effects: [IslandEffect]) {
+    for effect in effects {
+      switch effect {
+      case .animate:
+        break
+      case .schedule(let id, let delay):
+        timers[id]?.cancel()
+        timers[id] = Task { [weak self] in
+          try? await Task.sleep(for: delay)
+          guard !Task.isCancelled else { return }
+          self?.timers[id] = nil
+          self?.send(.timerFired(id))
+        }
+      case .cancel(let id):
+        timers[id]?.cancel()
+        timers[id] = nil
+      case .play(let sound):
+        if !attention.releasingHeard { onSound(sound) }
+      }
+    }
+  }
+
+  func markAlertHeard(_ kind: IslandAlert.Kind) {
+    model.heardAlerts.insert(kind)
   }
 
 }

@@ -6,11 +6,7 @@ import os
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable:this type_body_length - разбивка вне задачи
   private let store = IslandStore()
-  /// Миграция старого домена Alcove Analog — до первого чтения настроек
-  private let settings: AppSettings = {
-    LegacyDefaultsMigration.runAtLaunch()
-    return AppSettings()
-  }()
+  private let settings = AppSettings.afterLegacyMigration()
   private let sounds = SoundPlayer()
   private let claudeConnection = ClaudeConnection(installer: .live)
   private let claudeLifecycle = ClaudeModuleLifecycle()
@@ -18,9 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private lazy var claude = ClaudeModule(
     store: store, settings: settings,
     directory: ClaudeFiles.directory(home: FileManager.default.homeDirectoryForCurrentUser))
+  private lazy var agents = ClaudeRequestsModule(store: store)
   private lazy var soon = SoonAppIntegration(store: store, settings: settings)
   private lazy var settingsWindow = SettingsWindowController(
-    settings: settings, claudeConnection: claudeConnection, soonModule: soon.module,
+    settings: settings, claudeConnection: claudeConnection, agents: agents, soonModule: soon.module,
     calendars: { [weak self] in self?.calendar.calendars() ?? [] },
     playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
@@ -44,16 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private var lastPower: PowerState?
   private var tasks: [Task<Void, Never>] = []
   private var debugSections: [DebugSection] = []
-  private lazy var links = LaunchLinkQueue { [weak self] url in DebugURL.perform(url, in: self?.debugSections ?? []) }
+  private lazy var links = LaunchLinkQueue { [weak self] url in
+    guard let self else { return }
+    if !ClaudeAgentsLinkRouter.perform(url, module: agents) { DebugURL.perform(url, in: debugSections) }
+  }
   /// После изменения громкости из плеера HUD молчит 0.5 с, пока CoreAudio подтверждает уровень.
   private var rowQuietUntil = Date.distantPast
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "app")
 
-  /// При холодном запуске по ссылке каталог готов до applicationDidFinishLaunching: AppKit уже доставляет URL.
   func applicationWillFinishLaunching(_ notification: Notification) {
+    _ = agents
     soon.install()
     debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude, soon: soon.module)
-    // здесь, а не в applicationDidFinishLaunching: холодный запуск по ссылке calendar.remind закрепляет повестку раньше
+    debugSections.append(DebugClaudeAgents.section(agents))
     calendar.apply()
     store.onSound = { [weak self] sound in
       guard let self, settings.playSounds else { return }
@@ -63,7 +63,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
       log.info("join \(url.host() ?? "", privacy: .public)")
       NSWorkspace.shared.open(url)
     }
-    // Most Recent: последний вид раскрытого переживает перезапуск
     store.restoreLastExpandedView(settings.lastExpandedView)
     store.onLastExpandedViewChange = { [weak self] view in self?.settings.lastExpandedView = view }
     store.onOpenSettings = { [weak self] in self?.settingsWindow.show() }
@@ -99,6 +98,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     }
     liveSourcesEnabled = true
     soon.start(window: window)
+    agents.onEditing = { [weak self] active in self?.window?.setAgentInputActive(active) }
+    agents.start()
     applyClaudeSettings()
     startFullscreenMonitor()
     startSourceActivity()
@@ -112,6 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    agents.stop()
     soon.module.stop()
     claudeLifecycle.stop()
     claude.stop()
@@ -121,7 +123,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     headphonesMonitor?.stop()
   }
 
-  /// Настройки из окна и меню применяются сразу. DisplayChoice пока не влияет на окно.
   private func applySettings() {
     store.config = settings.machineConfig(from: store.config)
     applyAppearance()
@@ -164,7 +165,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   /// oasis://debug/<id>: при холодном запуске ждёт готовности острова и первой загрузки календаря
   func application(_ application: NSApplication, open urls: [URL]) { links.open(urls) }
 
-  /// Полноэкранное приложение на экране с вырезом прячет компакт музыки
   private func startFullscreenMonitor() {
     let monitor = FullscreenMonitor { [store, log] isFullscreen in
       log.info("fullscreen \(isFullscreen ? "on" : "off")")
@@ -174,7 +174,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     fullscreen = monitor
   }
 
-  /// Источник музыки на переднем плане: сверяется при смене приложения и при смене трека
   private func updateSourceActive() {
     let active = frontmostBundleID != nil && frontmostBundleID == store.nowPlaying?.bundleID
     store.send(.sourceActiveChanged(active))
@@ -254,6 +253,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     let power = PowerSource()
     power.onChange = { [weak self] state in
       guard let self else { return }
+      store.updateAttentionPower(state: state, rules: settings.powerRules)
       for alert in PowerNotices.alerts(from: lastPower, to: state, rules: settings.powerRules) { store.send(.alertArrived(alert)) }
       lastPower = state
     }

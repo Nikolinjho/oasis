@@ -14,6 +14,7 @@ BIN="$(swift build -c "$CONFIG" --show-bin-path)/Oasis"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Oasis"
+cp "$(dirname "$BIN")/OasisClaudeBridge" "$APP/Contents/Resources/OasisClaudeBridge"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 # иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
 cp -R Resources/YandexMusic "$APP/Contents/Resources/"
@@ -68,5 +69,6 @@ fi
 if [ -d "$APP/Contents/Resources/MediaRemoteAdapter.framework" ]; then
     codesign --force --sign "$SIGN" "$APP/Contents/Resources/MediaRemoteAdapter.framework"
 fi
+codesign --force --sign "$SIGN" "$APP/Contents/Resources/OasisClaudeBridge"
 codesign --force --sign "$SIGN" "$APP"
 echo "Собрано: $APP ($CONFIG, подпись: $SIGN)"
