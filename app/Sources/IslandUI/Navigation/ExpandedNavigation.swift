@@ -38,9 +38,10 @@ struct ExpandedNavigation: View {
       Color.clear.frame(width: notchWidth)
       HStack(spacing: 6) {
         Spacer(minLength: 0)
-        if view == .agents {
+        if view.isAgents {
           Button(action: onFilterWaiting) {
-            Text("\(waitingCount) ждут ответа").font(.system(size: 10)).foregroundStyle(ClaudeAgentsStyle.accent)
+            Text("\(waitingCount) ждут ответа").font(.system(size: 10)).foregroundStyle(
+              view == .codexAgents ? AgentProvider.codex.accent : AgentProvider.claude.accent)
           }.help("Показать ожидающих ответа")
         }
         if !wide {

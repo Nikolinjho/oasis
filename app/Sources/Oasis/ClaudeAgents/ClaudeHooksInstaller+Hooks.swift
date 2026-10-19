@@ -9,14 +9,11 @@ extension ClaudeHooksInstaller {
     ]
     for event in events {
       var group: [String: Any] = ["hooks": [["type": "command", "command": command, "timeout": 600]]]
-      if event == "PreToolUse" { group["matcher"] = "AskUserQuestion" }
-      result[event] = [group]
       if event == "PreToolUse" {
-        result[event]?.append([
-          "matcher": "^(?!AskUserQuestion$).+",
-          "hooks": [["type": "command", "command": command, "timeout": 5]],
-        ])
+        group["matcher"] = "^(?!AskUserQuestion$).+"
+        group["hooks"] = [["type": "command", "command": command, "timeout": 5]]
       }
+      result[event] = [group]
     }
     return result
   }

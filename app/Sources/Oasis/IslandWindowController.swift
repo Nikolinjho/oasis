@@ -218,7 +218,7 @@ final class IslandWindowController {
   private func pointerOverList(panel: NotchPanel) -> Bool {
     guard store.model.surface == .expanded else { return false }
     let pointer = NSEvent.mouseLocation
-    if store.model.expandedView == .agents || store.model.expandedView == .inbox { return true }
+    if store.model.expandedView.isAgents || store.model.expandedView == .inbox { return true }
     if store.model.expandedView == .soon {
       let header: CGFloat = store.config.dashboardNavigation ? ExpandedLayout.headerHeight : 0
       return pointer.y < panel.frame.maxY - 54 - header
@@ -246,7 +246,10 @@ final class IslandWindowController {
     let point = NSEvent.mouseLocation
     let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
     // вне формы клики уходят в menu bar и окна под островом
-    panel.ignoresMouseEvents = !IslandGeometry.reachingScreenTop(island).contains(point)
+    let local = CGPoint(x: point.x - panel.frame.minX, y: max(0, panel.frame.maxY - point.y))
+    panel.ignoresMouseEvents = !PeekQueueGeometry.contains(
+      local, content: store.contentSpec, appearance: store.appearance.peekQueue,
+      visible: store.showsPeekQueue, windowWidth: panel.frame.width)
 
     let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
     // безопасная зона — только у раскрытого: компакт и hover из покоя держатся по форме, как раньше

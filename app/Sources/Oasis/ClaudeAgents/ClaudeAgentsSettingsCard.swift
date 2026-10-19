@@ -20,6 +20,10 @@ struct ClaudeAgentsSettingsCard: View {
           module.perform(module.panel.connected || module.panel.hasConnectionRecord ? .disconnect : .connect)
         }
       }.padding(.vertical, 8)
+      Text(
+        "Для опросников сразу в терминале и Oasis нужен Claude Code 2.1.296 или новее. После подключения или обновления перезапусти CLI."
+      )
+      .font(.system(size: 11)).foregroundStyle(.secondary).padding(.bottom, 6)
       if let error = module.panel.error { Text(error).font(.system(size: 11)).foregroundStyle(.red) }
       if module.panel.hasForeignDecisionHooks {
         Text(

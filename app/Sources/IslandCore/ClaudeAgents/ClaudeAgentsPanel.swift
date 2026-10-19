@@ -68,7 +68,7 @@ public struct ClaudeReplyDraft: Equatable, Sendable {
     var answers: [ClaudeQuestionAnswer] = []
     for (index, question) in request.questions.enumerated() {
       let text = texts[index] ?? ""
-      if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      if question.allowsOther || question.options.isEmpty, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         answers.append(.init(questionIndex: index, selection: .text(text)))
       } else {
         let selected = (options[index] ?? []).sorted()
@@ -82,7 +82,17 @@ public struct ClaudeReplyDraft: Equatable, Sendable {
   }
 }
 
+public enum AgentProvider: String, Equatable, Sendable {
+  case claude = "claude-code"
+  case codex
+
+  public var title: String { self == .codex ? "Codex" : "Claude Code" }
+  public var shortTitle: String { self == .codex ? "Codex" : "Claude" }
+  public var view: ExpandedView { self == .codex ? .codexAgents : .agents }
+}
+
 public struct ClaudeAgentsPanel: Equatable, Sendable {
+  public var provider: AgentProvider
   public var agents: [ClaudeAgentSnapshot] = []
   public var requests: [ClaudeRequest] = []
   public var selectedAgentID: ClaudeAgentID?
@@ -97,7 +107,7 @@ public struct ClaudeAgentsPanel: Equatable, Sendable {
   public var showsInbox = false
   public var waitingOnly = false
 
-  public init() {}
+  public init(provider: AgentProvider = .claude) { self.provider = provider }
   public var selectedAgent: ClaudeAgentSnapshot? { agents.first { $0.id == selectedAgentID } }
   public var selectedRequest: ClaudeRequest? { requests.first { $0.id == selectedRequestID } }
   public var waiting: [ClaudeRequest] { requests.filter { $0.phase == .waiting || $0.phase == .sending } }

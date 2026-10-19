@@ -25,7 +25,7 @@ public struct ClaudeRequestID: Codable, Hashable, Sendable {
 }
 
 public enum ClaudeBridgeLimits {
-  public static let protocolVersion = 1
+  public static let protocolVersion = 2
   public static let maximumInputBytes = 512 * 1024
   public static let maximumFrameBytes = 1024 * 1024
   public static let hookTimeoutSeconds = 600

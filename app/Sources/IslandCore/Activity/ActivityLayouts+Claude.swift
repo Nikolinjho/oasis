@@ -7,6 +7,10 @@ extension ActivityLayouts {
   public static let limitLow = RGB(red: 1, green: 69 / 255, blue: 58 / 255)
   public static let limitTrack = RGB(red: 0.22, green: 0.22, blue: 0.22)
 
+  public static let codexIcon = ActivityLayout(
+    symbol: "terminal", symbolColor: RGB(red: 0.85, green: 0.89, blue: 0.91),
+    indicator: .text("", color: RGB(red: 0.85, green: 0.89, blue: 0.91)), imageName: "codex")
+
   public static let claudeIcon = ActivityLayout(
     symbol: "sparkle", symbolColor: claudeOrange, indicator: .text("", color: claudeOrange), imageName: "claude")
 

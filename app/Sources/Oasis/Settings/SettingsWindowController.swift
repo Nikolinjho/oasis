@@ -32,6 +32,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
   private let settings: AppSettings
   private let claudeConnection: ClaudeConnection?
   private let agents: ClaudeRequestsModule?
+  private let codex: CodexRequestsModule?
   private let soonModule: SoonModule?
   private let playSound: (IslandSound) -> Void
   /// Календари EventKit для страницы Calendar: AppDelegate берёт их у источника календаря
@@ -40,13 +41,15 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
   private var closeShortcutMonitor: Any?
 
   init(
-    settings: AppSettings, claudeConnection: ClaudeConnection? = nil, agents: ClaudeRequestsModule? = nil, soonModule: SoonModule? = nil,
+    settings: AppSettings, claudeConnection: ClaudeConnection? = nil, agents: ClaudeRequestsModule? = nil,
+    codex: CodexRequestsModule? = nil, soonModule: SoonModule? = nil,
     calendars: @escaping () -> [CalendarInfo] = { [] },
     playSound: @escaping (IslandSound) -> Void = { _ in }
   ) {
     self.settings = settings
     self.claudeConnection = claudeConnection
     self.agents = agents
+    self.codex = codex
     self.soonModule = soonModule
     self.calendars = calendars
     self.playSound = playSound
@@ -83,7 +86,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     window.delegate = self
     window.contentView = NSHostingView(
       rootView: SettingsView(
-        settings: settings, claudeConnection: claudeConnection, agents: agents, soonModule: soonModule, playSound: playSound,
+        settings: settings, claudeConnection: claudeConnection, agents: agents, codex: codex, soonModule: soonModule, playSound: playSound,
         calendars: calendars,
         onPageChange: { [weak window] page in window?.title = page.title }))
     window.center()

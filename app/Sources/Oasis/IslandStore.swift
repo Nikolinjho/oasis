@@ -13,13 +13,17 @@ final class IslandStore {
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
   var agentsPanel = ClaudeAgentsPanel()
+  var codexPanel = ClaudeAgentsPanel(provider: .codex)
   var showAttentionInbox = false
+  var attentionInboxProvider = AgentProvider.claude
   var agentInputActive = false
   @ObservationIgnored var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
+  @ObservationIgnored var onCodexAction: (ClaudeAgentsAction) -> Void = { _ in }
   private(set) var claudePanel: ClaudePanel?
   private(set) var soonPanel: SoonPanel?
   @ObservationIgnored var attention = AttentionCoordinator()
   var attentionItems: [IslandAttention] = []
+  var queuedPeeks: [IslandAttention] = []
   /// Последний payload источника как есть
   @ObservationIgnored private var sourceNowPlaying: NowPlayingInfo?
   @ObservationIgnored private var playbackModes = PlaybackModeOverride()
@@ -58,7 +62,7 @@ final class IslandStore {
   var notch = CGSize(width: 185, height: 32)
   /// Вид страниц настроек, которые не меняют поведение машины: Battery и т.д. (IslandAppearance)
   var appearance = IslandAppearance.default {
-    didSet { if appearance.contrastOutline != oldValue.contrastOutline { onContrastOutlineChange() } }
+    didSet { appearanceChanged(from: oldValue) }
   }
   /// Фон под раскрытым тёмный (BackdropMonitor): Contrast outline виден только над ним
   var backdropDark = true
@@ -195,7 +199,10 @@ final class IslandStore {
   }
 
   func send(_ event: IslandEvent) {
-    guard !deferAttention(event) else { return }
+    if deferAttention(event) {
+      if refreshPeekQueue() { onSurfaceChange() }
+      return
+    }
     var next = model
     let expiryEffects = prepareAttention(&next)
     let previous = model.surface
@@ -234,7 +241,8 @@ final class IslandStore {
       return
     }
     // после эффектов: вложенный send из колбэка не перемешается с таймерами этого события
-    if model.surface != previous || model.expandedView != previousView { onSurfaceChange() }
+    let queueChanged = refreshPeekQueue()
+    if model.surface != previous || model.expandedView != previousView || queueChanged { onSurfaceChange() }
     if model.lastExpandedView != previousLast { onLastExpandedViewChange(model.lastExpandedView) }
     if previous == .expanded, model.surface != .expanded { releaseAttentionIfPossible() }
   }
@@ -360,13 +368,6 @@ extension IslandStore {
     send(.claudeViewAvailable(panel != nil))
   }
 
-}
-
-extension IslandStore {
-  var config: IslandMachine.Config {
-    get { model.config }
-    set { send(.configChanged(newValue)) }
-  }
 }
 
 extension IslandStore {

@@ -30,7 +30,7 @@ struct ClaudeRequestDetail: View {
           .accessibilityLabel(phaseTitle)
         if !panel.waiting.isEmpty {
           Button("Следующий ожидающий") { onAction(.nextWaiting) }.font(.system(size: 10))
-            .buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
+            .buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
         }
       }
     }
@@ -40,7 +40,7 @@ struct ClaudeRequestDetail: View {
   private var requestPager: some View {
     HStack(spacing: 8) {
       Text(request.kind == .permission ? "РАЗРЕШЕНИЕ" : "ВОПРОС")
-        .font(.system(size: 9, weight: .semibold)).tracking(0.7).foregroundStyle(ClaudeAgentsStyle.accent)
+        .font(.system(size: 9, weight: .semibold)).tracking(0.7).foregroundStyle(panel.provider.accent)
       Spacer(minLength: 0)
       if agentRequests.count > 1, let current = agentRequests.firstIndex(where: { $0.id == request.id }) {
         Button {
@@ -64,7 +64,7 @@ struct ClaudeRequestDetail: View {
     let question = request.questions[index]
     return VStack(alignment: .leading, spacing: 6) {
       HStack {
-        Text(question.header.isEmpty ? "Claude спрашивает" : question.header)
+        Text(question.header.isEmpty ? "\(panel.provider.shortTitle) спрашивает" : question.header)
           .font(.system(size: 11, weight: .medium)).foregroundStyle(IslandPalette.secondary)
         Spacer()
         if request.questions.count > 1 {
@@ -92,31 +92,45 @@ struct ClaudeRequestDetail: View {
         }
       }
       .frame(maxHeight: .infinity)
-      HStack(spacing: 6) {
-        Text("Свой ответ").font(.system(size: 10)).foregroundStyle(IslandPalette.tertiary)
-        Spacer()
-        if question.multiSelect { Text("Можно несколько").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary) }
+      if question.allowsOther || question.options.isEmpty {
+        HStack(spacing: 6) {
+          Text("Свой ответ").font(.system(size: 10)).foregroundStyle(IslandPalette.tertiary)
+          Spacer()
+          if question.multiSelect { Text("Можно несколько").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary) }
+        }
+        replyEditor(question)
+          .id("\(request.id.value)-\(index)")
+          .padding(5).background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.045)))
+          .overlay(RoundedRectangle(cornerRadius: 8).stroke(IslandPalette.divider, lineWidth: 1))
+          .frame(height: panel.compact ? 36 : 44)
+          .accessibilityLabel("Свой ответ \(panel.provider.shortTitle)")
       }
+      HStack {
+        if !question.isSecret { Text("Enter – новая строка").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary) }
+        Spacer()
+        Button(request.phase == .sending ? "Отправляется…" : "Ответить ⌘↩") { onAction(.send(request.id)) }
+          .font(.system(size: 11)).buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
+          .disabled(!active || draft.answer(for: request) == nil)
+          .keyboardShortcut(.return, modifiers: .command)
+          .accessibilityLabel("Ответить \(panel.provider.shortTitle)")
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func replyEditor(_ question: ClaudeQuestion) -> some View {
+    if question.isSecret {
+      AgentSecretEditor(
+        text: draft.texts[index] ?? "", editable: active,
+        onText: { onAction(.text(request.id, question: index, value: $0)) },
+        onFocus: { onAction(.beginEditing) }, onSubmit: { onAction(.send(request.id)) }, onEscape: { onAction(.close) })
+    } else {
       ClaudeReplyEditor(
         text: draft.texts[index] ?? "", position: draft.positions[index] ?? .init(), editable: active,
         onText: { onAction(.text(request.id, question: index, value: $0)) },
         onPosition: { onAction(.textPosition(request.id, question: index, position: $0)) },
         onFocus: { onAction(.beginEditing) }, onSubmit: { onAction(.send(request.id)) }, onEscape: { onAction(.close) }
       )
-      .id("\(request.id.value)-\(index)")
-      .padding(5).background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.045)))
-      .overlay(RoundedRectangle(cornerRadius: 8).stroke(IslandPalette.divider, lineWidth: 1))
-      .frame(height: panel.compact ? 36 : 44)
-      .accessibilityLabel("Свой ответ Claude")
-      HStack {
-        Text("Enter – новая строка").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary)
-        Spacer()
-        Button(request.phase == .sending ? "Отправляется…" : "Ответить ⌘↩") { onAction(.send(request.id)) }
-          .font(.system(size: 11)).buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
-          .disabled(!active || draft.answer(for: request) == nil)
-          .keyboardShortcut(.return, modifiers: .command)
-          .accessibilityLabel("Ответить Claude")
-      }
     }
   }
 
@@ -127,7 +141,7 @@ struct ClaudeRequestDetail: View {
     } label: {
       HStack(alignment: .top, spacing: 8) {
         Image(systemName: selected ? (multi ? "checkmark.square.fill" : "largecircle.fill.circle") : (multi ? "square" : "circle"))
-          .font(.system(size: 12)).foregroundStyle(selected ? ClaudeAgentsStyle.accent : IslandPalette.tertiary)
+          .font(.system(size: 12)).foregroundStyle(selected ? panel.provider.accent : IslandPalette.tertiary)
           .padding(.top, 2)
         VStack(alignment: .leading, spacing: 2) {
           Text(option.label).font(.system(size: 11, weight: .medium)).foregroundStyle(IslandPalette.foreground)
@@ -154,7 +168,7 @@ struct ClaudeRequestDetail: View {
       Spacer(minLength: 0)
       HStack(spacing: 16) {
         Button("Разрешить один раз") { onAction(.allowOnce(request.id)) }
-          .buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
+          .buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
           .accessibilityLabel("Разрешить один раз")
           .disabled(permissionPreview == nil)
         Button("Отклонить") { onAction(.deny(request.id)) }
@@ -177,12 +191,12 @@ struct ClaudeRequestDetail: View {
     switch request.phase {
     case .waiting: "Ожидает ответа"
     case .sending: "Ответ отправляется…"
-    case .accepted: "Ответ передан Claude Code"
-    case .continued: "Claude продолжил работу"
+    case .accepted: panel.provider == .codex ? "Запрос завершён в Codex" : "Ответ передан Claude Code"
+    case .continued: panel.provider == .codex ? "Запрос завершён в Codex" : "Claude продолжил работу"
     case .declined: "Действие отклонено"
-    case .expired: "Время ожидания истекло. Продолжи в Claude Code."
+    case .expired: "Время ожидания истекло. Продолжи в \(panel.provider.title)."
     case .cancelled: "Запрос отменён"
-    case .disconnected: "Связь с запросом потеряна. Продолжи в Claude Code."
+    case .disconnected: "Связь с запросом потеряна. Продолжи в \(panel.provider.title)."
     }
   }
 }

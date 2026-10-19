@@ -6,6 +6,7 @@ struct OverviewView: View {
   let agenda: DayAgenda
   let claude: ClaudePanel?
   var agents = ClaudeAgentsPanel()
+  var codex = ClaudeAgentsPanel(provider: .codex)
   let soon: SoonPanel?
   let dismissedEvents: Set<String>
   let appearance: IslandAppearance
@@ -34,7 +35,18 @@ struct OverviewView: View {
         } else {
           unavailable("Календарь выключен", width: 280, height: 126)
         }
-        claudeSummary
+        HStack(spacing: 10) {
+          claudeSummary
+          Button {
+            onSelectView(.codexAgents)
+          } label: {
+            HStack(spacing: 4) {
+              CodexIcon().frame(width: 18, height: 18)
+              Text(codex.waitingCount > 0 ? "Codex · \(codex.waitingCount)" : "Codex")
+                .font(.system(size: 11, weight: .semibold))
+            }.foregroundStyle(IslandPalette.foreground)
+          }.buttonStyle(.plain).help("Агенты и ответы Codex")
+        }
       }
       .frame(width: 280, height: 164, alignment: .topLeading)
       divider

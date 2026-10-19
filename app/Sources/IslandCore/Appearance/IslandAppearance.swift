@@ -64,6 +64,7 @@ public enum WaveformStyle: String, CaseIterable, Sendable {
 /// Как остров рисует свои поверхности: настройки страниц, которые меняют вид, а не поведение.
 /// Поведение живёт в IslandMachine.Config. Store держит значение и отдаёт его в IslandView и геометрию
 public struct IslandAppearance: Equatable, Sendable {
+  public var peekQueue = PeekQueueAppearance()
   public var battery = BatteryAlertStyle()
   /// Sound: по умолчанию Decibel и Show device (ui-inspection 1.7)
   public var volumeHUD = HUDAppearance(style: .decibel, icon: .device)

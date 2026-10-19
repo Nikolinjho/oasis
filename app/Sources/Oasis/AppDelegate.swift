@@ -15,9 +15,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     store: store, settings: settings,
     directory: ClaudeFiles.directory(home: FileManager.default.homeDirectoryForCurrentUser))
   private lazy var agents = ClaudeRequestsModule(store: store)
+  private lazy var codex = CodexRequestsModule(store: store)
   private lazy var soon = SoonAppIntegration(store: store, settings: settings)
-  private lazy var settingsWindow = SettingsWindowController(
-    settings: settings, claudeConnection: claudeConnection, agents: agents, soonModule: soon.module,
+  lazy var settingsWindow = SettingsWindowController(
+    settings: settings, claudeConnection: claudeConnection, agents: agents, codex: codex, soonModule: soon.module,
     calendars: { [weak self] in self?.calendar.calendars() ?? [] },
     playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
@@ -43,17 +44,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private var debugSections: [DebugSection] = []
   private lazy var links = LaunchLinkQueue { [weak self] url in
     guard let self else { return }
-    if !ClaudeAgentsLinkRouter.perform(url, module: agents) { DebugURL.perform(url, in: debugSections) }
+    if !ClaudeAgentsLinkRouter.perform(url, module: agents), !CodexAgentsLinkRouter.perform(url, module: codex) {
+      DebugURL.perform(url, in: debugSections)
+    }
   }
-  /// После изменения громкости из плеера HUD молчит 0.5 с, пока CoreAudio подтверждает уровень.
   private var rowQuietUntil = Date.distantPast
   private let log = Logger(subsystem: "dev.nikoko.oasis", category: "app")
 
   func applicationWillFinishLaunching(_ notification: Notification) {
     _ = agents
+    _ = codex
     soon.install()
     debugSections = DebugCatalog.sections(store: store, settings: settings, sounds: sounds, claude: claude, soon: soon.module)
     debugSections.append(DebugClaudeAgents.section(agents))
+    debugSections.append(DebugCodexAgents.section(codex))
     calendar.apply()
     store.onSound = { [weak self] sound in
       guard let self, settings.playSounds else { return }
@@ -61,7 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     }
     store.onJoin = { [log] url in
       log.info("join \(url.host() ?? "", privacy: .public)")
-      NSWorkspace.shared.open(url)
+      MeetingLinkOpener.open(url)
     }
     store.restoreLastExpandedView(settings.lastExpandedView)
     store.onLastExpandedViewChange = { [weak self] view in self?.settings.lastExpandedView = view }
@@ -100,6 +104,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     soon.start(window: window)
     agents.onEditing = { [weak self] active in self?.window?.setAgentInputActive(active) }
     agents.start()
+    codex.onEditing = { [weak self] active in self?.window?.setAgentInputActive(active) }
+    codex.start()
     applyClaudeSettings()
     startFullscreenMonitor()
     startSourceActivity()
@@ -114,6 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
 
   func applicationWillTerminate(_ notification: Notification) {
     agents.stop()
+    codex.stop()
     soon.module.stop()
     claudeLifecycle.stop()
     claude.stop()
@@ -153,13 +160,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     appearance.output = OutputDeviceKind.classify(
       transport: output.transport, uid: output.uid, name: output.name, knownHeadphones: knownHeadphones)
     store.appearance = appearance
-  }
-
-  /// Повторный запуск (open -a, Spotlight) открывает настройки: с Hide menu bar icon при закрытой крышке
-  /// иначе до них не добраться
-  func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-    settingsWindow.show()
-    return false
   }
 
   /// oasis://debug/<id>: при холодном запуске ждёт готовности острова и первой загрузки календаря

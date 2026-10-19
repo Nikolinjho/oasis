@@ -12,6 +12,7 @@ final class ClaudeAgentInputController {
   private var generation = UUID()
   private var suspended = false
   private var restoreFocus = false
+  private var provider = AgentProvider.claude
   private var observer: NSObjectProtocol?
 
   init(store: IslandStore) {
@@ -48,7 +49,8 @@ final class ClaudeAgentInputController {
   private func begin() {
     if !active { previousApp = NSWorkspace.shared.frontmostApplication }
     if let lease { store.releaseAttention(lease) }
-    lease = store.acquireAttention(owner: .agents(store.agentsPanel.selectedRequestID))
+    provider = store.activeAgentsPanel.provider
+    lease = store.acquireAttention(owner: .agents(store.activeAgentsPanel.selectedRequestID))
     active = true
     store.agentInputActive = true
     generation = UUID()
@@ -83,7 +85,7 @@ final class ClaudeAgentInputController {
       panel?.resignKey()
       return
     }
-    guard surface == .expanded, store.model.expandedView == .agents else {
+    guard surface == .expanded, store.model.expandedView == provider.view else {
       end(restorePrevious: false)
       return
     }
@@ -96,7 +98,7 @@ final class ClaudeAgentInputController {
     let current = generation
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
       guard let self, active, generation == current, isAppFrontmost,
-        store.model.surface == .expanded, store.model.expandedView == .agents,
+        store.model.surface == .expanded, store.model.expandedView == provider.view,
         let panel, let content = panel.contentView, let editor = Self.editor(in: content)
       else { return }
       panel.makeKeyAndOrderFront(nil)

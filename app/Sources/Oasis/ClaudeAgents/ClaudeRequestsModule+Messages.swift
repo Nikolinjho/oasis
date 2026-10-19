@@ -11,11 +11,33 @@ extension ClaudeRequestsModule {
     case .request(let request): receiveRequest(request)
     case .received(let id, _): acceptRequest(id)
     case .cancelled(let id, let reason): cancelRequest(id, reason: reason)
+    case .questionFinished(let completion): finishQuestion(completion)
     case .heartbeat(let id):
       if panel.agents.contains(where: { $0.id == id.agent }) { observations[id.agent] = Date() }
     default: break
     }
     publish()
+  }
+
+  private func finishQuestion(_ completion: ClaudeQuestionCompletion) {
+    for index in panel.requests.indices {
+      let request = panel.requests[index]
+      guard request.acceptsTerminalAnswer, request.id.agent == completion.question.agent,
+        request.toolUseID == completion.question.toolUseID
+      else { continue }
+      switch completion.outcome {
+      case .terminal:
+        panel.requests[index].phase = .continued
+        panel.drafts.removeValue(forKey: request.id)
+      case .oasis:
+        panel.requests[index].phase = .accepted
+        panel.drafts.removeValue(forKey: request.id)
+      case .cancelled:
+        guard isPending(request) else { continue }
+        panel.requests[index].phase = .cancelled
+      }
+      store.send(.alertRetracted(.claudeRequest(request.id)))
+    }
   }
 
   private func receiveRequest(_ request: ClaudeRequest) {
@@ -72,8 +94,7 @@ extension ClaudeRequestsModule {
     reconcileAgentStates()
     trimHistory()
     store.agentsPanel = panel
-    let count = panel.waitingCount
-    if store.model.agentsWaitingCount != count { store.send(.agentsWaitingChanged(count)) }
+    store.publishAgentCount()
   }
 
   private func trimHistory() {

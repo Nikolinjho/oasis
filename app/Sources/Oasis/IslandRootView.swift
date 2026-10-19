@@ -14,6 +14,7 @@ struct IslandRootView: View {
       agenda: store.agenda,
       claude: store.claudePanel,
       agents: store.agentsWithAttention, onAgentsAction: store.onAgentsAction,
+      codex: store.codexWithAttention, onCodexAction: store.onCodexAction, inboxProvider: store.attentionInboxProvider,
       soon: store.soonPanel,
       dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,
@@ -27,15 +28,21 @@ struct IslandRootView: View {
       onSoonAction: { store.onSoonAction($0) },
       mediaEnabled: store.mediaEnabled, calendarEnabled: store.calendarFilter.isEnabled,
       onSelectView: { view in
-        if view == .agents {
-          store.onAgentsAction(.openPanel)
+        if view == .inbox, store.model.expandedView.isAgents {
+          store.performAgentAction(.openInbox, provider: store.activeAgentsPanel.provider)
+          return
+        }
+        if view.isAgents {
+          store.performAgentAction(.openPanel, provider: view == .codexAgents ? .codex : .claude)
           return
         }
         if view == .soon { store.onSoonAction(.showList) } else { store.send(.expandedViewRequested(view)) }
       },
       onOpenSettings: {
-        store.onAgentsAction(.close)
+        store.performAgentAction(.close, provider: store.activeAgentsPanel.provider)
         store.onOpenSettings()
-      })
+      },
+      contentSpec: store.contentSpec,
+      queuedPeeks: store.queuedPeeks)
   }
 }

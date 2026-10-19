@@ -36,6 +36,7 @@ extension ClaudeRequestsModule {
     case .openInbox:
       onEditing(false)
       store.showAttentionInbox = true
+      store.attentionInboxProvider = .claude
       store.send(.expandedViewRequested(.inbox))
     case .closeInbox:
       store.showAttentionInbox = false

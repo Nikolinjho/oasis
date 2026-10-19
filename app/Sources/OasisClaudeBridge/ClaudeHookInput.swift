@@ -7,7 +7,7 @@ struct ClaudeHookInput {
   let event: ClaudeBridgeEvent
   let request: ClaudeRequest?
 
-  init(data: Data) throws {
+  init(data: Data, acceptsTerminalAnswer: Bool = false) throws {
     guard data.count <= ClaudeBridgeLimits.maximumInputBytes,
       let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
       let session = object["session_id"] as? String, !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -43,7 +43,8 @@ struct ClaudeHookInput {
       guard Set(questions.map(\.text)).count == questions.count else { throw ClaudeBridgeError.protocolViolation }
       request = ClaudeRequest(
         id: ClaudeRequestID(agent: agent), kind: .questions, toolName: tool,
-        toolUseID: object["tool_use_id"] as? String, originalInput: data, questions: questions
+        toolUseID: object["tool_use_id"] as? String, originalInput: data, questions: questions,
+        acceptsTerminalAnswer: acceptsTerminalAnswer
       )
     } else {
       let supported: Set<String> = [
@@ -56,6 +57,10 @@ struct ClaudeHookInput {
   }
 
   static func read(cancellation: ClaudeHookCancellation) throws -> ClaudeHookInput {
+    try ClaudeHookInput(data: readData(cancellation: cancellation))
+  }
+
+  static func readData(cancellation: ClaudeHookCancellation) throws -> Data {
     let deadline = ContinuousClock.now.advanced(by: .seconds(2))
     let flags = fcntl(STDIN_FILENO, F_GETFL)
     guard flags >= 0, fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == 0 else { throw ClaudeBridgeError.disconnected }
@@ -67,7 +72,7 @@ struct ClaudeHookInput {
       let count = Darwin.read(STDIN_FILENO, &chunk, chunk.count)
       if count == 0 {
         guard !cancellation.cancelled else { throw ClaudeBridgeError.disconnected }
-        return try ClaudeHookInput(data: data)
+        return data
       }
       if count < 0, errno == EINTR || errno == EAGAIN { continue }
       guard count > 0, data.count + count <= ClaudeBridgeLimits.maximumInputBytes else {

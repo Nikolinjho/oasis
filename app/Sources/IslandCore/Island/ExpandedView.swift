@@ -3,6 +3,9 @@
 public enum ExpandedView: String, CaseIterable, Hashable, Sendable {
   case duo, player, calendar, claude, soon, agents
   case overview, modules, inbox
+  case codexAgents
+
+  public var isAgents: Bool { self == .agents || self == .codexAgents }
 
   public var next: ExpandedView {
     let all = Self.allCases

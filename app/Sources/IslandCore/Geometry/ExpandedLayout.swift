@@ -7,7 +7,7 @@ public enum ExpandedLayout {
 
   public static func size(for view: ExpandedView, navigation: Bool, volumeRow: Bool = false) -> CGSize {
     if view == .inbox { return CGSize(width: 345, height: 207) }
-    if view == .agents { return CGSize(width: 640, height: 320) }
+    if view.isAgents { return CGSize(width: 640, height: 320) }
     if view == .overview || view == .modules { return dashboard }
     return CGSize(
       width: IslandGeometry.expanded.width,

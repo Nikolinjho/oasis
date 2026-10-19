@@ -14,6 +14,7 @@ public struct ClaudeRequest: Codable, Equatable, Sendable {
   public let toolUseID: String?
   public let originalInput: Data
   public let questions: [ClaudeQuestion]
+  public let acceptsTerminalAnswer: Bool
   public let createdAt: Date
   public let deadline: Date
   public var phase: ClaudeRequestPhase
@@ -21,7 +22,7 @@ public struct ClaudeRequest: Codable, Equatable, Sendable {
   public init(
     id: ClaudeRequestID, kind: Kind, toolName: String, toolUseID: String? = nil,
     originalInput: Data, questions: [ClaudeQuestion] = [], createdAt: Date = Date(),
-    deadline: Date? = nil, phase: ClaudeRequestPhase = .waiting
+    deadline: Date? = nil, phase: ClaudeRequestPhase = .waiting, acceptsTerminalAnswer: Bool = false
   ) {
     self.id = id
     self.kind = kind
@@ -29,6 +30,7 @@ public struct ClaudeRequest: Codable, Equatable, Sendable {
     self.toolUseID = toolUseID
     self.originalInput = originalInput
     self.questions = questions
+    self.acceptsTerminalAnswer = acceptsTerminalAnswer
     self.createdAt = createdAt
     self.deadline = deadline ?? createdAt.addingTimeInterval(Double(ClaudeBridgeLimits.requestLifetimeSeconds))
     self.phase = phase

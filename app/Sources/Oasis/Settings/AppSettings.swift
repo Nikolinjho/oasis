@@ -67,6 +67,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     static let naturalMovement = "naturalMovement"
     static let contrastOutline = "contrastOutline"
     static let progressiveBlur = "progressiveBlur"
+    static let peekQueueStyle = "peekQueueStyle"
+    static let peekQueuePosition = "peekQueuePosition"
   }
 
   let yandexConnection = YandexMusicConnection()
@@ -82,6 +84,13 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   let calendar: CalendarSettings
   let claude: ClaudeSettings
   let soon: SoonSettings
+
+  @Published var peekQueueStyle: PeekQueueStyle {
+    didSet { saveRaw(oldValue, peekQueueStyle, Key.peekQueueStyle) }
+  }
+  @Published var peekQueuePosition: PeekQueuePosition {
+    didSet { saveRaw(oldValue, peekQueuePosition, Key.peekQueuePosition) }
+  }
 
   /// General → Expand on hover, по умолчанию вкл
   @Published var expandOnHover: Bool {
@@ -286,6 +295,8 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
     calendar = CalendarSettings(defaults: defaults)
     claude = ClaudeSettings(defaults: defaults)
     soon = SoonSettings(defaults: defaults)
+    peekQueueStyle = Self.readRaw(defaults, Key.peekQueueStyle, PeekQueueStyle.row)
+    peekQueuePosition = Self.readRaw(defaults, Key.peekQueuePosition, PeekQueuePosition.left)
     expandOnHover = defaults.object(forKey: Key.expandOnHover) as? Bool ?? true
     hoverDuration = defaults.object(forKey: Key.hoverDuration) as? Double ?? 0
     forceSimulatedNotch = defaults.bool(forKey: Key.forceSimulatedNotch)
@@ -388,6 +399,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
 
   var appearance: IslandAppearance {
     var appearance = IslandAppearance()
+    appearance.peekQueue = PeekQueueAppearance(style: peekQueueStyle, position: peekQueuePosition)
     appearance.battery = BatteryAlertStyle(hidesLabel: hideBatteryLabel, hidesPercentage: hideBatteryPercentage)
     appearance.volumeHUD = HUDAppearance(
       style: soundHUDStyle, showsPercentage: soundHUDPercentage, hidesLabel: soundHUDHideLabel,

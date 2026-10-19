@@ -19,6 +19,7 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 # иконка приложения и template-значок menu bar (исходники и генератор — design/oasis-icon)
 cp -R Resources/YandexMusic "$APP/Contents/Resources/"
 cp -R Resources/Soon "$APP/Contents/Resources/"
+cp -R Resources/ClaudeAgents "$APP/Contents/Resources/"
 cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png "$APP/Contents/Resources/"
 
 if [ -d "$ADAPTER" ]; then
@@ -45,6 +46,9 @@ if [ -f "$CLAUDE_ICON" ]; then
 else
     echo "Нет $CLAUDE_ICON: у Claude будет SF Symbol sparkle" >&2
 fi
+
+mkdir -p "$APP/Contents/Resources/Codex"
+cp Resources/Codex/Icon.png "$APP/Contents/Resources/Codex/Icon.png"
 
 # явное подключение из настроек копирует скрипт в Application Support
 cp Scripts/claude-statusline.py "$APP/Contents/Resources/claude-statusline.py"

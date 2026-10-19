@@ -42,27 +42,69 @@ struct ClaudeHookClient {
   ) throws {
     var heartbeat = ContinuousClock.now
     while deadline > ContinuousClock.now, !cancellation.cancelled {
-      if heartbeat.duration(to: .now) >= .seconds(10) {
-        try ClaudeBridgeWire.send(.heartbeat(requestID: request.id), to: descriptor)
-        heartbeat = ContinuousClock.now
-      }
+      try sendHeartbeat(request.id, descriptor: descriptor, previous: &heartbeat)
       guard let message = try readMessage(descriptor, buffer: &buffer, milliseconds: 200) else { continue }
       switch message {
-      case .response(let requestID, let responseID, let answer):
-        guard requestID == request.id, deadline > ContinuousClock.now, !cancellation.cancelled else {
-          throw ClaudeBridgeError.protocolViolation
+      case .response:
+        if try deliver(message, request: request, descriptor: descriptor, deadline: deadline) {
+          return
         }
-        let output = try ClaudeHookOutput.data(for: answer, request: request, validateDeadline: false)
-        try writeOutput(output, deadline: deadline)
-        try ClaudeBridgeWire.send(.received(requestID: request.id, responseID: responseID), to: descriptor)
-        return
       case .hello(_, let currentLaunch):
         guard currentLaunch == launchID else { throw ClaudeBridgeError.disconnected }
+      case .received(let id, _):
+        guard id == request.id else { throw ClaudeBridgeError.protocolViolation }
+        return
       case .cancelled, .error: throw ClaudeBridgeError.disconnected
       default: throw ClaudeBridgeError.protocolViolation
       }
     }
     throw ClaudeBridgeError.expired
+  }
+
+  private func sendHeartbeat(_ id: ClaudeRequestID, descriptor: Int32, previous: inout ContinuousClock.Instant) throws {
+    guard previous.duration(to: .now) >= .seconds(10) else { return }
+    try ClaudeBridgeWire.send(.heartbeat(requestID: id), to: descriptor)
+    previous = ContinuousClock.now
+  }
+
+  private func deliver(
+    _ message: ClaudeBridgeMessage, request: ClaudeRequest, descriptor: Int32,
+    deadline: ContinuousClock.Instant
+  ) throws -> Bool {
+    guard case .response(let requestID, let responseID, let answer) = message,
+      requestID == request.id, deadline > ContinuousClock.now, !cancellation.cancelled
+    else {
+      throw ClaudeBridgeError.protocolViolation
+    }
+    let output: Data
+    if request.acceptsTerminalAnswer {
+      let data = try ClaudeHookOutput.data(for: answer, request: request, validateDeadline: false)
+      let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+      guard let hook = object?["hookSpecificOutput"] as? [String: Any],
+        let input = hook["updatedInput"] as? [String: Any], let answers = input["answers"] as? [String: String]
+      else { throw ClaudeBridgeError.invalidAnswer }
+      output = try JSONSerialization.data(withJSONObject: ["responseID": responseID.uuidString, "answers": answers])
+    } else {
+      output = try ClaudeHookOutput.data(for: answer, request: request, validateDeadline: false)
+    }
+    try writeOutput(output, deadline: deadline)
+    if request.acceptsTerminalAnswer { return false }
+    try ClaudeBridgeWire.send(.received(requestID: request.id, responseID: responseID), to: descriptor)
+    return true
+  }
+
+  func finish(_ completion: ClaudeQuestionCompletion) throws {
+    let descriptor = try ClaudeBridgeWire.connect(paths: paths)
+    defer { close(descriptor) }
+    let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+    var buffer = Data()
+    try ClaudeBridgeWire.send(.hello(version: ClaudeBridgeLimits.protocolVersion, launchID: UUID()), to: descriptor)
+    guard case .hello(let version, _) = try receive(descriptor, buffer: &buffer, deadline: deadline),
+      version == ClaudeBridgeLimits.protocolVersion
+    else { throw ClaudeBridgeError.protocolViolation }
+    try ClaudeBridgeWire.send(.questionFinished(completion), to: descriptor)
+    guard case .questionFinished(let confirmed) = try receive(descriptor, buffer: &buffer, deadline: deadline), confirmed == completion
+    else { throw ClaudeBridgeError.protocolViolation }
   }
 
   private func receive(_ descriptor: Int32, buffer: inout Data, deadline: ContinuousClock.Instant) throws -> ClaudeBridgeMessage {

@@ -6,6 +6,9 @@ struct ExpandedContent: View {
   let view: ExpandedView
   var agents = ClaudeAgentsPanel()
   var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
+  var codex = ClaudeAgentsPanel(provider: .codex)
+  var onCodexAction: (ClaudeAgentsAction) -> Void = { _ in }
+  var inboxProvider = AgentProvider.claude
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var claude: ClaudePanel?
@@ -29,15 +32,14 @@ struct ExpandedContent: View {
   var body: some View {
     ZStack(alignment: .top) {
       content
-        .padding(.top, (navigation || view == .agents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
-      if navigation || view == .agents || view == .inbox {
+        .padding(.top, (navigation || view.isAgents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
+      if navigation || view.isAgents || view == .inbox {
         ExpandedNavigation(
           view: view, width: size.width, notchWidth: notchWidth,
-          onSelectView: onSelectView, onOpenSettings: onOpenSettings, waitingCount: agents.waitingCount,
+          onSelectView: onSelectView, onOpenSettings: onOpenSettings, waitingCount: activePanel.waitingCount,
           attentionCount: agents.attention.filter { $0.active && $0.unread }.count,
-          onFilterWaiting: { onAgentsAction(.filterWaiting(true)) },
-          onBack: view == .soon && soon?.selected != nil ? { onSoonAction(.showList) } : nil,
-          backDestination: view == .soon && soon?.selected != nil ? "Soon" : nil)
+          onFilterWaiting: { activeAction(.filterWaiting(true)) },
+          onBack: backAction, backDestination: backTitle)
       }
     }
     .frame(width: size.width, height: size.height, alignment: .top)
@@ -48,7 +50,7 @@ struct ExpandedContent: View {
       switch view {
       case .overview:
         OverviewView(
-          info: info, agenda: agenda, claude: claude, agents: agents, soon: soon, dismissedEvents: dismissedEvents,
+          info: info, agenda: agenda, claude: claude, agents: agents, codex: codex, soon: soon, dismissedEvents: dismissedEvents,
           appearance: appearance, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
           onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
           onSelectView: onSelectView, onOpenSettings: onOpenSettings
@@ -72,9 +74,9 @@ struct ExpandedContent: View {
           .transition(.viewSwap(timeScale: timeScale))
       case .inbox:
         AttentionInboxView(panel: agents, onAction: onAgentsAction)
-      case .agents:
+      case .agents, .codexAgents:
         ClaudeAgentsView(
-          panel: agents, onAction: onAgentsAction, onOpenSettings: onOpenSettings, context: liveEvent, music: info,
+          panel: activePanel, onAction: activeAction, onOpenSettings: onOpenSettings, context: liveEvent, music: info,
           soonCount: soon?.reminders.filter { $0.state != .completed }.count ?? 0, onJoin: onJoin)
       case .claude:
         if let claude {
@@ -100,14 +102,28 @@ struct ExpandedContent: View {
     .frame(width: size.width, height: contentHeight, alignment: .topLeading)
   }
 
+  private var backAction: (() -> Void)? {
+    if view == .inbox { return { onSelectView(inboxProvider.view) } }
+    if view == .soon && soon?.selected != nil { return { onSoonAction(.showList) } }
+    return nil
+  }
+
+  private var backTitle: String? {
+    if view == .inbox { return inboxProvider.title }
+    return view == .soon && soon?.selected != nil ? "Soon" : nil
+  }
+
+  private var activePanel: ClaudeAgentsPanel { view == .codexAgents ? codex : agents }
+  private var activeAction: (ClaudeAgentsAction) -> Void { view == .codexAgents ? onCodexAction : onAgentsAction }
+
   private var size: CGSize {
-    view == .agents
-      ? CGSize(width: agents.width, height: agents.height)
+    view.isAgents
+      ? CGSize(width: activePanel.width, height: activePanel.height)
       : ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
   }
 
   private var contentHeight: CGFloat {
-    size.height - ((navigation || view == .agents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
+    size.height - ((navigation || view.isAgents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
   }
 }
 

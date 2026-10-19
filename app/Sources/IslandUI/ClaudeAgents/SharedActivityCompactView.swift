@@ -5,6 +5,7 @@ import SwiftUI
 /// Независимые цели календаря, музыки и ожидающих запросов вокруг физического выреза.
 struct SharedActivityCompactView: View {
   let agents: ClaudeAgentsPanel
+  var codex = ClaudeAgentsPanel(provider: .codex)
   let music: NowPlayingInfo?
   let event: CalendarEvent?
   let notchWidth: CGFloat
@@ -16,12 +17,13 @@ struct SharedActivityCompactView: View {
     VStack(spacing: 0) {
       HStack(spacing: 0) {
         Button {
-          onSelect(event == nil ? .agents : .calendar)
+          onSelect(event == nil ? primary.provider.view : .calendar)
         } label: {
           HStack(spacing: 6) {
             Group {
               if event == nil {
-                ActivityIcon(layout: ActivityLayouts.claudeIcon).frame(width: 18, height: 15)
+                ActivityIcon(layout: primary.provider == .codex ? ActivityLayouts.codexIcon : ActivityLayouts.claudeIcon).frame(
+                  width: 18, height: 15)
               } else {
                 Image(systemName: "calendar").foregroundStyle(IslandPalette.dateAccent)
               }
@@ -39,14 +41,14 @@ struct SharedActivityCompactView: View {
                 }
               }
             } else {
-              Text("Claude")
+              Text(primary.provider.shortTitle)
             }
           }.font(.system(size: 11, weight: .medium)).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel(event == nil ? "Агенты Claude" : "Календарь")
+        .accessibilityLabel(event == nil ? "Агенты \(primary.provider.shortTitle)" : "Календарь")
         Color.clear.frame(width: notchWidth)
-        HStack(spacing: 10) {
+        HStack(spacing: 6) {
           if let music {
             Button {
               onSelect(.player)
@@ -56,19 +58,21 @@ struct SharedActivityCompactView: View {
                 .frame(width: 20, height: 24)
             }.accessibilityLabel("Музыка")
           }
-          Button {
-            onSelect(.agents)
-          } label: {
-            HStack(spacing: 4) {
-              Image(systemName: "sparkle").font(.system(size: 12))
-              Text("\(agents.waitingCount)").font(.system(size: 12, weight: .semibold)).monospacedDigit()
-            }.foregroundStyle(ClaudeAgentsStyle.accent).frame(height: 24)
-          }.accessibilityLabel("\(agents.waitingCount) запросов Claude ждут ответа")
+          ForEach(waitingPanels, id: \.provider.rawValue) { panel in
+            Button {
+              onSelect(panel.provider.view)
+            } label: {
+              HStack(spacing: 3) {
+                ActivityIcon(layout: panel.provider == .codex ? ActivityLayouts.codexIcon : ActivityLayouts.claudeIcon)
+                Text("\(panel.waitingCount)").font(.system(size: 12, weight: .semibold)).monospacedDigit()
+              }.frame(height: 24)
+            }.accessibilityLabel("\(panel.waitingCount) запросов \(panel.provider.shortTitle) ждут ответа")
+          }
         }.frame(maxWidth: .infinity, alignment: .trailing)
       }
       .padding(.horizontal, 18).frame(height: 32)
       if height > 32 {
-        Text(event?.title ?? music?.title ?? "Claude ждёт ответа")
+        Text(event?.title ?? music?.title ?? "\(primary.provider.shortTitle) ждёт ответа")
           .font(.system(size: 12, weight: .medium)).lineLimit(1)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal, 18).frame(height: height - 32)
@@ -76,6 +80,9 @@ struct SharedActivityCompactView: View {
     }
     .buttonStyle(.plain).foregroundStyle(IslandPalette.foreground)
   }
+
+  private var waitingPanels: [ClaudeAgentsPanel] { [agents, codex].filter { $0.waitingCount > 0 } }
+  private var primary: ClaudeAgentsPanel { waitingPanels.first ?? agents }
 
   private func countdown(_ event: CalendarEvent, now: Date) -> String {
     if event.start <= now { return "Сейчас" }

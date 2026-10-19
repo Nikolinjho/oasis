@@ -16,6 +16,7 @@ struct ModulesView: View {
       tile(
         "Claude Code", subtitle: "Агенты и ответы", symbol: "sparkle", view: .agents,
         enabled: true)
+      tile("Codex", subtitle: "Агенты и ответы", symbol: "terminal", view: .codexAgents, enabled: true)
       tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon, enabled: soonAvailable)
       ModuleTile(title: "Pomodoro", subtitle: "Скоро", symbol: "timer", enabled: false, action: {})
     }
@@ -42,7 +43,9 @@ private struct ModuleTile: View {
     Button(action: action) {
       VStack(spacing: 10) {
         Group {
-          if title == "Soon" {
+          if title == "Codex" {
+            CodexIcon().frame(width: 32, height: 32)
+          } else if title == "Soon" {
             SoonIcon().frame(width: 36, height: 36)
           } else {
             Image(systemName: symbol)

@@ -4,18 +4,28 @@ import IslandUI
 
 extension IslandStore {
   var spec: IslandShapeSpec {
+    PeekQueueGeometry.islandSpec(contentSpec, appearance: appearance.peekQueue, visible: showsPeekQueue)
+  }
+
+  var showsPeekQueue: Bool {
+    PeekQueueGeometry.isVisible(surface: model.surface, count: queuedPeeks.count)
+  }
+
+  var contentSpec: IslandShapeSpec {
     var spec = IslandGeometry.spec(
       for: model.surface, hasMedia: model.hasMedia, notch: notch,
       calendarIndicatorWidth: IslandView.calendarIndicatorWidth,
       reminderIndicatorWidth: IslandView.reminderIndicatorWidth, battery: appearance.battery,
       calendarWithMusic: model.showsMedia, volumeRow: model.volumeRowShown,
       expandedView: model.expandedView, navigation: model.config.dashboardNavigation)
-    if agentsPanel.waitingCount > 0, Self.isRestSwipeSurface(model.surface), model.surface != .idle {
-      spec.size.width = ActivityComposition.width(notchWidth: notch.width, calendar: model.calendarLive, music: model.showsMedia)
+    if waitingAgentCount > 0, Self.isRestSwipeSurface(model.surface), model.surface != .idle {
+      spec.size.width = ActivityComposition.width(
+        notchWidth: notch.width, calendar: model.calendarLive, music: model.showsMedia,
+        agentProviders: [agentsPanel, codexPanel].filter { $0.waitingCount > 0 }.count)
       if case .hoverNudge = model.surface { spec.size.width *= IslandGeometry.hoverNudgeWidthScale }
     }
-    if model.surface == .expanded, model.expandedView == .agents {
-      spec.size = CGSize(width: agentsPanel.width, height: agentsPanel.height)
+    if model.surface == .expanded, model.expandedView.isAgents {
+      spec.size = CGSize(width: activeAgentsPanel.width, height: activeAgentsPanel.height)
       spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: spec.size.height)
     }
     if model.surface == .expanded, stretch != 0 {

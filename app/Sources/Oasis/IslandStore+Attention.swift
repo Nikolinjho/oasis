@@ -29,7 +29,7 @@ extension IslandStore {
 
   func protectsExpanded(_ state: IslandModel) -> Bool {
     state.surface == .expanded
-      && (state.expandedView == .agents
+      && (state.expandedView.isAgents
         || (state.config.dashboardNavigation
           && state.expandedView != .overview && state.expandedView != .modules))
   }
@@ -146,8 +146,8 @@ extension IslandStore {
   }
 
   func markPresentedRequest() {
-    guard model.surface == .expanded, model.expandedView == .agents,
-      !showAttentionInbox, let id = agentsPanel.selectedRequestID
+    guard model.surface == .expanded, model.expandedView.isAgents,
+      !showAttentionInbox, let id = activeAgentsPanel.selectedRequestID
     else { return }
     attention.openedRequests.insert(id)
     for index in attentionItems.indices {
@@ -174,7 +174,7 @@ extension IslandStore {
     refreshAttention()
     let historicalRequest: Bool
     if case .alert(.claudeRequest(let requestID)) = attentionItems[index].source {
-      historicalRequest = agentsPanel.requests.contains { $0.id == requestID }
+      historicalRequest = agentPanel(for: requestID).requests.contains { $0.id == requestID }
     } else {
       historicalRequest = false
     }
@@ -193,8 +193,9 @@ extension IslandStore {
   private func openAlertAttention(_ alert: IslandAlert) {
     switch alert {
     case .claudeRequest(let requestID):
-      onAgentsAction(.selectRequest(requestID))
-      send(.expandedViewRequested(.agents))
+      let provider = agentPanel(for: requestID).provider
+      performAgentAction(.selectRequest(requestID), provider: provider)
+      send(.expandedViewRequested(provider.view))
     case .calendarReminder: send(.expandedViewRequested(.calendar))
     case .soon(let notice):
       if let reminder = soonPanel?.reminders.first(where: { $0.occurrenceID == notice.occurrenceID }) {
@@ -218,11 +219,13 @@ extension IslandStore {
     let detail: String
     switch alert {
     case .claudeRequest(let id):
-      let request = agentsPanel.requests.first { $0.id == id }
+      let panel = agentPanel(for: id)
+      let request = panel.requests.first { $0.id == id }
       title =
         request?.kind == .permission
-        ? "Разрешение: \(request?.toolName ?? "Claude")" : request?.questions.first?.text ?? "Claude спрашивает"
-      detail = agentsPanel.agents.first { $0.id == id.agent }?.project ?? "Claude Code"
+        ? "Разрешение: \(request?.toolName ?? panel.provider.shortTitle)"
+        : request?.questions.first?.text ?? "\(panel.provider.shortTitle) спрашивает"
+      detail = panel.agents.first { $0.id == id.agent }?.project ?? panel.provider.title
     case .calendarReminder(let reminder):
       title = reminder.title
       detail = "Через \(reminder.minutes) мин"

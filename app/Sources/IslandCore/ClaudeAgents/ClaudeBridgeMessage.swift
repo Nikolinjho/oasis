@@ -39,5 +39,6 @@ public enum ClaudeBridgeMessage: Codable, Equatable, Sendable {
   case received(requestID: ClaudeRequestID, responseID: UUID)
   case cancelled(requestID: ClaudeRequestID, reason: String)
   case heartbeat(requestID: ClaudeRequestID)
+  case questionFinished(ClaudeQuestionCompletion)
   case error(code: String)
 }

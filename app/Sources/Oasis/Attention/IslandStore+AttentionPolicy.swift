@@ -5,7 +5,7 @@ extension IslandStore {
   func peekDeadline(_ alert: IslandAlert, now: Date = Date()) -> Date {
     switch alert {
     case .claudeRequest(let id):
-      return agentsPanel.requests.first { $0.id == id }?.deadline ?? now
+      return agentPanel(for: id).requests.first { $0.id == id }?.deadline ?? now
     case .calendarReminder(let reminder):
       return eventForAttention(reminder.eventID)?.start ?? now.addingTimeInterval(Double(reminder.minutes) * 60)
     case .soon(let notice):
@@ -26,7 +26,7 @@ extension IslandStore {
     switch alert {
     case .claudeRequest(let id):
       return (!forPeek || !attention.openedRequests.contains(id))
-        && agentsPanel.waiting.contains { $0.id == id }
+        && agentPanel(for: id).waiting.contains { $0.id == id }
     case .calendarReminder(let reminder):
       return calendarReminderEligible(reminder, now: now)
     case .soon(let notice):
@@ -56,7 +56,7 @@ extension IslandStore {
   }
 
   func refreshAttention(now: Date = Date()) {
-    let retainedRequests = Set(agentsPanel.requests.map(\.id)).union(
+    let retainedRequests = Set(allAgentRequests.map(\.id)).union(
       attentionItems.compactMap { item in
         if case .alert(.claudeRequest(let id)) = item.source { return id }
         return nil

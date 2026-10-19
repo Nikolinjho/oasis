@@ -6,7 +6,7 @@ import SwiftUI
 /// Modules — свои модули Oasis, у Alcove их нет; Soon — название приложения, а не бейдж (решение 03.10)
 enum SettingsPage: String, CaseIterable, Identifiable {
   case general, battery, connectivity, focus, display, sound, nowPlaying, calendar, fileTray, lockScreen
-  case claudeCode, pomodoro, soon
+  case claudeCode, codex, pomodoro, soon
   case about
 
   var id: String { rawValue }
@@ -24,6 +24,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .fileTray: "File Tray"
     case .lockScreen: "Lock Screen"
     case .claudeCode: "Claude Code"
+    case .codex: "Codex"
     case .pomodoro: "Pomodoro"
     case .soon: "Soon"
     case .about: "About"
@@ -43,6 +44,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .fileTray: "tray.fill"
     case .lockScreen: "lock.fill"
     case .claudeCode: "sparkle"
+    case .codex: "terminal"
     case .pomodoro: "timer"
     case .soon: "clock.arrow.circlepath"
     case .about: "info"
@@ -63,6 +65,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .lockScreen: Color(white: 0.3)
     // Оранжевый Claude ≈ #D97757: у Alcove таких страниц нет, цвета модулей — оценка
     case .claudeCode: Color(red: 0.85, green: 0.47, blue: 0.34)
+    case .codex: .gray
     case .pomodoro: .red
     case .soon: SoonPalette.accent
     }
@@ -73,7 +76,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
     case .general: nil
     case .battery, .connectivity, .focus, .display, .sound: "Notifications"
     case .nowPlaying, .calendar, .fileTray, .lockScreen: "Live Activities"
-    case .claudeCode, .pomodoro, .soon: "Modules"
+    case .claudeCode, .codex, .pomodoro, .soon: "Modules"
     case .about: "Oasis"
     }
   }
@@ -82,6 +85,6 @@ enum SettingsPage: String, CaseIterable, Identifiable {
   var isAvailable: Bool { Self.available.contains(self) }
 
   private static let available: Set<SettingsPage> = [
-    .general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar, .claudeCode, .soon,
+    .general, .battery, .connectivity, .display, .sound, .nowPlaying, .calendar, .claudeCode, .codex, .soon,
   ]
 }

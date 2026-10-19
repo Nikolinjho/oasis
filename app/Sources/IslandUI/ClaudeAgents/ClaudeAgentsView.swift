@@ -45,16 +45,20 @@ struct ClaudeAgentsView: View {
   private var sidebar: some View {
     VStack(alignment: .leading, spacing: 6) {
       HStack {
-        Text("CLAUDE CODE").font(.system(size: 10, weight: .semibold)).tracking(0.8)
+        Text(panel.provider.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.8)
         Spacer()
-        Text("\(panel.waitingCount) ждут").font(.system(size: 10)).foregroundStyle(ClaudeAgentsStyle.accent)
+        Text("\(panel.waitingCount) ждут").font(.system(size: 10)).foregroundStyle(panel.provider.accent)
       }
       .foregroundStyle(IslandPalette.secondary)
       .padding(.horizontal, 10)
       if panel.agents.isEmpty {
-        Text("Сессии появятся после подключения hooks и нового события Claude Code.")
-          .font(.system(size: 11)).foregroundStyle(IslandPalette.secondary)
-          .padding(.horizontal, 10).padding(.top, 6)
+        Text(
+          panel.provider == .codex
+            ? "Сессии появятся после подключения общего сервера Codex."
+            : "Сессии появятся после подключения hooks и нового события Claude Code."
+        )
+        .font(.system(size: 11)).foregroundStyle(IslandPalette.secondary)
+        .padding(.horizontal, 10).padding(.top, 6)
       }
       HStack(spacing: 12) {
         filter("Все", waiting: false)
@@ -74,7 +78,7 @@ struct ClaudeAgentsView: View {
         }
       }
       HStack(spacing: 12) {
-        Button("Лимиты") { onAction(.openLimits) }
+        if panel.provider == .claude { Button("Лимиты") { onAction(.openLimits) } }
         Button("Входящие · \(panel.attention.filter { $0.active && $0.unread }.count)") { onAction(.openInbox) }
         Spacer(minLength: 0)
       }
@@ -89,26 +93,26 @@ struct ClaudeAgentsView: View {
     } label: {
       Text(title).font(.system(size: 10, weight: .medium))
         .foregroundStyle(panel.waitingOnly == waiting ? IslandPalette.foreground : IslandPalette.tertiary)
-        .underline(panel.waitingOnly == waiting, color: ClaudeAgentsStyle.accent.opacity(0.7))
+        .underline(panel.waitingOnly == waiting, color: panel.provider.accent.opacity(0.7))
     }.buttonStyle(.plain)
   }
 
   private func agentRow(_ agent: ClaudeAgentSnapshot) -> some View {
     HStack(spacing: 7) {
-      Circle().fill(ClaudeAgentsStyle.color(agent.state)).frame(width: 5, height: 5)
+      Circle().fill(ClaudeAgentsStyle.color(agent.state, provider: panel.provider)).frame(width: 5, height: 5)
       VStack(alignment: .leading, spacing: 3) {
         HStack(spacing: 5) {
           if agent.parent != nil { Image(systemName: "arrow.turn.down.right").font(.system(size: 8)) }
           Text(agent.project).font(.system(size: 12, weight: .semibold)).lineLimit(1)
         }
         HStack(spacing: 5) {
-          Text(agent.branch ?? agent.state.title).foregroundStyle(ClaudeAgentsStyle.color(agent.state))
+          Text(agent.branch ?? agent.state.title).foregroundStyle(ClaudeAgentsStyle.color(agent.state, provider: panel.provider))
           Text(String((agent.id.agentID ?? agent.id.sessionID).prefix(6))).foregroundStyle(IslandPalette.tertiary)
         }.font(.system(size: 9)).lineLimit(1)
       }
       Spacer(minLength: 0)
       let count = panel.waiting.filter { $0.id.agent == agent.id }.count
-      if count > 0 { Text("\(count)").font(.system(size: 10, weight: .semibold)).foregroundStyle(ClaudeAgentsStyle.accent) }
+      if count > 0 { Text("\(count)").font(.system(size: 10, weight: .semibold)).foregroundStyle(panel.provider.accent) }
     }
     .padding(.horizontal, 10).frame(height: 42)
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -123,7 +127,7 @@ struct ClaudeAgentsView: View {
         Image(systemName: "calendar")
         Text(context.start <= Date() ? "Созвон начался · \(context.title)" : context.title).lineLimit(1)
         if let url = MeetingLink.find(in: context) {
-          Button("Войти") { onJoin(url) }.buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
+          Button("Войти") { onJoin(url) }.buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
         }
       }
       Spacer(minLength: 0)
@@ -138,7 +142,7 @@ struct ClaudeAgentsView: View {
       HStack {
         Text(agent.project).font(.system(size: 15, weight: .semibold)).lineLimit(1)
         Spacer()
-        Text(agent.state.title).font(.system(size: 10)).foregroundStyle(ClaudeAgentsStyle.color(agent.state))
+        Text(agent.state.title).font(.system(size: 10)).foregroundStyle(ClaudeAgentsStyle.color(agent.state, provider: panel.provider))
       }
       HStack(spacing: 6) {
         if let branch = agent.branch {
@@ -165,8 +169,11 @@ struct ClaudeAgentsView: View {
     VStack(alignment: .leading, spacing: 12) {
       Text(agent.detail.isEmpty ? agent.state.title : agent.detail)
         .font(.system(size: 12)).foregroundStyle(IslandPalette.secondary).lineLimit(5)
-      Text("Ответить здесь можно, когда Claude задаст вопрос или запросит разрешение.")
-        .font(.system(size: 11)).foregroundStyle(IslandPalette.tertiary)
+      Text(
+        panel.provider == .codex
+          ? "Ответить здесь можно, когда Codex задаст вопрос." : "Ответить здесь можно, когда Claude задаст вопрос или запросит разрешение."
+      )
+      .font(.system(size: 11)).foregroundStyle(IslandPalette.tertiary)
       Spacer()
     }.padding(.top, 12)
   }
@@ -174,14 +181,18 @@ struct ClaudeAgentsView: View {
   private var empty: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Агенты и ответы").font(.system(size: 18, weight: .semibold))
-      Text("Вопросы и разовые разрешения Claude Code появятся в острове. Музыка и календарь останутся рядом.")
-        .font(.system(size: 12)).foregroundStyle(IslandPalette.secondary)
+      Text(
+        panel.provider == .codex
+          ? "Один опросник в терминале Codex и Oasis. Первый принятый сервером ответ завершает ожидание в обоих окнах."
+          : "Вопросы и разовые разрешения Claude Code появятся в острове. Музыка и календарь останутся рядом."
+      )
+      .font(.system(size: 12)).foregroundStyle(IslandPalette.secondary)
       if let error = panel.error { Text(error).font(.system(size: 11)).foregroundStyle(IslandPalette.dateAccent) }
       if panel.connected {
-        Text("Подключено · начни новую сессию Claude Code").font(.system(size: 11)).foregroundStyle(ClaudeAgentsStyle.accent)
+        Text("Подключено · начни новую сессию \(panel.provider.title)").font(.system(size: 11)).foregroundStyle(panel.provider.accent)
       } else {
-        Button("Подключить Claude Code") { onAction(.connect) }
-          .font(.system(size: 12)).buttonStyle(SoonTextButtonStyle(tint: ClaudeAgentsStyle.accent))
+        Button("Подключить \(panel.provider.title)") { onAction(.connect) }
+          .font(.system(size: 12)).buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
       }
       Spacer()
       Button("Настройки") { onOpenSettings() }.font(.system(size: 11)).buttonStyle(SoonTextButtonStyle(tint: IslandPalette.secondary))
@@ -191,13 +202,17 @@ struct ClaudeAgentsView: View {
 
 enum ClaudeAgentsStyle {
   static let accent = Color(red: 217 / 255, green: 119 / 255, blue: 87 / 255)
-  static func color(_ state: ClaudeAgentState) -> Color {
+  static func color(_ state: ClaudeAgentState, provider: AgentProvider = .claude) -> Color {
     switch state {
-    case .waiting: accent
+    case .waiting: provider.accent
     case .working: IslandPalette.charging
     case .error: IslandPalette.dateAccent
     case .finished: IslandPalette.secondary
     case .stale, .closed: IslandPalette.tertiary
     }
   }
+}
+
+extension AgentProvider {
+  var accent: Color { self == .codex ? Color(red: 0.83, green: 0.9, blue: 0.93) : ClaudeAgentsStyle.accent }
 }

@@ -17,7 +17,7 @@ if arguments.first == "doctor" {
   print(
     "OasisClaudeBridge protocol=\(ClaudeBridgeLimits.protocolVersion) socket=\(connected ? "available" : "unavailable") "
       + "signature=\(ClaudeBridgeDoctor.signature()) configOwnership=\(ClaudeBridgeDoctor.configOwnership())")
-} else if arguments.first == "hook" {
+} else if ["hook", "question", "question-finished"].contains(arguments.first) {
   signal(SIGPIPE, SIG_IGN)
   signal(SIGTERM, SIG_IGN)
   signal(SIGINT, SIG_IGN)
@@ -29,8 +29,15 @@ if arguments.first == "doctor" {
     return source
   }
   do {
-    let input = try ClaudeHookInput.read(cancellation: cancellation)
-    try ClaudeHookClient(paths: paths, cancellation: cancellation).run(input)
+    let data = try ClaudeHookInput.readData(cancellation: cancellation)
+    let client = ClaudeHookClient(paths: paths, cancellation: cancellation)
+    if arguments.first == "question-finished" {
+      try client.finish(JSONDecoder().decode(ClaudeQuestionCompletion.self, from: data))
+      print("confirmed")
+    } else {
+      let input = try ClaudeHookInput(data: data, acceptsTerminalAnswer: arguments.first == "question")
+      try client.run(input)
+    }
   } catch {
     // Ошибка моста возвращает управление штатному диалогу Claude без решения.
   }

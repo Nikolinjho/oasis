@@ -7,6 +7,7 @@ struct SettingsView: View {
   @ObservedObject var settings: AppSettings
   var claudeConnection: ClaudeConnection?
   var agents: ClaudeRequestsModule?
+  var codex: CodexRequestsModule?
   var soonModule: SoonModule?
   /// Кнопки ▶ превью звука: AppDelegate подключает SoundPlayer
   var playSound: (IslandSound) -> Void = { _ in }
@@ -49,6 +50,8 @@ struct SettingsView: View {
       if let claudeConnection {
         ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, agents: agents, preview: playSound)
       }
+    case .codex:
+      if let codex { CodexSettingsPage(module: codex) }
     case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
     case .soon:
       if let soonModule { SoonSettingsPage(settings: settings.soon, module: soonModule) }
@@ -157,6 +160,7 @@ struct GeneralPage: View {
           SliderRow(title: "Hover duration", value: $settings.hoverDuration, range: 0...0.6, step: 0.1, unit: "s")
         }
       }
+      PeekQueueSettingsCard(settings: settings)
       // Most Recent включён — плитки и Force enable прячутся, текущая плитка дописана в подпись тумблера (ui-inspection 1.2)
       SettingsCard(title: "Idle Activity") {
         ToggleRow(

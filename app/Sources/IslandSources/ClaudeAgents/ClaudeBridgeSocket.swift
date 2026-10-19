@@ -33,6 +33,7 @@ public final class ClaudeBridgeSocket: @unchecked Sendable {
   private var timer: DispatchSourceTimer?
   private var connections: [Int32: ClaudeBridgeConnection] = [:]
   private var acknowledged: [ClaudeRequestID: UUID] = [:]
+  private var finishedQuestions: [ClaudeQuestionID: ContinuousClock.Instant] = [:]
   private var callback: (@Sendable (ClaudeBridgeMessage) -> Void)?
   private var launchID = UUID()
 
@@ -211,7 +212,9 @@ public final class ClaudeBridgeSocket: @unchecked Sendable {
       connection.heartbeat = ContinuousClock.now
       callback?(message)
     case .received(let id, let responseID):
-      try acknowledge(id, responseID: responseID, connection: connection)
+      try acknowledgeHook(id, responseID: responseID, connection: connection)
+    case .questionFinished(let completion):
+      try finishQuestion(completion, sender: connection)
     case .cancelled(let id, let reason):
       guard connection.request?.id == id else { throw ClaudeBridgeError.protocolViolation }
       closeConnection(connection, reason: reason)
@@ -225,6 +228,11 @@ public final class ClaudeBridgeSocket: @unchecked Sendable {
       request.deadline > Date(), request.deadline.timeIntervalSinceNow <= Double(ClaudeBridgeLimits.requestLifetimeSeconds),
       !connections.values.contains(where: { $0.request?.id == request.id })
     else { throw ClaudeBridgeError.protocolViolation }
+    if request.acceptsTerminalAnswer {
+      guard request.kind == .questions, let toolUseID = request.toolUseID, !toolUseID.isEmpty,
+        finishedQuestions[ClaudeQuestionID(agent: request.id.agent, toolUseID: toolUseID)] == nil
+      else { throw ClaudeBridgeError.protocolViolation }
+    }
     connection.request = request
     connection.deadline = ContinuousClock.now.advanced(by: .seconds(request.deadline.timeIntervalSinceNow))
     callback?(.request(request))
@@ -273,6 +281,36 @@ public final class ClaudeBridgeSocket: @unchecked Sendable {
 }
 
 extension ClaudeBridgeSocket {
+  private func finishQuestion(_ completion: ClaudeQuestionCompletion, sender: ClaudeBridgeConnection) throws {
+    guard sender.request == nil else { throw ClaudeBridgeError.protocolViolation }
+    guard valid(completion.question.agent), !completion.question.toolUseID.isEmpty else { throw ClaudeBridgeError.protocolViolation }
+    let connection = connections.values.first {
+      $0.request?.acceptsTerminalAnswer == true && $0.request?.id.agent == completion.question.agent
+        && $0.request?.toolUseID == completion.question.toolUseID
+    }
+    if completion.outcome == .oasis {
+      guard let connection, let request = connection.request, let responseID = completion.responseID,
+        connection.deadline.map({ $0 > .now }) == true, connection.responseID == responseID
+      else { throw ClaudeBridgeError.expired }
+      try acknowledge(request.id, responseID: responseID, connection: connection)
+      try? ClaudeBridgeWire.send(.received(requestID: request.id, responseID: responseID), to: connection.descriptor)
+    }
+    finishedQuestions[completion.question] = .now
+    if finishedQuestions.count > 256, let oldest = finishedQuestions.min(by: { $0.value < $1.value })?.key {
+      finishedQuestions.removeValue(forKey: oldest)
+    }
+    try ClaudeBridgeWire.send(.questionFinished(completion), to: sender.descriptor)
+    callback?(.questionFinished(completion))
+    if let connection {
+      closeConnection(connection, reason: completion.outcome == .terminal ? "terminal-answered" : "cancelled")
+    }
+  }
+
+  private func acknowledgeHook(_ id: ClaudeRequestID, responseID: UUID, connection: ClaudeBridgeConnection) throws {
+    guard connection.request?.acceptsTerminalAnswer != true else { throw ClaudeBridgeError.protocolViolation }
+    try acknowledge(id, responseID: responseID, connection: connection)
+  }
+
   private func stopOnQueue() {
     timer?.cancel()
     timer = nil
@@ -290,6 +328,7 @@ extension ClaudeBridgeSocket {
       lock = -1
     }
     acknowledged.removeAll()
+    finishedQuestions.removeAll()
     callback = nil
   }
 }

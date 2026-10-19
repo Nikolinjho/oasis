@@ -39,11 +39,16 @@ struct ClaudeHooksInstaller {
     try validateSupportDirectory()
     let manifest = try connectionRecord()
     guard manifest["state"] as? String == "installed",
+      manifest["version"] as? Int == 3,
       manifest["protocolVersion"] as? Int == ClaudeBridgeLimits.protocolVersion,
       FileManager.default.isExecutableFile(atPath: installedHelper.path),
       let helper = try read(installedHelper),
       manifest["helperDigest"] as? String == digest(helper),
       digest(helper) == digest(try Data(contentsOf: helperSource))
+    else { return false }
+    let settings = try object(read(settingsURL))
+    guard try questionPluginInstalled(manifest: manifest),
+      (settings["enabledPlugins"] as? [String: Any])?[questionPluginID] as? Bool != false
     else { return false }
     let hooks = try validatedHooks(object(read(settingsURL)))
     try rejectModifiedOwnedHooks(hooks, owned: entries)
@@ -57,15 +62,24 @@ struct ClaudeHooksInstaller {
     try withConnectionLock {
       let original = try read(settingsURL)
       var settings = try object(original)
-      settings["hooks"] = try addingOwnedHooks(to: validatedHooks(settings))
+      var hooks = try validatedHooks(settings)
+      if hasConnectionRecord, let owned = try connectionRecord()["entries"] as? [String: [[String: Any]]] {
+        hooks = try removingOwnedHooks(from: hooks, owned: owned)
+      }
+      settings["hooks"] = try addingOwnedHooks(to: hooks)
       let helper = try Data(contentsOf: helperSource)
       var manifest = try installRecord(original: original, helper: helper)
+      let pluginContents = try prepareQuestionPlugin(helper: helper, settings: &settings, manifest: &manifest)
+      try atomicWrite(encode(manifest), to: manifestURL, permissions: 0o600)
+      try installQuestionPlugin(pluginContents)
       try atomicWrite(helper, to: installedHelper, permissions: 0o700)
       try FileManager.default.createDirectory(at: settingsURL.deletingLastPathComponent(), withIntermediateDirectories: true)
       try atomicWrite(encode(settings), to: settingsURL, permissions: 0o600) {
         try requireUnchanged(original)
       }
       manifest["state"] = "installed"
+      manifest["entries"] = entries
+      manifest.removeValue(forKey: "pluginAllowedDigests")
       try atomicWrite(encode(manifest), to: manifestURL, permissions: 0o600)
     }
   }
@@ -79,36 +93,48 @@ struct ClaudeHooksInstaller {
       }
       let original = try read(settingsURL)
       var settings = try object(original)
+      try validateQuestionPlugin(manifest: manifest)
       let hooks = try removingOwnedHooks(from: validatedHooks(settings), owned: owned)
       if hooks.isEmpty { settings.removeValue(forKey: "hooks") } else { settings["hooks"] = hooks }
+      try restoreQuestionPluginSetting(settings: &settings, manifest: manifest)
       if original != nil {
         try atomicWrite(encode(settings), to: settingsURL, permissions: 0o600) {
           try requireUnchanged(original)
         }
       }
       if original == nil { try requireUnchanged(nil) }
+      try removeQuestionPlugin(manifest: manifest)
       try FileManager.default.removeItem(at: manifestURL)
     }
   }
 
   func installRecord(original: Data?, helper: Data) throws -> [String: Any] {
+    let previous: [String: Any]?
     if hasConnectionRecord {
-      _ = try connectionRecord()
+      previous = try connectionRecord()
     } else if let original {
       try atomicWrite(original, to: backupURL, permissions: 0o600)
+      previous = nil
+    } else {
+      previous = nil
     }
-    let manifest: [String: Any] = [
-      "version": 2, "settingsPath": settingsURL.path, "entries": entries, "state": "pending",
+    var manifest: [String: Any] = [
+      "version": 3, "settingsPath": settingsURL.path, "entries": entries, "state": "pending",
       "protocolVersion": ClaudeBridgeLimits.protocolVersion, "helperDigest": digest(helper),
     ]
-    try atomicWrite(encode(manifest), to: manifestURL, permissions: 0o600)
+    if let previous {
+      for key in ["pluginDigests", "pluginEnabledBefore"] { manifest[key] = previous[key] }
+      var owned = previous["entries"] as? [String: [[String: Any]]] ?? [:]
+      for (event, groups) in entries { owned[event, default: []].append(contentsOf: groups) }
+      manifest["entries"] = owned
+    }
     return manifest
   }
 
   func connectionRecord() throws -> [String: Any] {
     let record = try object(read(manifestURL))
     guard record["settingsPath"] as? String == settingsURL.path,
-      record["version"] as? Int == 2,
+      [2, 3].contains(record["version"] as? Int ?? 0),
       record["entries"] is [String: [[String: Any]]]
     else { throw Failure(message: "Повреждена запись подключения Claude") }
     return record
