@@ -204,6 +204,12 @@ final class IslandWindowController {
 
   private func pointerMoved() {
     guard let panel, metrics != nil, !menuOpen, !composerActive else { return }
+    // NSTextView может забрать mouseUp в собственном цикле выделения, минуя локальный монитор.
+    // Фактическое отпускание снимает удержание острова даже после такого клика.
+    if leftButtonDown && NSEvent.pressedMouseButtons & 1 == 0 {
+      leftButtonDown = false
+      dragStartedInside = false
+    }
     let point = NSEvent.mouseLocation
     let island = IslandGeometry.islandScreenRect(store.spec, windowFrame: panel.frame)
     // вне формы клики уходят в menu bar и окна под островом
