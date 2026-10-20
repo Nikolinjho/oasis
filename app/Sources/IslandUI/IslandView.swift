@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Остров целиком: форма и контент по состоянию. Размер окна фиксированный, анимируется только форма
 public struct IslandView: View {
+  @State private var missionControl = MissionControlPresentation()
   let model: IslandModel
   let spec: IslandShapeSpec
   let contentSpec: IslandShapeSpec
@@ -23,6 +24,8 @@ public struct IslandView: View {
   let calendarEvent: CalendarEvent?
   /// Остров тянут свайпом вверх: контент в блюре
   let dragBlurred: Bool
+  let backSwipeOffset: CGFloat
+  let animatesBackNavigation: Bool
   let appearance: IslandAppearance
   /// Фон под раскрытым тёмный: Contrast outline виден только над ним. Без замера — тёмный
   let backdropDark: Bool
@@ -49,6 +52,7 @@ public struct IslandView: View {
     dismissedEvents: Set<String> = [],
     calendarEvent: CalendarEvent? = nil,
     dragBlurred: Bool = false,
+    backSwipeOffset: CGFloat = 0, animatesBackNavigation: Bool = false,
     appearance: IslandAppearance = .default,
     backdropDark: Bool = true,
     volume: Double = 0,
@@ -79,6 +83,8 @@ public struct IslandView: View {
     self.dismissedEvents = dismissedEvents
     self.calendarEvent = calendarEvent
     self.dragBlurred = dragBlurred
+    self.backSwipeOffset = backSwipeOffset
+    self.animatesBackNavigation = animatesBackNavigation
     self.appearance = appearance
     self.backdropDark = backdropDark
     self.volume = volume
@@ -95,7 +101,7 @@ public struct IslandView: View {
     ZStack(alignment: .top) {
       // Progressive blur — под тенью и формой. Вид живёт только у раскрытого: иначе WindowServer снимал бы фон
       // под окном и в покое. Появляется и уходит той же анимацией, что тень (withAnimation модели)
-      if Self.showsBlur(surface: model.surface, enabled: appearance.progressiveBlur) {
+      if Self.showsBlur(surface: model.surface, enabled: appearance.progressiveBlur && !missionControl.isActive) {
         GeometryReader { proxy in
           VariableBlurView(shape: Self.blurShape(spec, width: proxy.size.width))
         }
@@ -107,7 +113,7 @@ public struct IslandView: View {
         .fill(isTuningHint ? IslandPalette.tuning : IslandPalette.background)
         // тень только у раскрытого: меняется вместе с моделью внутри withAnimation и растёт той же пружиной
         .shadow(
-          color: .black.opacity(model.surface == .expanded ? IslandGeometry.Shadow.opacity : 0),
+          color: .black.opacity(model.surface == .expanded && !missionControl.isActive ? IslandGeometry.Shadow.opacity : 0),
           radius: IslandGeometry.Shadow.radius,
           y: IslandGeometry.Shadow.y)
       // поверх тени, под контентом: проявляется и гаснет вместе с тенью, форма анимируется той же пружиной.
@@ -119,6 +125,8 @@ public struct IslandView: View {
         .animation(.easeInOut(duration: 0.2), value: backdropDark)
       if model.expandedView.isAgents {
         expandedContent
+          .modifier(BackSwipeDrag(offset: backSwipeOffset))
+          .transition(animatesBackNavigation ? .swipeBack(timeScale: model.config.timeScale) : .identity)
           .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
           .clipShape(IslandShape(spec: spec, shoulder: 0))
           .blur(radius: dragBlurred ? 8 : 0)
@@ -137,6 +145,10 @@ public struct IslandView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .contentShape(IslandShape(spec: spec))
     .onTapGesture(perform: islandClicked)
+    .onChange(of: model.surface, initial: true) { _, surface in
+      if surface == .expanded { missionControl.start() } else { missionControl.stop() }
+    }
+    .onDisappear { missionControl.stop() }
     .overlay(alignment: .topLeading) {
       PeekQueueOverlay(surface: model.surface, spec: contentSpec, items: queuedPeeks, appearance: appearance.peekQueue)
     }
@@ -183,8 +195,11 @@ public struct IslandView: View {
       // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
       if !model.expandedView.isAgents {
         expandedContent
+          .modifier(BackSwipeDrag(offset: backSwipeOffset))
           .id(IslandContentID.expanded)
-          .transition(.playerEntrance(timeScale: model.config.timeScale))
+          .transition(
+            animatesBackNavigation
+              ? .swipeBack(timeScale: model.config.timeScale) : .playerEntrance(timeScale: model.config.timeScale))
       }
     case .hud(let kind, let level):
       HUDView(kind: kind, level: level, notchWidth: notchWidth, appearance: appearance.hud(kind), deviceSymbol: appearance.output.symbol)
@@ -220,6 +235,7 @@ public struct IslandView: View {
       liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
       showsVolumeRow: model.volumeRowShown, onAction: onAction, onJoin: onJoin,
       timeScale: model.config.timeScale, navigation: model.config.dashboardNavigation,
+      animatesBackNavigation: animatesBackNavigation,
       notchWidth: notchWidth, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
       onSelectView: onSelectView, onOpenSettings: onOpenSettings
     )
@@ -268,6 +284,9 @@ public struct IslandView: View {
   public nonisolated static let reminderIndicatorWidth =
     ActivityCompactView.indicatorWidth(ActivityLayouts.reminderWidestIndicator)
 
+}
+
+extension IslandView {
   /// Состояние, по которому раскладывается живая активность (музыка, календарь): для отклика — то,
   /// из которого он открылся
   private var liveSurface: Surface {
@@ -289,9 +308,6 @@ public struct IslandView: View {
     return size
   }
 
-}
-
-extension IslandView {
   static func showsBlur(surface: Surface, enabled: Bool) -> Bool {
     enabled && surface == .expanded
   }

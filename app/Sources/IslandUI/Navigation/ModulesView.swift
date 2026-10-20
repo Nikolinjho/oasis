@@ -44,7 +44,7 @@ private struct ModuleTile: View {
       VStack(spacing: 10) {
         Group {
           if title == "Codex" {
-            CodexIcon().frame(width: 32, height: 32)
+            CodexIcon().foregroundStyle(IslandPalette.foreground).frame(width: 32, height: 32)
           } else if title == "Soon" {
             SoonIcon().frame(width: 36, height: 36)
           } else {

@@ -75,11 +75,7 @@ struct ExpandedNavigation: View {
   }
 
   private var backTarget: ExpandedView {
-    switch view {
-    case .claude, .inbox: .agents
-    case .modules: .overview
-    default: .modules
-    }
+    view.backTarget ?? .overview
   }
 
   private var backTitle: String {

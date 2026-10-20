@@ -23,6 +23,7 @@ struct ExpandedContent: View {
   let onJoin: (URL) -> Void
   var timeScale: Double = 1
   var navigation = false
+  var animatesBackNavigation = false
   var notchWidth: CGFloat = 185
   var mediaEnabled = true
   var calendarEnabled = true
@@ -55,33 +56,36 @@ struct ExpandedContent: View {
           onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
           onSelectView: onSelectView, onOpenSettings: onOpenSettings
         )
-        .transition(.viewSwap(timeScale: timeScale))
+        .transition(contentTransition)
       case .modules:
         ModulesView(
           mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
           claudeAvailable: claude != nil, soonAvailable: soon != nil, onSelectView: onSelectView
         )
-        .transition(.viewSwap(timeScale: timeScale))
+        .transition(contentTransition)
       case .duo:
         DuoView(
           info: info, agenda: agenda, dismissedEvents: dismissedEvents, appearance: appearance, liveEvent: liveEvent,
           onJoin: onJoin, onAction: onAction
         )
-        .transition(.viewSwap(timeScale: timeScale))
+        .transition(contentTransition)
       case .player:
         PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
-          .transition(.viewSwap(timeScale: timeScale))
+          .transition(contentTransition)
       case .inbox:
         AttentionInboxView(panel: agents, onAction: onAgentsAction)
+          .transition(contentTransition)
       case .agents, .codexAgents:
         ClaudeAgentsView(
           panel: activePanel, onAction: activeAction, onOpenSettings: onOpenSettings, context: liveEvent, music: info,
-          soonCount: soon?.reminders.filter { $0.state != .completed }.count ?? 0, onJoin: onJoin)
+          soonCount: soon?.reminders.filter { $0.state != .completed }.count ?? 0, onJoin: onJoin
+        )
+        .transition(contentTransition)
       case .claude:
         if let claude {
           ClaudeLimitsView(panel: claude)
-            .transition(.viewSwap(timeScale: timeScale))
+            .transition(contentTransition)
         }
       case .soon:
         if let soon {
@@ -92,11 +96,12 @@ struct ExpandedContent: View {
               SoonListView(panel: soon, now: context.date, onAction: onSoonAction)
             }
           }
-          .transition(.viewSwap(timeScale: timeScale))
+          .id(soon.selectedID)
+          .transition(contentTransition)
         }
       case .calendar:
         CalendarDayView(agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, onJoin: onJoin)
-          .transition(.viewSwap(timeScale: timeScale))
+          .transition(contentTransition)
       }
     }
     .frame(width: size.width, height: contentHeight, alignment: .topLeading)
@@ -106,6 +111,10 @@ struct ExpandedContent: View {
     if view == .inbox { return { onSelectView(inboxProvider.view) } }
     if view == .soon && soon?.selected != nil { return { onSoonAction(.showList) } }
     return nil
+  }
+
+  private var contentTransition: AnyTransition {
+    animatesBackNavigation ? .swipeBack(timeScale: timeScale) : .viewSwap(timeScale: timeScale)
   }
 
   private var backTitle: String? {

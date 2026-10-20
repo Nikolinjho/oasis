@@ -39,6 +39,7 @@ final class IslandStore {
   private(set) var stretch: CGFloat = 0
   /// Остров тянут вверх: контент в блюре
   private(set) var dragBlurred = false
+  let backSwipe = BackSwipePresentation()
   @ObservationIgnored private var tracker = SwipeTracker()
   /// General → Gestures → Swipe to dismiss activity
   @ObservationIgnored var swipeToDismiss = true
@@ -166,6 +167,7 @@ final class IslandStore {
         stretch = 0
         dragBlurred = false
       }
+    case .back: break
     }
   }
 
@@ -193,7 +195,7 @@ final class IslandStore {
       send(.activityRestored)
       guard model.dismissed != wasDismissed else { return }
       NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
-    case .stretch, .settle:
+    case .stretch, .settle, .back:
       break
     }
   }
@@ -213,13 +215,13 @@ final class IslandStore {
 
     var transition: IslandTransition?
     for case .animate(let t) in effects { transition = t }
-    // ушли из раскрытого посреди свайпа (уход курсора, уведомление, HUD): тяга и блюр не должны
-    // пережить схлопывание и достаться следующему раскрытию. Сбрасываются той же пружиной, что и форма
+    // Сбрасываем жесты при уходе из раскрытого, чтобы они не пережили схлопывание.
     let apply = {
       self.model = next
       if next.surface != .expanded {
         self.stretch = 0
         self.dragBlurred = false
+        self.backSwipe.reset()
       }
     }
     if let spring = transition.flatMap({ IslandMotion.spring(for: $0, timeScale: next.config.timeScale) }) {
@@ -362,14 +364,12 @@ extension IslandStore {
     soonPanel = panel
     send(.soonViewAvailable(panel != nil))
   }
-  /// Без данных Claude выпадает из цикла раскрытых видов.
   func applyClaude(_ panel: ClaudePanel?) {
     claudePanel = panel
     send(.claudeViewAvailable(panel != nil))
   }
 
 }
-
 extension IslandStore {
   private func execute(_ effects: [IslandEffect]) {
     for effect in effects {

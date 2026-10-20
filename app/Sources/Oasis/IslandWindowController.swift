@@ -37,7 +37,7 @@ final class IslandWindowController {
   var naturalMovement = true
   private var composerActive = false
   private lazy var agentInput = ClaudeAgentInputController(store: store)
-  private var scrollInList = false
+  private var scrollHandler = IslandScrollHandler()
   var onComposerSurfaceChange: (Surface) -> Void = { _ in }
 
   init(store: IslandStore, menu: NSMenu) {
@@ -185,48 +185,9 @@ final class IslandWindowController {
     return true
   }
 
-  /// Жест трекпада над островом: раскрытый листает и закрывается, покой убирает и возвращает активность.
-  /// .began/.ended/.cancelled доходят до store всегда, даже когда сейчас surface не наша (HUD или
-  /// уведомление увели её посреди жеста): store запирает владельца жеста на .began и снимает его
-  /// на .ended/.cancelled (IslandStore.swipeOwner) — не долети сюда эти фазы, владелец жеста
-  /// застрял бы до следующего жеста. .changed и съедение события (true) — только когда surface наша,
-  /// остальное — не наше: скролл уходит дальше как обычно (review Task 15)
   private func handleScroll(_ event: NSEvent) -> Bool {
-    guard !composerActive else { return false }
-    guard let panel, event.window === panel,
-      let input = Self.swipeInput(
-        phase: event.phase, momentumPhase: event.momentumPhase, precise: event.hasPreciseScrollingDeltas,
-        deltaX: event.scrollingDeltaX, deltaY: event.scrollingDeltaY,
-        inverted: event.isDirectionInvertedFromDevice, natural: naturalMovement)
-    else { return false }
-    if input.phase == .began { scrollInList = pointerOverList(panel: panel) }
-    if scrollInList {
-      if input.phase == .ended || input.phase == .cancelled { scrollInList = false }
-      return false
-    }
-    let surface = store.model.surface
-    let ours = surface == .expanded || (store.swipeToDismiss && IslandStore.isRestSwipeSurface(surface))
-    guard ours else {
-      if input.phase != .changed { store.swipe(input.phase, dx: input.dx, dy: input.dy) }
-      return false
-    }
-    store.swipe(input.phase, dx: input.dx, dy: input.dy)
-    return true
-  }
-
-  /// Владелец прокрутки определяется один раз: перемещение курсора не обрывает уже начатый свайп.
-  private func pointerOverList(panel: NotchPanel) -> Bool {
-    guard store.model.surface == .expanded else { return false }
-    let pointer = NSEvent.mouseLocation
-    if store.model.expandedView.isAgents || store.model.expandedView == .inbox { return true }
-    if store.model.expandedView == .soon {
-      let header: CGFloat = store.config.dashboardNavigation ? ExpandedLayout.headerHeight : 0
-      return pointer.y < panel.frame.maxY - 54 - header
-    }
-    guard store.model.expandedView == .overview, store.soonPanel != nil else { return false }
-    let body = IslandGeometry.bodyScreenRect(store.spec, windowFrame: panel.frame)
-    return pointer.x >= body.maxX - 230 && pointer.x <= body.maxX - 24
-      && pointer.y < panel.frame.maxY - 62 && pointer.y > panel.frame.maxY - 174
+    guard !composerActive, let panel else { return false }
+    return scrollHandler.handle(event, panel: panel, store: store, natural: naturalMovement)
   }
 
   /// Меню от точки клика, как контекстное меню у Alcove. popUp возвращается, когда меню закрыто:

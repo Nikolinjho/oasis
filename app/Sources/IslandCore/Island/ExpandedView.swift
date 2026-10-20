@@ -7,6 +7,15 @@ public enum ExpandedView: String, CaseIterable, Hashable, Sendable {
 
   public var isAgents: Bool { self == .agents || self == .codexAgents }
 
+  public var backTarget: ExpandedView? {
+    switch self {
+    case .overview: nil
+    case .modules: .overview
+    case .claude, .inbox: .agents
+    default: .modules
+    }
+  }
+
   public var next: ExpandedView {
     let all = Self.allCases
     return all[(all.firstIndex(of: self)! + 1) % all.count]

@@ -19,6 +19,7 @@ struct IslandRootView: View {
       dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,
       dragBlurred: store.dragBlurred,
+      backSwipeOffset: store.backSwipe.offset, animatesBackNavigation: store.backSwipe.navigating,
       appearance: store.appearance,
       backdropDark: store.backdropDark,
       volume: store.volumeLevel,
@@ -27,17 +28,7 @@ struct IslandRootView: View {
       onJoin: { store.onJoin($0) },
       onSoonAction: { store.onSoonAction($0) },
       mediaEnabled: store.mediaEnabled, calendarEnabled: store.calendarFilter.isEnabled,
-      onSelectView: { view in
-        if view == .inbox, store.model.expandedView.isAgents {
-          store.performAgentAction(.openInbox, provider: store.activeAgentsPanel.provider)
-          return
-        }
-        if view.isAgents {
-          store.performAgentAction(.openPanel, provider: view == .codexAgents ? .codex : .claude)
-          return
-        }
-        if view == .soon { store.onSoonAction(.showList) } else { store.send(.expandedViewRequested(view)) }
-      },
+      onSelectView: store.selectExpandedView,
       onOpenSettings: {
         store.performAgentAction(.close, provider: store.activeAgentsPanel.provider)
         store.onOpenSettings()

@@ -16,6 +16,8 @@ public struct SwipeTracker: Sendable {
     case close
     /// Порог вниз пройден: следующий вид сразу, не дожидаясь отпускания
     case cycle
+    /// Порог вправо пройден: вернуться на родительский экран один раз за жест
+    case back
     /// Отпустили, не дотянув: вернуть высоту
     case settle
   }
@@ -48,42 +50,54 @@ public struct SwipeTracker: Sendable {
   private var fired = false
   private var axis = Axis.undecided
   private var pendingX: CGFloat = 0
+  private let tracksBack: Bool
 
-  public init() {}
+  public init(tracksBack: Bool = false) {
+    self.tracksBack = tracksBack
+  }
 
-  /// Горизонтальные свайпы не наши (решение пользователя 27.09): ось фиксируется один раз в начале жеста
-  /// по накопленным |dx| и |dy|, и горизонтальный жест игнорируется целиком. Отбрасывать отдельные события
-  /// с |dx| > |dy| хуже: у вертикального свайпа бывает дрожь по dx (в логе dy=1 dx=1), и пропуски таких
-  /// событий занижали бы накопленную дельту и сдвигали порог закрытия
+  public var isHorizontal: Bool { tracksBack && axis == .horizontal }
+  public var backProgress: CGFloat { max(0, pendingX * Self.pointsPerDelta / Self.closeThreshold) }
+
+  /// Ось фиксируется по накопленным дельтам в начале жеста. Возврат вправо включается отдельно,
+  /// чтобы вертикальные жесты острова и компакта сохранили прежнее поведение.
   public mutating func feed(_ phase: Phase, dx: CGFloat = 0, dy: CGFloat) -> Output? {
     switch phase {
     case .began:
       reset()
       return nil
     case .changed:
-      guard !fired, axis != .horizontal else { return nil }
-      total += dy
-      if axis == .undecided {
-        pendingX += dx
-        guard max(abs(pendingX), abs(total)) >= Self.axisLockDistance else { return nil }
-        axis = abs(pendingX) > abs(total) ? .horizontal : .vertical
-        guard axis == .vertical else { return nil }
-      }
-      let travel = total * Self.pointsPerDelta
-      if travel <= -Self.closeThreshold {
-        fired = true
-        return .close
-      }
-      if travel >= Self.cycleThreshold {
-        fired = true
-        return .cycle
-      }
-      return .stretch(travel < 0 ? travel : Self.rubber(travel))
+      return changed(dx: dx, dy: dy)
     case .ended, .cancelled:
       defer { reset() }
       guard !fired, axis != .horizontal else { return nil }
       return .settle
     }
+  }
+
+  private mutating func changed(dx: CGFloat, dy: CGFloat) -> Output? {
+    guard !fired else { return nil }
+    total += dy
+    pendingX += dx
+    if axis == .undecided {
+      guard max(abs(pendingX), abs(total)) >= Self.axisLockDistance else { return nil }
+      axis = abs(pendingX) > abs(total) ? .horizontal : .vertical
+    }
+    if axis == .horizontal {
+      guard tracksBack, pendingX * Self.pointsPerDelta >= Self.closeThreshold else { return nil }
+      fired = true
+      return .back
+    }
+    let travel = total * Self.pointsPerDelta
+    if travel <= -Self.closeThreshold {
+      fired = true
+      return .close
+    }
+    if travel >= Self.cycleThreshold {
+      fired = true
+      return .cycle
+    }
+    return .stretch(travel < 0 ? travel : Self.rubber(travel))
   }
 
   private mutating func reset() {
