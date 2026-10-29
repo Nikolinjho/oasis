@@ -22,6 +22,8 @@ struct YandexConnectionCard: View {
         Text("The local debugging port stays open until Yandex Music restarts normally, even after Oasis quits.")
           .font(.system(size: 11)).foregroundStyle(.secondary)
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(12)
     }
     .alert("Connect Yandex Music?", isPresented: $confirmsConnect) {
       Button("Cancel", role: .cancel) {}
