@@ -92,6 +92,12 @@ extension ClaudeRequestsModule {
       draft.options[questionIndex] = selected == [option] ? [] : [option]
     }
     draft.texts[questionIndex] = ""
+    if !request.questions[questionIndex].multiSelect,
+      draft.hasAnswer(for: request, questionIndex: questionIndex),
+      let next = draft.nextUnansweredQuestion(for: request)
+    {
+      draft.questionIndex = next
+    }
     panel.drafts[id] = draft
   }
 

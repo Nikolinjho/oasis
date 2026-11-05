@@ -10,6 +10,11 @@ struct ClaudeRequestDetail: View {
   private var active: Bool { request.phase == .waiting }
   private var draft: ClaudeReplyDraft { panel.drafts[request.id] ?? .init() }
   private var index: Int { min(draft.questionIndex, max(0, request.questions.count - 1)) }
+  private var nextQuestion: Int? { draft.nextUnansweredQuestion(for: request) }
+  private var submitTitle: String {
+    if request.phase == .sending { return "Отправляется…" }
+    return nextQuestion == nil ? "Ответить ⌘↩" : "Далее ⌘↩"
+  }
   private var agentRequests: [ClaudeRequest] {
     panel.requests.filter { $0.id.agent == request.id.agent }.sorted { $0.createdAt < $1.createdAt }
   }
@@ -106,14 +111,29 @@ struct ClaudeRequestDetail: View {
           .accessibilityLabel("Свой ответ \(panel.provider.shortTitle)")
       }
       HStack {
-        if !question.isSecret { Text("Enter – новая строка").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary) }
+        if request.questions.count > 1 {
+          let answered = request.questions.indices.filter { draft.hasAnswer(for: request, questionIndex: $0) }.count
+          Text("Ответы: \(answered) из \(request.questions.count)")
+            .font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary)
+        } else if !question.isSecret {
+          Text("Enter – новая строка").font(.system(size: 9)).foregroundStyle(IslandPalette.tertiary)
+        }
         Spacer()
-        Button(request.phase == .sending ? "Отправляется…" : "Ответить ⌘↩") { onAction(.send(request.id)) }
+        Button(submitTitle) { continueReply() }
           .font(.system(size: 11)).buttonStyle(SoonTextButtonStyle(tint: panel.provider.accent))
-          .disabled(!active || draft.answer(for: request) == nil)
+          .disabled(!active || !draft.hasAnswer(for: request, questionIndex: index))
           .keyboardShortcut(.return, modifiers: .command)
-          .accessibilityLabel("Ответить \(panel.provider.shortTitle)")
+          .accessibilityLabel(nextQuestion == nil ? "Ответить \(panel.provider.shortTitle)" : "Следующий вопрос")
       }
+    }
+  }
+
+  private func continueReply() {
+    guard active, draft.hasAnswer(for: request, questionIndex: index) else { return }
+    if let nextQuestion {
+      onAction(.selectQuestion(request.id, nextQuestion))
+    } else {
+      onAction(.send(request.id))
     }
   }
 
@@ -123,13 +143,13 @@ struct ClaudeRequestDetail: View {
       AgentSecretEditor(
         text: draft.texts[index] ?? "", editable: active,
         onText: { onAction(.text(request.id, question: index, value: $0)) },
-        onFocus: { onAction(.beginEditing) }, onSubmit: { onAction(.send(request.id)) }, onEscape: { onAction(.close) })
+        onFocus: { onAction(.beginEditing) }, onSubmit: { continueReply() }, onEscape: { onAction(.close) })
     } else {
       ClaudeReplyEditor(
         text: draft.texts[index] ?? "", position: draft.positions[index] ?? .init(), editable: active,
         onText: { onAction(.text(request.id, question: index, value: $0)) },
         onPosition: { onAction(.textPosition(request.id, question: index, position: $0)) },
-        onFocus: { onAction(.beginEditing) }, onSubmit: { onAction(.send(request.id)) }, onEscape: { onAction(.close) }
+        onFocus: { onAction(.beginEditing) }, onSubmit: { continueReply() }, onEscape: { onAction(.close) }
       )
     }
   }

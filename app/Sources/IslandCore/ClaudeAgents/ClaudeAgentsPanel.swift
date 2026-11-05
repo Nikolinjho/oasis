@@ -63,22 +63,35 @@ public struct ClaudeReplyDraft: Equatable, Sendable {
 
   public init() {}
 
+  public func hasAnswer(for request: ClaudeRequest, questionIndex: Int) -> Bool {
+    guard request.kind == .questions, request.questions.indices.contains(questionIndex) else { return false }
+    return answer(for: request.questions[questionIndex], at: questionIndex) != nil
+  }
+
+  public func nextUnansweredQuestion(for request: ClaudeRequest) -> Int? {
+    request.questions.indices.first { !hasAnswer(for: request, questionIndex: $0) }
+  }
+
   public func answer(for request: ClaudeRequest) -> ClaudeAnswer? {
     guard request.kind == .questions, !request.questions.isEmpty else { return nil }
     var answers: [ClaudeQuestionAnswer] = []
     for (index, question) in request.questions.enumerated() {
-      let text = texts[index] ?? ""
-      if question.allowsOther || question.options.isEmpty, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        answers.append(.init(questionIndex: index, selection: .text(text)))
-      } else {
-        let selected = (options[index] ?? []).sorted()
-        guard !selected.isEmpty, question.multiSelect || selected.count == 1,
-          selected.allSatisfy({ question.options.indices.contains($0) })
-        else { return nil }
-        answers.append(.init(questionIndex: index, selection: .options(selected)))
-      }
+      guard let answer = answer(for: question, at: index) else { return nil }
+      answers.append(answer)
     }
     return .questions(answers)
+  }
+
+  private func answer(for question: ClaudeQuestion, at index: Int) -> ClaudeQuestionAnswer? {
+    let text = texts[index] ?? ""
+    if question.allowsOther || question.options.isEmpty, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      return .init(questionIndex: index, selection: .text(text))
+    }
+    let selected = (options[index] ?? []).sorted()
+    guard !selected.isEmpty, question.multiSelect || selected.count == 1,
+      selected.allSatisfy({ question.options.indices.contains($0) })
+    else { return nil }
+    return .init(questionIndex: index, selection: .options(selected))
   }
 }
 
