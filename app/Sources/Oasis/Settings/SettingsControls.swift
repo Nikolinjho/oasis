@@ -2,6 +2,11 @@ import AppKit
 import IslandUI
 import SwiftUI
 
+/// Отступ строки внутри карточки, общий для стандартных и составных строк.
+enum SettingsLayout {
+  static let rowInset: CGFloat = 12
+}
+
 /// Акцент Alcove: тумблер и заливка слайдера (ui-inspection 1.1)
 enum SettingsPalette {
   static let accent = Color(red: 233 / 255, green: 98 / 255, blue: 96 / 255)
@@ -130,7 +135,7 @@ struct ToggleRow: View {
         .toggleStyle(.switch)
         .tint(tint)
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, SettingsLayout.rowInset)
     .frame(height: 42)
   }
 }
@@ -176,7 +181,7 @@ struct SliderRow: View {
       Slider(value: $value.snapped(to: step), in: range, step: step, onEditingChanged: onEditingChanged)
         .tint(SettingsPalette.accent)
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, SettingsLayout.rowInset)
     .frame(height: 72)
   }
 
@@ -222,7 +227,7 @@ struct MasterToggleRow: View {  // swiftlint:disable:this inclusive_language - m
         .toggleStyle(.switch)
         .tint(SettingsPalette.accent)
     }
-    .padding(.horizontal, 12)
+    .padding(.horizontal, SettingsLayout.rowInset)
     .frame(height: 42)
   }
 }

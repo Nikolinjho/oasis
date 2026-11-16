@@ -74,6 +74,7 @@ public struct CodexLimitsPanel: Equatable, Sendable {
   public var limits: CodexLimits?
   public var status: String?
   public var now: Date
+  public var forecastText: String?
 
   public init(limits: CodexLimits? = nil, status: String? = "Подключение…", now: Date = Date()) {
     self.limits = limits

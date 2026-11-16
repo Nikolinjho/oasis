@@ -22,6 +22,10 @@ struct CodexLimitsView: View {
               }
             }
           }
+          if let forecast = panel.forecastText {
+            Text(forecast).font(.system(size: 11)).foregroundStyle(IslandPalette.secondary)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          }
           if let status = panel.status {
             Text(status).font(.system(size: 11)).foregroundStyle(IslandPalette.secondary)
               .frame(maxWidth: .infinity, alignment: .leading)

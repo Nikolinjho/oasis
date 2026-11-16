@@ -50,7 +50,7 @@ struct SettingsView: View {
         ClaudeSettingsPage(settings: settings.claude, connection: claudeConnection, preview: playSound)
       }
     case .codex:
-      if let codexLimits { CodexLimitsSettingsPage(module: codexLimits) }
+      if let codexLimits { CodexLimitsSettingsPage(module: codexLimits, preview: playSound) }
     case .calendar: CalendarPage(calendar: settings.calendar, playSound: playSound, loadCalendars: calendars)
     case .soon:
       if let soonModule { SoonSettingsPage(settings: settings.soon, module: soonModule) }

@@ -13,6 +13,7 @@ public enum IslandAlert: Equatable, Sendable {
   case airpods(AirPodsInfo)
   /// Порог лимита Claude Code, прогноз исчерпания или сброс окна.
   case claude(ClaudeNotice)
+  case codex(CodexNotice)
   case soon(SoonNotice)
 
   /// Вид: повтор того же вида в очереди заменяет ждущее, а поверх показанного обновляет его.
@@ -22,7 +23,7 @@ public enum IslandAlert: Equatable, Sendable {
     case charging, lowBattery, lowPower
     case calendarReminder(eventID: String)
     case airpods
-    case claude
+    case claude, codex
     case soon(occurrenceID: String)
   }
 
@@ -34,7 +35,17 @@ public enum IslandAlert: Equatable, Sendable {
     case .calendarReminder(let reminder): .calendarReminder(eventID: reminder.eventID)
     case .airpods: .airpods
     case .claude: .claude
+    case .codex: .codex
     case .soon(let notice): .soon(occurrenceID: notice.occurrenceID)
+    }
+  }
+
+  /// Общие свойства предупреждений о лимитах для очереди и звука.
+  public var limitsNotice: ClaudeNotice? {
+    switch self {
+    case .claude(let notice): notice
+    case .codex(let notice): notice.details
+    default: nil
     }
   }
 
@@ -44,6 +55,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .charging, .lowBattery, .lowPower, .calendarReminder, .soon: 2
     case .airpods: 1
     case .claude(let notice): notice.urgent ? 2 : notice.reason == .reset ? 0 : 1
+    case .codex(let notice): notice.details.urgent ? 2 : notice.details.reason == .reset ? 0 : 1
     }
   }
 
@@ -53,7 +65,7 @@ public enum IslandAlert: Equatable, Sendable {
     case .charging, .lowBattery, .lowPower, .airpods: IslandTiming.alertVisible
     // как peek календаря на старте: Peek duration 4 с (ui-inspection 3.5)
     case .calendarReminder: IslandTiming.calendarPeek
-    case .claude: IslandTiming.calendarPeek
+    case .claude, .codex: IslandTiming.calendarPeek
     case .soon: .seconds(5)
     }
   }
@@ -69,6 +81,7 @@ public enum IslandAlert: Equatable, Sendable {
     // допущение плана P1: звук события и на напоминаниях, не только на старте
     case .calendarReminder: .event
     case .claude(let notice): notice.sound
+    case .codex(let notice): notice.details.sound
     case .soon(let notice): notice.soundChannel == .island ? .event : nil
     }
   }

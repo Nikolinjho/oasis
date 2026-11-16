@@ -3,9 +3,10 @@ import Foundation
 import IslandCore
 
 @MainActor
-final class ClaudeSettings: ObservableObject {
+final class LimitsSettings: ObservableObject {
   var onChange: () -> Void = {}
   private let defaults: UserDefaults
+  private let namespace: String
   @Published var enabled: Bool { didSet { save(oldValue, enabled, "enabled") } }
   @Published var sessionWarning: Bool { didSet { save(oldValue, sessionWarning, "sessionWarning") } }
   @Published var thresholds: [Int] { didSet { save(oldValue, thresholds, "thresholds") } }
@@ -16,17 +17,18 @@ final class ClaudeSettings: ObservableObject {
   @Published var workdayEnd: Int { didSet { save(oldValue, workdayEnd, "workdayEnd") } }
   @Published var statuslineText: Bool { didSet { save(oldValue, statuslineText, "statuslineText") } }
 
-  init(defaults: UserDefaults) {
+  init(defaults: UserDefaults, namespace: String = "claude") {
+    self.namespace = namespace
     self.defaults = defaults
-    enabled = defaults.object(forKey: "claude.enabled") as? Bool ?? true
-    sessionWarning = defaults.object(forKey: "claude.sessionWarning") as? Bool ?? true
-    thresholds = defaults.array(forKey: "claude.thresholds") as? [Int] ?? [50, 25, 10, 5]
-    criticalSound = defaults.object(forKey: "claude.criticalSound") as? Bool ?? true
-    resetNotice = defaults.bool(forKey: "claude.resetNotice")
-    expandedView = defaults.object(forKey: "claude.expandedView") as? Bool ?? true
-    forecastUntilWorkday = defaults.bool(forKey: "claude.forecastUntilWorkday")
-    workdayEnd = defaults.object(forKey: "claude.workdayEnd") as? Int ?? 1200
-    statuslineText = defaults.object(forKey: "claude.statuslineText") as? Bool ?? true
+    enabled = defaults.object(forKey: "\(namespace).enabled") as? Bool ?? true
+    sessionWarning = defaults.object(forKey: "\(namespace).sessionWarning") as? Bool ?? true
+    thresholds = defaults.array(forKey: "\(namespace).thresholds") as? [Int] ?? [50, 25, 10, 5]
+    criticalSound = defaults.object(forKey: "\(namespace).criticalSound") as? Bool ?? true
+    resetNotice = defaults.bool(forKey: "\(namespace).resetNotice")
+    expandedView = defaults.object(forKey: "\(namespace).expandedView") as? Bool ?? true
+    forecastUntilWorkday = defaults.bool(forKey: "\(namespace).forecastUntilWorkday")
+    workdayEnd = defaults.object(forKey: "\(namespace).workdayEnd") as? Int ?? 1200
+    statuslineText = defaults.object(forKey: "\(namespace).statuslineText") as? Bool ?? true
   }
 
   var alertConfig: ClaudeAlertConfig {
@@ -41,7 +43,7 @@ final class ClaudeSettings: ObservableObject {
 
   private func save<T: Equatable>(_ old: T, _ new: T, _ key: String) {
     guard old != new else { return }
-    defaults.set(new, forKey: "claude." + key)
+    defaults.set(new, forKey: "\(namespace)." + key)
     onChange()
   }
 }

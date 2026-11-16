@@ -45,6 +45,7 @@ extension IslandStore {
     switch alert {
     case .soon: model.config.hideSoonPeekInFullscreen
     case .claude(let notice): !notice.urgent
+    case .codex(let notice): !notice.details.urgent
     default: false
     }
   }

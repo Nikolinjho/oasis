@@ -26,6 +26,8 @@ struct AlertView: View {
       ActivityCompactView(layout: ActivityLayouts.airpods(info), notchWidth: notchWidth)
     case .soon(let notice):
       SoonPeekView(notice: notice, notchWidth: notchWidth)
+    case .codex(let notice):
+      ActivityCompactView(layout: ActivityLayouts.codex(notice, calendar: .current), notchWidth: notchWidth)
     case .claude(let notice):
       ActivityCompactView(layout: ActivityLayouts.claude(notice, calendar: .current), notchWidth: notchWidth)
     }

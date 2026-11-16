@@ -333,7 +333,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func fullscreenChanged(_ m: inout IslandModel, _ on: Bool) -> [IslandEffect] {
     guard m.isFullscreen != on else { return [] }
     m.isFullscreen = on
-    let claudeEffects = on ? suppressNormalClaude(&m) + suppressSoonInFullscreen(&m) : []
+    let claudeEffects = on ? suppressNormalLimits(&m) + suppressSoonInFullscreen(&m) : []
     if let pending = m.pending, isRest(pending) { m.pending = m.base }
     switch m.surface {
     case .compact where on, .peek where on:
@@ -351,21 +351,20 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   }
 
   /// Обычный peek, уже ожидающий HUD или grow, не должен появиться после входа в fullscreen.
-  private static func suppressNormalClaude(_ m: inout IslandModel) -> [IslandEffect] {
-    m.alertQueue.removeAll(where: isNormalClaude)
-    if case .alert(let alert) = m.pending, isNormalClaude(alert) {
+  private static func suppressNormalLimits(_ m: inout IslandModel) -> [IslandEffect] {
+    m.alertQueue.removeAll(where: isNormalLimits)
+    if case .alert(let alert) = m.pending, isNormalLimits(alert) {
       m.pending = m.dequeueAlert().map(Surface.alert) ?? m.base
     }
-    if case .alert(let alert) = m.surface, isNormalClaude(alert), m.pending == nil {
-      m.heardAlerts.remove(.claude)
+    if case .alert(let alert) = m.surface, isNormalLimits(alert), m.pending == nil {
+      m.heardAlerts.remove(alert.kind)
       return [.cancel(.alertHide)] + hideAlert(&m)
     }
     return []
   }
 
-  private static func isNormalClaude(_ alert: IslandAlert) -> Bool {
-    if case .claude(let notice) = alert { return !notice.urgent }
-    return false
+  private static func isNormalLimits(_ alert: IslandAlert) -> Bool {
+    alert.limitsNotice.map { !$0.urgent } ?? false
   }
 
   private static func mediaCleared(_ m: inout IslandModel) -> [IslandEffect] {
@@ -492,7 +491,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   private static func alertArrived(  // swiftlint:disable:this cyclomatic_complexity - по case на поверхность
     _ m: inout IslandModel, _ alert: IslandAlert
   ) -> [IslandEffect] {
-    guard !m.isFullscreen || (!isNormalClaude(alert) && !(m.config.hideSoonPeekInFullscreen && isSoon(alert))) else { return [] }
+    guard !m.isFullscreen || (!isNormalLimits(alert) && !(m.config.hideSoonPeekInFullscreen && isSoon(alert))) else { return [] }
     // уведомление — активность, которую свайпом уже не удержать в вырезе
     m.dismissed = false
     // новое уведомление вида, вытесненного HUD, — новый показ со звуком
@@ -524,7 +523,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .alert(let current) where current.kind == alert.kind:
       m.surface = .alert(alert)
       return [.animate(.alertUpdate), .schedule(.alertHide, after: m.config.alerts.duration(for: alert))]
-        + claudeUpdateSound(from: current, to: alert, rules: m.config.alerts)
+        + limitsUpdateSound(from: current, to: alert, rules: m.config.alerts)
     case .alert, .hud:
       m.enqueue(alert)
       return []
@@ -541,8 +540,8 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
   }
 
   /// Новый критический порог звучит и при обновлении открытого peek. Повтор прежнего порога остаётся тихим.
-  private static func claudeUpdateSound(from current: IslandAlert, to next: IslandAlert, rules: AlertRules) -> [IslandEffect] {
-    guard case .claude(let previous) = current, case .claude(let notice) = next,
+  private static func limitsUpdateSound(from current: IslandAlert, to next: IslandAlert, rules: AlertRules) -> [IslandEffect] {
+    guard current.kind == next.kind, let previous = current.limitsNotice, let notice = next.limitsNotice,
       case .threshold(let threshold) = notice.reason, threshold <= 5, notice.urgent,
       notice.reason != previous.reason, let sound = rules.sound(for: next)
     else { return [] }

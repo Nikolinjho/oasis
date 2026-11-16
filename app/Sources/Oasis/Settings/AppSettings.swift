@@ -82,7 +82,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   private let defaults: UserDefaults
   /// Страница Calendar: свой объект в AppSettings+Calendar.swift, изменения идут в onChange
   let calendar: CalendarSettings
-  let claude: ClaudeSettings
+  let claude: LimitsSettings
   let soon: SoonSettings
 
   @Published var peekQueueStyle: PeekQueueStyle {
@@ -293,7 +293,7 @@ final class AppSettings: ObservableObject {  // swiftlint:disable:this type_body
   init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
     calendar = CalendarSettings(defaults: defaults)
-    claude = ClaudeSettings(defaults: defaults)
+    claude = LimitsSettings(defaults: defaults)
     soon = SoonSettings(defaults: defaults)
     peekQueueStyle = Self.readRaw(defaults, Key.peekQueueStyle, PeekQueueStyle.row)
     peekQueuePosition = Self.readRaw(defaults, Key.peekQueuePosition, PeekQueuePosition.left)

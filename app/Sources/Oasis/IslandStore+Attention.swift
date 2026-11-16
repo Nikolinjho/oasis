@@ -172,6 +172,7 @@ extension IslandStore {
         onSoonAction(.showList)
       }
     case .claude: send(.expandedViewRequested(.claude))
+    case .codex: send(.expandedViewRequested(.codex))
     default: onOpenSettings()
     }
   }
@@ -206,6 +207,9 @@ extension IslandStore {
       detail = "Наушники"
     case .claude:
       title = "Лимиты Claude Code"
+      detail = "Подписка"
+    case .codex:
+      title = "Лимиты Codex"
       detail = "Подписка"
     }
     let deadline = attention.deadlines[alert.kind]
