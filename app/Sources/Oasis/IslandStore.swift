@@ -13,6 +13,7 @@ final class IslandStore {
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
   private(set) var claudePanel: ClaudePanel?
+  private(set) var codexPanel: CodexLimitsPanel?
   private(set) var soonPanel: SoonPanel?
   @ObservationIgnored var attention = AttentionCoordinator()
   var attentionItems: [IslandAttention] = []
@@ -356,6 +357,11 @@ extension IslandStore {
     soonPanel = panel
     send(.soonViewAvailable(panel != nil))
   }
+  func applyCodex(_ panel: CodexLimitsPanel?) {
+    codexPanel = panel
+    send(.codexViewAvailable(panel != nil))
+  }
+
   func applyClaude(_ panel: ClaudePanel?) {
     claudePanel = panel
     send(.claudeViewAvailable(panel != nil))

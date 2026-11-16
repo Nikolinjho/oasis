@@ -12,6 +12,7 @@ public struct IslandView: View {
   let nowPlaying: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
+  let codex: CodexLimitsPanel?
   let soon: SoonPanel?
   let onSoonAction: (SoonAction) -> Void
   /// Отклонённые через Dismiss Event: стопка Duo их не показывает
@@ -38,6 +39,7 @@ public struct IslandView: View {
     model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
     agenda: DayAgenda = .empty,
     claude: ClaudePanel? = nil,
+    codex: CodexLimitsPanel? = nil,
     soon: SoonPanel? = nil,
     dismissedEvents: Set<String> = [],
     calendarEvent: CalendarEvent? = nil,
@@ -63,6 +65,7 @@ public struct IslandView: View {
     self.nowPlaying = nowPlaying
     self.agenda = agenda
     self.claude = claude
+    self.codex = codex
     self.soon = soon
     self.onSoonAction = onSoonAction
     self.dismissedEvents = dismissedEvents
@@ -181,7 +184,7 @@ public struct IslandView: View {
 
   private var expandedContent: some View {
     ExpandedContent(
-      view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude,
+      view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude, codex: codex,
       soon: soon, onSoonAction: onSoonAction, dismissedEvents: dismissedEvents,
       appearance: appearance,
       liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,

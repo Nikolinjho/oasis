@@ -20,7 +20,7 @@ extension IslandStore {
       expandedView: model.expandedView, navigation: model.config.dashboardNavigation)
     if model.surface == .expanded, model.expandedView == .overview || model.expandedView == .modules {
       spec.size = DashboardLayout(
-        media: mediaEnabled, calendar: calendarFilter.isEnabled, claude: claudePanel != nil,
+        media: mediaEnabled, calendar: calendarFilter.isEnabled, claude: claudePanel != nil, codex: codexPanel != nil,
         soon: soonPanel != nil, notchWidth: notch.width
       ).size(for: model.expandedView)
     }

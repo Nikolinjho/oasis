@@ -23,10 +23,10 @@ struct DashboardLayoutTests {
 
   @Test("Все сочетания модулей помещаются с учётом камеры, пустой каталог не содержит плиток")
   func combinations() {
-    for flags in 0..<16 {
+    for flags in 0..<32 {
       let layout = DashboardLayout(
         media: flags & 1 != 0, calendar: flags & 2 != 0, claude: flags & 4 != 0,
-        soon: flags & 8 != 0)
+        codex: flags & 16 != 0, soon: flags & 8 != 0)
       for view in [ExpandedView.overview, .modules] {
         let size = layout.size(for: view)
         #expect(size.width >= 345)
@@ -35,6 +35,7 @@ struct DashboardLayoutTests {
       }
       #expect(layout.moduleViews.contains(.duo) == (layout.media && layout.calendar))
       #expect(layout.moduleViews.contains(.claude) == layout.claude)
+      #expect(layout.moduleViews.contains(.codex) == layout.codex)
       if flags == 0 { #expect(layout.moduleViews.isEmpty) }
     }
     let wideNotch = DashboardLayout(media: false, calendar: false, claude: false, soon: false, notchWidth: 220)

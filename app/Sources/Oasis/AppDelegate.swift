@@ -10,13 +10,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   private let sounds = SoundPlayer()
   private let claudeConnection = ClaudeConnection(installer: .live)
   private let claudeLifecycle = ClaudeModuleLifecycle()
+  private lazy var codexLimits = CodexLimitsModule(store: store)
   private var liveSourcesEnabled = false
   private lazy var claude = ClaudeModule(
     store: store, settings: settings,
     directory: ClaudeFiles.directory(home: FileManager.default.homeDirectoryForCurrentUser))
   private lazy var soon = SoonAppIntegration(store: store, settings: settings)
   lazy var settingsWindow = SettingsWindowController(
-    settings: settings, claudeConnection: claudeConnection, soonModule: soon.module,
+    settings: settings, claudeConnection: claudeConnection, codexLimits: codexLimits, soonModule: soon.module,
     calendars: { [weak self] in self?.calendar.calendars() ?? [] },
     playSound: { [weak self] sound in self?.sounds.play(sound) })
   private var window: IslandWindowController?
@@ -94,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
     }
     liveSourcesEnabled = true
     soon.start(window: window)
+    codexLimits.start()
     applyClaudeSettings()
     startFullscreenMonitor()
     startSourceActivity()
@@ -107,6 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {  // swiftlint:disable
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    codexLimits.stop()
     soon.module.stop()
     claudeLifecycle.stop()
     claude.stop()

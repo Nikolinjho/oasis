@@ -5,6 +5,7 @@ struct OverviewView: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
+  let codex: CodexLimitsPanel?
   let soon: SoonPanel?
   let dismissedEvents: Set<String>
   let appearance: IslandAppearance
@@ -30,7 +31,27 @@ struct OverviewView: View {
               agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, compact: true,
               onOpen: { onSelectView(.calendar) }, onJoin: onJoin)
           }
-          if claude != nil { claudeSummary }
+          HStack(spacing: 10) {
+            if claude != nil { claudeSummary }
+            if let codex {
+              Button {
+                onSelectView(.codex)
+              } label: {
+                HStack(spacing: 8) {
+                  Image(systemName: "terminal").font(.system(size: 20))
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text(codexTitle(codex)).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+                    Text(codex.status == nil ? codex.freshness : "Лимиты недоступны")
+                      .font(.system(size: 10)).foregroundStyle(IslandPalette.secondary).lineLimit(1)
+                  }
+                  Spacer(minLength: 0)
+                  Image(systemName: "chevron.right").font(.system(size: 9))
+                }
+                .foregroundStyle(IslandPalette.foreground).frame(height: 30).contentShape(Rectangle())
+              }
+              .buttonStyle(.plain).help("Лимиты Codex")
+            }
+          }
         }
         .frame(width: 280, height: 164, alignment: .topLeading)
       }
@@ -88,12 +109,17 @@ struct OverviewView: View {
 
   private var layout: DashboardLayout {
     DashboardLayout(
-      media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil,
+      media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil, codex: codex != nil,
       soon: soon != nil, notchWidth: notchWidth)
   }
 
   private var showsMiddleColumn: Bool {
     layout.showsMiddleColumn
+  }
+
+  private func codexTitle(_ panel: CodexLimitsPanel) -> String {
+    guard let window = panel.limits?.buckets.first?.windows.first else { return "Codex" }
+    return "Codex · \(window.remaining)% осталось"
   }
 
 }

@@ -13,6 +13,7 @@ struct IslandRootView: View {
       nowPlaying: store.nowPlaying,
       agenda: store.agenda,
       claude: store.claudePanel,
+      codex: store.codexPanel,
       soon: store.soonPanel,
       dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,

@@ -5,18 +5,20 @@ public struct DashboardLayout: Equatable, Sendable {
   public let media: Bool
   public let calendar: Bool
   public let claude: Bool
+  public let codex: Bool
   public let soon: Bool
   public let notchWidth: CGFloat
 
-  public init(media: Bool, calendar: Bool, claude: Bool, soon: Bool, notchWidth: CGFloat = 185) {
+  public init(media: Bool, calendar: Bool, claude: Bool, codex: Bool = false, soon: Bool, notchWidth: CGFloat = 185) {
     self.media = media
     self.calendar = calendar
     self.claude = claude
+    self.codex = codex
     self.soon = soon
     self.notchWidth = notchWidth
   }
 
-  public var showsMiddleColumn: Bool { calendar || claude }
+  public var showsMiddleColumn: Bool { calendar || claude || codex }
 
   public var moduleViews: [ExpandedView] {
     var views: [ExpandedView] = []
@@ -24,6 +26,7 @@ public struct DashboardLayout: Equatable, Sendable {
     if media { views.append(.player) }
     if calendar { views.append(.calendar) }
     if claude { views.append(.claude) }
+    if codex { views.append(.codex) }
     if soon { views.append(.soon) }
     return views
   }

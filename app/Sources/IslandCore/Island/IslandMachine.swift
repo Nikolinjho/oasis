@@ -30,6 +30,7 @@ public enum IslandEvent: Equatable, Sendable {
   /// Свайп вниз по раскрытому: следующий вид
   case expandedViewCycled
   case claudeViewAvailable(Bool)
+  case codexViewAvailable(Bool)
   case soonViewAvailable(Bool)
   case expandedViewRequested(ExpandedView)
   /// Свайп вверх по компакту: активность уходит в форму выреза до смены активности или свайпа вниз
@@ -85,6 +86,7 @@ public struct IslandModel: Equatable, Sendable {
   /// Вид раскрытого. С чего начинается раскрытие, решает Idle Activity (ExpandedRules)
   public var expandedView: ExpandedView = .duo
   public var claudeViewAvailable = false
+  public var codexViewAvailable = false
   public var soonViewAvailable = false
   /// Последний просмотренный вид раскрытого: для Most Recent
   public var lastExpandedView: ExpandedView = .duo
@@ -246,6 +248,7 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     case .calendarStarted: calendarStarted(&model)
     case .expandedViewCycled: expandedViewCycled(&model)
     case .claudeViewAvailable(let available): claudeViewAvailable(&model, available)
+    case .codexViewAvailable(let available): codexViewAvailable(&model, available)
     case .soonViewAvailable(let available): soonViewAvailable(&model, available)
     case .expandedViewRequested(let view): expandedViewRequested(&model, view)
     case .activityDismissed: activityDismissed(&model)
@@ -635,10 +638,20 @@ public enum IslandMachine {  // swiftlint:disable:this type_body_length - ред
     return m.surface == .expanded ? [.animate(.viewSwap)] : []
   }
 
+  private static func codexViewAvailable(_ m: inout IslandModel, _ available: Bool) -> [IslandEffect] {
+    m.codexViewAvailable = available
+    guard !available else { return [] }
+    if m.lastExpandedView == .codex { m.lastExpandedView = m.config.dashboardNavigation ? .overview : .duo }
+    guard m.expandedView == .codex else { return [] }
+    m.expandedView = m.config.dashboardNavigation ? .overview : .duo
+    return m.surface == .expanded ? [.animate(.viewSwap)] : []
+  }
+
   private static func unavailableViews(_ m: IslandModel) -> Set<ExpandedView> {
     var hidden: Set<ExpandedView> = []
     if !m.config.dashboardNavigation { hidden.formUnion([.overview, .modules]) }
     if !m.claudeViewAvailable { hidden.insert(.claude) }
+    if !m.codexViewAvailable { hidden.insert(.codex) }
     if !m.soonViewAvailable { hidden.insert(.soon) }
     return hidden
   }

@@ -6,6 +6,24 @@ import Testing
 
 @MainActor
 struct IslandStoreDashboardTests {
+  @Test("Codex остаётся доступным без данных, отключение возвращает в обзор")
+  func codexLimitsAvailability() {
+    let store = IslandStore()
+    store.applyCodex(CodexLimitsPanel(status: "Соединение недоступно"))
+    store.selectExpandedView(.codex)
+    #expect(store.model.surface == .expanded)
+    #expect(store.model.expandedView == .codex)
+    #expect(store.codexPanel?.limits == nil)
+    #expect(store.navigateBack())
+    #expect(store.model.expandedView == .modules)
+    store.selectExpandedView(.codex)
+    store.applyCodex(nil)
+    #expect(store.model.expandedView == .overview)
+    #expect(store.model.lastExpandedView == .overview)
+    store.selectExpandedView(.codex)
+    #expect(store.model.expandedView == .overview)
+  }
+
   @Test("Отключение Soon сразу сужает форму обзора и её область клика")
   func disablingSoonResizesIsland() {
     let store = IslandStore()

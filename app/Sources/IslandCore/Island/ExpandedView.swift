@@ -2,7 +2,7 @@
 /// rawValue — ключ в UserDefaults: последний вид для Most Recent переживает перезапуск
 public enum ExpandedView: String, CaseIterable, Hashable, Sendable {
   case duo, player, calendar, claude, soon
-  case overview, modules
+  case overview, modules, codex
 
   public var backTarget: ExpandedView? {
     switch self {

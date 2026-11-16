@@ -5,6 +5,7 @@ struct ModulesView: View {
   let mediaEnabled: Bool
   let calendarEnabled: Bool
   let claudeAvailable: Bool
+  let codexAvailable: Bool
   let soonAvailable: Bool
   let onSelectView: (ExpandedView) -> Void
   var notchWidth: CGFloat = 185
@@ -17,6 +18,7 @@ struct ModulesView: View {
       if mediaEnabled { tile("Музыка", subtitle: "Плеер", symbol: "music.note", view: .player) }
       if calendarEnabled { tile("Календарь", subtitle: "События и месяц", symbol: "calendar", view: .calendar) }
       if claudeAvailable { tile("Claude Code", subtitle: "Лимиты подписки", symbol: "sparkle", view: .claude) }
+      if codexAvailable { tile("Codex", subtitle: "Лимиты подписки", symbol: "terminal", view: .codex) }
       if soonAvailable { tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon) }
     }
     .padding(.horizontal, 24)
@@ -25,7 +27,7 @@ struct ModulesView: View {
 
   private var layout: DashboardLayout {
     DashboardLayout(
-      media: mediaEnabled, calendar: calendarEnabled, claude: claudeAvailable,
+      media: mediaEnabled, calendar: calendarEnabled, claude: claudeAvailable, codex: codexAvailable,
       soon: soonAvailable, notchWidth: notchWidth)
   }
 

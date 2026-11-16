@@ -7,6 +7,7 @@ struct ExpandedContent: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var claude: ClaudePanel?
+  var codex: CodexLimitsPanel?
   var soon: SoonPanel?
   var onSoonAction: (SoonAction) -> Void = { _ in }
   var dismissedEvents: Set<String> = []
@@ -44,7 +45,7 @@ struct ExpandedContent: View {
       switch view {
       case .overview:
         OverviewView(
-          info: info, agenda: agenda, claude: claude, soon: soon, dismissedEvents: dismissedEvents,
+          info: info, agenda: agenda, claude: claude, codex: codex, soon: soon, dismissedEvents: dismissedEvents,
           appearance: appearance, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
           onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
           onSelectView: onSelectView, notchWidth: notchWidth
@@ -53,7 +54,7 @@ struct ExpandedContent: View {
       case .modules:
         ModulesView(
           mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
-          claudeAvailable: claude != nil,
+          claudeAvailable: claude != nil, codexAvailable: codex != nil,
           soonAvailable: soon != nil, onSelectView: onSelectView, notchWidth: notchWidth
         )
         .transition(contentTransition)
@@ -71,6 +72,10 @@ struct ExpandedContent: View {
         if let claude {
           ClaudeLimitsView(panel: claude)
             .transition(contentTransition)
+        }
+      case .codex:
+        if let codex {
+          CodexLimitsView(panel: codex).transition(contentTransition)
         }
       case .soon:
         if let soon {
@@ -108,7 +113,7 @@ struct ExpandedContent: View {
   private var size: CGSize {
     if view == .overview || view == .modules {
       return DashboardLayout(
-        media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil,
+        media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil, codex: codex != nil,
         soon: soon != nil, notchWidth: notchWidth
       ).size(for: view)
     }
