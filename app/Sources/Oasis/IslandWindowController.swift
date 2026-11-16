@@ -36,7 +36,6 @@ final class IslandWindowController {
   /// General → Gestures → Natural movement: источник знака dy у свайпа (swipeInput)
   var naturalMovement = true
   private var composerActive = false
-  private lazy var agentInput = ClaudeAgentInputController(store: store)
   private var scrollHandler = IslandScrollHandler()
   var onComposerSurfaceChange: (Surface) -> Void = { _ in }
 
@@ -96,16 +95,6 @@ final class IslandWindowController {
 
   // swiftlint:disable:next function_body_length - мониторы событий одним списком, порядок установки виден целиком
   private func installMonitors() {
-    if let keyboard = NSEvent.addLocalMonitorForEvents(
-      matching: .keyDown,
-      handler: { [weak self] event in
-        guard let self, event.window === panel, agentInput.active, event.keyCode == 53 else { return event }
-        store.onAgentsAction(.close)
-        return nil
-      })
-    {
-      monitors.append(keyboard)
-    }
     let moves: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged]
     if let global = NSEvent.addGlobalMonitorForEvents(
       matching: moves,
@@ -223,8 +212,7 @@ final class IslandWindowController {
     let zone: IslandGeometry.SafeZone? =
       store.model.surface == .expanded ? (store.appearance.progressiveBlur ? .blurred : .plain) : nil
     let inside =
-      agentInput.active
-      || IslandGeometry.pointerInside(
+      IslandGeometry.pointerInside(
         point, body: body, island: island, openedFrom: hoverOpenedFrom, expandedSafeZone: zone)
     guard inside != pointerInside else { return }
     guard inside || Self.shouldSendHoverExit(pointerInside: inside, buttonDown: leftButtonDown, dragStartedInside: dragStartedInside)
@@ -264,7 +252,6 @@ final class IslandWindowController {
   /// и остров стоит закрытым, пока курсор не уйдёт и не вернётся
   private func surfaceChanged() {
     retainNavigationRegion()
-    agentInput.surfaceChanged(store.model.surface)
     if composerActive {
       if case .hud = store.model.surface { panel?.orderFrontRegardless() } else { panel?.orderOut(nil) }
       onComposerSurfaceChange(store.model.surface)
@@ -295,8 +282,6 @@ extension IslandWindowController {
       expandedRegion = nil
     }
   }
-
-  func setAgentInputActive(_ active: Bool) { agentInput.setActive(active, panel: panel) }
 
   var composerFrame: CGRect {
     panel?.frame ?? CGRect(x: 400, y: 400, width: 624, height: 320)

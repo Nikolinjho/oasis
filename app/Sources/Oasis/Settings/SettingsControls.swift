@@ -22,9 +22,7 @@ struct SettingsIcon: View {
   let side: CGFloat
 
   var body: some View {
-    if page == .codex {
-      CodexIcon().frame(width: side, height: side)
-    } else if page == .soon {
+    if page == .soon {
       SoonIcon().frame(width: side, height: side)
     } else {
       RoundedRectangle(cornerRadius: side * 0.26, style: .continuous)

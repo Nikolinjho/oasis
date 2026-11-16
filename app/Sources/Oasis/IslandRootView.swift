@@ -13,8 +13,6 @@ struct IslandRootView: View {
       nowPlaying: store.nowPlaying,
       agenda: store.agenda,
       claude: store.claudePanel,
-      agents: store.agentsWithAttention, onAgentsAction: store.onAgentsAction,
-      codex: store.codexWithAttention, onCodexAction: store.onCodexAction, inboxProvider: store.attentionInboxProvider,
       soon: store.soonPanel,
       dismissedEvents: store.dismissedEvents,
       calendarEvent: store.calendarEvent,
@@ -30,7 +28,6 @@ struct IslandRootView: View {
       mediaEnabled: store.mediaEnabled, calendarEnabled: store.calendarFilter.isEnabled,
       onSelectView: store.selectExpandedView,
       onOpenSettings: {
-        store.performAgentAction(.close, provider: store.activeAgentsPanel.provider)
         store.onOpenSettings()
       },
       contentSpec: store.contentSpec,

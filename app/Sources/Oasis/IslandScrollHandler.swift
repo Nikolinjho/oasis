@@ -20,7 +20,7 @@ struct IslandScrollHandler {
       store.backSwipe.reset()
       backTracker = SwipeTracker(
         tracksBack: store.model.surface == .expanded
-          && (store.config.dashboardNavigation || store.model.expandedView.isAgents || store.model.expandedView == .inbox))
+          && store.config.dashboardNavigation)
     }
     // Возврат следует за пальцами, независимо от Natural movement и системной настройки прокрутки.
     let direction: CGFloat = event.isDirectionInvertedFromDevice ? 1 : -1
@@ -69,7 +69,6 @@ struct IslandScrollHandler {
   private func pointerOverList(panel: NotchPanel, store: IslandStore) -> Bool {
     guard store.model.surface == .expanded else { return false }
     let pointer = NSEvent.mouseLocation
-    if store.model.expandedView.isAgents || store.model.expandedView == .inbox { return true }
     if store.model.expandedView == .soon {
       let header: CGFloat = store.config.dashboardNavigation ? ExpandedLayout.headerHeight : 0
       return pointer.y < panel.frame.maxY - 54 - header

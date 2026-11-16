@@ -1,17 +1,13 @@
 /// Виды раскрытого острова. Обзор и каталог открывают модули без последовательного листания.
 /// rawValue — ключ в UserDefaults: последний вид для Most Recent переживает перезапуск
 public enum ExpandedView: String, CaseIterable, Hashable, Sendable {
-  case duo, player, calendar, claude, soon, agents
-  case overview, modules, inbox
-  case codexAgents
-
-  public var isAgents: Bool { self == .agents || self == .codexAgents }
+  case duo, player, calendar, claude, soon
+  case overview, modules
 
   public var backTarget: ExpandedView? {
     switch self {
     case .overview: nil
     case .modules: .overview
-    case .claude, .inbox: .agents
     default: .modules
     }
   }

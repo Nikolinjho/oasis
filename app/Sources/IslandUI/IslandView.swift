@@ -12,11 +12,6 @@ public struct IslandView: View {
   let nowPlaying: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
-  let agents: ClaudeAgentsPanel
-  let onAgentsAction: (ClaudeAgentsAction) -> Void
-  let codex: ClaudeAgentsPanel
-  let onCodexAction: (ClaudeAgentsAction) -> Void
-  let inboxProvider: AgentProvider
   let soon: SoonPanel?
   let onSoonAction: (SoonAction) -> Void
   /// Отклонённые через Dismiss Event: стопка Duo их не показывает
@@ -43,11 +38,6 @@ public struct IslandView: View {
     model: IslandModel, spec: IslandShapeSpec, notchWidth: CGFloat, nowPlaying: NowPlayingInfo?,
     agenda: DayAgenda = .empty,
     claude: ClaudePanel? = nil,
-    agents: ClaudeAgentsPanel = .init(),
-    onAgentsAction: @escaping (ClaudeAgentsAction) -> Void = { _ in },
-    codex: ClaudeAgentsPanel = .init(provider: .codex),
-    onCodexAction: @escaping (ClaudeAgentsAction) -> Void = { _ in },
-    inboxProvider: AgentProvider = .claude,
     soon: SoonPanel? = nil,
     dismissedEvents: Set<String> = [],
     calendarEvent: CalendarEvent? = nil,
@@ -73,11 +63,6 @@ public struct IslandView: View {
     self.nowPlaying = nowPlaying
     self.agenda = agenda
     self.claude = claude
-    self.agents = agents
-    self.onAgentsAction = onAgentsAction
-    self.inboxProvider = inboxProvider
-    self.codex = codex
-    self.onCodexAction = onCodexAction
     self.soon = soon
     self.onSoonAction = onSoonAction
     self.dismissedEvents = dismissedEvents
@@ -123,17 +108,6 @@ public struct IslandView: View {
           ContrastOutline.isVisible(surface: model.surface, enabled: appearance.contrastOutline, backdropDark: backdropDark) ? 1 : 0
         )
         .animation(.easeInOut(duration: 0.2), value: backdropDark)
-      if model.expandedView.isAgents {
-        expandedContent
-          .modifier(BackSwipeDrag(offset: backSwipeOffset))
-          .transition(animatesBackNavigation ? .swipeBack(timeScale: model.config.timeScale) : .identity)
-          .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
-          .clipShape(IslandShape(spec: spec, shoulder: 0))
-          .blur(radius: dragBlurred ? 8 : 0)
-          .opacity(model.surface == .expanded ? (dragBlurred ? 0.6 : 1) : 0)
-          .allowsHitTesting(model.surface == .expanded)
-          .accessibilityHidden(model.surface != .expanded)
-      }
       content
         .modifier(OpenScale(size: spec.size, target: spec.size, scalesContent: model.surface == .expanded))
         .clipShape(IslandShape(spec: spec, shoulder: 0))
@@ -159,48 +133,30 @@ public struct IslandView: View {
     switch model.surface {
     // отклик на hover в той же ветке: вью музыки не пересоздаётся и не играет переход
     case .compact, .peek, .hoverNudge(from: .compact), .hoverNudge(from: .peek):
-      Group {
-        if waitingCount > 0 {
-          SharedActivityCompactView(
-            agents: agents, codex: codex, music: model.showsMedia ? nowPlaying : nil,
-            event: model.calendarLive ? calendarEvent : nil, notchWidth: notchWidth, height: liveSize.height, appearance: appearance,
-            onSelect: onSelectView)
-        } else {
-          MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: liveSurface == .peek, appearance: appearance)
-        }
-      }
-      // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
-      // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку.
-      // В отклике рамка исходного состояния: форма расширяется вокруг контента, он не сдвигается
-      .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
-      .id(IslandContentID.music)
-      .transition(.slot)
+      MusicLiveView(info: nowPlaying, notchWidth: notchWidth, showsTitle: liveSurface == .peek, appearance: appearance)
+        // рамка итогового размера, а не текущей формы: обложка и волна стоят на своих местах
+        // и открываются маской формы, а не едут вместе с её краями. Уходящий вью держит свою рамку.
+        // В отклике рамка исходного состояния: форма расширяется вокруг контента, он не сдвигается
+        .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
+        .id(IslandContentID.music)
+        .transition(.slot)
     case .calendar, .calendarPeek, .hoverNudge(from: .calendar), .hoverNudge(from: .calendarPeek):
-      Group {
-        if waitingCount > 0 {
-          SharedActivityCompactView(
-            agents: agents, codex: codex, music: model.showsMedia ? nowPlaying : nil,
-            event: calendarEvent, notchWidth: notchWidth, height: liveSize.height, appearance: appearance, onSelect: onSelectView)
-        } else {
-          CalendarLiveView(
-            event: calendarEvent, music: model.showsMedia ? nowPlaying : nil,
-            showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth, appearance: appearance)
-        }
-      }
+      CalendarLiveView(
+        event: calendarEvent, music: model.showsMedia ? nowPlaying : nil,
+        showsLine: liveSurface == .calendarPeek, notchWidth: notchWidth, appearance: appearance
+      )
       // как у музыки: рамка итогового размера, контент открывается маской формы
       .frame(width: liveSize.width, height: liveSize.height, alignment: .top)
       .id(IslandContentID.calendar)
       .transition(.slot)
     case .expanded:
       // calendarEvent store хранит и после закрытия окна: в Duo оно идёт, только пока окно открыто
-      if !model.expandedView.isAgents {
-        expandedContent
-          .modifier(BackSwipeDrag(offset: backSwipeOffset))
-          .id(IslandContentID.expanded)
-          .transition(
-            animatesBackNavigation
-              ? .swipeBack(timeScale: model.config.timeScale) : .playerEntrance(timeScale: model.config.timeScale))
-      }
+      expandedContent
+        .modifier(BackSwipeDrag(offset: backSwipeOffset))
+        .id(IslandContentID.expanded)
+        .transition(
+          animatesBackNavigation
+            ? .swipeBack(timeScale: model.config.timeScale) : .playerEntrance(timeScale: model.config.timeScale))
     case .hud(let kind, let level):
       HUDView(kind: kind, level: level, notchWidth: notchWidth, appearance: appearance.hud(kind), deviceSymbol: appearance.output.symbol)
         // как у музыки: в узкой рамке растущей формы подпись переносилась на две строки
@@ -208,7 +164,7 @@ public struct IslandView: View {
         .id(IslandContentID.hud(kind))
         .transition(.slot)
     case .alert(let alert):
-      AlertView(alert: alert, notchWidth: notchWidth, battery: appearance.battery, agents: agents, codex: codex)
+      AlertView(alert: alert, notchWidth: notchWidth, battery: appearance.battery)
         // как у HUD: рамка текущей формы, контент разъезжается вместе с краями
         .frame(width: contentSpec.size.width, height: contentSpec.size.height, alignment: .top)
         .id(IslandContentID.alert)
@@ -223,13 +179,9 @@ public struct IslandView: View {
     }
   }
 
-  private var waitingCount: Int { agents.waitingCount + codex.waitingCount }
-
   private var expandedContent: some View {
     ExpandedContent(
-      view: model.expandedView, agents: agents, onAgentsAction: onAgentsAction, codex: codex, onCodexAction: onCodexAction,
-      inboxProvider: inboxProvider,
-      info: nowPlaying, agenda: agenda, claude: claude,
+      view: model.expandedView, info: nowPlaying, agenda: agenda, claude: claude,
       soon: soon, onSoonAction: onSoonAction, dismissedEvents: dismissedEvents,
       appearance: appearance,
       liveEvent: model.calendarLive ? calendarEvent : nil, volume: volume,
@@ -243,12 +195,7 @@ public struct IslandView: View {
 
   private func islandClicked() {
     if model.surface == .expanded, model.config.dashboardNavigation { return }
-    if model.surface == .expanded, model.expandedView.isAgents { return }
     if model.surface == .expanded, model.expandedView == .soon { return }
-    if case .alert(.claudeRequest(let id)) = model.surface {
-      if id.agent.provider == AgentProvider.codex.rawValue { onCodexAction(.openRequest(id)) } else { onAgentsAction(.openRequest(id)) }
-      return
-    }
     if case .alert(.soon(let notice)) = model.surface {
       guard notice.reminderIDs.count == 1,
         let reminder = soon?.reminders.first(where: { $0.occurrenceID == notice.occurrenceID })
@@ -258,12 +205,6 @@ public struct IslandView: View {
       }
       onSoonAction(.open(id: reminder.id, revision: reminder.revision))
       return
-    }
-    if waitingCount > 0 {
-      switch model.surface {
-      case .compact, .peek, .calendar, .calendarPeek, .hoverNudge: return
-      default: break
-      }
     }
     onClick()
   }
@@ -296,15 +237,10 @@ extension IslandView {
 
   private var liveSize: CGSize {
     let notch = CGSize(width: notchWidth, height: contentSpec.size.height)
-    var size = IslandGeometry.spec(
+    let size = IslandGeometry.spec(
       for: liveSurface, hasMedia: model.hasMedia, notch: notch, calendarIndicatorWidth: Self.calendarIndicatorWidth,
       reminderIndicatorWidth: Self.reminderIndicatorWidth, calendarWithMusic: model.showsMedia
     ).size
-    if waitingCount > 0 {
-      size.width = ActivityComposition.width(
-        notchWidth: notchWidth, calendar: model.calendarLive, music: model.showsMedia,
-        agentProviders: [agents, codex].filter { $0.waitingCount > 0 }.count)
-    }
     return size
   }
 

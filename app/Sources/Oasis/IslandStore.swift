@@ -12,13 +12,6 @@ final class IslandStore {
   private(set) var model: IslandModel
   /// Трек источника с ещё не подтверждёнными кликами Shuffle/Repeat поверх (playbackModes)
   private(set) var nowPlaying: NowPlayingInfo?
-  var agentsPanel = ClaudeAgentsPanel()
-  var codexPanel = ClaudeAgentsPanel(provider: .codex)
-  var showAttentionInbox = false
-  var attentionInboxProvider = AgentProvider.claude
-  var agentInputActive = false
-  @ObservationIgnored var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
-  @ObservationIgnored var onCodexAction: (ClaudeAgentsAction) -> Void = { _ in }
   private(set) var claudePanel: ClaudePanel?
   private(set) var soonPanel: SoonPanel?
   @ObservationIgnored var attention = AttentionCoordinator()
@@ -237,7 +230,6 @@ final class IslandStore {
     }
 
     execute(effects)
-    markPresentedRequest()
     if let restore = restoreAttentionAfterHUD(event) {
       send(.expandedViewRequested(restore))
       return

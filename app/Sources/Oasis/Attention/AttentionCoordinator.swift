@@ -12,7 +12,6 @@ struct AttentionCoordinator {
   var deferred: [DeferredAttention] = []
   var retracted: Set<IslandAlert.Kind> = []
   var deadlines: [IslandAlert.Kind: Date] = [:]
-  var openedRequests: Set<ClaudeRequestID> = []
   var calendarEvents: [CalendarEvent] = []
   var knownCalendarIDs: Set<String> = []
   var musicPeekUntil: Date?

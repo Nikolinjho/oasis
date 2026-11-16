@@ -3,15 +3,8 @@ import IslandCore
 
 extension IslandStore {
   var protectsAttention: Bool {
-    attention.soonEditing || agentInputActive || !attention.leases.isEmpty || attention.restoreView != nil
+    attention.soonEditing || !attention.leases.isEmpty || attention.restoreView != nil
       || protectsExpanded(model)
-  }
-
-  var agentsWithAttention: ClaudeAgentsPanel {
-    var snapshot = agentsPanel
-    snapshot.attention = attentionItems
-    snapshot.showsInbox = showAttentionInbox
-    return snapshot
   }
 
   @discardableResult
@@ -29,9 +22,8 @@ extension IslandStore {
 
   func protectsExpanded(_ state: IslandModel) -> Bool {
     state.surface == .expanded
-      && (state.expandedView.isAgents
-        || (state.config.dashboardNavigation
-          && state.expandedView != .overview && state.expandedView != .modules))
+      && state.config.dashboardNavigation
+      && state.expandedView != .overview && state.expandedView != .modules
   }
 
   func deferAttention(_ event: IslandEvent) -> Bool {
@@ -104,7 +96,7 @@ extension IslandStore {
   func protectQueuedAttention(_ next: inout IslandModel) {
     guard
       protectsExpanded(next) || attention.restoreView != nil || attention.soonEditing
-        || agentInputActive || !attention.leases.isEmpty
+        || !attention.leases.isEmpty
     else { return }
     for alert in next.alertQueue {
       deferAlert(alert, heard: next.heardAlerts.contains(alert.kind))
@@ -145,19 +137,6 @@ extension IslandStore {
     return false
   }
 
-  func markPresentedRequest() {
-    guard model.surface == .expanded, model.expandedView.isAgents,
-      !showAttentionInbox, let id = activeAgentsPanel.selectedRequestID
-    else { return }
-    attention.openedRequests.insert(id)
-    for index in attentionItems.indices {
-      if case .alert(.claudeRequest(let requestID)) = attentionItems[index].source, requestID == id {
-        attentionItems[index].unread = false
-      }
-    }
-    attention.deferred.removeAll { $0.alert.kind == .claudeRequest(id) }
-  }
-
   private func deferAlert(_ alert: IslandAlert, heard: Bool = false) {
     attention.deferred.removeAll { $0.alert.kind == alert.kind }
     attention.deferred.append(.init(alert: alert, heard: heard))
@@ -172,16 +151,9 @@ extension IslandStore {
   func openAttention(_ id: UUID) {
     guard let index = attentionItems.firstIndex(where: { $0.id == id }) else { return }
     refreshAttention()
-    let historicalRequest: Bool
-    if case .alert(.claudeRequest(let requestID)) = attentionItems[index].source {
-      historicalRequest = agentPanel(for: requestID).requests.contains { $0.id == requestID }
-    } else {
-      historicalRequest = false
-    }
-    guard attentionItems[index].active || historicalRequest else { return }
+    guard attentionItems[index].active else { return }
     attentionItems[index].unread = false
     let item = attentionItems[index]
-    showAttentionInbox = false
     switch item.source {
     case .music: send(.expandedViewRequested(.player))
     case .calendar: send(.expandedViewRequested(.calendar))
@@ -192,10 +164,6 @@ extension IslandStore {
 
   private func openAlertAttention(_ alert: IslandAlert) {
     switch alert {
-    case .claudeRequest(let requestID):
-      let provider = agentPanel(for: requestID).provider
-      performAgentAction(.selectRequest(requestID), provider: provider)
-      send(.expandedViewRequested(provider.view))
     case .calendarReminder: send(.expandedViewRequested(.calendar))
     case .soon(let notice):
       if let reminder = soonPanel?.reminders.first(where: { $0.occurrenceID == notice.occurrenceID }) {
@@ -218,14 +186,6 @@ extension IslandStore {
     let title: String
     let detail: String
     switch alert {
-    case .claudeRequest(let id):
-      let panel = agentPanel(for: id)
-      let request = panel.requests.first { $0.id == id }
-      title =
-        request?.kind == .permission
-        ? "Разрешение: \(request?.toolName ?? panel.provider.shortTitle)"
-        : request?.questions.first?.text ?? "\(panel.provider.shortTitle) спрашивает"
-      detail = panel.agents.first { $0.id == id.agent }?.project ?? panel.provider.title
     case .calendarReminder(let reminder):
       title = reminder.title
       detail = "Через \(reminder.minutes) мин"

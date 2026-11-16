@@ -4,11 +4,6 @@ import SwiftUI
 /// Контент раскрытого по виду. Смена вида — только контент: старый гаснет в блюр, новый проявляется (ui-inspection 3.7)
 struct ExpandedContent: View {
   let view: ExpandedView
-  var agents = ClaudeAgentsPanel()
-  var onAgentsAction: (ClaudeAgentsAction) -> Void = { _ in }
-  var codex = ClaudeAgentsPanel(provider: .codex)
-  var onCodexAction: (ClaudeAgentsAction) -> Void = { _ in }
-  var inboxProvider = AgentProvider.claude
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   var claude: ClaudePanel?
@@ -33,13 +28,11 @@ struct ExpandedContent: View {
   var body: some View {
     ZStack(alignment: .top) {
       content
-        .padding(.top, (navigation || view.isAgents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
-      if navigation || view.isAgents || view == .inbox {
+        .padding(.top, navigation ? ExpandedLayout.headerHeight : 0)
+      if navigation {
         ExpandedNavigation(
           view: view, width: size.width, notchWidth: notchWidth,
-          onSelectView: onSelectView, onOpenSettings: onOpenSettings, waitingCount: activePanel.waitingCount,
-          attentionCount: agents.attention.filter { $0.active && $0.unread }.count,
-          onFilterWaiting: { activeAction(.filterWaiting(true)) },
+          onSelectView: onSelectView, onOpenSettings: onOpenSettings,
           onBack: backAction, backDestination: backTitle)
       }
     }
@@ -51,16 +44,17 @@ struct ExpandedContent: View {
       switch view {
       case .overview:
         OverviewView(
-          info: info, agenda: agenda, claude: claude, agents: agents, codex: codex, soon: soon, dismissedEvents: dismissedEvents,
+          info: info, agenda: agenda, claude: claude, soon: soon, dismissedEvents: dismissedEvents,
           appearance: appearance, mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
           onAction: onAction, onJoin: onJoin, onSoonAction: onSoonAction,
-          onSelectView: onSelectView, onOpenSettings: onOpenSettings
+          onSelectView: onSelectView, notchWidth: notchWidth
         )
         .transition(contentTransition)
       case .modules:
         ModulesView(
           mediaEnabled: mediaEnabled, calendarEnabled: calendarEnabled,
-          claudeAvailable: claude != nil, soonAvailable: soon != nil, onSelectView: onSelectView
+          claudeAvailable: claude != nil,
+          soonAvailable: soon != nil, onSelectView: onSelectView, notchWidth: notchWidth
         )
         .transition(contentTransition)
       case .duo:
@@ -73,15 +67,6 @@ struct ExpandedContent: View {
         PlayerView(info: info, appearance: appearance, volume: volume, showsVolumeRow: showsVolumeRow, onAction: onAction)
           .frame(width: DuoLayout.size.width, height: contentHeight, alignment: .top)
           .transition(contentTransition)
-      case .inbox:
-        AttentionInboxView(panel: agents, onAction: onAgentsAction)
-          .transition(contentTransition)
-      case .agents, .codexAgents:
-        ClaudeAgentsView(
-          panel: activePanel, onAction: activeAction, onOpenSettings: onOpenSettings, context: liveEvent, music: info,
-          soonCount: soon?.reminders.filter { $0.state != .completed }.count ?? 0, onJoin: onJoin
-        )
-        .transition(contentTransition)
       case .claude:
         if let claude {
           ClaudeLimitsView(panel: claude)
@@ -108,7 +93,6 @@ struct ExpandedContent: View {
   }
 
   private var backAction: (() -> Void)? {
-    if view == .inbox { return { onSelectView(inboxProvider.view) } }
     if view == .soon && soon?.selected != nil { return { onSoonAction(.showList) } }
     return nil
   }
@@ -118,21 +102,21 @@ struct ExpandedContent: View {
   }
 
   private var backTitle: String? {
-    if view == .inbox { return inboxProvider.title }
-    return view == .soon && soon?.selected != nil ? "Soon" : nil
+    view == .soon && soon?.selected != nil ? "Soon" : nil
   }
 
-  private var activePanel: ClaudeAgentsPanel { view == .codexAgents ? codex : agents }
-  private var activeAction: (ClaudeAgentsAction) -> Void { view == .codexAgents ? onCodexAction : onAgentsAction }
-
   private var size: CGSize {
-    view.isAgents
-      ? CGSize(width: activePanel.width, height: activePanel.height)
-      : ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
+    if view == .overview || view == .modules {
+      return DashboardLayout(
+        media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil,
+        soon: soon != nil, notchWidth: notchWidth
+      ).size(for: view)
+    }
+    return ExpandedLayout.size(for: view, navigation: navigation, volumeRow: view == .player && showsVolumeRow)
   }
 
   private var contentHeight: CGFloat {
-    size.height - ((navigation || view.isAgents || view == .inbox) ? ExpandedLayout.headerHeight : 0)
+    size.height - (navigation ? ExpandedLayout.headerHeight : 0)
   }
 }
 

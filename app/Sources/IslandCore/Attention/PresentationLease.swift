@@ -2,7 +2,6 @@ import Foundation
 
 public struct PresentationLease: Equatable, Sendable {
   public enum Owner: Hashable, Sendable {
-    case agents(ClaudeRequestID?)
     case soonComposer
     case expanded(ExpandedView)
   }

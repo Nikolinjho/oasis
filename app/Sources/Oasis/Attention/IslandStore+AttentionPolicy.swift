@@ -4,8 +4,6 @@ import IslandCore
 extension IslandStore {
   func peekDeadline(_ alert: IslandAlert, now: Date = Date()) -> Date {
     switch alert {
-    case .claudeRequest(let id):
-      return agentPanel(for: id).requests.first { $0.id == id }?.deadline ?? now
     case .calendarReminder(let reminder):
       return eventForAttention(reminder.eventID)?.start ?? now.addingTimeInterval(Double(reminder.minutes) * 60)
     case .soon(let notice):
@@ -20,13 +18,10 @@ extension IslandStore {
     if forPeek {
       if model.isFullscreen && isSuppressedInFullscreen(alert) { return false }
       if let deadline = attention.deadlines[alert.kind], deadline <= now {
-        guard case .claudeRequest = alert else { return false }
+        return false
       }
     }
     switch alert {
-    case .claudeRequest(let id):
-      return (!forPeek || !attention.openedRequests.contains(id))
-        && agentPanel(for: id).waiting.contains { $0.id == id }
     case .calendarReminder(let reminder):
       return calendarReminderEligible(reminder, now: now)
     case .soon(let notice):
@@ -50,26 +45,11 @@ extension IslandStore {
     switch alert {
     case .soon: model.config.hideSoonPeekInFullscreen
     case .claude(let notice): !notice.urgent
-    case .claudeRequest: true
     default: false
     }
   }
 
   func refreshAttention(now: Date = Date()) {
-    let retainedRequests = Set(allAgentRequests.map(\.id)).union(
-      attentionItems.compactMap { item in
-        if case .alert(.claudeRequest(let id)) = item.source { return id }
-        return nil
-      })
-    attention.openedRequests.formIntersection(retainedRequests)
-    attention.deadlines = attention.deadlines.filter { kind, _ in
-      if case .claudeRequest(let id) = kind { return retainedRequests.contains(id) }
-      return true
-    }
-    attention.retracted = attention.retracted.filter { kind in
-      if case .claudeRequest(let id) = kind { return retainedRequests.contains(id) }
-      return true
-    }
     for index in attentionItems.indices {
       switch attentionItems[index].source {
       case .alert(let alert):
@@ -86,7 +66,6 @@ extension IslandStore {
 
   func prepareAttention(_ next: inout IslandModel) -> [IslandEffect] {
     refreshAttention()
-    markPresentedRequest()
     next.alertQueue.removeAll { !eligible($0) }
     next.heardAlerts = next.heardAlerts.filter { kind in
       isQueuedOrPending(kind, in: next)

@@ -7,25 +7,30 @@ struct ModulesView: View {
   let claudeAvailable: Bool
   let soonAvailable: Bool
   let onSelectView: (ExpandedView) -> Void
+  var notchWidth: CGFloat = 185
 
   var body: some View {
     HStack(spacing: 8) {
-      tile("Duo", subtitle: "Музыка и события", symbol: "rectangle.split.2x1", view: .duo, enabled: mediaEnabled || calendarEnabled)
-      tile("Музыка", subtitle: "Плеер", symbol: "music.note", view: .player, enabled: mediaEnabled)
-      tile("Календарь", subtitle: "События и месяц", symbol: "calendar", view: .calendar, enabled: calendarEnabled)
-      tile(
-        "Claude Code", subtitle: "Агенты и ответы", symbol: "sparkle", view: .agents,
-        enabled: true)
-      tile("Codex", subtitle: "Агенты и ответы", symbol: "terminal", view: .codexAgents, enabled: true)
-      tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon, enabled: soonAvailable)
-      ModuleTile(title: "Pomodoro", subtitle: "Скоро", symbol: "timer", enabled: false, action: {})
+      if mediaEnabled && calendarEnabled {
+        tile("Duo", subtitle: "Музыка и события", symbol: "rectangle.split.2x1", view: .duo)
+      }
+      if mediaEnabled { tile("Музыка", subtitle: "Плеер", symbol: "music.note", view: .player) }
+      if calendarEnabled { tile("Календарь", subtitle: "События и месяц", symbol: "calendar", view: .calendar) }
+      if claudeAvailable { tile("Claude Code", subtitle: "Лимиты подписки", symbol: "sparkle", view: .claude) }
+      if soonAvailable { tile("Soon", subtitle: "Напоминания", symbol: "clock.arrow.circlepath", view: .soon) }
     }
     .padding(.horizontal, 24)
-    .frame(width: ExpandedLayout.dashboard.width, height: ExpandedLayout.dashboard.height - ExpandedLayout.headerHeight)
+    .frame(width: layout.size(for: .modules).width, height: ExpandedLayout.dashboard.height - ExpandedLayout.headerHeight)
   }
 
-  private func tile(_ title: String, subtitle: String, symbol: String, view: ExpandedView, enabled: Bool) -> some View {
-    ModuleTile(title: title, subtitle: enabled ? subtitle : (view == .claude ? subtitle : "Выключен"), symbol: symbol, enabled: enabled) {
+  private var layout: DashboardLayout {
+    DashboardLayout(
+      media: mediaEnabled, calendar: calendarEnabled, claude: claudeAvailable,
+      soon: soonAvailable, notchWidth: notchWidth)
+  }
+
+  private func tile(_ title: String, subtitle: String, symbol: String, view: ExpandedView) -> some View {
+    ModuleTile(title: title, subtitle: subtitle, symbol: symbol, enabled: true) {
       onSelectView(view)
     }
   }
@@ -43,9 +48,7 @@ private struct ModuleTile: View {
     Button(action: action) {
       VStack(spacing: 10) {
         Group {
-          if title == "Codex" {
-            CodexIcon().foregroundStyle(IslandPalette.foreground).frame(width: 32, height: 32)
-          } else if title == "Soon" {
+          if title == "Soon" {
             SoonIcon().frame(width: 36, height: 36)
           } else {
             Image(systemName: symbol)

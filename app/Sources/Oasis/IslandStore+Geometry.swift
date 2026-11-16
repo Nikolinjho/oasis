@@ -18,15 +18,11 @@ extension IslandStore {
       reminderIndicatorWidth: IslandView.reminderIndicatorWidth, battery: appearance.battery,
       calendarWithMusic: model.showsMedia, volumeRow: model.volumeRowShown,
       expandedView: model.expandedView, navigation: model.config.dashboardNavigation)
-    if waitingAgentCount > 0, Self.isRestSwipeSurface(model.surface), model.surface != .idle {
-      spec.size.width = ActivityComposition.width(
-        notchWidth: notch.width, calendar: model.calendarLive, music: model.showsMedia,
-        agentProviders: [agentsPanel, codexPanel].filter { $0.waitingCount > 0 }.count)
-      if case .hoverNudge = model.surface { spec.size.width *= IslandGeometry.hoverNudgeWidthScale }
-    }
-    if model.surface == .expanded, model.expandedView.isAgents {
-      spec.size = CGSize(width: activeAgentsPanel.width, height: activeAgentsPanel.height)
-      spec.bottomRadius = IslandGeometry.bottomRadius(forHeight: spec.size.height)
+    if model.surface == .expanded, model.expandedView == .overview || model.expandedView == .modules {
+      spec.size = DashboardLayout(
+        media: mediaEnabled, calendar: calendarFilter.isEnabled, claude: claudePanel != nil,
+        soon: soonPanel != nil, notchWidth: notch.width
+      ).size(for: model.expandedView)
     }
     if model.surface == .expanded, stretch != 0 {
       spec.size.height += stretch

@@ -8,9 +8,6 @@ screenshots of other products. Their respective owners retain their rights.
   [Nikolinjho/Soon](https://github.com/Nikolinjho/Soon), revision `991dac8`.
   See [source information](app/Resources/Soon/SOURCE.md) and the included
   [GNU GPL v2 license](app/Resources/Soon/LICENSE.txt).
-- **Codex mark:** `app/Resources/Codex/mark.svg` and its PNG conversion are
-  third-party branding. See [source information](app/Resources/Codex/SOURCE.md).
-  No MIT license or trademark rights are granted for this mark.
 - **Vecteezy artwork:** the `vecteezy_green-palm-trees-on-a-small-island_75263062_939/`
   directory contains third-party source artwork and its original
   `Vecteezy-License-Information.pdf`. These files are excluded from the Oasis

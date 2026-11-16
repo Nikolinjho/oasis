@@ -6,8 +6,6 @@ struct AlertView: View {
   let alert: IslandAlert
   let notchWidth: CGFloat
   var battery = BatteryAlertStyle()
-  var agents = ClaudeAgentsPanel()
-  var codex = ClaudeAgentsPanel(provider: .codex)
 
   var body: some View {
     switch alert {
@@ -28,9 +26,6 @@ struct AlertView: View {
       ActivityCompactView(layout: ActivityLayouts.airpods(info), notchWidth: notchWidth)
     case .soon(let notice):
       SoonPeekView(notice: notice, notchWidth: notchWidth)
-    case .claudeRequest(let id):
-      ClaudeRequestPeekView(
-        panel: id.agent.provider == AgentProvider.codex.rawValue ? codex : agents, requestID: id, notchWidth: notchWidth)
     case .claude(let notice):
       ActivityCompactView(layout: ActivityLayouts.claude(notice, calendar: .current), notchWidth: notchWidth)
     }

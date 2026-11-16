@@ -5,8 +5,6 @@ struct OverviewView: View {
   let info: NowPlayingInfo?
   let agenda: DayAgenda
   let claude: ClaudePanel?
-  var agents = ClaudeAgentsPanel()
-  var codex = ClaudeAgentsPanel(provider: .codex)
   let soon: SoonPanel?
   let dismissedEvents: Set<String>
   let appearance: IslandAppearance
@@ -16,53 +14,38 @@ struct OverviewView: View {
   let onJoin: (URL) -> Void
   let onSoonAction: (SoonAction) -> Void
   let onSelectView: (ExpandedView) -> Void
-  let onOpenSettings: () -> Void
+  var notchWidth: CGFloat = 185
 
   var body: some View {
     HStack(alignment: .top, spacing: 0) {
       if mediaEnabled {
         OverviewMusic(info: info, appearance: appearance, onAction: onAction, onOpen: { onSelectView(.player) })
           .frame(width: 184, height: 164)
-      } else {
-        unavailable("Музыка выключена", width: 184)
       }
-      divider
-      VStack(alignment: .leading, spacing: 6) {
-        if calendarEnabled {
-          CalendarDayView(
-            agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, compact: true,
-            onOpen: { onSelectView(.calendar) }, onJoin: onJoin)
-        } else {
-          unavailable("Календарь выключен", width: 280, height: 126)
+      if mediaEnabled && (showsMiddleColumn || soon != nil) { divider }
+      if showsMiddleColumn {
+        VStack(alignment: .leading, spacing: 6) {
+          if calendarEnabled {
+            CalendarDayView(
+              agenda: agenda, dismissedEvents: dismissedEvents, style: appearance.calendar, compact: true,
+              onOpen: { onSelectView(.calendar) }, onJoin: onJoin)
+          }
+          if claude != nil { claudeSummary }
         }
-        HStack(spacing: 10) {
-          claudeSummary
-          Button {
-            onSelectView(.codexAgents)
-          } label: {
-            HStack(spacing: 4) {
-              CodexIcon().frame(width: 18, height: 18)
-              Text(codex.waitingCount > 0 ? "Codex · \(codex.waitingCount)" : "Codex")
-                .font(.system(size: 11, weight: .semibold))
-            }.foregroundStyle(IslandPalette.foreground)
-          }.buttonStyle(.plain).help("Агенты и ответы Codex")
-        }
+        .frame(width: 280, height: 164, alignment: .topLeading)
       }
-      .frame(width: 280, height: 164, alignment: .topLeading)
-      divider
+      if showsMiddleColumn && soon != nil { divider }
       if let soon {
         TimelineView(.periodic(from: .now, by: 1)) { context in
           SoonListView(
             panel: SoonPanel(reminders: soon.reminders, now: context.date),
             now: context.date, compact: true, onAction: onSoonAction)
         }
-      } else {
-        unavailable("Soon выключен", width: 204)
       }
     }
     .padding(.horizontal, 24)
     .padding(.top, 8)
-    .frame(width: ExpandedLayout.dashboard.width, height: 184, alignment: .top)
+    .frame(width: layout.size(for: .overview).width, height: 184, alignment: .top)
   }
 
   private var divider: some View {
@@ -73,7 +56,7 @@ struct OverviewView: View {
 
   private var claudeSummary: some View {
     Button {
-      onSelectView(.agents)
+      onSelectView(.claude)
     } label: {
       HStack(spacing: 8) {
         Image(systemName: "sparkle").font(.system(size: 20)).foregroundStyle(.orange)
@@ -88,34 +71,31 @@ struct OverviewView: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .help("Агенты и ответы Claude Code")
+    .help("Лимиты Claude Code")
   }
 
   private var claudeTitle: String {
-    if agents.waitingCount > 0 { return "Claude · \(agents.waitingCount) ждут ответа" }
     guard let claude, let window = claude.limits.fiveHour ?? claude.limits.sevenDay else { return "Claude Code" }
     return "Claude · \(claude.remaining(window))% осталось"
   }
 
   private var claudeSubtitle: String {
-    if !agents.agents.isEmpty { return "Сессий: \(agents.agents.count) · Агенты и ответы" }
-    guard let claude else { return agents.connected ? "Подключено · Агенты и ответы" : "Подключить агентов" }
+    guard let claude else { return "Лимиты подписки" }
     if claude.isStale { return claude.freshness }
     if let window = claude.limits.fiveHour { return "5 часов · \(claude.resetText(window, weekday: false))" }
     return "7 дней · \(claude.freshness)"
   }
 
-  private func unavailable(_ title: String, width: CGFloat, height: CGFloat = 164) -> some View {
-    Button(action: onOpenSettings) {
-      VStack(spacing: 6) {
-        Text(title).font(.system(size: 12, weight: .medium))
-        Text("Настроить").font(.system(size: 11)).foregroundStyle(Color(red: 45 / 255, green: 212 / 255, blue: 191 / 255))
-      }
-      .foregroundStyle(IslandPalette.secondary)
-      .frame(width: width, height: height)
-    }
-    .buttonStyle(.plain)
+  private var layout: DashboardLayout {
+    DashboardLayout(
+      media: mediaEnabled, calendar: calendarEnabled, claude: claude != nil,
+      soon: soon != nil, notchWidth: notchWidth)
   }
+
+  private var showsMiddleColumn: Bool {
+    layout.showsMiddleColumn
+  }
+
 }
 
 private struct OverviewMusic: View {
