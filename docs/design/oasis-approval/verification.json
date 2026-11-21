@@ -1,0 +1,15 @@
+{
+  "version": 4,
+  "screens_checked": 81,
+  "screenshots_saved": 81,
+  "geometry_issues": [],
+  "console_errors": 0,
+  "comment_survives_screen_change": true,
+  "comment_survives_reload": true,
+  "review_export_filename": "oasis-design-approval.json",
+  "zoom_checked": "768 × 216 pt · 200%",
+  "mobile_viewport": 390,
+  "mobile_document_width": 390,
+  "native_preview_scrolls_on_narrow_viewport": true,
+  "application_source_changed": false
+}

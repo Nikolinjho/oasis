@@ -1,0 +1,117 @@
+[
+  {
+    "screen": "settings-general",
+    "source": "app/Sources/Oasis/Settings/SettingsView.swift",
+    "labels": [
+      "Launch at login",
+      "Hide menu bar icon",
+      "Contrast outline",
+      "Progressive blur",
+      "Play sounds",
+      "Expand on hover",
+      "Hover duration",
+      "Force enable activity",
+      "Natural movement",
+      "Swipe to dismiss activity",
+      "Notch width",
+      "Notch height"
+    ]
+  },
+  {
+    "screen": "settings-battery",
+    "source": "app/Sources/Oasis/Settings/Pages/BatteryPage.swift",
+    "labels": [
+      "Duration",
+      "Notify on low power mode",
+      "Warn on low battery",
+      "Low battery threshold",
+      "Play sound on low battery",
+      "Hide label",
+      "Hide percentage"
+    ]
+  },
+  {
+    "screen": "settings-connectivity",
+    "source": "app/Sources/Oasis/Settings/Pages/ConnectivityPage.swift",
+    "labels": [
+      "Duration",
+      "Warn on low battery",
+      "Low battery threshold",
+      "Play sound on low battery"
+    ]
+  },
+  {
+    "screen": "settings-display",
+    "source": "app/Sources/Oasis/Settings/Pages/HUDPage.swift",
+    "labels": [
+      "Duration",
+      "Show percentage",
+      "Hide label"
+    ]
+  },
+  {
+    "screen": "settings-sound",
+    "source": "app/Sources/Oasis/Settings/Pages/HUDPage.swift",
+    "labels": [
+      "Duration",
+      "Show percentage",
+      "Hide label"
+    ]
+  },
+  {
+    "screen": "settings-nowPlaying",
+    "source": "app/Sources/Oasis/Settings/Pages/NowPlayingPage.swift",
+    "labels": [
+      "Idle duration",
+      "Disable compact waveform",
+      "Disable artwork flip",
+      "Hide while source app is active",
+      "Hide media title extras",
+      "Automatic · \\(settings.effectiveMediaSource.title)",
+      "Quick Peek",
+      "When media changes",
+      "Peek duration"
+    ]
+  },
+  {
+    "screen": "settings-calendar",
+    "source": "app/Sources/Oasis/Settings/Pages/CalendarPage.swift",
+    "labels": [
+      "Time before event",
+      "Play sound on calendar event",
+      "Play hourly chime",
+      "Use calendar color",
+      "Disable activity during events",
+      "Use event indicators",
+      "Always show month view",
+      "Notify when time to leave",
+      "Quick Peek",
+      "Before event starts",
+      "When event is starting",
+      "Peek duration",
+      "Use colored calendar indicator"
+    ]
+  },
+  {
+    "screen": "settings-claudeCode",
+    "source": "app/Sources/Oasis/Settings/ClaudeSettingsPage.swift",
+    "labels": [
+      "Claude Code",
+      "Предупреждение о лимите сессии",
+      "Звук на 5% и 0%",
+      "Сброс окна",
+      "Вид в раскрытом острове"
+    ]
+  },
+  {
+    "screen": "settings-soon",
+    "source": "app/Sources/Oasis/Settings/SoonSettingsPage.swift",
+    "labels": [
+      "Soon",
+      "Show in island",
+      "System notifications",
+      "Play sound",
+      "Hide peek in fullscreen"
+    ]
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "version": 5,
+  "screens_checked": 93,
+  "functionality_checks": 174,
+  "source_setting_labels_checked": 61,
+  "missing_in_checked_functionality": [],
+  "geometry_issues": [],
+  "duo_has_timeline": false,
+  "player_control_slots": 5,
+  "duo_content_margins_pt": [17.5, 18.5],
+  "waiting_filter_visible_sessions": 1,
+  "pico_mouse_hover_on_leaves": "peek",
+  "pico_mouse_click_on_leaves": "emerge",
+  "pico_drag": "drag",
+  "pico_after_release": "idle",
+  "animation_preview_seconds": 14,
+  "animation_states": ["climb", "hide", "hidden", "peek", "emerge", "idle"],
+  "application_source_changed": false
+}

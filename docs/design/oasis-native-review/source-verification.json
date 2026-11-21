@@ -1,0 +1,1300 @@
+{
+  "sourceFiles": 258,
+  "identical": 256,
+  "exceptions": {
+    "IslandUI/IslandPalette.swift": "Only background, divider and date accent colors; no layout or icon changes.",
+    "Oasis/Settings/SettingsView.swift": "private removed from @State page so renderer can select existing pages; view body identical."
+  },
+  "files": [
+    {
+      "file": "IslandCore/Activity/ActivityComposition.swift",
+      "sha256": "2b92f30615a32364e0d4bcc56f3af9775b0980830c57c4f3e47fe496d2a0c83b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Activity/ActivityLayout.swift",
+      "sha256": "5ff46298e3dcd5d7b6d96536d1d71e8f3ed418c8fe584d6cbd566bd124518dc5",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Activity/ActivityLayouts+Claude.swift",
+      "sha256": "1c74cd77e68ae082ed9bf045c80a74ab441e0f92b753e0f74ac42303914ba415",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Activity/ActivityLayouts+Soon.swift",
+      "sha256": "a16b0cca787e24ed2c65ca97038eef4ea92a9c61969fc0fa4d517ec066671eb6",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Activity/ActivityLayouts.swift",
+      "sha256": "e329193dae8491ab547436007813e7853d2c4e97b72514a1f1e54418691141cd",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Activity/IslandAttention.swift",
+      "sha256": "de7e86329f108ec0625d8d770523af9bf1ee8839c0a5a72408034db881d99736",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Appearance/BackdropLuminance.swift",
+      "sha256": "55d2f182d6c858ef7268f6abab352b3d2c142a191f3cdae89c0ebc69f420a017",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Appearance/CalendarAppearance.swift",
+      "sha256": "03c93b251897e0f1b1983deb45d110392b7304550a76a66cbdb5c21fc45f2299",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Appearance/IslandAppearance.swift",
+      "sha256": "e815c298c1c7e752b62fbf863a799243ab4264284bfa8eee3c4e2580f917433d",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Appearance/OutputDeviceKind.swift",
+      "sha256": "017d8c927c15826444fe4c3c7422e51c811d76f3e20a4a477cc78ffc20776d2e",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Appearance/PeekQueueAppearance.swift",
+      "sha256": "547b205f346a0cffc23bf1a11c8285d63f7712699c1c1a82d3771873e1749b8a",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Attention/AttentionAction.swift",
+      "sha256": "157d4156bb4fdf1e3d3efce81db6331aa13e3f2a5e9ea367894cfbdca48cadc2",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Attention/PresentationLease.swift",
+      "sha256": "29eb33951e747f43b6e1ac09cab665768ef499b20688a8c2e10495787ba169b2",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/CalendarEvent.swift",
+      "sha256": "dfebf338b0f0b8ac50b569657cd5b84b0c63ee313eaebbeb21e3f740b3d7b0b9",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/CalendarFilter.swift",
+      "sha256": "4cce2728046175bd2a6696acef8a870b298aaa9c96c8fae1b259299b2c42d167",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/CalendarMenu.swift",
+      "sha256": "e0cd71bd13f9757493f3c5decd625f8e1e8e373bbb2df8c40a3f1fc1656cbb47",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/CalendarSchedule.swift",
+      "sha256": "4fbd24d5fc53b903452b330b371c03fa15b498699ae65fb2ff190cb9adf4d131",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/HourlyChime.swift",
+      "sha256": "0e31d15ca1df989295f28446518d6523dcde50468e1536e144e809546d047ab0",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/MeetingLink.swift",
+      "sha256": "df45118e096509109d5ec98e2708325ff393751cff5332d2866c812cb8dda22b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Calendar/MonthGrid.swift",
+      "sha256": "1e21e8d55084ea2b3d1fe0fe37a766163335b5727f363aec225d6cbb15421332",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Claude/ClaudeLimits.swift",
+      "sha256": "50cfdff23652846d9baef6252bb52e8097a4645b7ec57423ecb78890e8ac92f7",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Claude/ClaudeNotice.swift",
+      "sha256": "ee694bd22799ba8d65f601101fb82cd4e44bda5fa66ba658259dcd7894240f3f",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Claude/ClaudePanel.swift",
+      "sha256": "d97cd5a02110f71d2bc5c015cf1b2e0b686d4ce5100cfa007994ad2c3bb3598c",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Claude/LimitForecast.swift",
+      "sha256": "96782180d827dee72a3411b5b8a1251af7101cf18ed646795c07eda0f6f450fd",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeAgentID.swift",
+      "sha256": "0094b2e8f8c4b69714a7285adbdf081d4a62da8f0972cf6f04db77cfbbefe546",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeAgentsPanel.swift",
+      "sha256": "f3d6eb17632d1b38d832c14202153cf6cef1abe99a15f3364840739195879b74",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeAnswer.swift",
+      "sha256": "8fb6e4be87cb35204bddebe64faa247ea5e64dd1cc4a60d335c274a590621393",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeBridgeMessage.swift",
+      "sha256": "839eab4ca653c33b8a58379e72f8ed152203a79179c2049fe549700e770ee52f",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeQuestion.swift",
+      "sha256": "063a66e23f8b1e6c423ca7b1214772432b86114bf9f63ad062230b7b9810908b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeQuestionCompletion.swift",
+      "sha256": "47d32b42a634cff054bf6addfcd63c5e533fbe592b263712e2fc9a574094fa85",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/ClaudeAgents/ClaudeRequest.swift",
+      "sha256": "6e552ea7a535f5c1ca05a97912dd2ed1dbb08a722dba55cbb3633fda0013d00a",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Codex/CodexConnection.swift",
+      "sha256": "ee455ad544c3aab711569bfb912513887e7b859046257855c739a65cdc58b7ee",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Codex/CodexQuestion.swift",
+      "sha256": "dfa2c2bb2ab72ff949333c106edbf0f4266b7d78f282a22763a7f76c46819e09",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/ExpandedLayout.swift",
+      "sha256": "fafc258021ba1c3aff716f398952401d24a1b715745ac49165d7adcc1c363762",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/IslandGeometry.swift",
+      "sha256": "9eee95d54ec58c3f039b961e2a97964702f79297b7e1cae88a61ce5eda35a8f6",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/IslandOutline.swift",
+      "sha256": "b1f6897e0011b95b7622bf2142e42f51d4294b61eeb1d9754bf8dcb3926a5c29",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/NotchMetrics.swift",
+      "sha256": "9162480ec842de9c93013ab6379e687ad87d5569f1f73a11dcae087e356dace6",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/SVGPath.swift",
+      "sha256": "e771da9aef6cdcba417b5e1031d47155f7d287f2669c526f8da3940b8a2af3af",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/SafeZone.swift",
+      "sha256": "8869e2fff100855ba50f2d71f02479dd47577f70008112866917da2a40f088be",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Geometry/Squircle.swift",
+      "sha256": "2c8da1a1cc6e9da70cee007cca25b3c29dc64e7c38c8b0475118bf9717726a54",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Gestures/SwipeTracker.swift",
+      "sha256": "e7cc465a43a15778c3d8120ecad5679992625fe8f3a4f12af3a7b61ae3b1e422",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Gestures/ValueThrottle.swift",
+      "sha256": "9f00a978f2d5a3a6c7b2009e85be41ae02e29961e1399cbf28fc58ced19a0446",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/AlertRules.swift",
+      "sha256": "e724afe6b4308277a2e260fdd670af072acb030a54f6b1efdf39786b5f95bdc9",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/CalendarRules.swift",
+      "sha256": "1a769d08566d4fdcd78d713ed6322a14188cb613c3d4021f6a84bc99fca9b7c7",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/ExpandedView.swift",
+      "sha256": "0efc6c7f209e19bbef57ae6fe288f0390579b3824897dae3d50709fc220a05c8",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/IdleActivity.swift",
+      "sha256": "3a8448c59b7d1f08574137aa4f9098f79863f93fe65df330eb810193a149b59a",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/IslandAlert.swift",
+      "sha256": "4c30aabf116464a0dbb4f007ddf2e09ebbf196cdd9a8a43aeeef527207855a75",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/IslandMachine.swift",
+      "sha256": "fcf2ad9b6b118a657f39bcdbf692c1b188ba7aa0061a6a13ca7bcabed7d433f7",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/NowPlayingRules.swift",
+      "sha256": "ad59a9222af225046b2d0927db7f7b945d103be98558ecf6f8b49e1fd01b4781",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/Surface.swift",
+      "sha256": "aff8dbc3620b4b7a17a805c3deeea15b04cdda7ddf3ee25819fc0d1a6f28f68b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Island/TuningHint.swift",
+      "sha256": "20256c737cc2c80156e8df986415465cab7c0e0febfbb0f8946f18b14fa73d39",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/IslandTiming.swift",
+      "sha256": "c251317e2d76109c27b2258795ca614e58fe1e5ffd5b8b68e1b2d60bcc56bc43",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/MediaSourceChoice.swift",
+      "sha256": "f4fb6e3773869876b4cf4307778b5bfff5c6f2c1314115abcbaa885b2815b6ba",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/NowPlayingInfo.swift",
+      "sha256": "a09e2cdf78d991cf5ba9c9a8a059afaa0cad34bc4fcd0944b75ea9adbcd84135",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/PlaybackModeOverride.swift",
+      "sha256": "af02e4f2770c67c9621695529fb4fa7d0efe2d6d0541e410809349935cb837dd",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/PlayerCapabilities.swift",
+      "sha256": "39b032814e876ded805ee012fff1e08448ec94e6b31b5d84bf16fbaae7c12c0e",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/PlayerExtraControl.swift",
+      "sha256": "c9c794cbadeb6903860147a31fedbe83609a78f1278651ad48615281dcdf66c7",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Media/TitleCleaner.swift",
+      "sha256": "a8cf36e9f0d11960ab949a33a2e6b2be053061cac5699e97ecf033c2af09677b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Motion/IslandMotion.swift",
+      "sha256": "b839707567b6beff3035bfb814b81bbf31e3092296c9205a48d65d965846417c",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Motion/SpringSpec.swift",
+      "sha256": "ab7a61861f7f6fabc9d287e1880fccd98e6452479aab3bf129f42b1e13a5b917",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Power/PowerState.swift",
+      "sha256": "953d4c06e220c0317a0bc61c7bcec29a9177d4e06e9e77958a6be8d1384a052b",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Screen/DisplayChoice.swift",
+      "sha256": "1cc511fe8aa2249768ad5341cc896a29638ce27dc69a020d0c163c66494bc570",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Soon/SoonDurationParser.swift",
+      "sha256": "006e630d2a867d459ba667a55fc56ce394a6c8201d64111df4509db97df02d54",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Soon/SoonNotice.swift",
+      "sha256": "badd35c450e13135b3bb5bf597ad80ee12a8b2beaff53cd687d80bbb43bd54f5",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Soon/SoonPanel.swift",
+      "sha256": "d57befccc2f14ada8d4759f858648c965a537f1abb249a7761594a5ce0d5b664",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Soon/SoonReminder.swift",
+      "sha256": "27057172218dede6a17209c3130ecb60017bfa55bb5c428aeae8afec6fea2c9a",
+      "identical": true
+    },
+    {
+      "file": "IslandCore/Soon/SoonSchedule.swift",
+      "sha256": "29bd7a18257c274de2f9080dcf93e4dbf18619e7b3195b3e71830bfa1cb6d804",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Bluetooth/AirPodsBattery.swift",
+      "sha256": "a9bef3e89cde9f7c779565032d75d991b0ec58e4e8aa22cdc86497db1ed31a79",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Bluetooth/BluetoothAudioOutputs.swift",
+      "sha256": "cd1c6189cc8375403cb6309281ae54671dffd90cb5ee030393e4f5cc47d87a7a",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Bluetooth/BluetoothWatcher.swift",
+      "sha256": "7e8bdba72dea5bca520c863a6305aa59c327ea257565829bd88eadec35e9f221",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Bluetooth/HeadphonesBatteryMonitor.swift",
+      "sha256": "294500e1c1c3faf1225286b82a92d943aec6e2ab3e8fca3ae3fd0565e997d351",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Bluetooth/HeadphonesBatteryTracker.swift",
+      "sha256": "cc7efe30ff590b42ecfc22360125336becc37756433157bb8507c9400e33b452",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Calendar/EventKitCalendarSource.swift",
+      "sha256": "0478abcbcbe0d8ff393e60de51e6f81a5bd225e2a6ffb2af579036e9335ed000",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Claude/ClaudeFiles.swift",
+      "sha256": "152b4c5d839cdd33ce11bf64160f1bb980a4aa45c62c1c8da5a134d478ff6a4d",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Claude/ClaudeHistory.swift",
+      "sha256": "fb5891957d639e7f8f35e527b3d3b8a36f8d8582fdfa7ff2c759797e3268ad76",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Claude/ClaudeLimitsSource.swift",
+      "sha256": "18b6811cd98d6af8e147299458d0153826e174acb4d4efd526da043bc63b5b39",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/ClaudeAgents/ClaudeBridgePaths.swift",
+      "sha256": "9dfd64eb12aecac461cc9b151999ceced50d6edfe8981bbe99093328f3987dfb",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/ClaudeAgents/ClaudeBridgeSocket.swift",
+      "sha256": "c64a6f0f70948eb12979715fd0ed2253695db33680e75281721d57a6672f2565",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/ClaudeAgents/ClaudeBridgeWire.swift",
+      "sha256": "059d3bc632d6f63af957cebbeba793ee4b604a8e2ca4ffda05b05c063722f179",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/ClaudeAgents/ClaudeHookOutput.swift",
+      "sha256": "421931e82fa0da152e2b05b2ba4fe2aafffdcef0e341f6c692103fe3ed2dbd5f",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Codex/CodexAppServerClient.swift",
+      "sha256": "9a59334f6d0fcbeee89c4681dc8a6fa784983775cb0da67d52a8510d5aed455c",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Codex/CodexRPC.swift",
+      "sha256": "ad5b23ab92c275ada6aac13cc43367ee66430c43c9b42cbd28ea0c6bf449aff1",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Codex/CodexWebSocket.swift",
+      "sha256": "c386f97761a51f6796357a043146a510a1d553d9270e57e134e8abba8ac3a06a",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Keys/MediaKeyPress.swift",
+      "sha256": "b720d1c779d3093a0a652d1e5d4dc65f9f6efcd79fd13a2692031d3826982bcc",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Keys/MediaKeyTap.swift",
+      "sha256": "67790870fb9d0b422d5ef33563b703ae2fce6d3d9d0f1bdc63439f666a4283e2",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Levels/BrightnessControl.swift",
+      "sha256": "0e1291147e0b97c8f3ddca6669e2c554582e1f77a4c6a2e1e172d0c348036750",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Levels/LevelStep.swift",
+      "sha256": "93ea20e84945916561520988018eaac00a6781b5b36037f1a3f01da7f7a026d2",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Levels/VolumeControl.swift",
+      "sha256": "dc956c93900c4aaaf5463188b1eb49cbdd3559ed079bda106b86c67875e5a443",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/AccentCache.swift",
+      "sha256": "0c1808fbcac8d32f313fb971dce0ec070d43cf5e82e40bb974252c151ff9e627",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/AdapterNowPlayingSource.swift",
+      "sha256": "4695424d4b3abefbf43a3606328efd4f0afeb114fab5df719756ca2c15904093",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/AdapterPaths.swift",
+      "sha256": "524e2cbaf71098ad9428ede9d9a5fe0dbdee7491d6a8866102a96f3d13cb158c",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/ArtworkColor.swift",
+      "sha256": "0760a402702d9f1d31cf3b2d52298d8654249d822f0ca50c69a658c191dd1aa3",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/Backoff.swift",
+      "sha256": "23ef37945c0d97ce75624e9aecd756ca23df5a3cf3a8586ac95f0ff3b83d6a93",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/BrowserSources.swift",
+      "sha256": "489f3218e56cf960575411e5d302c987d8bffb53e4540310c443d0d6ca0f3f5e",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/LineBuffer.swift",
+      "sha256": "bd0d7bb1393eae99924e1c3afbdb54937c401bda339df6f15d428955a51d6974",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/NowPlayingParser.swift",
+      "sha256": "0ad99336592860fead772e12249ec6a637538c85891854a51faccd08aed3ec45",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/NowPlayingSourceState.swift",
+      "sha256": "84154b8c95c806e50e6447a969b4f68b8600dc0c8d1a7263633244041fcbf134",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/StaleAdapters.swift",
+      "sha256": "ccfe66fe3c35778337824411ea36b6f8cbc1e949b0016e8bd7549783e2648632",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/CDPClient.swift",
+      "sha256": "a17ce659cb3ad0ce169c6b7914d2bab522594d059e01fca88bf121e48b4c15f4",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/JSONValue.swift",
+      "sha256": "da648a884c86e6de6864689c01534041d418136f1a3a9bd1ea897e4ac3d6c6c4",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/SystemYandexLifecycle.swift",
+      "sha256": "5c87ddc21f6b6c9536d1283b1039bc95f9b168f1825543ca3a34d543bd1e3135",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexEndpoint.swift",
+      "sha256": "6045a7fc7f1346b579b1b229609de41a0e199bed5c839ad35412c6164640ccb2",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexMusicClient.swift",
+      "sha256": "d45cd55df9e4999f5a2b459d2c5b46ac0cdc6aa1fcc5bfee385d4565a87907ff",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexMusicSource.swift",
+      "sha256": "b3e6245a771f7336bff2268721958374dc113f61a556371c19a7e443f41505c4",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexSnapshot.swift",
+      "sha256": "e7bc955e18370200dc4fa091afc9b7da1a86f10764c44ad85503183364e9240f",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexSourceTransitions.swift",
+      "sha256": "c9ce4cb67ea18b30dfe88a849c82a837019ff03be094aeb6b2f492a1e4955e79",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/NowPlaying/YandexMusic/YandexSourceWorker.swift",
+      "sha256": "b27c243e799511b5e98b838697239c4ea84d0d9ba91fc52ef40e3d7ada84dee1",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Player/AppActivator.swift",
+      "sha256": "c75debd66838540c1b93dda75eac864581c722c1f482dad350529988d6cb523d",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Player/MusicFavorite.swift",
+      "sha256": "a16de9fa40e5e7b749dd4d20265f6f3c2831f2a86066dd41418babc2f454b969",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Player/PlayerActionRouter.swift",
+      "sha256": "b227aef79864d4b6347bf0a7ee6d936a2e2b10a4a063f64bf91466c28cfa3c1d",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Power/PowerSource.swift",
+      "sha256": "f702fc6db5e6515a1657ba2a209e4d58f5fd9c333ee2b619efa8802bcd0bb872",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Power/PowerStateParser.swift",
+      "sha256": "9bab3448fecd2df8cb6ebab24904b437ca368373c92eaf5fe3c16ab04ba3dae3",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Screen/FullscreenWindows.swift",
+      "sha256": "b1c8b4792003b406d8f4a2ae7688c4311f6b6c6df9a037dd25a0c3ef50dc70cd",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Soon/SoonNotifications.swift",
+      "sha256": "9dc3e00c1bddf39b7725bb4d16dd44077f822058e60ff2d24e8c67bbdc70ad5d",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/Soon/SoonRepository.swift",
+      "sha256": "72445801d987714dcf3dd3fcc61251e444faf12af0c397f8623c8d650de667bc",
+      "identical": true
+    },
+    {
+      "file": "IslandSources/SourceLog.swift",
+      "sha256": "5dffdaac9714d4b090d2f8690e0b53848fb1fa451f865ab116d13ad566a68c26",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Activity/ActivityCompactView.swift",
+      "sha256": "eda93393f7e721f740e0f55b2c734c24410b476e42190a8273131d21128592b8",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Activity/ActivityIcon.swift",
+      "sha256": "2c98f630ab4f95135378db0aad2c1cd07ddc21ba3a05eecd0288e79f9152b079",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Alerts/AlertView.swift",
+      "sha256": "c88783d8efe533bc200f1ceb194730dc156ba731aff5b49b62e8952805125add",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ArtworkView.swift",
+      "sha256": "001c4b10e0bad9352fbd6160002d6108ae3f993e9bda4867e889099381d9436a",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/BackSwipeTransition.swift",
+      "sha256": "daea39bc15105e4bf009106e71b3f960f6b3d07a3a45aeaff4871c0a536ace8f",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Calendar/CalendarDayView.swift",
+      "sha256": "fddd68525164239aebe638508d2e1b68ed62cb38fbb32f972527c31d38caab92",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Calendar/CalendarLiveView.swift",
+      "sha256": "aaa17002cf60f62fe86a26ccaa8ef14b6d26529ef005c84a37a575910dd547d5",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Calendar/MonthGridView.swift",
+      "sha256": "b5c29b31dc6114ac18db92b996ec0dcc1a369e8ce5c3f849f134e7ca1abc21f1",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Claude/ClaudeLimitsView.swift",
+      "sha256": "5b5be41da115911b0a5954d787b9eb54c9dfe61970c1adf085c657d732e29c65",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/AgentSecretEditor.swift",
+      "sha256": "67e8ad4029beee6c9b3049cbb6463ae91f5c67becb6cd1ab4aac2df1150c1105",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/AttentionInboxView.swift",
+      "sha256": "32a1a6ce6dbd58b4de9e0fa65cb1a77a20760f70c5685771500912a2b33f7c3e",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/ClaudeAgentsView.swift",
+      "sha256": "b6d165bb3b09a996fa9a306445834d0bfea2cc72b413518798b3d8797b6b39fb",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/ClaudeReplyEditor.swift",
+      "sha256": "c147986b87f7918ca662cd49a9068c5764c14961a5d6a0eb3fdb19d20c2f07c0",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/ClaudeRequestDetail.swift",
+      "sha256": "6c998e51bbd59f8d63e92764eade7041d1b9c284e8517aadfd879f17ec9dbc56",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/ClaudeRequestPeekView.swift",
+      "sha256": "c511243a0a5fafdefd5aca3dd9620dd8be9df82dc91f74b40caa7e5d4b1fe5c2",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/CodexIcon.swift",
+      "sha256": "7d100c115672c692207fb4fd00291263b8fa84d49929e7f10ca924dd658b458c",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ClaudeAgents/SharedActivityCompactView.swift",
+      "sha256": "c696e20f6a3535ad73cfea03292a903f1b7e2f87a3eafb59aa1e503964aa39b9",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Color+RGB.swift",
+      "sha256": "5a430e116329ee745558a27f5523d809dbf510b832c410208fb04d076f3091a9",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ContrastOutline.swift",
+      "sha256": "7ca63568ac64853de4e97813ef41545711edb61c1747986b589e2bab9f63627d",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Duo/DuoParts.swift",
+      "sha256": "2ff132f99b4cf757e401ede2a19e43f694f84defc4fb1ec5cc73ee4134232f3b",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Duo/DuoView.swift",
+      "sha256": "58f72cd0635a9eb1e6352c599159a05d08f1157f9614857359dffa36ab29f307",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/ExpandedContent.swift",
+      "sha256": "3d7d9b85326f9353d1709c80f670d0dd321d745493ccc8720f4ae646dc712f34",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/HUD/HUDView.swift",
+      "sha256": "e5f0ba0e1940c4cdbf31921001deefccda3130faf7814d2ac70e8fc4d130813b",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/IslandPalette.swift",
+      "sha256": "0e3f10c866e1814fbbc98fda0dd562b1b9693a7f4de4d96c2707eb26968959e8",
+      "identical": false
+    },
+    {
+      "file": "IslandUI/IslandShape.swift",
+      "sha256": "28f760e6232db469caa60147f2db2700935a4f105d0828354cb968af426d7d97",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/IslandView.swift",
+      "sha256": "00e523d75b449e0dc2c54afa68b3832dbf230f1fea34a4dc953cf2a2f8c602a6",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/MissionControlPresentation.swift",
+      "sha256": "942a5694ce79d9f8337f806f1d6b86db5d1a42daccaad2029c056daa215deb6d",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Music/ArtworkFlip.swift",
+      "sha256": "4299ee16f1c18f21251d62396c5b9a9d2f64fb9ce191dfe49365140051bd41c6",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Music/MarqueeText.swift",
+      "sha256": "d3167c1be255d2cccdf4d857a165f14d54e60b1b98eafafb175ec7820ae259d0",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Music/MusicLiveView.swift",
+      "sha256": "0a0622a7769d0732dc2c8a02ddf259133da6ee6c6d963666a4c1ce3bf57c59a2",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Music/PlayerView.swift",
+      "sha256": "523c7ab895d976dab8f9a02b5bf8d1d0f2978a73025bd46ca6d3f9bdf2b33658",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Music/ProgressRow.swift",
+      "sha256": "e4e511ff4ef82e8866a879f65120485fbfd693bb715bb27383d081dbc7823c7d",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Navigation/ExpandedNavigation.swift",
+      "sha256": "1624170f145e4a3fc2f833c105a80a91efc4e738d31efa8e7bc19085efbc2c28",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Navigation/ModulesView.swift",
+      "sha256": "dffd7daa3f1ee1f0c37184bd6f509fc32ca18a038537f1c450bbdca42ea9ac93",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Navigation/OverviewView.swift",
+      "sha256": "2162b9f16a6b444f1932cfb99312e2dda989acee53defcd79ea2203d9dc4470a",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/OpenScale.swift",
+      "sha256": "591994208706402f22643e8b061015d862a72634d1914bbd38b4683ad8294905",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/PeekQueueView.swift",
+      "sha256": "2650513b2e6aea887fd7fe3ef18b4b0bec8e8f4157175b29557b4987a129c5a6",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/SlotTransition.swift",
+      "sha256": "52c758ace65af2fa1e91d57bcb3ef44ce38156c1964d0d248859d11d64a594d4",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonComposerView.swift",
+      "sha256": "0f36c50338fc4c628a8c39eb99b449321b06e63e77f3b66f16f0f5b3ad063a3a",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonDetailView.swift",
+      "sha256": "8eb2846a987530665d4fa0462009bbde742979079425a577b31ba9dbb9b8c6f0",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonIcon.swift",
+      "sha256": "80cc23fea90319d6b9a4605e3f2f6d648abeeba2dd45d57178e0c1916d63c2e0",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonListView.swift",
+      "sha256": "61a030e274095e763cb8c419eda80495784e4b5ed33a3b1dcd55b19383abb4c4",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonPalette.swift",
+      "sha256": "04dec4dbd48f841235b4fd8b92004d11730a4f83a8a796fc776db622d2e26cd1",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonPeekView.swift",
+      "sha256": "a242a8d92a28d7b1e34f1b877320716b64441bfff40011075559a74a055c59f8",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Soon/SoonTextButtonStyle.swift",
+      "sha256": "777b23e4fbe8ce35090fad16b0dbcf52d49d38ee904b5d8bda6b6716cb0982bc",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/SpringSpec+Animation.swift",
+      "sha256": "52e4ddcafbd79aa8ba25a2ec73fded27c8e2b1e478a12e772162aaa1dce67ef7",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/Tuning/TuningHintView.swift",
+      "sha256": "d2f4415bb47ceb752a3c98c6b8d390b5527c6ed3552e7593905c8c527ecd4745",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/VariableBlurView.swift",
+      "sha256": "3b31bfaadbe5f1b4a8530034731406639a5ecb6366bb11a398c19f21bfc65722",
+      "identical": true
+    },
+    {
+      "file": "IslandUI/WaveformView.swift",
+      "sha256": "76a095234c51e2a82d3b1a4743f3c48a1296f6d2cc92b2f7302ec95769853771",
+      "identical": true
+    },
+    {
+      "file": "Oasis/AppDelegate+Windows.swift",
+      "sha256": "764d8061bf5ee80b00360337f3ea731e0fb6acdde4440a09bb0f162ac06a7d94",
+      "identical": true
+    },
+    {
+      "file": "Oasis/AppDelegate.swift",
+      "sha256": "d758f6e7b037810af3b13881e0ce1784f8dc7d343a11489ff48f576ed16bfc70",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Attention/AttentionCoordinator.swift",
+      "sha256": "184a2dd864dcee6689da1e10b2099ea401288fbb7e94b76c86f84d823733f6c9",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Attention/IslandStore+AttentionActions.swift",
+      "sha256": "0d27834b195612252cb203007af25dc21b07765b3e79181cf9deeab4cb273887",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Attention/IslandStore+AttentionPolicy.swift",
+      "sha256": "fceaae9dcfcf0ef859dfb6cf33b51476e86777723f37da135448ded9c09cd87e",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Attention/IslandStore+PeekQueue.swift",
+      "sha256": "3a2222a59be6254b24c6be904de5bd7c0ad4af368f757abfb43bf5842650bd96",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Attention/IslandStore+PowerAttention.swift",
+      "sha256": "79920384b283bf4e6075486b37c8c958cdaacf7fabaea200c0a42bb00d5f5300",
+      "identical": true
+    },
+    {
+      "file": "Oasis/BackSwipePresentation.swift",
+      "sha256": "30de99cae12ef5f99a73fdf03d301900870a8b9296cbbfd69147f65d09822f80",
+      "identical": true
+    },
+    {
+      "file": "Oasis/BackdropMonitor.swift",
+      "sha256": "670006d250a2cb635cd9b2921a46ae91371d851592825e986c903a7262494536",
+      "identical": true
+    },
+    {
+      "file": "Oasis/CalendarBridge.swift",
+      "sha256": "a48a3d938f919463cc1a0f2c97c728b8bbe4279c871a91e8a7c3bce813c0b987",
+      "identical": true
+    },
+    {
+      "file": "Oasis/CalendarClock.swift",
+      "sha256": "610820d9d67f923a96502dafc09032282c739ceea361db63ce511c77e9b91d20",
+      "identical": true
+    },
+    {
+      "file": "Oasis/CalendarMenuSection.swift",
+      "sha256": "d5480e438b3172058a1718d3f195e0262538626713f9944d5a98d8a1308260c2",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Claude/ClaudeConnection.swift",
+      "sha256": "6fed2865b0a2b5b318078cd7aea22f78984a97c4938ffb282ed49377acf10386",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Claude/ClaudeModule.swift",
+      "sha256": "8727b112ae0b744bf353100ff6005779d608fa93a8e4167043cc602b46421162",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Claude/ClaudeModuleLifecycle.swift",
+      "sha256": "49d8656270d4f5b118664afe77e7aa0a660c60f11b59f47353489cc9c7abbb2c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Claude/ClaudeStatuslineInstaller.swift",
+      "sha256": "81c6f02d3d64c37e37d39dcb360d370c1f3c5e4514b7f7b3117d88640343149c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeAgentInputController.swift",
+      "sha256": "6d2c5a55f1484228419d977071bb8e597a3865590d0ab717bf1f7ee27ec236e0",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeAgentsDiagnostics.swift",
+      "sha256": "05335e5b7b76b124df8301f2595f99d34ec2a243cfaa69d3da120af30f51b687",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeAgentsSettingsCard.swift",
+      "sha256": "2df006b085aa577fa12dfad9e0fde26b06f8493d4f9ad968af1982bb55ee3d41",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeHooksInstaller+Hooks.swift",
+      "sha256": "62086e0f40d1582c26340592f36a9acff6265ceee9411bc6a002128b82d22570",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeHooksInstaller+QuestionPlugin.swift",
+      "sha256": "c42d6aa94a4703d18ed69ea95529fce9e1f8d37620e553f8fb1c2d2bba47c48e",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeHooksInstaller+Storage.swift",
+      "sha256": "1ad5456b7a46047c5921c322c22cb2026a047a6977b5d49a2ed7c80663b26f2a",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeHooksInstaller.swift",
+      "sha256": "e0d0b164f398f4ff960d8dc13c671b77a790996861c5a17a972ba7745c478d64",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeRequestsModule+Actions.swift",
+      "sha256": "22de171667a29ac9a606412fe6aa764cf89def0d677b714f18e48eec41c04dc1",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeRequestsModule+Branch.swift",
+      "sha256": "24683bf3cc25e3717e282218141192b083611438baf7c464e9c4ba252ae7b4b8",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeRequestsModule+Events.swift",
+      "sha256": "04bc277abf8839a37ee7efdc216783c1f78225a1e9147e03bab0601e174e97cd",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeRequestsModule+Messages.swift",
+      "sha256": "3c31fe94e1a09da8016031685ab4eba07b14ddf539bf7fd7498cafb59f7d195c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/ClaudeAgents/ClaudeRequestsModule.swift",
+      "sha256": "64851a559e800d53a0559cfcaa9c01e71684cf2347876bf82ae1fdff9d77d93d",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Codex/CodexRequestsModule+Actions.swift",
+      "sha256": "e7faa1e8c5bd1b6e09a948a0aa03145cf7f93e45e70a3d34b32092c737f4c195",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Codex/CodexRequestsModule+Events.swift",
+      "sha256": "e71f9f93e9e6f446a78045e6358a9d7487a1a2065fbdd7e231f00d7c764fcdb4",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Codex/CodexRequestsModule.swift",
+      "sha256": "3ea5458c50a00846cadd1526cb5f3be8956d80f5135224e10a9394f072a36e88",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugAction.swift",
+      "sha256": "2e8bde9f2d80156b473d053732993e23cf0f2b67b19905f629dc2be07558e485",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugCatalog.swift",
+      "sha256": "783af9c7e5aa0d3f2dc497ba460633a8406eeff7d4ddc254d4c1d739c22aa767",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugClaude.swift",
+      "sha256": "9e5459f4a64b7745eb9b5ca83516463b75373b3a1a906e33bbe54bef7ad1e340",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugClaudeAgents.swift",
+      "sha256": "e749e8a46a47c3ca6c7a9a637e4dcd1a07d870a7b7db0c2cd7d5492cb37b0f16",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugCodexAgents.swift",
+      "sha256": "582eb288ab9558f21f42ce7c6d1ba33f27d3ae6b2b37e5706f3af1f7cb5b40bf",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugMenu.swift",
+      "sha256": "b2decae1ae50cb6c0c3b1ad437b570d444c9ee749c1ff056d425d414f607f226",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugScript.swift",
+      "sha256": "6abdc177b934fcfbcd8de08a2a48e31e27056df3189de1aead63220076addfe4",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DebugSoon.swift",
+      "sha256": "b35ef3de994a448489ec60d8ba48a36e6e91872c73293921b29b589f5fc472f3",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Debug/DemoSequence.swift",
+      "sha256": "e3aca986c0b02c49c5920caabbc5eb7da0e214d341ac6d1da6c29fb293fd197c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/DemoTracks.swift",
+      "sha256": "2d322118ad3e8cb1a5950d020eb21d4f33d0d919353f0d9408a08cea06ecd6b3",
+      "identical": true
+    },
+    {
+      "file": "Oasis/FullscreenAccessibility.swift",
+      "sha256": "3f5266f8d78a22b47d0b2cc4e3da8e161420caa6e6ac5abda633c85d7a706cb2",
+      "identical": true
+    },
+    {
+      "file": "Oasis/FullscreenMonitor.swift",
+      "sha256": "d2583fc02b18dab2932c16ed1af5492b1fd96e98f35a55c2861710f70ed1dfef",
+      "identical": true
+    },
+    {
+      "file": "Oasis/HourlyChimeTimer.swift",
+      "sha256": "dfe7878c58b3f0e4d89dfa713f4688675646354de587d908fc93846be869fbba",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandRootView.swift",
+      "sha256": "9b786d41bc059d5e07748d2137df7362453e75aafa6e64d6ba1f47ee82b6c766",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandScrollHandler.swift",
+      "sha256": "dbed4191cd5c1e5d1b25a850abcbe063f5655ab501dec3a97237930f4e7b1896",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Agents.swift",
+      "sha256": "f6599aa2b467220bd3067b46563bda70a43a0251bfb00b081d0a208b2a300a32",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Attention.swift",
+      "sha256": "26ad219a55d90df0733e35d8d445955fe9be73866dcd1a89a47adcde71147713",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Geometry.swift",
+      "sha256": "c6d435bd40bc8c7579455c710917df05d33eb161df29b73316dc50290c32c886",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Navigation.swift",
+      "sha256": "2b1f3818e22c912cf45466b37581a0a1d861d8b0c87c225b5e9f836b4a0e79a4",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Settings.swift",
+      "sha256": "0c12e85c5e16d1b44493d6749e32e51ff3b9fedef43bcd5f019d8bc4619203bf",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore+Soon.swift",
+      "sha256": "ec76f2a8cccc47a0cc95c9ef7ac48c965f3f744eee9a47c5fbb324b19f927ef7",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandStore.swift",
+      "sha256": "4e999b2a815bf6a17f9c3164c6081a09bc358d85db88f143d195aab0f173745d",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandWindowController+Hover.swift",
+      "sha256": "837335f88794061c2976b2bfe0696f40d5d05c5cb2f318aec030fcf09d14cb8d",
+      "identical": true
+    },
+    {
+      "file": "Oasis/IslandWindowController.swift",
+      "sha256": "12a1af461a492c5ae690c77f5b2cd90dfc3cdc4ed785cf1537fa64a75fd5b0b7",
+      "identical": true
+    },
+    {
+      "file": "Oasis/LaunchLinkQueue.swift",
+      "sha256": "464b9fb058b3cff02e4fe6741f5c3a1f4f8ce41ebd2a36efd9a4c70cdd052401",
+      "identical": true
+    },
+    {
+      "file": "Oasis/LoginItem.swift",
+      "sha256": "9450535d4eb7cd59801817ed39913f1813b019d639db344e6c49c73d8fa34005",
+      "identical": true
+    },
+    {
+      "file": "Oasis/MainMenu.swift",
+      "sha256": "331ca447a6fee06451a29c9ec49832c8fad2f6138e626687f93ce7c2554e9842",
+      "identical": true
+    },
+    {
+      "file": "Oasis/MeetingLinkOpener.swift",
+      "sha256": "1862bcdb5dbaab93fd5d64d368a7eb3af367aeb2312b92bc176b06fa6012f785",
+      "identical": true
+    },
+    {
+      "file": "Oasis/NotchPanel.swift",
+      "sha256": "68e68b1473951c0657d426530dd0f82d24692e671ad805cd3cd1d5e7d56e9b5c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/NowPlayingSourceFactory.swift",
+      "sha256": "8d01a7f5185cc4590bb716e0550c93c9947d4a18d30e3b838df538510a2b7198",
+      "identical": true
+    },
+    {
+      "file": "Oasis/NowPlayingSourceSwitcher.swift",
+      "sha256": "eea214434ac38b4a977c2284b8a21b901f6d31820bdff7fbfcb7584bfd17f730",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Permissions.swift",
+      "sha256": "82229f073f91653027997f93a9dcaf3b9e34f0d0dcf10e1e8b3b8398753171cb",
+      "identical": true
+    },
+    {
+      "file": "Oasis/PlayerActions.swift",
+      "sha256": "d160e1c4b8dcbe92df3ec392c91a0ee5fa5b544b86610a260d61df10b9650181",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/AppSettings+Calendar.swift",
+      "sha256": "938580bfde6323584b6f6d7e6d592b06c7f0803f8c1d1eea401f3c0897c0313a",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/AppSettings+Launch.swift",
+      "sha256": "0b01f0d868d90bc53249ea90e3f58e771e14274b354cd0c31389f790c2052056",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/AppSettings.swift",
+      "sha256": "0942deee9f5ebcf02311e272389c367bac5c0e28485b1fc8c13113a4f2a7a5bd",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/ClaudeSettings.swift",
+      "sha256": "622fb002b9ad393f83c2c62c4735df3af2fd9bfeded1f4d3bccafeccebdda5b4",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/ClaudeSettingsPage.swift",
+      "sha256": "3250d3841c3756e687ecaf419197142f3c998dba462121140a2f1126ac942c65",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/CodexSettingsPage.swift",
+      "sha256": "6729da3b243eab24c685226bea29e8f5b164de0f147e33fa9ef8c36fc48c6514",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/LegacyDefaultsMigration.swift",
+      "sha256": "4cf11862d71ce942ee5757e46f714285f478e315454888851e8178c0a7549b5b",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/BatteryPage.swift",
+      "sha256": "d10e46b8a498b0e02e44800e625f186d0f3ffa14cb03b4019cadd1e9f55133ae",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/CalendarPage.swift",
+      "sha256": "909f21e936bfe024edb827444bd658752ad8ae5bc6cc364719b240aab49ecfa6",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/ConnectivityPage.swift",
+      "sha256": "06fa944e4cf5234398c14d625e22dd12174d32241c9391d62f44ba3f32eca9ab",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/HUDPage.swift",
+      "sha256": "9884b8a54fa5e4f735704f14508e546d5c2ed6c9f8d3100765c8224cd04bf5db",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/NowPlayingPage.swift",
+      "sha256": "0aa8416cd0178f741d93d0e5f0749c4a86ab6f44875424c951412f87aab0e0c0",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/Pages/YandexConnectionCard.swift",
+      "sha256": "2fd58a582d5874c3d2ef4954711f44f3d054669ce4758788aabc68cc33474126",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/PeekQueueSettingsCard.swift",
+      "sha256": "1eabcb985f2886b4acc65832ac2ed1c728a8974b4d3838cfed2408c25527f2f3",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/SettingsControls.swift",
+      "sha256": "a49452951667235ea887d4dc243888e62c94269bd068b382d2b5676623b6b7a0",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/SettingsPage.swift",
+      "sha256": "a8610ea1abb2de0386b95a44af1b96265d67c3f8f82ebb4c60f54df7ac1c15e4",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/SettingsView.swift",
+      "sha256": "0efe4d5936e29d6a0485b5ac46aa898b8a621e1234893860e9c986a1f3c71b55",
+      "identical": false
+    },
+    {
+      "file": "Oasis/Settings/SettingsWindowController.swift",
+      "sha256": "e03e44e8b836c8790293bc11e99446910481467625ae7b03642337bbfc3df11c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/SoonSettings.swift",
+      "sha256": "832886a5c98625c230dfd5bcdd09760e496ce4c2b5d3fa1e95840dd93fa8d049",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/SoonSettingsPage.swift",
+      "sha256": "06e696d53958f53cf50c6fec4388c35226828cc31e8fc1de1b3730788bc3f62e",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Settings/YandexMusicConnection.swift",
+      "sha256": "6cc19f75f750e9c4bf6eafc355defd4ee0b307ceda1069d022c3c0c9eed616b5",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Soon/SoonAppIntegration.swift",
+      "sha256": "849f7b69e9cd68462d63113daed1a05b85c3c5f4aee322605d2cccb93ea53fa5",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Soon/SoonComposerController.swift",
+      "sha256": "29422d5a62000b2d081ed2794eccf16505daa38fb179dd35478230c20e4aa743",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Soon/SoonMenuSection.swift",
+      "sha256": "6f02474d3a0fdc0de309a712e9469785ec748ccb26c735024c4dc20f77583348",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Soon/SoonModule.swift",
+      "sha256": "dcdeaf4b4ec3c46e75af5867687dbea92abf7681144f7dc177e2f5c7e2bf8dda",
+      "identical": true
+    },
+    {
+      "file": "Oasis/Soon/SoonModuleLifecycle.swift",
+      "sha256": "468e9c7fd5989e3645fbde7415106db31d156c939330f36e26d41343ad73963c",
+      "identical": true
+    },
+    {
+      "file": "Oasis/SoundPlayer.swift",
+      "sha256": "b85a1d20c20ff145c848c0d2923d2a4c09f9c5afa1a66806eda8b50d8f8c5df9",
+      "identical": true
+    },
+    {
+      "file": "Oasis/SourceActivityMonitor.swift",
+      "sha256": "f857fbb99fe25ee2a3bf9c363efbba900054dd83d6cdbbae4c9a409b4da5cdca",
+      "identical": true
+    },
+    {
+      "file": "Oasis/StatusItemController.swift",
+      "sha256": "a4b67eb0c667deee95cf5f603fabfaf2b21605df9e9a1d5ac4dca5cb7b88d268",
+      "identical": true
+    }
+  ]
+}

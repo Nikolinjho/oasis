@@ -1,0 +1,3 @@
+// swift-tools-version: 6.2
+import PackageDescription
+let package = Package(name: "OasisReview", platforms: [.macOS(.v26)], targets: [.target(name:"IslandCore"), .target(name:"IslandSources",dependencies:["IslandCore"]), .target(name:"IslandUI",dependencies:["IslandCore"]), .executableTarget(name:"Oasis", dependencies:["IslandCore","IslandSources","IslandUI"])])

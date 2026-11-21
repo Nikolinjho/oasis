@@ -1,0 +1,380 @@
+[
+  {
+    "height" : "207",
+    "id" : "duo",
+    "title" : "duo",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "duo-empty",
+    "title" : "duo · пусто",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "player",
+    "title" : "player",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "player-empty",
+    "title" : "player · пусто",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "calendar",
+    "title" : "calendar",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "calendar-empty",
+    "title" : "calendar · пусто",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "claude",
+    "title" : "claude",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "soon",
+    "title" : "soon",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "soon-empty",
+    "title" : "soon · пусто",
+    "width" : "345"
+  },
+  {
+    "height" : "320",
+    "id" : "agents",
+    "title" : "agents",
+    "width" : "640"
+  },
+  {
+    "height" : "320",
+    "id" : "agents-empty",
+    "title" : "agents · пусто",
+    "width" : "640"
+  },
+  {
+    "height" : "216",
+    "id" : "overview",
+    "title" : "overview",
+    "width" : "768"
+  },
+  {
+    "height" : "216",
+    "id" : "overview-empty",
+    "title" : "overview · пусто",
+    "width" : "768"
+  },
+  {
+    "height" : "216",
+    "id" : "modules",
+    "title" : "modules",
+    "width" : "768"
+  },
+  {
+    "height" : "207",
+    "id" : "inbox",
+    "title" : "inbox",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "inbox-empty",
+    "title" : "inbox · пусто",
+    "width" : "345"
+  },
+  {
+    "height" : "320",
+    "id" : "codexAgents",
+    "title" : "codexAgents",
+    "width" : "640"
+  },
+  {
+    "height" : "320",
+    "id" : "codexAgents-empty",
+    "title" : "codexAgents · пусто",
+    "width" : "640"
+  },
+  {
+    "height" : "239",
+    "id" : "player-volume",
+    "title" : "Плеер · громкость",
+    "width" : "345"
+  },
+  {
+    "height" : "175",
+    "id" : "soon-detail",
+    "title" : "Soon · детали",
+    "width" : "345"
+  },
+  {
+    "height" : "207",
+    "id" : "soon-compose",
+    "title" : "Soon · создание",
+    "width" : "345"
+  },
+  {
+    "height" : "32",
+    "id" : "music-playing-compact",
+    "title" : "Музыка · играет · компакт",
+    "width" : "257"
+  },
+  {
+    "height" : "51",
+    "id" : "music-playing-peek",
+    "title" : "Музыка · играет · peek",
+    "width" : "276"
+  },
+  {
+    "height" : "32",
+    "id" : "music-paused-compact",
+    "title" : "Музыка · пауза · компакт",
+    "width" : "257"
+  },
+  {
+    "height" : "51",
+    "id" : "music-paused-peek",
+    "title" : "Музыка · пауза · peek",
+    "width" : "276"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-volume-0",
+    "title" : "HUD · volume · 0%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-volume-60",
+    "title" : "HUD · volume · 60%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-volume-100",
+    "title" : "HUD · volume · 100%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-brightness-0",
+    "title" : "HUD · brightness · 0%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-brightness-60",
+    "title" : "HUD · brightness · 60%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "hud-brightness-100",
+    "title" : "HUD · brightness · 100%",
+    "width" : "367"
+  },
+  {
+    "height" : "32",
+    "id" : "charging",
+    "title" : "charging",
+    "width" : "350"
+  },
+  {
+    "height" : "32",
+    "id" : "low-battery",
+    "title" : "low-battery",
+    "width" : "373"
+  },
+  {
+    "height" : "32",
+    "id" : "low-power",
+    "title" : "low-power",
+    "width" : "435"
+  },
+  {
+    "height" : "90",
+    "id" : "hover",
+    "title" : "Пустой остров · hover",
+    "width" : "203"
+  },
+  {
+    "height" : "32",
+    "id" : "airpods-airpods",
+    "title" : "Наушники · airpods",
+    "width" : "280"
+  },
+  {
+    "height" : "32",
+    "id" : "airpods-pro",
+    "title" : "Наушники · pro",
+    "width" : "280"
+  },
+  {
+    "height" : "32",
+    "id" : "airpods-max",
+    "title" : "Наушники · max",
+    "width" : "280"
+  },
+  {
+    "height" : "32",
+    "id" : "event-reminder",
+    "title" : "Напоминание о событии",
+    "width" : "300"
+  },
+  {
+    "height" : "73",
+    "id" : "soon-peek",
+    "title" : "Soon · уведомление",
+    "width" : "300"
+  },
+  {
+    "height" : "320",
+    "id" : "claude-permission-false",
+    "title" : "Claude Code · permission · обычный",
+    "width" : "640"
+  },
+  {
+    "height" : "288",
+    "id" : "claude-permission-true",
+    "title" : "Claude Code · permission · компакт",
+    "width" : "560"
+  },
+  {
+    "height" : "320",
+    "id" : "claude-questions-false",
+    "title" : "Claude Code · questions · обычный",
+    "width" : "640"
+  },
+  {
+    "height" : "288",
+    "id" : "claude-questions-true",
+    "title" : "Claude Code · questions · компакт",
+    "width" : "560"
+  },
+  {
+    "height" : "320",
+    "id" : "codex-permission-false",
+    "title" : "Codex · permission · обычный",
+    "width" : "640"
+  },
+  {
+    "height" : "288",
+    "id" : "codex-permission-true",
+    "title" : "Codex · permission · компакт",
+    "width" : "560"
+  },
+  {
+    "height" : "320",
+    "id" : "codex-questions-false",
+    "title" : "Codex · questions · обычный",
+    "width" : "640"
+  },
+  {
+    "height" : "288",
+    "id" : "codex-questions-true",
+    "title" : "Codex · questions · компакт",
+    "width" : "560"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-general",
+    "title" : "Настройки · General",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-battery",
+    "title" : "Настройки · Battery",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-connectivity",
+    "title" : "Настройки · Connectivity",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-focus",
+    "title" : "Настройки · Focus",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-display",
+    "title" : "Настройки · Display",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-sound",
+    "title" : "Настройки · Sound",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-nowPlaying",
+    "title" : "Настройки · Now Playing",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-calendar",
+    "title" : "Настройки · Calendar",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-fileTray",
+    "title" : "Настройки · File Tray",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-lockScreen",
+    "title" : "Настройки · Lock Screen",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-claudeCode",
+    "title" : "Настройки · Claude Code",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-codex",
+    "title" : "Настройки · Codex",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-pomodoro",
+    "title" : "Настройки · Pomodoro",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-soon",
+    "title" : "Настройки · Soon",
+    "width" : "620"
+  },
+  {
+    "height" : "659",
+    "id" : "settings-about",
+    "title" : "Настройки · About",
+    "width" : "620"
+  }
+]

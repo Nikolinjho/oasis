@@ -1,0 +1,22 @@
+{
+  "screens": 63,
+  "issues": [],
+  "modes": [
+    "current",
+    "refreshed",
+    "overlay",
+    "sideBySide"
+  ],
+  "zoom2x": true,
+  "mascotOnlyOn": "hover",
+  "mascot": {
+    "upY": 184.07016312157214,
+    "downY": 277.5538817230882,
+    "hidden": true,
+    "peek": true,
+    "call": "emerge"
+  },
+  "approvalReload": true,
+  "commentReload": true,
+  "exportFilename": "oasis-native-approval.json"
+}

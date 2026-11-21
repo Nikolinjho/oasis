@@ -1,0 +1,10 @@
+{
+  "nativePairs": 63,
+  "samePairDimensions": true,
+  "sourceFilesUnchanged": 258,
+  "identicalRendererFiles": 256,
+  "rendererExceptions": [
+    "IslandUI/IslandPalette.swift",
+    "Oasis/Settings/SettingsView.swift"
+  ]
+}
